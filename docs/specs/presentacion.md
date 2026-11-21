@@ -41,6 +41,21 @@ La casa sigue la [ambientación japonesa](../propuesta.md#ambientación): dormit
 
 La prueba del visor verifica el picking sobre la giantess y los umbrales, el seguimiento del dormitorio a la cocina y de regreso al dormitorio antes de llegar al living, y la igualdad del hash con la ejecución headless.
 
+## Lote de animación
+
+El atlas de la casa ya tiene los clips que van a usar los hitos de animación, contacto y partida. `TestMorningAtlasCoversPresentation` recorre los `visual` del escenario y de `content/objects` y verifica que cada uno exista en el atlas con estos clips:
+
+| Visual | Escala | Clips |
+| --- | --- | --- |
+| `giantess` | macro | `idle`, `walk`, `reach` (mano estirada), `sit` (seiza sobre zabuton) y `eat` (sentada, con onigiri) en las cuatro direcciones |
+| `tiny`, `tiny_lavender`, `tiny_ochre` | micro | `idle`, `walk` y `carry` (brazos arriba) en las cuatro direcciones, y `fall` |
+| `palm` | micro | `rested` (sombra pegada) y `raised` (sombra separada). `idle` es la palma apoyada |
+| `cup` | macro y micro | `held`, sin sombra de contacto |
+
+Los nombres con dirección usan el sufijo `_north`, `_east`, `_south` o `_west`. Un clip pedido que no existe cae al nombre sin sufijo y después a `idle`. Los ojos del tiny tienen dos píxeles, con el inferior más claro como brillo, y su sombra es translúcida para leerse igual sobre madera y piel.
+
+![Lote de M15: tiny en cuatro direcciones, caminata, acarreo y caída; giantess con la mano estirada, sentada y comiendo](img/m15-lote.png)
+
 ## Superficies y colonia en micro
 
 `Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.

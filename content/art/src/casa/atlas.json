@@ -325,6 +325,82 @@
             "frames": [
               "giantess/macro_idle_south.png"
             ]
+          },
+          "reach_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_reach_south.png"
+            ]
+          },
+          "sit_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_sit_south.png"
+            ]
+          },
+          "eat_south": {
+            "frame_ticks": 8,
+            "frames": [
+              "giantess/macro_eat_south_1.png",
+              "giantess/macro_eat_south_2.png"
+            ]
+          },
+          "reach_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_reach_north.png"
+            ]
+          },
+          "sit_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_sit_north.png"
+            ]
+          },
+          "eat_north": {
+            "frame_ticks": 8,
+            "frames": [
+              "giantess/macro_eat_north_1.png",
+              "giantess/macro_eat_north_2.png"
+            ]
+          },
+          "reach_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_reach_east.png"
+            ]
+          },
+          "sit_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_sit_east.png"
+            ]
+          },
+          "eat_east": {
+            "frame_ticks": 8,
+            "frames": [
+              "giantess/macro_eat_east_1.png",
+              "giantess/macro_eat_east_2.png"
+            ]
+          },
+          "reach_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_reach_west.png"
+            ]
+          },
+          "sit_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_sit_west.png"
+            ]
+          },
+          "eat_west": {
+            "frame_ticks": 8,
+            "frames": [
+              "giantess/macro_eat_west_1.png",
+              "giantess/macro_eat_west_2.png"
+            ]
           }
         },
         "carry": [
@@ -349,7 +425,19 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "palm/micro_idle.png"
+              "palm/micro_rested.png"
+            ]
+          },
+          "rested": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_rested.png"
+            ]
+          },
+          "raised": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_raised.png"
             ]
           }
         }
@@ -367,6 +455,12 @@
             "frames": [
               "cup/macro_idle.png"
             ]
+          },
+          "held": {
+            "frame_ticks": 1,
+            "frames": [
+              "cup/macro_held.png"
+            ]
           }
         }
       },
@@ -380,6 +474,12 @@
             "frame_ticks": 1,
             "frames": [
               "cup/micro_idle.png"
+            ]
+          },
+          "held": {
+            "frame_ticks": 1,
+            "frames": [
+              "cup/micro_held.png"
             ]
           }
         }
@@ -437,16 +537,119 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "tiny/micro_idle.png"
+              "tiny/micro_idle_south.png"
             ]
           },
           "walk": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_walk_south_1.png",
+              "tiny/micro_walk_south_2.png",
+              "tiny/micro_walk_south_3.png",
+              "tiny/micro_walk_south_4.png"
+            ]
+          },
+          "idle_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_idle_south.png"
+            ]
+          },
+          "walk_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_walk_south_1.png",
+              "tiny/micro_walk_south_2.png",
+              "tiny/micro_walk_south_3.png",
+              "tiny/micro_walk_south_4.png"
+            ]
+          },
+          "carry_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_carry_south_1.png",
+              "tiny/micro_carry_south_2.png",
+              "tiny/micro_carry_south_3.png",
+              "tiny/micro_carry_south_4.png"
+            ]
+          },
+          "idle_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_idle_north.png"
+            ]
+          },
+          "walk_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_walk_north_1.png",
+              "tiny/micro_walk_north_2.png",
+              "tiny/micro_walk_north_3.png",
+              "tiny/micro_walk_north_4.png"
+            ]
+          },
+          "carry_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_carry_north_1.png",
+              "tiny/micro_carry_north_2.png",
+              "tiny/micro_carry_north_3.png",
+              "tiny/micro_carry_north_4.png"
+            ]
+          },
+          "idle_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_idle_east.png"
+            ]
+          },
+          "walk_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_walk_east_1.png",
+              "tiny/micro_walk_east_2.png",
+              "tiny/micro_walk_east_3.png",
+              "tiny/micro_walk_east_4.png"
+            ]
+          },
+          "carry_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_carry_east_1.png",
+              "tiny/micro_carry_east_2.png",
+              "tiny/micro_carry_east_3.png",
+              "tiny/micro_carry_east_4.png"
+            ]
+          },
+          "idle_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_idle_west.png"
+            ]
+          },
+          "walk_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_walk_west_1.png",
+              "tiny/micro_walk_west_2.png",
+              "tiny/micro_walk_west_3.png",
+              "tiny/micro_walk_west_4.png"
+            ]
+          },
+          "carry_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny/micro_carry_west_1.png",
+              "tiny/micro_carry_west_2.png",
+              "tiny/micro_carry_west_3.png",
+              "tiny/micro_carry_west_4.png"
+            ]
+          },
+          "fall": {
             "frame_ticks": 2,
             "frames": [
-              "tiny/micro_walk_1.png",
-              "tiny/micro_walk_2.png",
-              "tiny/micro_walk_3.png",
-              "tiny/micro_walk_4.png"
+              "tiny/micro_fall_1.png",
+              "tiny/micro_fall_2.png"
             ]
           }
         }
@@ -485,16 +688,119 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "tiny_lavender/micro_idle.png"
+              "tiny_lavender/micro_idle_south.png"
             ]
           },
           "walk": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_walk_south_1.png",
+              "tiny_lavender/micro_walk_south_2.png",
+              "tiny_lavender/micro_walk_south_3.png",
+              "tiny_lavender/micro_walk_south_4.png"
+            ]
+          },
+          "idle_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_idle_south.png"
+            ]
+          },
+          "walk_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_walk_south_1.png",
+              "tiny_lavender/micro_walk_south_2.png",
+              "tiny_lavender/micro_walk_south_3.png",
+              "tiny_lavender/micro_walk_south_4.png"
+            ]
+          },
+          "carry_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_carry_south_1.png",
+              "tiny_lavender/micro_carry_south_2.png",
+              "tiny_lavender/micro_carry_south_3.png",
+              "tiny_lavender/micro_carry_south_4.png"
+            ]
+          },
+          "idle_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_idle_north.png"
+            ]
+          },
+          "walk_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_walk_north_1.png",
+              "tiny_lavender/micro_walk_north_2.png",
+              "tiny_lavender/micro_walk_north_3.png",
+              "tiny_lavender/micro_walk_north_4.png"
+            ]
+          },
+          "carry_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_carry_north_1.png",
+              "tiny_lavender/micro_carry_north_2.png",
+              "tiny_lavender/micro_carry_north_3.png",
+              "tiny_lavender/micro_carry_north_4.png"
+            ]
+          },
+          "idle_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_idle_east.png"
+            ]
+          },
+          "walk_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_walk_east_1.png",
+              "tiny_lavender/micro_walk_east_2.png",
+              "tiny_lavender/micro_walk_east_3.png",
+              "tiny_lavender/micro_walk_east_4.png"
+            ]
+          },
+          "carry_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_carry_east_1.png",
+              "tiny_lavender/micro_carry_east_2.png",
+              "tiny_lavender/micro_carry_east_3.png",
+              "tiny_lavender/micro_carry_east_4.png"
+            ]
+          },
+          "idle_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_idle_west.png"
+            ]
+          },
+          "walk_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_walk_west_1.png",
+              "tiny_lavender/micro_walk_west_2.png",
+              "tiny_lavender/micro_walk_west_3.png",
+              "tiny_lavender/micro_walk_west_4.png"
+            ]
+          },
+          "carry_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_lavender/micro_carry_west_1.png",
+              "tiny_lavender/micro_carry_west_2.png",
+              "tiny_lavender/micro_carry_west_3.png",
+              "tiny_lavender/micro_carry_west_4.png"
+            ]
+          },
+          "fall": {
             "frame_ticks": 2,
             "frames": [
-              "tiny_lavender/micro_walk_1.png",
-              "tiny_lavender/micro_walk_2.png",
-              "tiny_lavender/micro_walk_3.png",
-              "tiny_lavender/micro_walk_4.png"
+              "tiny_lavender/micro_fall_1.png",
+              "tiny_lavender/micro_fall_2.png"
             ]
           }
         }
@@ -533,16 +839,119 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "tiny_ochre/micro_idle.png"
+              "tiny_ochre/micro_idle_south.png"
             ]
           },
           "walk": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_walk_south_1.png",
+              "tiny_ochre/micro_walk_south_2.png",
+              "tiny_ochre/micro_walk_south_3.png",
+              "tiny_ochre/micro_walk_south_4.png"
+            ]
+          },
+          "idle_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_idle_south.png"
+            ]
+          },
+          "walk_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_walk_south_1.png",
+              "tiny_ochre/micro_walk_south_2.png",
+              "tiny_ochre/micro_walk_south_3.png",
+              "tiny_ochre/micro_walk_south_4.png"
+            ]
+          },
+          "carry_south": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_carry_south_1.png",
+              "tiny_ochre/micro_carry_south_2.png",
+              "tiny_ochre/micro_carry_south_3.png",
+              "tiny_ochre/micro_carry_south_4.png"
+            ]
+          },
+          "idle_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_idle_north.png"
+            ]
+          },
+          "walk_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_walk_north_1.png",
+              "tiny_ochre/micro_walk_north_2.png",
+              "tiny_ochre/micro_walk_north_3.png",
+              "tiny_ochre/micro_walk_north_4.png"
+            ]
+          },
+          "carry_north": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_carry_north_1.png",
+              "tiny_ochre/micro_carry_north_2.png",
+              "tiny_ochre/micro_carry_north_3.png",
+              "tiny_ochre/micro_carry_north_4.png"
+            ]
+          },
+          "idle_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_idle_east.png"
+            ]
+          },
+          "walk_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_walk_east_1.png",
+              "tiny_ochre/micro_walk_east_2.png",
+              "tiny_ochre/micro_walk_east_3.png",
+              "tiny_ochre/micro_walk_east_4.png"
+            ]
+          },
+          "carry_east": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_carry_east_1.png",
+              "tiny_ochre/micro_carry_east_2.png",
+              "tiny_ochre/micro_carry_east_3.png",
+              "tiny_ochre/micro_carry_east_4.png"
+            ]
+          },
+          "idle_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_idle_west.png"
+            ]
+          },
+          "walk_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_walk_west_1.png",
+              "tiny_ochre/micro_walk_west_2.png",
+              "tiny_ochre/micro_walk_west_3.png",
+              "tiny_ochre/micro_walk_west_4.png"
+            ]
+          },
+          "carry_west": {
+            "frame_ticks": 3,
+            "frames": [
+              "tiny_ochre/micro_carry_west_1.png",
+              "tiny_ochre/micro_carry_west_2.png",
+              "tiny_ochre/micro_carry_west_3.png",
+              "tiny_ochre/micro_carry_west_4.png"
+            ]
+          },
+          "fall": {
             "frame_ticks": 2,
             "frames": [
-              "tiny_ochre/micro_walk_1.png",
-              "tiny_ochre/micro_walk_2.png",
-              "tiny_ochre/micro_walk_3.png",
-              "tiny_ochre/micro_walk_4.png"
+              "tiny_ochre/micro_fall_1.png",
+              "tiny_ochre/micro_fall_2.png"
             ]
           }
         }

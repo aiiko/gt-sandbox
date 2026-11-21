@@ -4,15 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M15 — Fuentes de arte y ambientación japonesa
-
-- Pasar el arte a fuentes editables por pieza, versionadas junto al atlas, con un comando reproducible que arme `casa.png` y `casa.json`. El atlas exportado deja de editarse a mano.
-- Redibujar la casa con la [ambientación japonesa](propuesta.md#ambientación): washitsu con tatami y futón, puertas corredizas, cocina compacta y living de madera. Los muebles conservan posición, altura y ofertas.
-- Producir el lote que piden los hitos siguientes: tiny con reposo, caminata y acarreo en cuatro direcciones y caída; giantess sentada comiendo, con la mano apoyada y mirando TV; palma elevada y apoyada; taza en mano y apoyada.
-- Agregar un test que recorra los `visual` del escenario y del contenido y verifique que el atlas tiene las variantes y clips que la presentación va a pedir para cada uno.
-
-**Aceptación.** El comando de exportación reproduce el atlas versionado byte a byte. Las capturas de la casa y del escritorio muestran la nueva ambientación con la paleta de la propuesta. El test de cobertura del atlas pasa y el hash del escenario no cambia.
-
 ### M16 — Animación y poses
 
 - Vincular poses, caminata, reposo, comer y acarreo al estado que recibe la presentación. Elegir la dirección del tiny por la ruta igual que en la giantess.

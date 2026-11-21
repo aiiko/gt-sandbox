@@ -188,6 +188,15 @@ func (a *Atlas) Require(id string) error {
 
 func (a *Atlas) Supports(scale Scale) bool { return slices.Contains(a.scales, scale) }
 
+// Clips devuelve los clips ordenados de una variante visible, o nil si no se dibuja.
+func (a *Atlas) Clips(id string, scale Scale) []string {
+	v, ok := a.sprites[id][scale]
+	if !ok || v.Hidden {
+		return nil
+	}
+	return slices.Sorted(maps.Keys(v.Clips))
+}
+
 func (a *Atlas) Visible(id string, scale Scale) bool {
 	v, ok := a.sprites[id][scale]
 	return ok && !v.Hidden
