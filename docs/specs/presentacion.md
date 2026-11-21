@@ -21,6 +21,14 @@ go run ./cmd/artpack -check         # solo verifica
 
 La muestra de M12 (`content/art/muestra.*`) queda congelada como referencia y no tiene fuentes.
 
+Parte de las fuentes se dibuja por código con los scripts de `tools/art/` (Python con Pillow): `rooms.py` para habitaciones, futón, puertas y heladera; `micro.py` para la etiqueta del nido y el posavasos; y `sprites.py` para el tiny, las poses de la giantess, la palma elevada y la taza en mano. `px.py` reúne las primitivas de dibujo. Los scripts parten de las piezas originales de M14 guardadas en `tools/art/base/`. Una pieza generada se ajusta en su script, no en el PNG, porque la próxima ejecución la sobrescribe. Para retocar una pieza a mano en un editor, hay que quitarla antes de su script. `-check` regenera en una carpeta temporal y compara píxeles con las fuentes versionadas.
+
+```sh
+python tools/art/build.py -check    # las fuentes coinciden con los scripts
+python tools/art/build.py           # regenera las piezas dibujadas por código
+go run ./cmd/artpack                # rearma el atlas
+```
+
 ## La casa en macro
 
 El escenario de «Una mañana en la casa» enlaza su atlas por la ruta `atlas`, relativa al archivo del escenario. El manifiesto puede declarar las escalas disponibles. Un atlas sin esa lista ofrece las dos escalas. `-atlas` permite reemplazar el manifiesto elegido por el escenario.
