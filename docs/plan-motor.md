@@ -4,14 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M12 — Base de presentación y prueba de arte
-
-- Incorporar el lienzo de 480 × 270 px, escalado por factores enteros y conversión de coordenadas del cursor a la escena. Ajustar el dibujo al píxel después de interpolar.
-- Cargar un atlas PNG con metadatos JSON, validar rectángulos, pivotes, variantes por escala y clips, y separar el identificador visual del nombre de la entidad.
-- Probar la paleta y las densidades con una escena pequeña que incluya madera, piel, una silueta tiny y la taza en ambas escalas.
-
-**Aceptación.** La escena se ve nítida a 1×, 2× y 4× y al redimensionar con bandas. El cursor selecciona en el punto que se dibuja. Las exportaciones inválidas fallan con un diagnóstico que identifica el recurso. Una captura por escala fija la referencia visual para los siguientes hitos.
-
 ### M13 — La casa en macro
 
 - Producir tiles y sprites para dormitorio, cocina y living. Dibujar suelo, paredes, puertas, cama, escritorio, heladera, mesa y televisor.
@@ -55,6 +47,7 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 ## Contratos de integración
 
 - La presentación lee `view.Frame` y los eventos publicados. Puede ampliar los datos que captura `view` para resolver apariencia, pose u oclusión. El estado lógico se modifica mediante comandos.
+- El formato del atlas, el escalado del lienzo y las referencias visuales están en la [spec de presentación](specs/presentacion.md).
 - Cámara, filtros, selección, animación y transiciones pertenecen a la presentación. No afectan rutas, portales, tiempos lógicos ni snapshots. Se mantienen [las reglas del motor](../CLAUDE.md) y [los contratos de simulación](specs/nucleo.md).
 - Cada hito cierra con una prueba reproducible sobre el escenario de referencia, una captura cuando cambia el dibujo y la spec actualizada cuando cambia un contrato. Ejecutar `go test ./...` y `go vet ./...` antes del cierre.
 

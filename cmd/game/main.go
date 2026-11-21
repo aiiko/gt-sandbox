@@ -2,6 +2,7 @@
 // 60 FPS interpolando, y permite inspeccionar y mandar comandos.
 //
 //	go run ./cmd/game                                   # Una mañana en la casa
+//	go run ./cmd/game -art                              # prueba de pixel art
 //	go run ./cmd/game -scenario tests/scenarios/floor_to_desk_by_leg.json
 //	go run ./cmd/game -crowd 200 -seed 7
 //	go run ./cmd/game -load s.json
@@ -19,6 +20,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +43,7 @@ import (
 const morningScenario = "tests/scenarios/una_manana_en_la_casa.json"
 
 func main() {
-	scen := flag.String("scenario", morningScenario, "escenario JSON a reproducir")
+	scen := flag.String("scenario", "", "escenario JSON a reproducir")
 	crowd := flag.Int("crowd", 0, "en vez de un escenario, n tinies caminando por un escritorio")
 	seed := flag.Uint64("seed", 1, "semilla para -crowd")
 	load := flag.String("load", "", "en vez de un escenario, continuar un snapshot JSON")
@@ -49,8 +51,17 @@ func main() {
 	micro := flag.String("micro", "", "empezar en la vista micro del Space con este nombre")
 	shotTick := flag.Int("shot-tick", 0, "tick del escenario (o del mundo) para -shot; corre a x16")
 	story := flag.Bool("story", false, "iniciar en modo historia")
+	art := flag.Bool("art", false, "abrir la prueba de pixel art")
+	atlas := flag.String("atlas", "content/art/muestra.json", "manifiesto JSON para -art")
+	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	flag.Parse()
 
+	if *scen == "" {
+		*scen = morningScenario
+		if *art {
+			*scen = artScenario
+		}
+	}
 	g, err := newGame(*scen, *crowd, *seed, *load)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "game:", err)
@@ -67,19 +78,43 @@ func main() {
 		g.shot, g.shotTick = *shot, clock.Tick(*shotTick)+g.run.World.Tick()
 		g.run.Speed = view.Speeds[len(view.Speeds)-1]
 	}
+	var app ebiten.Game = g
+	width, height := 1280, 800
+	if *art {
+		if err := g.enableArt(*atlas); err != nil {
+			fmt.Fprintln(os.Stderr, "game:", err)
+			os.Exit(1)
+		}
+		app = pixelGame{g}
+		width, height = render.CanvasWidth*2, render.CanvasHeight*2
+		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
+	}
+	if *size != "" {
+		widthText, heightText, _ := strings.Cut(*size, "x")
+		w, widthErr := strconv.Atoi(widthText)
+		h, heightErr := strconv.Atoi(heightText)
+		if widthErr != nil || heightErr != nil || w < 1 || h < 1 {
+			fmt.Fprintln(os.Stderr, "game: -size debe ser un tamaño positivo como 960x540")
+			os.Exit(1)
+		}
+		width, height = w, h
+	}
 	ebiten.SetWindowTitle("gt-sandbox | " + g.title)
-	ebiten.SetWindowSize(1280, 800)
+	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	if err := ebiten.RunGame(g); err != nil {
+	if err := ebiten.RunGame(app); err != nil {
 		fmt.Fprintln(os.Stderr, "game:", err)
 		os.Exit(1)
 	}
 }
 
 type game struct {
-	title  string
-	run    *view.Runner
-	status func() string // estado del escenario, para el HUD
+	title   string
+	run     *view.Runner
+	status  func() string // estado del escenario, para el HUD
+	visuals map[ids.ID]string
+	artDesk ids.ID
+	art     *artMode
 
 	cam     camera.Camera
 	proj    camera.Projector
@@ -98,6 +133,7 @@ type game struct {
 	shot     string // captura pedida por -shot
 	shotTick clock.Tick
 	shotDone bool
+	shotErr  error
 }
 
 func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
@@ -138,6 +174,8 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 			return nil, err
 		}
 		g.title = spec.Name
+		g.visuals = in.Visuals
+		g.artDesk = in.Refs["desk"]
 		g.run = view.NewRunner(in.World, p.Step)
 		var verdict string
 		g.status = func() string {
@@ -174,6 +212,9 @@ func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 	}
 	if !g.cam.Anchor.IsNil() {
 		if s, ok := f.SpaceByID(g.cam.Anchor); ok {
+			if g.art != nil {
+				return fixedmath.Transform{Pos: s.Pose.Pos}
+			}
 			return s.Pose.Transform()
 		}
 		g.cam.Follow(ids.Nil, fixedmath.Identity, g.proj)
@@ -214,6 +255,10 @@ func (g *game) frame() *view.Frame {
 }
 
 func (g *game) fit() {
+	if g.art != nil {
+		g.fitArt()
+		return
+	}
 	if !g.follow.IsNil() {
 		g.cam.X, g.cam.Y = 0, 0
 		return
@@ -232,6 +277,12 @@ func (g *game) fit() {
 }
 
 func (g *game) Update() error {
+	if g.shotDone {
+		if g.shotErr != nil {
+			return g.shotErr
+		}
+		return ebiten.Termination
+	}
 	if g.w == 0 {
 		return nil // todavía sin Layout
 	}
@@ -251,9 +302,6 @@ func (g *game) Update() error {
 	g.keys()
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	g.mouse(f)
-	if g.shotDone {
-		return ebiten.Termination
-	}
 	if g.shot != "" && g.run.World.Tick() >= g.shotTick {
 		g.run.Paused = true
 	} else {
@@ -317,6 +365,10 @@ func (g *game) keys() {
 // toggleMicro alterna entre la vista macro y la vista micro del Space
 // elegido (o del Space donde está la entidad elegida).
 func (g *game) toggleMicro() {
+	if g.art != nil {
+		g.toggleArtMicro()
+		return
+	}
 	f := g.run.Cur
 	g.stopFollowing()
 	if !g.cam.Anchor.IsNil() {
@@ -337,6 +389,10 @@ func (g *game) toggleMicro() {
 }
 
 func (g *game) mouse(f *view.Frame) {
+	if g.art != nil {
+		g.artMouse()
+		return
+	}
 	x, y := ebiten.CursorPosition()
 	if _, wy := ebiten.Wheel(); wy != 0 {
 		f := 1.25
@@ -383,16 +439,22 @@ func (g *game) Draw(screen *ebiten.Image) {
 	g.w, g.h = screen.Bounds().Dx(), screen.Bounds().Dy()
 	f := g.frame()
 	proj := g.cam.Project(g.anchor(f), g.w, g.h)
+	if g.art != nil {
+		g.drawArt(screen, f, proj)
+		return
+	}
 	render.Draw(screen, render.Scene{
 		Frame: f, Proj: proj, Layers: g.layers, Selected: g.sel, HideMoverLabels: g.story,
 	})
 	g.hud(screen)
-	if g.shot != "" && g.run.Paused && g.run.World.Tick() >= g.shotTick && !g.shotDone {
+	if g.wantsShot() {
 		g.shotDone = true
-		if err := savePNG(screen, g.shot); err != nil {
-			fmt.Fprintln(os.Stderr, "game:", err)
-		}
+		g.shotErr = savePNG(screen, g.shot)
 	}
+}
+
+func (g *game) wantsShot() bool {
+	return g.shot != "" && g.run.Paused && g.run.World.Tick() >= g.shotTick && !g.shotDone
 }
 
 func savePNG(img *ebiten.Image, path string) error {

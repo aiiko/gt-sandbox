@@ -55,6 +55,7 @@ type Spec struct {
 type EntitySpec struct {
 	Ref    string          `json:"ref"`
 	Object string          `json:"object,omitempty"`
+	Visual string          `json:"visual,omitempty"` // identificador de presentación
 	Spawn  json.RawMessage `json:"spawn"`
 }
 
@@ -106,10 +107,11 @@ func ReadFile(path string) (*Spec, error) {
 
 // Instance es un escenario armado, listo para correr.
 type Instance struct {
-	Spec  *Spec
-	World *world.World
-	Refs  map[string]ids.ID
-	Start clock.Tick // tick del mundo que corresponde al tick 0 del escenario
+	Spec    *Spec
+	World   *world.World
+	Refs    map[string]ids.ID
+	Visuals map[ids.ID]string
+	Start   clock.Tick // tick del mundo que corresponde al tick 0 del escenario
 	// Events acumula los eventos publicados desde Start.
 	Events []world.EventRecord
 }
@@ -164,6 +166,12 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 			}
 		}
 		for i, e := range wave {
+			if e.Visual != "" {
+				if in.Visuals == nil {
+					in.Visuals = make(map[ids.ID]string)
+				}
+				in.Visuals[spawned[i]] = e.Visual
+			}
 			if e.Ref != "" {
 				if _, dup := in.Refs[e.Ref]; dup {
 					return nil, fmt.Errorf("scenario: ref duplicado %q", e.Ref)

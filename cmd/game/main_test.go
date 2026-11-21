@@ -1,12 +1,59 @@
 package main
 
 import (
+	"image"
 	"slices"
 	"strings"
 	"testing"
 
+	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/render"
 	"gtsandbox/internal/view"
 )
+
+func TestArtSampleUsesSameEntitiesAtBothScales(t *testing.T) {
+	g, err := newGame("../../"+artScenario, 0, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.enableArt("../../content/art/muestra.json"); err != nil {
+		t.Fatal(err)
+	}
+	g.w, g.h = (pixelGame{g}).Layout(1031, 601)
+	g.fit()
+	hash := g.run.World.Hash()
+	f := g.run.Cur
+	var cup, tiny ids.ID
+	for id, visual := range g.visuals {
+		switch visual {
+		case "cup":
+			cup = id
+		case "tiny":
+			tiny = id
+		}
+	}
+	for _, layout := range []struct {
+		scale     render.Scale
+		cup, tiny image.Point
+	}{
+		{render.Macro, image.Pt(228, 134), image.Pt(235, 137)},
+		{render.Micro, image.Pt(135, 85), image.Pt(229, 214)},
+	} {
+		proj := g.cam.Project(g.anchor(f), g.w, g.h)
+		scene := g.art.atlas.Arrange(f, proj, g.visuals, layout.scale, g.art.focus)
+		if got := scene.Pick(layout.cup); cup.IsNil() || got != cup {
+			t.Errorf("%s: seleccionar la taza devolvió %s, quería %s", layout.scale, got, cup)
+		}
+		if got := scene.Pick(layout.tiny); tiny.IsNil() || got != tiny {
+			t.Errorf("%s: seleccionar al tiny devolvió %s, quería %s", layout.scale, got, tiny)
+		}
+		g.sel = tiny
+		g.toggleMicro()
+	}
+	if got := g.run.World.Hash(); got != hash {
+		t.Fatalf("la presentación cambió el hash: %x, quería %x", got, hash)
+	}
+}
 
 func TestMorningViewer(t *testing.T) {
 	g, err := newGame("../../"+morningScenario, 0, 0, "")
