@@ -211,14 +211,28 @@ func (a *Atlas) MicroFocus(id string) (image.Point, bool) {
 	return image.Pt(v.Focus[0]-v.Pivot[0], v.Focus[1]-v.Pivot[1]), true
 }
 
+// resolve devuelve el primer clip existente entre los candidatos. Si ninguno
+// existe prueba el nombre sin sufijo del primero y, por último, idle.
+func (v variant) resolve(names []string) string {
+	for _, n := range names {
+		if _, ok := v.Clips[n]; ok {
+			return n
+		}
+	}
+	if len(names) > 0 {
+		if base, _, _ := strings.Cut(names[0], "_"); base != names[0] {
+			if _, ok := v.Clips[base]; ok {
+				return base
+			}
+		}
+	}
+	return "idle"
+}
+
 func (v variant) frame(name string, tick uint64) image.Rectangle {
 	c, ok := v.Clips[name]
 	if !ok {
-		base, _, _ := strings.Cut(name, "_")
-		c, ok = v.Clips[base]
-	}
-	if !ok {
-		c = v.Clips["idle"]
+		c = v.Clips[v.resolve([]string{name})]
 	}
 	return frameRect(c.Frames[(tick/c.FrameTicks)%uint64(len(c.Frames))])
 }

@@ -418,26 +418,74 @@
       },
       "micro": {
         "pivot": [
-          144,
-          80
+          160,
+          160
         ],
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "palm/micro_rested.png"
+              "palm/micro_rested_north.png"
             ]
           },
           "rested": {
             "frame_ticks": 1,
             "frames": [
-              "palm/micro_rested.png"
+              "palm/micro_rested_north.png"
             ]
           },
           "raised": {
             "frame_ticks": 1,
             "frames": [
-              "palm/micro_raised.png"
+              "palm/micro_raised_north.png"
+            ]
+          },
+          "rested_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_rested_north.png"
+            ]
+          },
+          "raised_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_raised_north.png"
+            ]
+          },
+          "rested_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_rested_east.png"
+            ]
+          },
+          "raised_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_raised_east.png"
+            ]
+          },
+          "rested_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_rested_south.png"
+            ]
+          },
+          "raised_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_raised_south.png"
+            ]
+          },
+          "rested_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_rested_west.png"
+            ]
+          },
+          "raised_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_raised_west.png"
             ]
           }
         }
@@ -530,8 +578,8 @@
           15
         ],
         "carry": [
-          5,
-          -9
+          0,
+          -11
         ],
         "clips": {
           "idle": {
@@ -681,8 +729,8 @@
           15
         ],
         "carry": [
-          5,
-          -9
+          0,
+          -11
         ],
         "clips": {
           "idle": {
@@ -832,8 +880,8 @@
           15
         ],
         "carry": [
-          5,
-          -9
+          0,
+          -11
         ],
         "clips": {
           "idle": {

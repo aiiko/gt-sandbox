@@ -30,7 +30,7 @@ var requiredClips = map[string]map[render.Scale][]string{
 	"tiny":          {render.Micro: append(directions("idle", "walk", "carry"), "fall")},
 	"tiny_lavender": {render.Micro: append(directions("idle", "walk", "carry"), "fall")},
 	"tiny_ochre":    {render.Micro: append(directions("idle", "walk", "carry"), "fall")},
-	"palm":          {render.Micro: {"raised", "rested"}},
+	"palm":          {render.Micro: directions("raised", "rested")},
 	"cup":           {render.Macro: {"held"}, render.Micro: {"held"}},
 	"crumb":         {render.Micro: {"idle"}},
 }

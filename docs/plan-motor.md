@@ -4,13 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M16 — Animación y poses
-
-- Vincular poses, caminata, reposo, comer y acarreo al estado que recibe la presentación. Elegir la dirección del tiny por la ruta igual que en la giantess.
-- Alinear manga, palma y carga con los anclajes de cada vista. La taza y las migajas cambian de representación al ocurrir su evento.
-
-**Aceptación.** En macro se reconoce cuándo la giantess camina, come sentada, apoya la mano y mira TV. En micro el tiny camina y acarrea en la dirección de su ruta con la carga alineada. Las capturas por tick coinciden con los eventos del log.
-
 ### M17 — Contacto, viaje y caídas
 
 - Mostrar cuándo el paso entre mano y mueble está disponible. Diferenciar mano elevada y apoyada mediante silueta, sombra y señal del paso. La sombra de la mano anticipa su llegada a la superficie.

@@ -176,22 +176,25 @@ def clear_lower(im, y0):
     return out
 
 
+# Cuánto baja el torso al sentarse. Sentada ocupa menos alto para que el
+# mueble que tiene delante (escritorio, mesa) siga a la vista.
+SEAT_DROP = 7
+
+
 def seated(facing):
     """Sentada en seiza sobre un zabuton: el torso baja y las piernas se pliegan."""
     src = gload(f'idle_{facing}' if facing != 'west' else 'idle_east')
     upper = clear_lower(src, 29)
     c = Canvas(31, 38)
-    # zabuton coral
-    c.rrect(5, 29, 21, 8, '#FF9CAD', '#C66F86')
-    c.hline(6, 30, 19, '#FFC2CD')
-    c.px(15, 33, '#C66F86')
+    # zabuton coral, más ancho que el cuerpo para que asome a los lados
+    c.rrect(1, 30, 29, 8, '#FF9CAD', '#C66F86')
+    c.hline(2, 31, 27, '#FFC2CD')
+    c.px(3, 36, '#C66F86')
+    c.px(27, 36, '#C66F86')
     # rodillas y falda plegadas
-    c.rrect(7, 26, 17, 7, '#67588F', INK)
-    c.hline(8, 27, 15, '#7969A4')
-    if facing == 'north':
-        c.rect(9, 31, 4, 2, INK)  # pies bajo el cuerpo
-        c.rect(18, 31, 4, 2, INK)
-    c.paste(upper.crop((0, 0, 31, 29)), 0, 4 - 0)
+    c.rrect(4, 29, 23, 6, '#67588F', INK)
+    c.hline(5, 30, 21, '#7969A4')
+    c.paste(upper.crop((0, 0, 31, 29)), 0, SEAT_DROP)
     im = c.im
     if facing == 'west':
         im = ImageOps.mirror(im)
@@ -246,17 +249,18 @@ def eating(facing, frame):
     c = Canvas(31, 38)
     c.paste(base, 0, 0)
     up = frame == 1
+    d = SEAT_DROP - 4
     if facing == 'north':
         # codo que sube y baja junto a la cabeza
-        y = 18 if up else 21
+        y = (18 if up else 21) + d
         c.rrect(23, y, 4, 4, '#9A8BE3', INK)
     elif facing == 'south':
-        y = 18 if up else 23
+        y = (18 if up else 23) + d
         c.rrect(17, y + 2, 5, 5, '#9A8BE3', INK)
         c.rect(18, y, 3, 3, '#FFD8B9')
         onigiri(c, 18, y - 2)
     else:
-        y = 17 if up else 22
+        y = (17 if up else 22) + d
         c.rrect(22, y + 2, 5, 5, '#9A8BE3', INK)
         c.rect(24, y, 3, 3, '#FFD8B9')
         onigiri(c, 25, y - 2)
@@ -276,28 +280,45 @@ def giantess():
 
 # ------------------------------------------------------------ palma y taza
 
-def palm():
+PALM_SIZE = 320  # cuadro cuadrado: el pivote queda en el centro en las cuatro orientaciones
+# Rotación de la imagen original (dibujada mirando al norte) para cada orientación.
+PALM_TURNS = {'north': 0, 'east': -90, 'south': 180, 'west': 90}
+
+
+def palm_shadowless():
     src = load(os.path.join(BASE, 'palm/micro_idle.png'))
-    save(src, 'palm/micro_rested.png')
     shadow_cols = {(0x98, 0x5E, 0x76), (0xB0, 0x79, 0x82)}
     hand = src.copy()
-    # la sombra horneada son los píxeles de esos dos tonos sin mano encima ni a la izquierda
+    # la sombra horneada son los píxeles de esos dos tonos con transparencia encima o debajo
     for y in range(src.height):
         for x in range(src.width):
             p = src.getpixel((x, y))
             if p[3] and p[:3] in shadow_cols:
                 above = [src.getpixel((x, y - k)) for k in (1, 2, 3) if y - k >= 0]
-                if any(q[3] == 0 for q in above) or y + 1 >= src.height or src.getpixel((x, y + 1))[3] == 0 \
-                        or src.getpixel((x, min(y + 2, src.height - 1)))[3] == 0:
+                if any(q[3] == 0 for q in above) or y + 1 >= src.height or src.getpixel((x, y + 1))[3] == 0                         or src.getpixel((x, min(y + 2, src.height - 1)))[3] == 0:
                     hand.putpixel((x, y), (0, 0, 0, 0))
-    off = (10, 16)
-    out = Image.new('RGBA', (src.width + off[0], src.height + off[1]), (0, 0, 0, 0))
-    mask = hand.split()[3].point(lambda a: 80 if a else 0)
+    return hand
+
+
+def palm_frame(hand, offset, alpha):
+    """Centra la mano en un cuadro cuadrado y le agrega la sombra desplazada."""
+    out = Image.new('RGBA', (PALM_SIZE, PALM_SIZE), (0, 0, 0, 0))
+    at = ((PALM_SIZE - hand.width) // 2, (PALM_SIZE - hand.height) // 2)
+    mask = hand.split()[3].point(lambda a: alpha if a else 0)
     sh = Image.new('RGBA', hand.size, hexc(INK))
     sh.putalpha(mask)
-    out.alpha_composite(sh, off)
-    out.alpha_composite(hand, (0, 0))
-    save(out, 'palm/micro_raised.png')
+    out.alpha_composite(sh, (at[0] + offset[0], at[1] + offset[1]))
+    out.alpha_composite(hand, at)
+    return out
+
+
+def palm():
+    hand = palm_shadowless()
+    for facing, turn in PALM_TURNS.items():
+        h = hand.rotate(turn, expand=True) if turn else hand
+        # La luz viene siempre de arriba a la izquierda: la sombra no gira con la mano.
+        save(palm_frame(h, (2, 4), 120), f'palm/micro_rested_{facing}.png')
+        save(palm_frame(h, (10, 16), 80), f'palm/micro_raised_{facing}.png')
 
 
 def cup():

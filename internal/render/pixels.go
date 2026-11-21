@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"math"
 	"slices"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -83,7 +84,11 @@ const (
 type ArtScene struct {
 	atlas   *Atlas
 	sprites []sprite
+	clips   map[ids.ID]string
 }
+
+// Clip devuelve el clip con el que se dibujó una entidad, o "" si no se dibujó.
+func (s ArtScene) Clip(id ids.ID) string { return s.clips[id] }
 
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
@@ -117,12 +122,28 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		v, ok := a.sprites[visuals[id]][scale]
 		return v, ok && !v.Hidden && (!v.SelectedOnly || slices.Contains(featured, id))
 	}
-	out := ArtScene{atlas: a}
-	add := func(id, support, carrier ids.ID, pos units.Vec3, name string, isSpace bool, offset image.Point) {
+	out := ArtScene{atlas: a, clips: map[ids.ID]string{}}
+	carrying, inContact, resting := map[ids.ID]bool{}, map[ids.ID]bool{}, map[ids.ID]bool{}
+	for _, t := range f.Things {
+		if !t.CarriedBy.IsNil() {
+			carrying[t.CarriedBy] = true
+		}
+	}
+	for _, c := range f.Contacts {
+		inContact[c.A], inContact[c.B] = true, true
+	}
+	for _, s := range f.Spaces {
+		if inContact[s.ID] {
+			resting[s.Parent] = true
+		}
+	}
+	add := func(id, support, carrier ids.ID, pos units.Vec3, names []string, isSpace bool, offset image.Point) {
 		v, ok := visible(id)
 		if !ok {
 			return
 		}
+		name := v.resolve(names)
+		out.clips[id] = name
 		x, y := p.ToScreen(pos)
 		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1]).Add(offset)
 		group, depth := id, y+float32(v.DepthOffset)
@@ -161,21 +182,29 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 	}
 	for _, s := range f.Spaces {
-		if inFocus(s.ID) {
-			add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, artClip(s.Mover, s.Pose.Rot), true, image.Point{})
+		if !inFocus(s.ID) {
+			continue
 		}
+		names := actor{mover: s.Mover, facing: s.Pose.Rot, activity: s.Activity, step: s.Step,
+			carrying: carrying[s.ID], resting: resting[s.ID]}.clips()
+		if s.Mover == nil && !s.Extent.Empty() {
+			names = surfaceClips(s.Pose.Rot, inContact[s.ID])
+		}
+		add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, names, true, image.Point{})
 	}
 	if scale == Macro {
 		for _, pt := range f.Portals {
 			if !pt.Dynamic && !pt.Disabled {
 				mid := units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z)
-				add(pt.ID, ids.Nil, ids.Nil, mid, "idle", false, image.Point{})
+				add(pt.ID, ids.Nil, ids.Nil, mid, []string{"idle"}, false, image.Point{})
 			}
 		}
 	}
 	for _, t := range f.Things {
 		if t.CarriedBy.IsNil() && inFocus(t.Space) {
-			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, artClip(t.Mover, t.Pose.Rot), false, image.Point{})
+			names := actor{mover: t.Mover, facing: t.Pose.Rot, activity: t.Activity, step: t.Step,
+				carrying: carrying[t.ID]}.clips()
+			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, image.Point{})
 		}
 	}
 	for _, t := range f.Things {
@@ -199,8 +228,12 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			var offset image.Point
 			if v.Carry != nil {
 				offset = image.Pt(v.Carry[0], v.Carry[1])
+				// La carga va del lado hacia el que mira el porteador.
+				if strings.HasSuffix(out.clips[t.CarriedBy], "_west") {
+					offset.X = -offset.X
+				}
 			}
-			add(t.ID, support, t.CarriedBy, pos, "carried", false, offset)
+			add(t.ID, support, t.CarriedBy, pos, []string{"held"}, false, offset)
 		}
 	}
 	slices.SortStableFunc(out.sprites, func(a, b sprite) int {
@@ -228,30 +261,76 @@ func (a *Atlas) depthGroup(f *view.Frame, p camera.Projector, visuals map[ids.ID
 	return group, depth
 }
 
-func artClip(m *view.Mover, facing fixedmath.Angle) string {
-	if m == nil {
-		return "idle"
-	}
+// poseClips relaciona la acción de una oferta en uso con la pose que la dibuja.
+var poseClips = map[string]string{
+	"breakfast": "eat",
+	"snack":     "eat",
+	"eat":       "eat",
+	"nibble":    "eat",
+	"watch":     "sit",
+}
+
+// actor es el estado de una entidad del que sale su clip.
+type actor struct {
+	mover          *view.Mover
+	facing         fixedmath.Angle
+	activity, step string
+	carrying       bool // lleva algo
+	resting        bool // tiene una parte apoyada en otra superficie
+}
+
+func compass(facing fixedmath.Angle) string {
 	directions := [...]string{"east", "north", "west", "south"}
 	quarter := fixedmath.QuarterTurn
-	direction := directions[((facing.Norm()+quarter/2)/quarter)%4]
-	if m.Status != "moving" {
-		return "idle_" + direction
+	return directions[((facing.Norm()+quarter/2)/quarter)%4]
+}
+
+// clips devuelve los clips candidatos, del más específico al más general.
+func (a actor) clips() []string {
+	if a.mover == nil {
+		return []string{"idle"}
 	}
-	if len(m.Route) > 1 {
-		d := m.Route[1].Sub(m.Route[0])
-		switch {
-		case d.X.Abs() >= d.Y.Abs() && d.X > 0:
-			direction = "east"
-		case d.X.Abs() >= d.Y.Abs() && d.X < 0:
-			direction = "west"
-		case d.Y > 0:
-			direction = "north"
-		case d.Y < 0:
-			direction = "south"
+	direction := compass(a.facing)
+	if a.mover.Status == "moving" {
+		if len(a.mover.Route) > 1 {
+			d := a.mover.Route[1].Sub(a.mover.Route[0])
+			switch {
+			case d.X.Abs() >= d.Y.Abs() && d.X > 0:
+				direction = "east"
+			case d.X.Abs() >= d.Y.Abs() && d.X < 0:
+				direction = "west"
+			case d.Y > 0:
+				direction = "north"
+			case d.Y < 0:
+				direction = "south"
+			}
+		}
+		walk := []string{"walk_" + direction, "walk", "idle_" + direction}
+		if a.carrying {
+			walk = append([]string{"carry_" + direction}, walk...)
+		}
+		return walk
+	}
+	var out []string
+	if action, ok := strings.CutPrefix(a.activity, "use:"); ok && (a.step == "" || a.step == "use") {
+		if pose, ok := poseClips[action]; ok {
+			out = append(out, pose+"_"+direction, pose)
 		}
 	}
-	return "walk_" + direction
+	if a.resting {
+		out = append(out, "reach_"+direction, "reach")
+	}
+	return append(out, "idle_"+direction)
+}
+
+// surfaceClips elige la variante apoyada o elevada de una superficie móvil
+// según su orientación de mundo.
+func surfaceClips(facing fixedmath.Angle, contact bool) []string {
+	state := "raised"
+	if contact {
+		state = "rested"
+	}
+	return []string{state + "_" + compass(facing), state, "idle"}
 }
 
 // Pick devuelve el sprite visible en el píxel, respetando su transparencia.

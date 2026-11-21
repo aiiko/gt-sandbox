@@ -7,6 +7,7 @@ Paquetes: `view` (Frame, Runner, picking), `camera` (proyección), `render` (dib
 Foto plana y serializable de un tick, armada por `Capturer.Capture(w)` (solo lee el mundo):
 
 - `spaces`: id, nombre, kind, padre, profundidad, pose de mundo, extensión, copia de la grilla (cacheada por versión) y si es superficie de contacto. Los Spaces móviles pueden incluir el estado y la ruta del mover. Ordenados de abajo hacia arriba (Z de mundo, luego ID).
+- Los Spaces con `agent` (la giantess) incluyen `activity` y `step`, igual que las Things.
 - `things`: entidades con `location` que no son Spaces: pose de mundo, cuerpo, porteador para los objetos cargados y, si tienen `mover`, su estado y la ruta pendiente en puntos de mundo.
 - `portals` (extremos en el mundo; `dynamic` si los creó un contacto) y `contacts`.
 

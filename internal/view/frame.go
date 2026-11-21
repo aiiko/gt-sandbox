@@ -55,6 +55,9 @@ type Space struct {
 	Surface bool       `json:"surface,omitempty"` // tiene contact_surface
 	Depth   int        `json:"depth"`             // 0 = raíz
 	Mover   *Mover     `json:"mover,omitempty"`
+	// Activity y Step describen lo que hace un agente que es un Space (la giantess).
+	Activity string `json:"activity,omitempty"`
+	Step     string `json:"step,omitempty"`
 }
 
 // Thing es una entidad ubicada que no es un Space (un tiny, un objeto).
@@ -70,6 +73,8 @@ type Thing struct {
 	CarriedBy ids.ID       `json:"carried_by,omitempty"`
 	// Activity resume lo que hace un agente ("use:eat", "work", "work (suspendida)").
 	Activity string `json:"activity,omitempty"`
+	// Step es el paso en curso de una oferta de varios pasos ("goto", "pose", "use").
+	Step string `json:"step,omitempty"`
 }
 
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
@@ -159,6 +164,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		return out
 	}
+	agents := ecs.Get[ai.Agent](r)
 	grids := ecs.Get[nav.Grid](r)
 	surfaces := ecs.Get[attach.Surface](r)
 	seen := map[ids.ID]bool{}
@@ -169,6 +175,9 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		s := Space{ID: id, Name: names(id), Kind: sp.Kind, Parent: g.Parent(id), Pose: p,
 			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos)}
+		if a, ok := agents.Get(id); ok {
+			s.Activity, s.Step = activity(r, a)
+		}
 		for e := s.Parent; !e.IsNil() && s.Depth < space.MaxDepth; e = g.Parent(e) {
 			s.Depth++
 		}
@@ -187,7 +196,6 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		return cmp.Or(cmp.Compare(a.Pose.Pos.Z, b.Pose.Pos.Z), cmp.Compare(a.ID, b.ID))
 	})
 
-	agents := ecs.Get[ai.Agent](r)
 	carried := ecs.Get[jobs.Carried](r)
 	spaces := ecs.Get[space.Space](r)
 	cs.Location.Each(func(id ids.ID, l *comp.Location) {
@@ -207,7 +215,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			t.CarriedBy = c.By
 		}
 		if a, ok := agents.Get(id); ok {
-			t.Activity = activity(r, a)
+			t.Activity, t.Step = activity(r, a)
 		}
 		f.Things = append(f.Things, t)
 	})
@@ -246,19 +254,25 @@ func (c *Capturer) grid(id ids.ID, g *nav.Grid) *Grid {
 	return v
 }
 
-func activity(r *ecs.Registry, a ai.Agent) string {
+// activity resume la acción de un agente y, si la oferta tiene pasos, el
+// paso en curso. Una acción suspendida no tiene paso.
+func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 	d, suffix := a.Doing, ""
 	if d == nil && a.Suspended != nil {
 		d, suffix = a.Suspended, " (suspendida)"
 	}
 	if d == nil {
-		return ""
+		return "", ""
 	}
-	name := d.Action
+	name, step := d.Action, ""
 	if os, ok := ecs.Get[ai.Offers](r).Get(d.Target); ok && d.Action == "use" && d.Offer < len(os) {
-		name += ":" + os[d.Offer].Action
+		o := os[d.Offer]
+		name += ":" + o.Action
+		if suffix == "" && d.Stage < len(o.Steps) {
+			step = o.Steps[d.Stage].Do
+		}
 	}
-	return name + suffix
+	return name + suffix, step
 }
 
 // route pasa los tramos pendientes a puntos de mundo.

@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -168,13 +169,47 @@ func TestArtDirection(t *testing.T) {
 		{units.V3(1, -20, 0), "walk_south"},
 	} {
 		m.Route = []units.Vec3{{}, c.goal}
-		if got := artClip(m, 0); got != c.name {
+		if got := (actor{mover: m}).clips()[0]; got != c.name {
 			t.Errorf("ruta a %v: %s, quería %s", c.goal, got, c.name)
 		}
 	}
-	m.Status = "idle"
-	if got := artClip(m, fixedmath.QuarterTurn); got != "idle_north" {
-		t.Fatalf("reposo hacia el norte: %s", got)
+	m.Route = []units.Vec3{{}, units.V3(-20, 1, 0)}
+	if got := (actor{mover: m, carrying: true}).clips(); !slices.Equal(got[:2], []string{"carry_west", "walk_west"}) {
+		t.Errorf("acarreo hacia el oeste: %v", got)
+	}
+	still := &view.Mover{Status: "idle"}
+	for _, c := range []struct {
+		a    actor
+		want []string
+	}{
+		{actor{mover: still, facing: fixedmath.QuarterTurn}, []string{"idle_north"}},
+		{actor{mover: still, facing: fixedmath.QuarterTurn, activity: "use:breakfast", step: "use", resting: true},
+			[]string{"eat_north", "eat", "reach_north", "reach", "idle_north"}},
+		{actor{mover: still, activity: "use:breakfast", step: "pose", resting: true}, []string{"reach_east", "reach", "idle_east"}},
+		{actor{mover: still, activity: "use:watch"}, []string{"sit_east", "sit", "idle_east"}},
+		{actor{mover: still, activity: "use:watch (suspendida)"}, []string{"idle_east"}},
+		{actor{}, []string{"idle"}},
+	} {
+		if got := c.a.clips(); !slices.Equal(got, c.want) {
+			t.Errorf("%+v: %v, quería %v", c.a, got, c.want)
+		}
+	}
+	if got := surfaceClips(fixedmath.HalfTurn, true); !slices.Equal(got, []string{"rested_west", "rested", "idle"}) {
+		t.Errorf("superficie apoyada mirando al oeste: %v", got)
+	}
+	if got := surfaceClips(0, false)[0]; got != "raised_east" {
+		t.Errorf("superficie elevada: %s", got)
+	}
+	v := variant{Clips: map[string]clip{"idle": {}, "walk": {}, "carry_west": {}}}
+	for names, want := range map[string]string{
+		"carry_east,walk_east,walk": "walk",
+		"carry_west,walk_west":      "carry_west",
+		"walk_north":                "walk",
+		"sit_north,idle_north":      "idle",
+	} {
+		if got := v.resolve(strings.Split(names, ",")); got != want {
+			t.Errorf("resolve(%s) = %s, quería %s", names, got, want)
+		}
 	}
 }
 

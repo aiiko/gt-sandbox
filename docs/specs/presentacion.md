@@ -64,6 +64,21 @@ Los nombres con dirección usan el sufijo `_north`, `_east`, `_south` o `_west`.
 
 ![Lote de M15: tiny en cuatro direcciones, caminata, acarreo y caída; giantess con la mano estirada, sentada y comiendo](img/m15-lote.png)
 
+## Animación por estado
+
+El clip de cada entidad sale del estado que trae el `Frame`. `view` publica la acción del agente (`activity`, como `use:breakfast`) y, si la oferta tiene pasos, el paso en curso (`step`: `goto`, `pose`, `use`). La giantess es un Space y también los publica. El renderer arma una lista de clips candidatos y usa el primero que exista en la variante:
+
+1. Con el mover en marcha: `carry_<dir>` si lleva algo, `walk_<dir>`, `walk`. La dirección sale del tramo activo de la ruta.
+2. Quieto, con una oferta en su paso `use` (o sin pasos): la pose de la acción según `poseClips` (`breakfast`, `snack`, `eat` y `nibble` → `eat`; `watch` → `sit`). La dirección sale de la orientación.
+3. Con una parte propia apoyada en otra superficie, es decir, un Space hijo en un contacto: `reach_<dir>`.
+4. `idle_<dir>` y, al final, `idle`.
+
+Una superficie móvil sin mover, como la palma, usa `rested_<dir>` si está en un contacto y `raised_<dir>` si no. La dirección es la de su orientación de mundo. La palma se dibuja en un cuadro cuadrado con el pivote en el centro para que las cuatro orientaciones compartan el pivote. La sombra no gira con la mano porque la luz siempre viene de arriba a la izquierda. Lo que se carga usa `held` (la taza en mano no tiene sombra de contacto). El desplazamiento `carry` se espeja en X cuando el porteador mira al oeste. Los tinies llevan la carga sobre la cabeza, entre las manos levantadas.
+
+Las poses sentadas bajan el torso siete píxeles para que el escritorio o la mesa que la giantess tiene delante sigan a la vista. `ArtScene.Clip(id)` devuelve el clip elegido. `TestMorningAnimationFollowsState` recorre la mañana y verifica en cada tick la giantess (caminar, comer, sentarse frente a la TV, mano apoyada), la taza (en mano o apoyada), la palma (apoyada o elevada, con su orientación) y los tinies del escritorio (caminata o acarreo).
+
+![La giantess desayuna en el dormitorio y mira la TV sentada en el living](img/m16-poses.png)
+
 ## Superficies y colonia en micro
 
 `Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.
