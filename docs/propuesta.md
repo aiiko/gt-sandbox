@@ -951,6 +951,28 @@ El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio
 
 La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las referencias macro y micro de esta dirección. El [plan de hitos](plan-motor.md) lleva esas reglas al recorrido completo.
 
+### Sonido
+
+El sonido es presentación, como los símbolos de expresión. Sale de los eventos publicados y del `Frame`, nunca lee ni modifica el mundo, y no cambia el hash. Todo sonido tiene un equivalente visual que ya existe (símbolo, señal de paso, sombra), así que la escena se entiende en silencio.
+
+**Perspectiva por escala.** El mismo hecho suena distinto según la vista. En macro, la giantess camina con pantuflas suaves y los tinies casi no se oyen. En micro, la mano que baja es un soplo de aire que crece con la sombra y un golpe grave y cálido sobre la madera, y los pasitos de los tinies se oyen claros.
+
+**Sin música.** No hay banda sonora: la casa suena por su ambiente. Cada habitación tiene un fondo propio (gorriones y un fūrin en el dormitorio, el zumbido de la heladera en la cocina, el tic del reloj y el murmullo de la TV mientras la giantess la mira en el living), y la vista micro suma un tono de sala grave, como si todo estuviera amplificado.
+
+**Sonidos sintetizados.** Todos los sonidos se generan por código, como el arte dibujado por código: un sintetizador simple lee parámetros versionados (forma de onda, envolvente, tono, ruido, filtro) y escribe WAV cortos. Encaja con el pixel art, cada sonido se ajusta editando números y no hay licencias que seguir. Un manifiesto nombra cada sonido con un identificador estable, como el atlas con los visuales.
+
+| Grupo | Sonidos |
+| --- | --- |
+| Ambiente | Fondo por habitación, tono de sala en micro |
+| Giantess (macro) | Pasos según el suelo (tatami, madera, baldosa), noren y fusuma, heladera, taza sobre la mesa, mordiscos, zabuton, encender la TV |
+| La mano | En micro: soplo al acercarse, golpe al apoyarse, soplo al levantarse. En macro: un toque suave sobre el mueble |
+| Tinies (micro) | Pasitos de tono distinto por paleta, pop al recoger una migaja, plink al dejarla en el nido, saltito al subir a la mano, silbido al caer y «puf» al aterrizar |
+| Símbolos | Un sonido por símbolo: blip («!»), blip que sube («?»), gota, ronquidito («zzz»), tres notas, zumbido gruñón (vena) |
+| Señal de paso | Dos notas que suben al abrirse el paso y dos que bajan al cerrarse |
+| Interfaz | Clic al elegir, campanita al seguir, zoom al cambiar de escala con el fundido, cinta al pausar, hoja al sumar una entrada a la historia |
+
+**Mezcla.** El volumen y el panorama siguen la posición en pantalla, y lo que queda fuera de cuadro no suena, salvo el ambiente. Cada sonido tiene un límite de voces simultáneas, un tiempo mínimo entre repeticiones y una leve variación de tono, para que veinte tinies no saturen. A x4 y x16 se omiten los sonidos menores y quedan los importantes (la mano, las caídas, los descubrimientos). La pausa silencia los efectos y baja el ambiente. Hay volúmenes separados para ambiente, efectos e interfaz, y una tecla para silenciar.
+
 ## \*\*12. Riesgos que resolvería temprano\*\*
 
 | Riesgo                          | Consecuencia                                                        | Estrategia                                                |
@@ -969,4 +991,4 @@ La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las r
 
 El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El audio también queda fuera de esta entrega: la música de ambiente y los efectos se diseñan cuando la escena visual esté cerrada, a partir de los mismos eventos que alimentan las expresiones.
+La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El [sonido](#sonido) se suma a la escena cerrada sin música; una banda sonora queda para una etapa posterior.
