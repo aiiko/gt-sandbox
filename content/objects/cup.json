@@ -1,0 +1,10 @@
+{
+  "name": "cup",
+  "body": {"radius": 40000, "height": 100000, "mass": 0},
+  "components": {
+    "offers": [
+      {"action": "shelter", "scale": "tiny", "effects": [{"need": "energy", "amount": 300}], "duration": 200,
+       "approach": {"x": 0, "y": -50000}}
+    ]
+  }
+}

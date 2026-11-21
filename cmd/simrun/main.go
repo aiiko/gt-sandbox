@@ -2,13 +2,15 @@
 //
 //	go run ./cmd/simrun -seed 42 -ticks 1000 -spawn 100 -save out.json
 //	go run ./cmd/simrun -load out.json -ticks 500
-//	go run ./cmd/simrun -scenario tests/scenarios/tiny_crosses_desk.json
+//	go run ./cmd/simrun -scenario tests/scenarios/tiny_crosses_desk.json [-events]
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gtsandbox/internal/core/ids"
@@ -28,10 +30,11 @@ func main() {
 	load := flag.String("load", "", "snapshot JSON desde el cual continuar")
 	save := flag.String("save", "", "guardar snapshot JSON al terminar")
 	scen := flag.String("scenario", "", "correr un escenario JSON y verificar sus expectativas")
+	events := flag.Bool("events", false, "con -scenario: imprimir todos los eventos")
 	flag.Parse()
 
 	if *scen != "" {
-		if err := runScenario(*scen); err != nil {
+		if err := runScenario(*scen, *events); err != nil {
 			fmt.Fprintln(os.Stderr, "simrun:", err)
 			os.Exit(1)
 		}
@@ -43,7 +46,7 @@ func main() {
 	}
 }
 
-func runScenario(path string) error {
+func runScenario(path string, events bool) error {
 	spec, err := scenario.ReadFile(path)
 	if err != nil {
 		return err
@@ -56,6 +59,20 @@ func runScenario(path string) error {
 	fails, err := in.Run()
 	if err != nil {
 		return err
+	}
+	if events {
+		names := map[ids.ID]string{}
+		for ref, id := range in.Refs {
+			names[id] = ref
+		}
+		for _, e := range in.Events {
+			b, _ := json.Marshal(e.Event)
+			s := string(b)
+			for id, ref := range names {
+				s = strings.ReplaceAll(s, `"`+id.String()+`"`, ref)
+			}
+			fmt.Printf("%5d %s %s\n", e.Tick-in.Start, e.Event.Kind(), s)
+		}
 	}
 	fmt.Printf("%s: ticks=%d eventos=%d real=%v hash=%#016x\n",
 		spec.Name, spec.Ticks, len(in.Events), time.Since(start), in.World.Hash())

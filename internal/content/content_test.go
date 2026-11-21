@@ -12,7 +12,7 @@ func TestDefaultAndMerge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Join(lib.Names(), ","); got != "bed,crumb,fridge,tv" {
+	if got := strings.Join(lib.Names(), ","); got != "bed,crumb,cup,desk,fridge,tv" {
 		t.Fatalf("objetos: %s", got)
 	}
 	raw, err := lib.Spawn("crumb", json.RawMessage(`{"name":"c1","components":{"mover":{"speed":1}}}`))
@@ -41,5 +41,25 @@ func TestLoadRejects(t *testing.T) {
 		if _, err := Load(fs); err == nil {
 			t.Errorf("%s: se aceptó", name)
 		}
+	}
+}
+
+// "item": "<objeto>" se expande a la definición completa; un ciclo es error.
+func TestItems(t *testing.T) {
+	lib, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := lib.Spawn("fridge", nil)
+	if !strings.Contains(string(raw), `"name":"cup"`) || !strings.Contains(string(raw), `"portions"`) {
+		t.Fatalf("items sin expandir: %s", raw)
+	}
+	obj := func(name, item string) string {
+		return `{"name":"` + name + `","components":{"offers":[{"action":"a","scale":"s","effects":[],` +
+			`"steps":[{"do":"use","ticks":1},{"do":"spawn","item":"` + item + `"}]}]}}`
+	}
+	fs := fstest.MapFS{"objects/x.json": {Data: []byte(obj("x", "y"))}, "objects/y.json": {Data: []byte(obj("y", "x"))}}
+	if _, err := Load(fs); err == nil || !strings.Contains(err.Error(), "ciclo") {
+		t.Fatalf("ciclo aceptado: %v", err)
 	}
 }

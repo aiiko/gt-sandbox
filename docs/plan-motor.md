@@ -354,7 +354,16 @@ Cada hito cubre algunos pasos y termina con escenarios en `tests/scenarios` que 
 - Ofertas de varios pasos, encadenadas por datos: "desayunar" busca la comida en la cocina, la lleva al escritorio y come ahí, apoyando la mano.
 - Contenido: cocina, desayuno, taza y migaja con porciones. La giantess suma acciones hasta tener unas cinco (desayunar, dormir, mirar tele, trabajar en el escritorio, ir a otra habitación).
 
-**Aceptación:** con hambre alta, la giantess desayuna en el escritorio y deja una taza y migajas, sin comandos (`object_spawned`). Mientras come, la mano está apoyada y existe un portal mano↔escritorio, que desaparece cuando la levanta. Un tiny que come una migaja la reduce hasta que la migaja desaparece.
+**Aceptación:** con hambre alta, la giantess desayuna en el escritorio y deja una taza y migajas, sin comandos (`entity_spawned`, `item_dropped`). Mientras come, la mano está apoyada y existe un portal mano↔escritorio, que desaparece cuando la levanta. Un tiny que come una migaja la reduce hasta que la migaja desaparece.
+
+**Estado: completado.** Spec en `docs/specs/ai.md` (sección pasos). Decisiones tomadas en el camino:
+- Las ofertas de varios pasos son una lista de pasos con datos (`goto`, `wait`, `use`, `pose`, `take`, `drop`, `spawn`, `consume`) ejecutada por la acción `use`; sin `steps`, la oferta sigue siendo "ir y usar". No hay encadenamiento entre ofertas ni planificación: la utilidad es la de los efectos del paso `use`.
+- Lugares con etiqueta (componente `place`) para "ir al escritorio" sin nombrar uno en particular.
+- Lo que se deja o se crea cae a la superficie de abajo con la misma regla que las caídas (`space.Land`): la mano apoyada sobre el escritorio hace que la taza y las migajas terminen ahí, sin un caso especial.
+- `content` expande `"item": "<nombre>"` a la definición completa; la simulación no conoce la biblioteca.
+- Regla de no desperdicio: sin ella, la giantess desayunaba otra vez a los 40 s porque no tenía nada mejor que hacer.
+- La giantess tiene cinco ofertas: `snack` y `breakfast` (heladera), `sleep` (cama), `watch` (tele, en otra habitación) y `write` (escritorio, también con la mano apoyada). Ir a otra habitación sale de usar la tele; no hizo falta una acción aparte.
+- `simrun -events` imprime el log de eventos de un escenario; los escenarios aceptan `count` en las expectativas de eventos.
 
 ### M9 — Colonia y percepción (paso 3)
 - Percepción simple, sin canales: cada agente tiene `memory` con lo que vio (entidad, Space, posición, tick), actualizada cada cierto período con un radio de visión. Las opciones de IA solo usan lo conocido, no todo el mundo. Usa el índice espacial de `sim/spatial`.

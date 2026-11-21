@@ -42,7 +42,8 @@ type Weight struct {
 }
 
 // Doing es una acción en curso. Stage y Progress los usa la acción; Moving
-// es el estado de nav.Approach.
+// es el estado de nav.Approach. Place, Item y Posed son de "use": el lugar
+// elegido para el paso en curso, lo que carga y si cambió de pose.
 type Doing struct {
 	Action   string     `json:"action"`
 	Target   ids.ID     `json:"target"`
@@ -50,6 +51,9 @@ type Doing struct {
 	Stage    int        `json:"stage,omitempty"`
 	Progress clock.Tick `json:"progress,omitempty"`
 	Moving   bool       `json:"moving,omitempty"`
+	Place    ids.ID     `json:"place,omitempty"`
+	Item     ids.ID     `json:"item,omitempty"`
+	Posed    bool       `json:"posed,omitempty"`
 	Since    clock.Tick `json:"since"`
 }
 
@@ -61,6 +65,10 @@ type Agent struct {
 	DistanceCost float64  `json:"distance_cost,omitempty"`
 	// Inertia es la ventaja de la acción en curso; nil = DefaultInertia.
 	Inertia *float64 `json:"inertia,omitempty"`
+	// Hand es la parte desde la que deja cosas (un Space montado sobre el
+	// actor); IdlePose, la pose a la que vuelve al terminar una oferta.
+	Hand     ids.ID `json:"hand,omitempty"`
+	IdlePose string `json:"idle_pose,omitempty"`
 
 	Doing        *Doing     `json:"doing,omitempty"`
 	Suspended    *Doing     `json:"suspended,omitempty"`
@@ -146,33 +154,39 @@ type (
 	ActionStarted struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
 	}
 	ActionDone struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
 	}
 	ActionFailed struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
 	}
 	ActionInterrupted struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
-		By     string `json:"by"` // acción que la reemplazó
+		By     string `json:"by"` // qué la reemplazó (oferta o acción)
 	}
 	ActionSuspended struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
 		Cause  string `json:"cause"` // kind del evento
 	}
 	ActionResumed struct {
 		Entity ids.ID `json:"entity"`
 		Action string `json:"action"`
+		What   string `json:"what,omitempty"` // qué oferta, para "use"
 		Target ids.ID `json:"target"`
 	}
 )
@@ -183,6 +197,19 @@ func (ActionFailed) Kind() string      { return "action_failed" }
 func (ActionInterrupted) Kind() string { return "action_interrupted" }
 func (ActionSuspended) Kind() string   { return "action_suspended" }
 func (ActionResumed) Kind() string     { return "action_resumed" }
+
+// describer es una acción que sabe nombrar lo que hace (p. ej. "use" dice
+// qué oferta).
+type describer interface {
+	What(c *Ctx, d *Doing) string
+}
+
+func (s *actions) what(c *Ctx, d *Doing) string {
+	if x, ok := s.get(d.Action).(describer); ok {
+		return x.What(c, d)
+	}
+	return ""
+}
 
 // interrupting devuelve, para el evento e, la entidad que debe suspender lo
 // que hace (o Nil). Por ahora: caer.
@@ -237,7 +264,7 @@ func (s decide) Run(w *world.World) {
 				nav.Halt(w, c.Actor)
 				d.Moving = false
 				a.Suspended, a.Doing = d, nil
-				w.Emit(ActionSuspended{Entity: c.Actor, Action: d.Action, Target: d.Target, Cause: cause})
+				w.Emit(ActionSuspended{Entity: c.Actor, Action: d.Action, What: s.acts.what(c, d), Target: d.Target, Cause: cause})
 			}
 		}
 		if w.Tick() < a.RecoverUntil {
@@ -248,7 +275,7 @@ func (s decide) Run(w *world.World) {
 			a.Suspended = nil
 			if act := s.acts.get(d.Action); act != nil && act.Valid(c, d) {
 				a.Doing = d
-				w.Emit(ActionResumed{Entity: c.Actor, Action: d.Action, Target: d.Target})
+				w.Emit(ActionResumed{Entity: c.Actor, Action: d.Action, What: s.acts.what(c, d), Target: d.Target})
 				return
 			}
 			if act := s.acts.get(d.Action); act != nil {
@@ -269,11 +296,13 @@ func (s decide) Run(w *world.World) {
 				return
 			}
 			d := *a.Doing
+			what := s.acts.what(c, &d)
 			if !s.start(c, best) {
 				return
 			}
 			cur.Stop(c, &d, false)
-			w.Emit(ActionInterrupted{Entity: c.Actor, Action: d.Action, Target: d.Target, By: best.Action})
+			by := cmp.Or(s.acts.what(c, a.Doing), best.Action)
+			w.Emit(ActionInterrupted{Entity: c.Actor, Action: d.Action, What: what, Target: d.Target, By: by})
 			return
 		}
 		s.start(c, best)
@@ -302,7 +331,7 @@ func (s decide) start(c *Ctx, o Option) bool {
 		return false
 	}
 	c.Agent.Doing = d
-	c.W.Emit(ActionStarted{Entity: c.Actor, Action: d.Action, Target: d.Target})
+	c.W.Emit(ActionStarted{Entity: c.Actor, Action: d.Action, What: s.acts.what(c, d), Target: d.Target})
 	return true
 }
 
@@ -322,15 +351,16 @@ func (s act) Run(w *world.World) {
 		}
 		d := a.Doing
 		x := s.acts.get(d.Action)
+		what := s.acts.what(c, d) // antes del paso: puede consumir el objeto
 		switch x.Step(c, d) {
 		case Done:
 			x.Stop(c, d, true)
 			a.Doing = nil
-			w.Emit(ActionDone{Entity: c.Actor, Action: d.Action, Target: d.Target})
+			w.Emit(ActionDone{Entity: c.Actor, Action: d.Action, What: what, Target: d.Target})
 		case Failed:
 			x.Stop(c, d, false)
 			a.Doing = nil
-			w.Emit(ActionFailed{Entity: c.Actor, Action: d.Action, Target: d.Target})
+			w.Emit(ActionFailed{Entity: c.Actor, Action: d.Action, What: what, Target: d.Target})
 		}
 	})
 }
@@ -344,6 +374,11 @@ func check(w *world.World) error {
 			}
 		}
 	})
+	ecs.Get[Offers](w.ECS()).Each(func(e ids.ID, os *Offers) {
+		if e2 := os.Validate(); e2 != nil {
+			err = errors.Join(err, fmt.Errorf("ai %v: %w", e, e2))
+		}
+	})
 	return err
 }
 
@@ -355,7 +390,7 @@ func Install(w *world.World, extra ...Action) error {
 	if err != nil {
 		return err
 	}
-	if _, err := ecs.Register[Offers](r, "offers"); err != nil {
+	if err := registerUse(w); err != nil {
 		return err
 	}
 	acts := &actions{list: append([]Action{use{}, work{}}, extra...)}

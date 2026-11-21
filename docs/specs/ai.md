@@ -9,16 +9,46 @@ Paquetes: `sim/needs`, `sim/jobs`, `sim/ai`, `content` (datos) e `internal/conte
 
 ## Smart objects (`offers`)
 
-Componente de un objeto: lista de ofertas `{action, scale, effects: [{need, amount}], duration, approach}`. `scale` dice qué agentes pueden usarla (`giantess`, `tiny`). `approach` es el punto de uso, relativo a la posición del objeto en su Space. Las definiciones viven en `content/objects/<nombre>.json` (embebidas en el binario) y los escenarios las usan con `"object": "<nombre>"`; el `spawn` de la entidad reemplaza campos y componentes de la definición. Campos o componentes desconocidos son error al cargar.
+Componente de un objeto: lista de ofertas `{action, scale, effects: [{need, amount}], duration, approach, facing, steps}`.
+
+- `scale` dice qué agentes pueden usarla (`giantess`, `tiny`).
+- `approach` y `facing` son el punto de uso y la orientación, relativos a la posición del objeto en su Space.
+- Sin `steps`, la oferta es "ir al punto de uso y usar durante `duration`".
+
+Las definiciones viven en `content/objects/<nombre>.json` (embebidas en el binario) y los escenarios las usan con `"object": "<nombre>"`; el `spawn` de la entidad reemplaza campos y componentes de la definición. Campos, componentes o pasos desconocidos son error al cargar.
+
+### Pasos (`steps`)
+
+Una oferta de varios pasos se describe con datos. Los pasos instantáneos se encadenan en el mismo tick.
+
+| Paso | Qué hace |
+|---|---|
+| `goto` | Camina al punto de uso, o con `place: "<tag>"` al lugar con esa etiqueta más cercano (componente `place {tags, spot, facing}`). Al llegar toma `facing`. |
+| `wait` | Espera `ticks`. |
+| `use` | Aplica los efectos de a poco durante `ticks`; al terminar suman exactamente `amount`. Tiene que haber exactamente uno. |
+| `pose` | Pone al actor en la pose `pose` (`attach`). Al terminar o interrumpirse vuelve a `agent.idle_pose`. |
+| `take` | Crea `item` y lo carga (`carried` + reserva). |
+| `drop` | Deja lo cargado en `offset` (`item_dropped`). |
+| `spawn` | Crea `count` copias de `item` en un anillo de radio `spread` alrededor de `offset`. |
+| `consume` | Gasta `amount` porciones del objeto (`portions {left}`); en 0, o si no tiene porciones, el objeto desaparece (`consumed`). |
+
+- `offset` es relativo a la mano del actor (`agent.hand`, un Space montado sobre él) o, si no tiene, al actor, y gira con él. Lo que se deja o se crea cae enseguida a la superficie de abajo (`space.Land`, que emite `entity_fell`): así la taza y las migajas que suelta la mano apoyada terminan sobre el escritorio.
+- En el JSON de `content`, `"item": "<nombre>"` se reemplaza por la definición completa de ese objeto (con detección de ciclos). La simulación recibe datos autocontenidos y no conoce la biblioteca.
+- Si un paso `goto` necesita un lugar que no existe, la oferta no es una opción.
+- `Offers.Validate` verifica los pasos; lo usan el cargador de `content` y el invariante de `ai`.
+
+Ejemplo: `breakfast` de la heladera va a la heladera, espera, saca una taza, va al escritorio, apoya la mano, come, deja la taza y tres migajas, y vuelve a la pose de reposo.
 
 ## Agentes (`agent`) y selector
 
-Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), y el estado `doing`, `suspended` y `recover_until`.
+Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), `hand` y `idle_pose`, y el estado `doing` (con el lugar elegido, lo que carga y si cambió de pose), `suspended` y `recover_until`.
 
-- **Utilidad de usar una oferta:** `Σ w · (d(v) − d(v + amount)) − distance_cost · distancia`, con `d(v) = ((1000 − v)/1000)²`. La curva cuadrática hace que una necesidad baja pese mucho más. Seguir con una acción en curso vale lo que falta de su efecto.
+- **Utilidad de usar una oferta:** `Σ w · (d(v) − d(v + amount)) − distance_cost · distancia` (al primer punto de uso), con `d(v) = ((1000 − v)/1000)²`. La curva cuadrática hace que una necesidad baja pese mucho más. Seguir con una acción en curso vale lo que falta de su efecto.
+- **Sin desperdicio:** una oferta cuyos efectos se desperdiciarían todos en más de la mitad no es una opción (no se come sin hambre aunque no haya nada mejor que hacer).
+- **Cierre:** una oferta se puede interrumpir hasta terminar su paso `use`; lo que sigue (dejar cosas) se completa siempre. Al interrumpirse, el actor deja lo que carga a sus pies y vuelve a la pose de reposo.
 - **Utilidad de un trabajo:** `work + 0,01 · priority − distance_cost · distancia`.
 - **Decisión** (`ai.decide`, fase Decide): cada agente decide cada `DecidePeriod` (10 ticks), repartido por índice de entidad. Junta las opciones de todas las acciones y elige la mejor; los empates se resuelven por acción, objetivo y oferta. Si no hace nada, empieza la mejor siempre que llegue a `MinUtility`. Si ya hace algo, solo cambia cuando la nueva supera a la actual por más que `inertia` (histéresis). La acción reemplazada se termina con `action_interrupted`.
-- **Ejecución** (`ai.act`, fase Act, antes de `nav.plan`): un paso por tick. Emite `action_started`, `action_done` y `action_failed`.
+- **Ejecución** (`ai.act`, fase Act, antes de `nav.plan`): un paso por tick. Emite `action_started`, `action_done` y `action_failed`. Los eventos de acción llevan `what` (la oferta, para `use`), y `action_interrupted.by` dice qué la reemplazó.
 - **Interfaz `Action`:** `Options`, `Utility`, `Start`, `Step`, `Stop`, `Valid` e `Interruptible`. Las implementaciones no guardan estado propio: todo va en `Doing`, que se guarda y entra en el hash.
 - **Acciones del núcleo:**
   - `use`: reserva el objeto, camina al punto de uso y aplica los efectos de a poco durante `duration`; al terminar suman exactamente `amount`.
@@ -53,10 +83,14 @@ Hay eventos que interrumpen: por ahora `entity_fell`. Cuando le pasa a un agente
 - `tinies_share_crumbs` (aceptación): tres tinies y dos migajas con trabajos de acarreo. Cada migaja se reserva una sola vez y el tercer tiny no hace nada (`TestCrumbReservedOnce`).
 - `giantess_needs_stable` (aceptación): giantess con hambre, energía y diversión, y una heladera, una cama y una tele. Usa las tres. `TestStableChoice` verifica que no oscila y que, con `inertia: 0`, sí oscila; eso comprueba que el test detecta la oscilación.
 - `job_resumes_after_fall` (aceptación): el tiny toma el trabajo, la palma desaparece y el tiny cae. El trabajo se suspende, se retoma y termina, sin que la reserva venza.
+- `giantess_breakfast` (aceptación de M8): casa con cocina, dormitorio y living. Con hambre alta, la giantess desayuna en el escritorio con la mano apoyada (portal mano↔escritorio), deja la taza y tres migajas sobre el escritorio, levanta la mano y no repite el desayuno sin hambre. `TestBreakfastInterrupted` la interrumpe mientras come: la mano se levanta y la taza queda en el piso, sin carga ni reserva.
+- `tiny_eats_crumb` (aceptación de M8): un tiny come una migaja de tres porciones hasta que desaparece.
 
 ## Pendiente
 
 - Percepción: hoy los agentes conocen todas las ofertas y trabajos. Personalidad más allá de pesos. Curvas de utilidad por contenido.
 - Más eventos que interrumpan, y prioridades de emergencia (huir) por encima de la utilidad.
 - Reintentos con espera: un trabajo inalcanzable vuelve a la cola y puede volver a elegirse enseguida.
-- Ofertas que consumen el objeto (comerse la migaja) y efectos que no son necesidades.
+- Compromiso: una acción a medias vale solo lo que le falta, así que con dos necesidades urgentes la giantess puede alternar (dormir ↔ desayunar) y deja una taza en el piso cada vez. Hace falta que el compromiso crezca con el avance, o retomar acciones a medias.
+- Lugares reservables (hoy dos agentes pueden elegir el mismo escritorio).
+- `spawn` en anillo fijo: variar posiciones con RNG cuando importe.

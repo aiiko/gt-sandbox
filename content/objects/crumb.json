@@ -2,8 +2,10 @@
   "name": "crumb",
   "body": {"radius": 1500, "height": 1000, "mass": 0},
   "components": {
+    "portions": {"left": 3},
     "offers": [
-      {"action": "nibble", "scale": "tiny", "effects": [{"need": "hunger", "amount": 150}], "duration": 60}
+      {"action": "nibble", "scale": "tiny", "effects": [{"need": "hunger", "amount": 150}],
+       "steps": [{"do": "goto"}, {"do": "use", "ticks": 60}, {"do": "consume"}]}
     ]
   }
 }

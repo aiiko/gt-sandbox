@@ -34,10 +34,10 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - Navegación (ver `docs/specs/nav.md`): grilla `nav_grid` en el Space, portales como entidades con `portal`, componente `mover` con ruta en tramos; comandos `move_to`/`stop`/`set_cells`/`set_portal`. Para generar escenarios grandes, escribir un script que emita el JSON.
 - Contactos, portales dinámicos y poses en `sim/attach` (ver `docs/specs/attach.md`); caídas en `space.falls`. Una entidad con `comp.Body` debe estar apoyada en su Space (dentro de la extensión, Z≈0) o caerá.
 - Cambiar qué se hashea → incrementar `world.HashVersion`. Cambio incompatible en snapshots → incrementar `world.SnapshotSchema`.
-- `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario.
+- `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario (`-events` imprime su log de eventos).
 - Escenarios de integración en `tests/scenarios/*.json` (los corre `TestScenarios`). Escribir archivos con UTF-8 y LF.
 - Rendimiento: `go run ./cmd/simbench -n 200`.
-- IA (ver `docs/specs/ai.md`): `needs`, `agent` + `offers` (smart objects), `job`/`reservation`/`carried`. Las acciones (`ai.Action`) no guardan estado propio: todo va en `agent.doing`. Desde un sistema, mover con `nav.Approach`/`nav.Halt` y reservar con `jobs.Reserve`. Objetos en `content/objects/*.json`, usados en escenarios con `"object"`.
+- IA (ver `docs/specs/ai.md`): `needs`, `agent` + `offers` (smart objects), `job`/`reservation`/`carried`. Las acciones (`ai.Action`) no guardan estado propio: todo va en `agent.doing`. Desde un sistema, mover con `nav.Approach`/`nav.Halt` y reservar con `jobs.Reserve`. Objetos en `content/objects/*.json`, usados en escenarios con `"object"`; las ofertas de varios pasos usan `steps`, y `"item": "<objeto>"` se expande al cargar.
 - Visor de debug (ver `docs/specs/visor.md`): `go run ./cmd/game` (escenario de M5), `-scenario x.json`, `-crowd 200`, `-load s.json`; `-shot out.png -shot-tick N [-micro palm]` guarda una captura y sale (sirve para revisar cambios visuales sin interactuar). El renderer solo dibuja `view.Frame`; nunca leer el mundo desde `render`/`ui`.
 - Go: `go.mod` fija `toolchain go1.27.4` (lo descarga el comando `go`).
 

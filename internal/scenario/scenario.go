@@ -21,6 +21,7 @@
 package scenario
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -64,7 +65,7 @@ type CommandSpec struct {
 }
 
 // Expectation es exactamente una de: Event (ocurrió en [After, By), By = 0
-// sin límite),
+// sin límite; con Count, exactamente esa cantidad de veces),
 // NoEvent (nunca ocurrió) o At (posición final, opcionalmente en Space).
 // Para Event y NoEvent, Match filtra por campos del evento (con "$ref");
 // Entity es un atajo para {"entity": ...}.
@@ -74,6 +75,7 @@ type Expectation struct {
 	Match   json.RawMessage `json:"match,omitempty"`
 	By      int             `json:"by,omitempty"`
 	After   int             `json:"after,omitempty"`
+	Count   int             `json:"count,omitempty"`
 	NoEvent string          `json:"no_event,omitempty"`
 	At      string          `json:"at,omitempty"`
 	Space   string          `json:"space,omitempty"` // con At: el Space esperado
@@ -296,10 +298,12 @@ func (in *Instance) Check() ([]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			switch {
-			case x.Event != "" && !in.happened(x.Event, match, x.After, x.By):
+			switch n := in.count(cmp.Or(x.Event, x.NoEvent), match, x.After, x.By); {
+			case x.Event != "" && x.Count > 0 && n != x.Count:
+				fails = append(fails, fmt.Sprintf("%s %s%s ocurrió %d veces, se esperaban %d", x.Event, x.Entity, x.Match, n, x.Count))
+			case x.Event != "" && n == 0:
 				fails = append(fails, fmt.Sprintf("no ocurrió %s %s%s (en [%d, %d))", x.Event, x.Entity, x.Match, x.After, x.By))
-			case x.NoEvent != "" && in.happened(x.NoEvent, match, x.After, x.By):
+			case x.NoEvent != "" && n > 0:
 				fails = append(fails, fmt.Sprintf("ocurrió %s %s%s", x.NoEvent, x.Entity, x.Match))
 			}
 		case x.At != "" && x.Pos != nil:
@@ -341,10 +345,10 @@ func (in *Instance) matcher(x Expectation) (map[string]any, error) {
 	return match, nil
 }
 
-// happened busca un evento del kind dado cuyos campos coincidan con match;
-// debe ocurrir en el intervalo de ticks del escenario [after, by) (by = 0:
-// sin límite).
-func (in *Instance) happened(kind string, match map[string]any, after, by int) bool {
+// count cuenta los eventos del kind dado cuyos campos coinciden con match,
+// en el intervalo de ticks del escenario [after, by) (by = 0: sin límite).
+func (in *Instance) count(kind string, match map[string]any, after, by int) int {
+	n := 0
 	for _, e := range in.Events {
 		t := int(e.Tick - in.Start)
 		if e.Event.Kind() != kind || t < after || (by > 0 && t >= by) {
@@ -362,10 +366,10 @@ func (in *Instance) happened(kind string, match map[string]any, after, by int) b
 			}
 		}
 		if ok {
-			return true
+			n++
 		}
 	}
-	return false
+	return n
 }
 
 func strictUnmarshal(raw []byte, v any) error {

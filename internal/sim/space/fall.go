@@ -65,6 +65,30 @@ func (g Graph) Below(e ids.ID) (target ids.ID, local units.Vec3, height units.Le
 	return target, local, max(height, 0), ok
 }
 
+// Land hace aterrizar ya mismo a e si no está apoyada, como lo haría
+// space.falls al final del tick (emite EntityFell). Sirve para apoyar
+// objetos que un sistema deja en el aire, p. ej. a la altura de una mano.
+func Land(w *world.World, e ids.ID) bool {
+	g := Of(w.ECS())
+	if g.spaces.Has(e) || g.Supported(e) {
+		return false
+	}
+	to, local, h, ok := g.Below(e)
+	if !ok {
+		return false
+	}
+	return land(w, g, e, g.Parent(e), to, local, h)
+}
+
+func land(w *world.World, g Graph, e, from, to ids.ID, local units.Vec3, h units.Length) bool {
+	if _, err := g.Reparent(e, to); err != nil {
+		return false // misma raíz y CanPlace ya verificados
+	}
+	g.loc.Ptr(e).Pos = units.V3(local.X, local.Y, 0)
+	w.Emit(EntityFell{Entity: e, From: from, To: to, Height: h})
+	return true
+}
+
 // falls hace aterrizar a las entidades físicas (con comp.Body, que no sean
 // Spaces) que quedaron sin apoyo: porque su Space desapareció y las reubicó
 // space.orphans, porque una pose las dejó en el aire, etc. La caída es
@@ -93,11 +117,6 @@ func (falls) Run(w *world.World) {
 		}
 	})
 	for _, l := range todo {
-		if _, err := g.Reparent(l.e, l.to); err != nil {
-			continue // misma raíz y CanPlace ya verificados
-		}
-		loc := g.loc.Ptr(l.e)
-		loc.Pos = units.V3(l.local.X, l.local.Y, 0)
-		w.Emit(EntityFell{Entity: l.e, From: l.from, To: l.to, Height: l.h})
+		land(w, g, l.e, l.from, l.to, l.local, l.h)
 	}
 }

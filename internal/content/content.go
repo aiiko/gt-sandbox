@@ -1,6 +1,10 @@
 // Package content carga y valida las definiciones de objetos (gtsandbox/content):
 // cada archivo objects/<nombre>.json es un spawn parcial (name, body,
 // components...) que los escenarios usan como base con "object".
+//
+// En los pasos de las ofertas, "item": "<nombre>" se reemplaza por la
+// definición completa de ese objeto: la simulación recibe datos
+// autocontenidos y no conoce la biblioteca.
 package content
 
 import (
@@ -15,6 +19,7 @@ import (
 	"sync"
 
 	root "gtsandbox/content"
+	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/engine"
 	"gtsandbox/internal/sim/world"
@@ -36,22 +41,82 @@ func Load(fsys fs.FS) (*Library, error) {
 	if err != nil {
 		return nil, err
 	}
-	lib := &Library{objects: map[string]json.RawMessage{}}
+	raws := map[string]json.RawMessage{}
 	for _, f := range files {
 		raw, err := fs.ReadFile(fsys, f)
 		if err != nil {
 			return nil, err
 		}
+		raws[strings.TrimSuffix(path.Base(f), ".json")] = raw
+	}
+	lib := &Library{objects: map[string]json.RawMessage{}}
+	for _, name := range slices.Sorted(maps.Keys(raws)) {
+		raw, err := lib.resolve(raws, name, nil)
+		if err != nil {
+			return nil, fmt.Errorf("content: %s: %w", name, err)
+		}
 		sp, err := decode(probe, raw)
 		if err != nil {
-			return nil, fmt.Errorf("content: %s: %w", f, err)
+			return nil, fmt.Errorf("content: %s: %w", name, err)
 		}
-		if want := strings.TrimSuffix(path.Base(f), ".json"); string(sp.Name) != want {
-			return nil, fmt.Errorf("content: %s: name %q no coincide con el archivo", f, sp.Name)
+		if string(sp.Name) != name {
+			return nil, fmt.Errorf("content: %s: name %q no coincide con el archivo", name, sp.Name)
 		}
-		lib.objects[string(sp.Name)] = raw
 	}
 	return lib, nil
+}
+
+// resolve devuelve la definición de name con sus items expandidos
+// (recursivo; un ciclo es error).
+func (l *Library) resolve(raws map[string]json.RawMessage, name string, stack []string) (json.RawMessage, error) {
+	if done, ok := l.objects[name]; ok {
+		return done, nil
+	}
+	if slices.Contains(stack, name) {
+		return nil, fmt.Errorf("items en ciclo: %s", strings.Join(append(stack, name), " → "))
+	}
+	raw, ok := raws[name]
+	if !ok {
+		return nil, fmt.Errorf("objeto desconocido %q", name)
+	}
+	out, err := expand(raw, func(item string) (json.RawMessage, error) {
+		return l.resolve(raws, item, append(stack, name))
+	})
+	if err != nil {
+		return nil, err
+	}
+	l.objects[name] = out
+	return out, nil
+}
+
+// expand reemplaza cada components.offers[].steps[].item que sea un string
+// por lo que devuelva lookup.
+func expand(raw json.RawMessage, lookup func(string) (json.RawMessage, error)) (json.RawMessage, error) {
+	var v map[string]any
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.UseNumber() // los enteros grandes no pasan por float
+	if err := d.Decode(&v); err != nil {
+		return nil, err
+	}
+	comps, _ := v["components"].(map[string]any)
+	offers, _ := comps["offers"].([]any)
+	for _, o := range offers {
+		om, _ := o.(map[string]any)
+		steps, _ := om["steps"].([]any)
+		for _, s := range steps {
+			sm, _ := s.(map[string]any)
+			name, ok := sm["item"].(string)
+			if !ok {
+				continue
+			}
+			def, err := lookup(name)
+			if err != nil {
+				return nil, err
+			}
+			sm["item"] = def
+		}
+	}
+	return json.Marshal(v)
 }
 
 func decode(probe *world.World, raw []byte) (cmds.Spawn, error) {
@@ -63,6 +128,15 @@ func decode(probe *world.World, raw []byte) (cmds.Spawn, error) {
 	}
 	for _, n := range slices.Sorted(maps.Keys(sp.Components)) {
 		if _, err := probe.ECS().DecodeComponent(n, sp.Components[n]); err != nil {
+			return sp, err
+		}
+	}
+	if raw, ok := sp.Components["offers"]; ok {
+		var os ai.Offers
+		if err := json.Unmarshal(raw, &os); err != nil {
+			return sp, err
+		}
+		if err := os.Validate(); err != nil {
 			return sp, err
 		}
 	}
@@ -81,6 +155,13 @@ func Default() (*Library, error) {
 	return def, defErr
 }
 
+func (l *Library) item(name string) (json.RawMessage, error) {
+	if raw, ok := l.objects[name]; ok {
+		return raw, nil
+	}
+	return nil, fmt.Errorf("content: objeto desconocido %q", name)
+}
+
 // Names devuelve los nombres de los objetos, ordenados.
 func (l *Library) Names() []string {
 	return slices.Sorted(maps.Keys(l.objects))
@@ -88,8 +169,15 @@ func (l *Library) Names() []string {
 
 // Spawn combina la definición de object con overlay (un spawn parcial en
 // JSON): los campos de overlay reemplazan a los de la definición, y sus
-// components se agregan o reemplazan uno por uno.
+// components se agregan o reemplazan uno por uno. Los items del overlay
+// también se expanden.
 func (l *Library) Spawn(object string, overlay json.RawMessage) (json.RawMessage, error) {
+	if len(overlay) > 0 {
+		var err error
+		if overlay, err = expand(overlay, l.item); err != nil {
+			return nil, err
+		}
+	}
 	base, ok := l.objects[object]
 	if !ok {
 		return nil, fmt.Errorf("content: objeto desconocido %q", object)

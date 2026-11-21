@@ -40,17 +40,24 @@ var typedStores = map[string]bool{"name": true, "location": true, "body": true, 
 func (Spawn) Kind() string { return "spawn" }
 
 func (c Spawn) Apply(w *world.World) error {
+	_, err := c.Do(w)
+	return err
+}
+
+// Do es Apply devolviendo el ID creado. Sirve para sistemas que crean
+// entidades durante Step (p. ej. una acción que deja objetos).
+func (c Spawn) Do(w *world.World) (ids.ID, error) {
 	if c.Body != nil && (c.Body.Radius < 0 || c.Body.Height < 0 || c.Body.Mass < 0) {
-		return errors.New("spawn: body con valores negativos")
+		return ids.Nil, errors.New("spawn: body con valores negativos")
 	}
 	if c.Location != nil {
 		if err := space.Of(w.ECS()).CanPlace(ids.Nil, c.Location.Space); err != nil {
-			return fmt.Errorf("spawn: %w", err)
+			return ids.Nil, fmt.Errorf("spawn: %w", err)
 		}
 	}
 	setters, err := decodeComponents(w, c.Components)
 	if err != nil {
-		return fmt.Errorf("spawn: %w", err)
+		return ids.Nil, fmt.Errorf("spawn: %w", err)
 	}
 	s := comp.Of(w.ECS())
 	id := w.ECS().Spawn()
@@ -70,7 +77,7 @@ func (c Spawn) Apply(w *world.World) error {
 		ecs.Get[space.Space](w.ECS()).Set(id, *c.Space)
 	}
 	w.Emit(EntitySpawned{Entity: id, Name: c.Name})
-	return nil
+	return id, nil
 }
 
 // decodeComponents valida y decodifica componentes por nombre de store, en
