@@ -1,4 +1,4 @@
-# Spec: Necesidades, IA, smart objects, trabajos y colonias (M7–M9)
+# Spec: Necesidades, IA, smart objects, trabajos, colonias y exploración (M7–M10)
 
 Paquetes: `sim/needs`, `sim/jobs`, `sim/ai`, `sim/colony`, `content` (datos) e `internal/content` (carga). Es un esqueleto: la infraestructura está y el contenido es mínimo.
 
@@ -41,10 +41,11 @@ Ejemplo: `breakfast` de la heladera va a la heladera, espera, saca una taza, va 
 
 ## Agentes (`agent`) y selector
 
-Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), `hand` y `idle_pose`, y el estado `doing` (con el lugar elegido, lo que carga y si cambió de pose), `suspended` y `recover_until`.
+Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), `hand` y `idle_pose`, `sight`/`known`/`watch` (percepción), `curiosity`/`visited` (exploración), y el estado `doing` (con el lugar elegido, lo que carga y si cambió de pose), `suspended` y `recover_until`.
 
 - **Utilidad de usar una oferta:** `Σ w · (d(v) − d(v + amount)) − distance_cost · distancia` (al primer punto de uso), con `d(v) = ((1000 − v)/1000)²`. La curva cuadrática hace que una necesidad baja pese mucho más. Seguir con una acción en curso vale lo que falta de su efecto.
 - **Sin desperdicio:** una oferta cuyos efectos se desperdiciarían todos en más de la mitad no es una opción (no se come sin hambre aunque no haya nada mejor que hacer).
+- **Compromiso:** una oferta con la mano apoyada (`pose`) o algo en la mano (`take`) solo la interrumpe una opción urgente (utilidad ≥ `UrgentUtility`, 0,5). Sin esto, la ganancia que le falta baja mientras se usa y cualquier otra cosa la corta a medias (taza en el piso). Una acción lo declara con el método opcional `Committed`.
 - **Cierre:** una oferta se puede interrumpir hasta terminar su paso `use`; lo que sigue (dejar cosas) se completa siempre. Al interrumpirse, el actor deja lo que carga a sus pies y vuelve a la pose de reposo.
 - **Utilidad de un trabajo:** `work + 0,01 · priority − distance_cost · distancia`.
 - **Decisión** (`ai.decide`, fase Decide): cada agente decide cada `DecidePeriod` (10 ticks), repartido por índice de entidad. Junta las opciones de todas las acciones y elige la mejor; los empates se resuelven por acción, objetivo y oferta. Si no hace nada, empieza la mejor siempre que llegue a `MinUtility`. Si ya hace algo, solo cambia cuando la nueva supera a la actual por más que `inertia` (histéresis). La acción reemplazada se termina con `action_interrupted`.
@@ -53,6 +54,7 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
 - **Acciones del núcleo:**
   - `use`: reserva el objeto, camina al punto de uso y aplica los efectos de a poco durante `duration`; al terminar suman exactamente `amount`.
   - `work`: toma un trabajo abierto y lo ejecuta.
+  - `explore`: cruza un portal conocido hacia un Space donde nunca estuvo y da una vuelta allí (ver Exploración).
 - **Movimiento desde sistemas:** `nav.Approach` pide caminar y avisa si el agente llegó o si falló. `nav.Halt` lo detiene.
 
 ## Percepción y memoria
@@ -60,7 +62,17 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
 - Un agente con `sight > 0` solo usa los smart objects que conoce (`agent.known`). Sin `sight` conoce todo (la giantess, por ahora).
 - `ai.look` (fase Decide, antes del selector) mira cada `LookPeriod` (10 ticks) con el índice espacial: los objetos con `offers` a distancia ≤ `sight` en su mismo Space. Algo nuevo se agrega con `noticed {entity, target}`. Olvida lo que ya no existe y, pasado `MaxKnown` (64), lo más viejo.
 - `ai.Learn` hace que un agente conozca algo sin verlo (se lo contaron).
+- `ai.look` también registra el Space donde está el agente (`agent.visited`) y aprende los portales que tienen un extremo en su Space a distancia ≤ `sight`.
+- Un agente con `watch > 0` nota (`noticed`) a los agentes de otra escala a menos de `watch` en el mundo, aunque estén en otro Space. Para la giantess, que conoce todo, `known` funciona como registro de a quién vio; por ahora no cambia su plan.
 - Los trabajos no dependen de la memoria: la cola es conocimiento compartido.
+
+## Exploración
+
+- `agent.curiosity` es la utilidad de explorar. Las opciones de `explore` son los portales conocidos y habilitados con un extremo en el Space del agente y el otro en un Space no visitado. Si el portal es de contacto (`attach`, por ejemplo la mano apoyada) la utilidad se multiplica por `DynamicPortalX` (2). Se le resta `distance_cost` por la distancia al extremo propio.
+- La acción camina al otro extremo (cruzando el portal). Al llegar registra el Space, emite `explored {entity, space}` y da una vuelta a un punto transitable al azar a menos de `ExploreRange` (10 cm, RNG `ai.explore`). Si la vuelta no se puede, igual termina bien.
+- Los portales de contacto se crean de nuevo en cada apoyo y se borran al levantar la mano; la memoria olvida los borrados.
+- Si la mano se levanta con el tiny encima, el tiny sigue en la palma: es su Space, ya visitado, y espera a que aparezca un portal hacia un lugar nuevo.
+- `ai.WanderPoint` (punto transitable al azar cercano) lo comparten `explore` y `forage`.
 
 ## Reintentos
 
@@ -109,11 +121,13 @@ Hay eventos que interrumpen: por ahora `entity_fell`. Cuando le pasa a un agente
 - `tiny_eats_crumb` (aceptación de M8): un tiny come una migaja de tres porciones hasta que desaparece.
 - `colony_gathers` (aceptación de M9): seis tinies, un nido y ocho migajas fuera de su vista. Salen a buscar, la colonia acarrea lo que ven y comen del depósito. `TestColonyFeeds` verifica que no hay trabajos sobre algo que nadie vio, que nadie usa algo que no conoce, que se guarda comida y que en 10 minutos nadie llega a hambre 0.
 - `unreachable_food_retry` (aceptación de M9): una migaja encerrada; el tiny toma el trabajo, falla y lo vuelve a tomar recién 30 s después (exactamente dos asignaciones en 50 s).
+- `tiny_rides_hand` (aceptación de M10): dormitorio, living y cocina, cada uno con su escritorio salvo la cocina. La giantess escribe con la mano apoyada en el dormitorio y un tiny curioso sube a la palma. Después ella desayuna y come en el escritorio del living; el tiny baja y lo explora. Ella nota al tiny una vez y no cambia de plan; el tiny no cae. `TestTinyRidesHand` verifica que recuerda el escritorio nuevo y que sin curiosidad no sube. `TestBreakfastCommitted` arranca con más hambre: el desayuno corta la escritura, pero no al revés.
 
 ## Pendiente
 
 - Percepción: solo un radio y solo el propio Space (no se ve de la palma al escritorio). Lo que se ve se comparte con la colonia de inmediato, no al volver al nido. Personalidad más allá de pesos. Curvas de utilidad por contenido.
 - Más eventos que interrumpan, y prioridades de emergencia (huir) por encima de la utilidad.
-- Compromiso: una acción a medias vale solo lo que le falta, así que con dos necesidades urgentes la giantess puede alternar (dormir ↔ desayunar) y deja una taza en el piso cada vez. Hace falta que el compromiso crezca con el avance, o retomar acciones a medias.
+- Compromiso: hoy es un umbral fijo (`UrgentUtility`). Retomar una oferta a medias (la taza que quedó en el piso) en vez de empezar de nuevo.
+- Exploración: la curiosidad no decae con lo visitado ni se cansa; un Space visitado no vuelve a interesar nunca. El tiny no comparte con la colonia lo que explora.
 - Lugares reservables (hoy dos agentes pueden elegir el mismo escritorio).
 - `spawn` en anillo fijo: variar posiciones con RNG cuando importe.

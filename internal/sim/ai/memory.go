@@ -6,6 +6,8 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/spatial"
 	"gtsandbox/internal/sim/world"
 )
@@ -44,10 +46,9 @@ type Noticed struct {
 func (Noticed) Kind() string { return "noticed" }
 
 // Knows indica si el agente conoce e.
-func (a *Agent) Knows(e ids.ID) bool {
-	if a.Sight <= 0 {
-		return true
-	}
+func (a *Agent) Knows(e ids.ID) bool { return a.Sight <= 0 || a.known(e) }
+
+func (a *Agent) known(e ids.ID) bool {
 	for _, k := range a.Known {
 		if k.Entity == e {
 			return true
@@ -57,9 +58,10 @@ func (a *Agent) Knows(e ids.ID) bool {
 }
 
 // Learn hace que el agente actor conozca e (si no lo conocía) y emite
-// Noticed.
+// Noticed. También lo registra un agente sin Sight (que igual conoce todo),
+// para que Noticed diga qué notó.
 func Learn(w *world.World, a *Agent, actor, e ids.ID) {
-	if a.Sight <= 0 || a.Knows(e) || !w.ECS().Alive(e) {
+	if a.known(e) || !w.ECS().Alive(e) {
 		return
 	}
 	if len(a.Known) >= MaxKnown {
@@ -101,7 +103,9 @@ func keep[T any](s []T, ok func(T) bool) []T {
 	return out
 }
 
-// look: cada agente con vista mira a su alrededor cada LookPeriod ticks.
+// look: cada LookPeriod ticks, cada agente con vista registra el Space donde
+// está y aprende los smart objects y los extremos de portal que tiene a la
+// vista; cada agente con Watch nota a los agentes de otra escala cercanos.
 type look struct{ it agentIter }
 
 func (look) Name() string { return "ai.look" }
@@ -113,7 +117,7 @@ func (s look) Run(w *world.World) {
 	ix := spatial.Of(w)
 	s.it.each(w, func(c *Ctx) {
 		a := c.Agent
-		if a.Sight <= 0 || !clock.Staggered(w.Tick(), LookPeriod, uint64(c.Actor.Index())) {
+		if (a.Sight <= 0 && a.Watch <= 0) || !clock.Staggered(w.Tick(), LookPeriod, uint64(c.Actor.Index())) {
 			return
 		}
 		a.Known = keep(a.Known, func(k Known) bool { return r.Alive(k.Entity) && !r.Despawning(k.Entity) })
@@ -121,10 +125,46 @@ func (s look) Run(w *world.World) {
 		if !ok {
 			return
 		}
+		if a.Watch > 0 {
+			s.watch(w, c)
+		}
+		if a.Sight <= 0 {
+			return
+		}
+		a.visit(l.Space)
 		ix.Near(l.Space, l.Pos.XY(), a.Sight, func(e ids.ID, _ units.Vec2) {
 			if e != c.Actor && offers.Has(e) && !r.Despawning(e) {
 				Learn(w, a, c.Actor, e)
 			}
 		})
+		r2 := int64(a.Sight) * int64(a.Sight)
+		ecs.Get[nav.Portal](r).Each(func(e ids.ID, p *nav.Portal) {
+			if mine, _, ok := side(p, l.Space); ok && !r.Despawning(e) && mine.Pos.DistSq(l.Pos.XY()) <= r2 {
+				Learn(w, a, c.Actor, e)
+			}
+		})
 	})
+}
+
+// watch: el agente nota a los agentes de otra escala a menos de Watch (en el
+// mundo).
+func (s look) watch(w *world.World, c *Ctx) {
+	g := space.Of(w.ECS())
+	me, _, err := g.WorldPose(c.Actor)
+	if err != nil {
+		return
+	}
+	r2 := int64(c.Agent.Watch) * int64(c.Agent.Watch)
+	var seen []ids.ID
+	s.it.agents.Each(func(e ids.ID, o *Agent) {
+		if e == c.Actor || o.Scale == c.Agent.Scale || c.Agent.known(e) || w.ECS().Despawning(e) {
+			return
+		}
+		if p, _, err := g.WorldPose(e); err == nil && p.XY().DistSq(me.XY()) <= r2 {
+			seen = append(seen, e)
+		}
+	})
+	for _, e := range seen { // fuera del Each: Learn no toca el store, pero por las dudas
+		Learn(w, c.Agent, c.Actor, e)
+	}
 }

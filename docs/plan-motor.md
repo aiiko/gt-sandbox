@@ -390,6 +390,15 @@ Cada hito cubre algunos pasos y termina con escenarios en `tests/scenarios` que 
 
 **Aceptación:** con la mano apoyada en el escritorio, un tiny curioso sube por decisión propia. La giantess se va a otra habitación con el tiny en la palma, apoya la mano y el tiny baja y explora la habitación nueva. Ningún tiny cae por error de IA en el viaje.
 
+**Estado: completado.** Spec en `docs/specs/ai.md` (secciones percepción y exploración); escenario `tiny_rides_hand`. Decisiones tomadas en el camino:
+- `curiosity` es un rasgo (`agent.curiosity`), no una necesidad: no decae ni se satisface. Lo que "decae con lo visitado" se resolvió con `agent.visited`: un Space visitado deja de ser opción. Volver a explorar queda pendiente.
+- `explore` es una acción del núcleo de `ai` (como `use` y `work`) y elige portales, no superficies: un Space nuevo solo se alcanza por un portal. `ai.look` aprende los extremos de portal que tiene a la vista.
+- Quedarse en la palma no necesitó código: la palma es un Space más, ya visitado, y el tiny espera ahí hasta que aparece un portal a un lugar nuevo.
+- La giantess nota a los tinies con `agent.watch` (radio en el mundo, entre escalas), y lo registra en `known` aunque conozca todo.
+- Apareció el problema de compromiso anotado en M8: escribir y desayunar se cortaban entre sí y la taza quedaba en el piso. Se resolvió con `UrgentUtility`: una oferta con la mano apoyada o algo en la mano solo la interrumpe algo urgente.
+- `forage` usa `ai.WanderPoint`, compartido con `explore`.
+- Las memorias aún no se comparten con la colonia al volver (pendiente para M11 si el slice lo necesita).
+
 ### M11 — Vertical slice "Una mañana en la casa"
 - Escenario completo: tres espacios (habitación con escritorio y cama, cocina y otra habitación), una giantess con tres necesidades y unas cinco acciones, y una colonia de 20 tinies.
 - Test de aceptación que recorre el log de eventos y verifica que los seis pasos ocurren en orden, con varias semillas. Es la medida de que la secuencia sale de las reglas y no de un caso particular.

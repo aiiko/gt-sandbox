@@ -34,6 +34,9 @@ const (
 	DefaultInertia            = 0.15 // ventaja de la acción en curso
 	// MinUtility: por debajo de esto el agente prefiere no hacer nada.
 	MinUtility = 0.01
+	// UrgentUtility es lo que tiene que valer una opción para interrumpir una
+	// acción comprometida (que dejaría cosas a medias).
+	UrgentUtility = 0.5
 )
 
 // Weight es la importancia de una necesidad para un agente (personalidad).
@@ -76,6 +79,12 @@ type Agent struct {
 	Known []Known      `json:"known,omitempty"`
 	// Avoid son objetivos con los que falló hace poco (ver RetryTicks).
 	Avoid []Avoid `json:"avoid,omitempty"`
+	// Curiosity es la utilidad de explorar un Space nuevo; Visited, los
+	// Spaces donde estuvo (solo se registran con Sight).
+	Curiosity float64  `json:"curiosity,omitempty"`
+	Visited   []ids.ID `json:"visited,omitempty"`
+	// Watch es el radio (en el mundo) en el que nota a otros agentes.
+	Watch units.Length `json:"watch,omitempty"`
 
 	Doing        *Doing     `json:"doing,omitempty"`
 	Suspended    *Doing     `json:"suspended,omitempty"`
@@ -300,7 +309,8 @@ func (s decide) Run(w *world.World) {
 		if a.Doing != nil {
 			cur := s.acts.get(a.Doing.Action)
 			same := best.Action == a.Doing.Action && best.Target == a.Doing.Target && best.Offer == a.Doing.Offer
-			if same || !cur.Interruptible(c, a.Doing) || best.Utility <= cur.Utility(c, a.Doing)+a.inertia() {
+			if same || !cur.Interruptible(c, a.Doing) || best.Utility <= cur.Utility(c, a.Doing)+a.inertia() ||
+				committed(cur, c, a.Doing) && best.Utility < UrgentUtility {
 				return
 			}
 			d := *a.Doing
@@ -315,6 +325,17 @@ func (s decide) Run(w *world.World) {
 		}
 		s.start(c, best)
 	})
+}
+
+// committer es opcional: una acción comprometida solo la interrumpe algo
+// urgente.
+type committer interface {
+	Committed(c *Ctx, d *Doing) bool
+}
+
+func committed(act Action, c *Ctx, d *Doing) bool {
+	x, ok := act.(committer)
+	return ok && x.Committed(c, d)
 }
 
 // best devuelve la mejor opción. Desempate: acción, objetivo, oferta.
@@ -407,7 +428,7 @@ func Install(w *world.World, extra ...Action) error {
 	if err := registerUse(w); err != nil {
 		return err
 	}
-	acts := &actions{list: append([]Action{use{}, work{}}, extra...)}
+	acts := &actions{list: append([]Action{use{}, work{}, explore{}}, extra...)}
 	it := agentIter{agents: agents, needs: ecs.Get[needs.Needs](r)}
 	w.AddInvariant("ai", check)
 	return errors.Join(
@@ -418,6 +439,7 @@ func Install(w *world.World, extra ...Action) error {
 		world.RegisterEvent[ActionSuspended](w),
 		world.RegisterEvent[ActionResumed](w),
 		world.RegisterEvent[Noticed](w),
+		world.RegisterEvent[Explored](w),
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -50}, look{it}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide}, decide{acts, it}),
 		// Antes de nav.plan, para que los pedidos de movimiento se planeen

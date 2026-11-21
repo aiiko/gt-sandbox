@@ -85,6 +85,7 @@ func TestSaveLoadMidMove(t *testing.T) {
 		{"giantess_breakfast", "giantess", 120, 2},    // volviendo de la cocina con la taza
 		{"tiny_eats_crumb", "tiny", 20, 1},            // yendo a la migaja
 		{"colony_gathers", "t0", 300, 1},              // memoria, colonia y RNG de forage en curso
+		{"tiny_rides_hand", "tiny", 100, 2},           // subiendo a la palma: curiosidad y visitados
 	}
 	for _, c := range cases {
 		spec, err := ReadFile("../../tests/scenarios/" + c.file + ".json")

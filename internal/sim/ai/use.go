@@ -507,6 +507,10 @@ func (use) Valid(c *Ctx, d *Doing) bool {
 
 // Interruptible: hasta terminar el paso use. Lo que sigue (dejar cosas,
 // limpiar) se completa siempre.
+// Committed: con la mano apoyada o algo en la mano, solo algo urgente la
+// interrumpe (ver UrgentUtility).
+func (use) Committed(_ *Ctx, d *Doing) bool { return d.Posed || !d.Item.IsNil() }
+
 func (use) Interruptible(c *Ctx, d *Doing) bool {
 	o, _, ok := offerOf(c, d)
 	return !ok || d.Stage <= o.useStep()

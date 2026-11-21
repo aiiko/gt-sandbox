@@ -32,26 +32,15 @@ func (Forage) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	return m.Forage
 }
 
-// Start elige el destino: hasta 8 intentos de un punto transitable al azar.
+// Start elige el destino: un punto transitable al azar cercano.
 func (Forage) Start(c *ai.Ctx, d *ai.Doing) bool {
-	r := c.W.ECS()
-	l, ok := comp.Of(r).Location.Get(c.Actor)
-	sp, ok2 := ecs.Get[space.Space](r).Get(l.Space)
+	l, ok := comp.Of(c.W.ECS()).Location.Get(c.Actor)
+	p, ok2 := ai.WanderPoint(c.W, c.Actor, ForageRange, "colony.forage")
 	if !ok || !ok2 {
 		return false
 	}
-	grid := ecs.Get[nav.Grid](r).Ptr(l.Space)
-	rng := c.W.RNG("colony.forage")
-	for range 8 {
-		p := l.Pos.XY().Add(units.V2(
-			units.Length(rng.Int64N(int64(2*ForageRange+1)))-ForageRange,
-			units.Length(rng.Int64N(int64(2*ForageRange+1)))-ForageRange))
-		if sp.Extent.Contains(p) && (grid == nil || grid.Walkable(p)) {
-			d.Place, d.Goal = l.Space, p
-			return true
-		}
-	}
-	return false
+	d.Place, d.Goal = l.Space, p
+	return true
 }
 
 func (Forage) Step(c *ai.Ctx, d *ai.Doing) ai.Result {

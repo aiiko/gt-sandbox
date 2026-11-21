@@ -28,7 +28,9 @@ func TestBreakfastInterrupted(t *testing.T) {
 		case ai.ItemDropped:
 			cup, dropped = ev.Item, ev.On == in.Refs["bedroom"]
 		case attach.PoseChanged:
-			posed = ev.Pose
+			if !closed { // la de la interrupción; después puede volver a desayunar
+				posed = ev.Pose
+			}
 		case attach.PortalClosed:
 			closed = interrupted
 		}
