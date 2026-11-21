@@ -9,7 +9,10 @@
 package ids
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"gtsandbox/internal/core/statehash"
 )
@@ -32,6 +35,36 @@ func (id ID) String() string {
 		return "nil"
 	}
 	return fmt.Sprintf("%d#%d", id.Index(), id.Gen())
+}
+
+// MarshalText serializa como "índice#generación" (o "nil"), legible en
+// snapshots y logs, y sin problemas de precisión en JSON.
+func (id ID) MarshalText() ([]byte, error) { return []byte(id.String()), nil }
+
+// UnmarshalText es la inversa de MarshalText.
+func (id *ID) UnmarshalText(b []byte) error {
+	s := string(b)
+	if s == "nil" {
+		*id = Nil
+		return nil
+	}
+	is, gs, ok := strings.Cut(s, "#")
+	if !ok {
+		return fmt.Errorf("ids: formato inválido %q (esperado índice#gen)", s)
+	}
+	idx, err := strconv.ParseUint(is, 10, 32)
+	if err != nil {
+		return fmt.Errorf("ids: índice inválido en %q: %w", s, err)
+	}
+	gen, err := strconv.ParseUint(gs, 10, 32)
+	if err != nil {
+		return fmt.Errorf("ids: generación inválida en %q: %w", s, err)
+	}
+	if gen == 0 {
+		return fmt.Errorf("ids: generación 0 inválida en %q", s)
+	}
+	*id = Make(uint32(idx), uint32(gen))
+	return nil
 }
 
 // Allocator reparte IDs generacionales de forma determinista.
@@ -113,6 +146,63 @@ func (a *Allocator) HashState(h *statehash.Hasher) {
 	for _, idx := range a.free[a.head:] {
 		h.U32(idx)
 	}
+}
+
+// AllocatorState es el estado serializable de un Allocator.
+type AllocatorState struct {
+	Gens  []uint32 `json:"gens"`
+	Alive []bool   `json:"alive"`
+	Free  []uint32 `json:"free"` // en orden FIFO
+}
+
+// State devuelve una copia del estado interno.
+func (a *Allocator) State() AllocatorState {
+	return AllocatorState{
+		Gens:  append([]uint32{}, a.gens...),
+		Alive: append([]bool{}, a.alive...),
+		Free:  append([]uint32{}, a.free[a.head:]...),
+	}
+}
+
+// Restore reemplaza el estado del allocator, validando su consistencia:
+// generaciones no nulas y cada slot muerto presente exactamente una vez en la
+// cola de libres.
+func (a *Allocator) Restore(st AllocatorState) error {
+	n := len(st.Gens)
+	if len(st.Alive) != n {
+		return errors.New("ids: gens y alive tienen distinto largo")
+	}
+	inFree := make([]bool, n)
+	for _, idx := range st.Free {
+		if int(idx) >= n {
+			return fmt.Errorf("ids: slot libre %d fuera de rango", idx)
+		}
+		if st.Alive[idx] {
+			return fmt.Errorf("ids: slot %d vivo y libre a la vez", idx)
+		}
+		if inFree[idx] {
+			return fmt.Errorf("ids: slot %d duplicado en libres", idx)
+		}
+		inFree[idx] = true
+	}
+	live := 0
+	for i := range n {
+		if st.Gens[i] == 0 {
+			return fmt.Errorf("ids: slot %d con generación 0", i)
+		}
+		if st.Alive[i] {
+			live++
+		} else if !inFree[i] {
+			return fmt.Errorf("ids: slot muerto %d no está en libres", i)
+		}
+	}
+	*a = Allocator{
+		gens:  append([]uint32{}, st.Gens...),
+		alive: append([]bool{}, st.Alive...),
+		free:  append([]uint32{}, st.Free...),
+		live:  live,
+	}
+	return nil
 }
 
 // compact evita que la cola crezca sin límite cuando se consume.

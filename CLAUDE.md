@@ -21,7 +21,14 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - **D8** Simulación secuencial, sin goroutines dentro de `Step`.
 - **D9** Entidades con stores propios detrás del paquete `ecs` (no ECS externo por ahora).
 
-Todo sistema con estado propio implementa `statehash.Hashable`. Si cambia qué se hashea, incrementar `world.HashVersion`.
+## Convenciones del núcleo (ver `docs/specs/nucleo.md`)
+
+- Crear mundos siempre con `engine.New(...)`: define la "forma" del mundo, y save/load/replay requieren la misma forma. Los sistemas nuevos del núcleo se instalan ahí.
+- Componentes: structs de datos puros con campos exportados y tags JSON; el hash y los snapshots salen de su JSON. Nombre de store estable (`ecs.Register[T](r, "nombre")`).
+- Comandos y eventos: tipo con `Kind()` estable, registrados con `world.RegisterCommand[T]` / `world.RegisterEvent[T]`. Un `Apply` que falla no debe haber modificado nada.
+- Sistemas con estado propio implementan `world.Stateful`.
+- Cambiar qué se hashea → incrementar `world.HashVersion`. Cambio incompatible en snapshots → incrementar `world.SnapshotSchema`.
+- `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`.
 
 ## Capas
 

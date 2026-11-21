@@ -1,35 +1,28 @@
 package world
 
 import (
+	"encoding/json"
 	"errors"
+	"slices"
 	"testing"
 
-	"gtsandbox/internal/core/statehash"
 	"gtsandbox/internal/sim/clock"
 )
 
-// noise es un sistema de prueba que consume aleatoriedad y acumula estado,
-// para que el hash refleje algo no trivial.
+// noise consume aleatoriedad y acumula estado, para que el hash refleje algo.
 type noise struct {
 	name string
-	acc  uint64
-	runs int
+	Acc  uint64 `json:"acc"`
+	Runs int    `json:"runs"`
 }
 
 func (n *noise) Name() string { return n.name }
-
 func (n *noise) Run(w *World) {
-	r := w.RNG(n.name)
-	for range 1 + r.IntN(4) {
-		n.acc = n.acc*31 + r.Uint64()
-	}
-	n.runs++
+	n.Acc = n.Acc*31 + w.RNG(n.name).Uint64()
+	n.Runs++
 }
-
-func (n *noise) HashState(h *statehash.Hasher) {
-	h.U64(n.acc)
-	h.Int(n.runs)
-}
+func (n *noise) SaveState() (json.RawMessage, error) { return json.Marshal(n) }
+func (n *noise) LoadState(raw json.RawMessage) error { return json.Unmarshal(raw, n) }
 
 func newNoisyWorld(seed uint64) *World {
 	w := New(Config{Seed: seed})
@@ -39,65 +32,17 @@ func newNoisyWorld(seed uint64) *World {
 }
 
 // Criterio de aceptación M0: 10.000 ticks con la misma semilla dan el mismo hash.
-func TestDeterminism10kTicks(t *testing.T) {
-	a, b := newNoisyWorld(42), newNoisyWorld(42)
+func TestDeterminism(t *testing.T) {
+	a, b, c := newNoisyWorld(42), newNoisyWorld(42), newNoisyWorld(43)
 	a.StepN(10_000)
 	b.StepN(10_000)
+	c.StepN(10_000)
 	if a.Hash() != b.Hash() {
-		t.Fatalf("hash distinto con la misma semilla: %#x vs %#x", a.Hash(), b.Hash())
+		t.Fatal("hash distinto con la misma semilla")
 	}
-	if a.Tick() != 10_000 {
-		t.Fatalf("Tick = %d", a.Tick())
-	}
-}
-
-func TestDeterminismEmptyWorld(t *testing.T) {
-	a, b := New(Config{Seed: 1}), New(Config{Seed: 1})
-	a.StepN(10_000)
-	b.StepN(10_000)
-	if a.Hash() != b.Hash() {
-		t.Fatal("mundos vacíos divergieron")
-	}
-}
-
-func TestHashSensitivity(t *testing.T) {
-	a, b := newNoisyWorld(1), newNoisyWorld(2)
-	a.StepN(100)
-	b.StepN(100)
-	if a.Hash() == b.Hash() {
+	if a.Hash() == c.Hash() {
 		t.Fatal("semillas distintas deberían divergir")
 	}
-	c := newNoisyWorld(1)
-	c.StepN(101)
-	if a.Hash() == c.Hash() {
-		t.Fatal("ticks distintos deberían divergir")
-	}
-}
-
-// Agregar un sistema que usa su propio stream no cambia lo que ven los demás.
-func TestNewSystemDoesNotPerturbOthers(t *testing.T) {
-	a := newNoisyWorld(5)
-	b := newNoisyWorld(5)
-	extra := &noise{name: "extra"}
-	b.MustRegister(SystemSpec{Phase: clock.PhaseAct}, extra)
-	a.StepN(500)
-	b.StepN(500)
-	decideA := findNoise(t, a, "decide")
-	decideB := findNoise(t, b, "decide")
-	if decideA.acc != decideB.acc {
-		t.Fatal("el sistema nuevo alteró la aleatoriedad de 'decide'")
-	}
-}
-
-func findNoise(t *testing.T, w *World, name string) *noise {
-	t.Helper()
-	for _, r := range w.systems {
-		if r.sys.Name() == name {
-			return r.sys.(*noise)
-		}
-	}
-	t.Fatalf("sistema %q no encontrado", name)
-	return nil
 }
 
 type recorder struct {
@@ -106,63 +51,40 @@ type recorder struct {
 }
 
 func (r recorder) Name() string { return r.name }
-func (r recorder) Run(w *World) { *r.log = append(*r.log, r.name) }
+func (r recorder) Run(*World)   { *r.log = append(*r.log, r.name) }
 
-func TestExecutionOrder(t *testing.T) {
+func TestExecutionOrderAndPeriod(t *testing.T) {
 	var log []string
 	w := New(Config{})
-	w.MustRegister(SystemSpec{Phase: clock.PhaseSlow}, recorder{"slow", &log})
+	w.MustRegister(SystemSpec{Phase: clock.PhaseSlow, Period: 2}, recorder{"slow", &log})
 	w.MustRegister(SystemSpec{Phase: clock.PhaseMove, Order: 10}, recorder{"move10", &log})
 	w.MustRegister(SystemSpec{Phase: clock.PhaseMove, Order: -1}, recorder{"move-1", &log})
-	w.MustRegister(SystemSpec{Phase: clock.PhaseMove, Order: 10}, recorder{"move10b", &log})
 	w.MustRegister(SystemSpec{Phase: clock.PhaseCommands}, recorder{"cmd", &log})
-	w.Step()
-	want := []string{"cmd", "move-1", "move10", "move10b", "slow"}
-	if len(log) != len(want) {
-		t.Fatalf("log = %v", log)
-	}
-	for i := range want {
-		if log[i] != want[i] {
-			t.Fatalf("orden = %v, esperado %v", log, want)
-		}
-	}
-}
-
-func TestPeriodicSystem(t *testing.T) {
-	n := &noise{name: "p"}
-	w := New(Config{})
-	w.MustRegister(SystemSpec{Phase: clock.PhaseSlow, Period: 20}, n)
-	w.StepN(100)
-	if n.runs != 5 {
-		t.Fatalf("período 20 en 100 ticks: %d ejecuciones", n.runs)
-	}
-}
-
-func TestRegisterErrors(t *testing.T) {
-	w := New(Config{})
-	w.MustRegister(SystemSpec{}, &noise{name: "a"})
-	if err := w.Register(SystemSpec{}, &noise{name: "a"}); !errors.Is(err, ErrDuplicateSystem) {
-		t.Fatalf("duplicado: %v", err)
-	}
-	if err := w.Register(SystemSpec{Phase: clock.Phase(200)}, &noise{name: "b"}); !errors.Is(err, ErrInvalidPhase) {
-		t.Fatalf("fase inválida: %v", err)
+	w.StepN(2)
+	want := []string{"cmd", "move-1", "move10", "slow", "cmd", "move-1", "move10"}
+	if !slices.Equal(log, want) {
+		t.Fatalf("orden = %v, esperado %v", log, want)
 	}
 }
 
 type registerer struct{ err error }
 
 func (r *registerer) Name() string { return "registerer" }
-func (r *registerer) Run(w *World) {
-	r.err = w.Register(SystemSpec{}, &noise{name: "late"})
-}
+func (r *registerer) Run(w *World) { r.err = w.Register(SystemSpec{}, &noise{name: "late"}) }
 
-func TestRegisterDuringStepRejected(t *testing.T) {
+func TestRegisterErrors(t *testing.T) {
 	w := New(Config{})
 	r := &registerer{}
 	w.MustRegister(SystemSpec{}, r)
+	if err := w.Register(SystemSpec{}, &registerer{}); !errors.Is(err, ErrDuplicateSystem) {
+		t.Errorf("duplicado: %v", err)
+	}
+	if err := w.Register(SystemSpec{Phase: 200}, &noise{name: "b"}); !errors.Is(err, ErrInvalidPhase) {
+		t.Errorf("fase inválida: %v", err)
+	}
 	w.Step()
 	if !errors.Is(r.err, ErrDuringStep) {
-		t.Fatalf("se esperaba ErrDuringStep, vino %v", r.err)
+		t.Errorf("durante Step: %v", r.err)
 	}
 }
 

@@ -89,3 +89,21 @@ func TestSetHashTracksState(t *testing.T) {
 		t.Fatal("consumir un número debe cambiar el hash")
 	}
 }
+
+func TestSetStateRestore(t *testing.T) {
+	a := NewSet(11)
+	a.Get("ai").Uint64()
+	a.Get("phys").IntN(10)
+	b := NewSet(0)
+	if err := b.Restore(a.Seed(), a.State()); err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range []string{"ai", "phys", "new"} {
+		if !equal(draw(a.Get(n), 10), draw(b.Get(n), 10)) {
+			t.Fatalf("stream %q divergió tras restaurar", n)
+		}
+	}
+	if err := b.Restore(1, map[string][]byte{"x": {1, 2}}); err == nil {
+		t.Fatal("estado corrupto debería fallar")
+	}
+}

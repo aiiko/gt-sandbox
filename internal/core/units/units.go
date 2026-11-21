@@ -57,7 +57,9 @@ func (l Length) String() string {
 // Vec3 es una posición o desplazamiento en coordenadas locales de un Space.
 // X/Y forman el plano de la superficie; Z es la elevación.
 type Vec3 struct {
-	X, Y, Z Length
+	X Length `json:"x"`
+	Y Length `json:"y"`
+	Z Length `json:"z"`
 }
 
 func V3(x, y, z Length) Vec3 { return Vec3{x, y, z} }
@@ -92,7 +94,8 @@ func (a Vec3) String() string { return fmt.Sprintf("(%v, %v, %v)", a.X, a.Y, a.Z
 
 // Vec2 es una posición sobre el plano de una superficie.
 type Vec2 struct {
-	X, Y Length
+	X Length `json:"x"`
+	Y Length `json:"y"`
 }
 
 func V2(x, y Length) Vec2 { return Vec2{x, y} }
@@ -111,7 +114,8 @@ func (a Vec2) String() string { return fmt.Sprintf("(%v, %v)", a.X, a.Y) }
 
 // Rect es un rectángulo alineado a ejes, semiabierto: [Min, Max).
 type Rect struct {
-	Min, Max Vec2
+	Min Vec2 `json:"min"`
+	Max Vec2 `json:"max"`
 }
 
 // RectWH construye un rectángulo desde una esquina y un tamaño.

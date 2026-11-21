@@ -1,10 +1,16 @@
 // Package world contiene el estado autoritativo de la simulación y su loop.
 //
 // Reglas (ver CLAUDE.md):
-//   - El estado solo cambia dentro de Step(), a través de sistemas (D7).
+//   - El estado solo cambia dentro de Step(), a través de comandos y sistemas (D7).
 //   - Los sistemas corren secuencialmente en un orden total y estable (D5, D8):
 //     fase, luego Order, luego orden de registro.
 //   - Toda aleatoriedad sale de w.RNG(nombre) (D4).
+//
+// Un tick (Step) hace, en orden:
+//  1. aplica los comandos encolados (en orden de secuencia);
+//  2. corre los sistemas que tocan este tick, fase por fase;
+//  3. destruye las entidades marcadas para despawn (emite EntityDespawned);
+//  4. publica los eventos del tick (visibles en Events() hasta el próximo Step).
 package world
 
 import (
@@ -12,20 +18,22 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
 
 	"gtsandbox/internal/core/rng"
 	"gtsandbox/internal/core/statehash"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/ecs"
 )
 
 // HashVersion identifica el formato de Hash(). Incrementarlo si cambia qué se
 // hashea o cómo, para que los golden files viejos fallen de forma explícita.
-const HashVersion = 1
+const HashVersion = 2
 
 // System es una unidad de lógica que corre en una fase del tick.
 //
-// Si el sistema guarda estado propio que afecte la simulación, debe implementar
-// también statehash.Hashable para que entre en World.Hash().
+// Si el sistema guarda estado propio que afecte la simulación, debe
+// implementar Stateful para que entre en Hash() y en los snapshots.
 type System interface {
 	Name() string
 	Run(w *World)
@@ -58,17 +66,43 @@ type World struct {
 	seed     uint64
 	tick     clock.Tick
 	rng      *rng.Set
+	ecs      *ecs.Registry
 	systems  []registered
 	names    map[string]bool
 	stepping bool
+
+	commandKinds *kindRegistry[Command]
+	eventKinds   *kindRegistry[Event]
+
+	mu         sync.Mutex // protege queue y nextCmdSeq (Enqueue es concurrente)
+	queue      []queuedCommand
+	nextCmdSeq uint64
+
+	pendingEvents []EventRecord
+	published     []EventRecord
+
+	recording bool
+	cmdLog    []CommandRecord
 }
 
-// New crea un mundo vacío.
+// New crea un mundo vacío con los eventos del núcleo registrados.
 func New(cfg Config) *World {
-	return &World{
-		seed:  cfg.Seed,
-		rng:   rng.NewSet(cfg.Seed),
-		names: map[string]bool{},
+	w := &World{
+		seed:         cfg.Seed,
+		rng:          rng.NewSet(cfg.Seed),
+		ecs:          ecs.NewRegistry(),
+		names:        map[string]bool{},
+		commandKinds: newKindRegistry[Command]("comando"),
+		eventKinds:   newKindRegistry[Event]("evento"),
+	}
+	must(RegisterEvent[EntityDespawned](w))
+	must(RegisterEvent[CommandRejected](w))
+	return w
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -79,7 +113,7 @@ var (
 )
 
 // Register agrega un sistema. Debe hacerse antes de empezar a simular; los
-// nombres son únicos.
+// nombres son únicos y estables (se usan en snapshots).
 func (w *World) Register(spec SystemSpec, sys System) error {
 	if w.stepping {
 		return ErrDuringStep
@@ -105,9 +139,7 @@ func (w *World) Register(spec SystemSpec, sys System) error {
 
 // MustRegister es Register que hace panic ante error. Para setup.
 func (w *World) MustRegister(spec SystemSpec, sys System) {
-	if err := w.Register(spec, sys); err != nil {
-		panic(err)
-	}
+	must(w.Register(spec, sys))
 }
 
 // Step avanza la simulación exactamente un tick.
@@ -118,11 +150,17 @@ func (w *World) Step() {
 	w.stepping = true
 	defer func() { w.stepping = false }()
 
+	w.applyCommands()
 	for _, r := range w.systems {
 		if clock.Due(w.tick, r.spec.Period, r.spec.Offset) {
 			r.sys.Run(w)
 		}
 	}
+	for _, id := range w.ecs.Flush() {
+		w.Emit(EntityDespawned{Entity: id})
+	}
+	w.published = w.pendingEvents
+	w.pendingEvents = nil
 	w.tick++
 }
 
@@ -140,6 +178,9 @@ func (w *World) Tick() clock.Tick { return w.tick }
 // Seed devuelve la semilla del mundo.
 func (w *World) Seed() uint64 { return w.seed }
 
+// ECS devuelve el registro de entidades y componentes.
+func (w *World) ECS() *ecs.Registry { return w.ecs }
+
 // RNG devuelve el stream determinista `name`. Por convención, cada sistema usa
 // un stream con su propio nombre.
 func (w *World) RNG(name string) *rng.Stream { return w.rng.Get(name) }
@@ -153,19 +194,43 @@ func (w *World) Systems() []string {
 	return out
 }
 
+// CheckInvariants verifica la consistencia interna del mundo.
+func (w *World) CheckInvariants() error {
+	return w.ecs.CheckInvariants()
+}
+
 // Hash devuelve un hash del estado lógico completo. Dos mundos con la misma
 // semilla, los mismos sistemas y los mismos inputs deben tener el mismo hash
-// en el mismo tick.
+// en el mismo tick. Los comandos encolados todavía no aplicados no cuentan.
 func (w *World) Hash() uint64 {
 	h := statehash.New()
 	h.Int(HashVersion)
 	h.U64(w.seed)
 	h.U64(uint64(w.tick))
 	w.rng.HashState(h)
+	w.ecs.HashState(h)
+	w.mu.Lock()
+	h.U64(w.nextCmdSeq)
+	w.mu.Unlock()
+	h.Int(len(w.published))
+	for _, e := range w.published {
+		enc, err := w.eventKinds.encode(e.Event)
+		if err != nil {
+			panic(err)
+		}
+		h.U64(uint64(e.Tick))
+		h.U32(e.Seq)
+		h.String(enc.Kind)
+		h.Bytes(enc.Data)
+	}
 	for _, r := range w.systems {
-		if hs, ok := r.sys.(statehash.Hashable); ok {
+		if st, ok := r.sys.(Stateful); ok {
+			raw, err := st.SaveState()
+			if err != nil {
+				panic(fmt.Sprintf("world: sistema %q: %v", r.sys.Name(), err))
+			}
 			h.String(r.sys.Name())
-			hs.HashState(h)
+			h.Bytes(raw)
 		}
 	}
 	return h.Sum()

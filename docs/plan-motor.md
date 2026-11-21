@@ -48,15 +48,15 @@ gt-sandbox/
 │   ├── sim/
 │   │   ├── ecs/               # Entity store + component stores
 │   │   ├── clock/             # Tick, scheduler, fases, staggering
-│   │   ├── events/            # Bus de eventos diferido
-│   │   ├── commands/          # Cola de comandos externos
-│   │   ├── world/             # World: agrupa todo, Step()
+│   │   ├── world/             # World, Step(), comandos, eventos, snapshot, replay
+│   │   ├── comp/              # Componentes básicos
+│   │   ├── cmds/              # Comandos genéricos (spawn, despawn...)
+│   │   ├── engine/            # Construye la forma estándar del mundo
 │   │   ├── space/             # Spaces, jerarquía, transforms, superficies
 │   │   ├── spatial/           # Índice espacial por Space
 │   │   ├── nav/               # Grid local + grafo de portales
 │   │   ├── attach/            # Anclajes y contactos dinámicos
 │   │   ├── ai/  needs/  jobs/ # Esqueletos en M7, contenido después
-│   │   └── save/              # Snapshot versionado + hash de estado
 │   ├── content/               # Carga y validación de definiciones JSON
 │   ├── scenario/              # Formato y runner de escenarios de test
 │   ├── render/  camera/  ui/  # Solo leen snapshots
@@ -227,6 +227,8 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 - `Hash()` + snapshot JSON + `Load`.
 
 **Aceptación:** spawn/despawn masivo sin referencias colgantes (test con fuzzing); save/load/continuar = mismo hash; replay de comandos grabados reproduce el estado.
+
+**Estado: completado.** Spec en `docs/specs/nucleo.md`. Decisiones tomadas en el camino: el hash de componentes se deriva de su JSON (no hay que mantener `HashState` a mano); los IDs se serializan como `"índice#gen"`; masa en µg (`units.Mass`); el paquete `engine` es el único constructor de mundos; `Facing` en `Location` se pospone a M2 junto con las rotaciones.
 
 ### M2 — Spaces y transforms
 - `space` con jerarquía, transforms fijos 2D + Z + rotación, caché dirty.

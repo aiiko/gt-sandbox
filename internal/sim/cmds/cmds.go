@@ -1,0 +1,99 @@
+// Package cmds define los comandos genéricos del motor: crear, destruir y
+// reubicar entidades. Son la base para escenarios, herramientas de debug y
+// replays. Los comandos de gameplay (órdenes a tinies, etc.) llegarán con sus
+// propios sistemas.
+//
+// Los kinds ("spawn", ...) son parte del formato de los logs de replay.
+package cmds
+
+import (
+	"errors"
+	"fmt"
+
+	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/world"
+)
+
+var ErrNotAlive = errors.New("entidad no viva")
+
+// Spawn crea una entidad con los componentes básicos indicados y emite
+// EntitySpawned con el ID asignado.
+type Spawn struct {
+	Name     comp.Name      `json:"name,omitempty"`
+	Location *comp.Location `json:"location,omitempty"`
+	Body     *comp.Body     `json:"body,omitempty"`
+}
+
+func (Spawn) Kind() string { return "spawn" }
+
+func (c Spawn) Apply(w *world.World) error {
+	if c.Body != nil && (c.Body.Radius < 0 || c.Body.Height < 0 || c.Body.Mass < 0) {
+		return errors.New("spawn: body con valores negativos")
+	}
+	s := comp.Of(w.ECS())
+	id := w.ECS().Spawn()
+	if c.Name != "" {
+		s.Name.Set(id, c.Name)
+	}
+	if c.Location != nil {
+		s.Location.Set(id, *c.Location)
+	}
+	if c.Body != nil {
+		s.Body.Set(id, *c.Body)
+	}
+	w.Emit(EntitySpawned{Entity: id, Name: c.Name})
+	return nil
+}
+
+// Despawn destruye una entidad al final del tick.
+type Despawn struct {
+	Entity ids.ID `json:"entity"`
+}
+
+func (Despawn) Kind() string { return "despawn" }
+
+func (c Despawn) Apply(w *world.World) error {
+	if !w.ECS().Despawn(c.Entity) {
+		if w.ECS().Despawning(c.Entity) {
+			return fmt.Errorf("despawn %v: ya marcada", c.Entity)
+		}
+		return fmt.Errorf("despawn %v: %w", c.Entity, ErrNotAlive)
+	}
+	return nil
+}
+
+// SetLocation reubica una entidad (teletransporte de debug/escenario; el
+// movimiento normal lo hacen los sistemas).
+type SetLocation struct {
+	Entity   ids.ID        `json:"entity"`
+	Location comp.Location `json:"location"`
+}
+
+func (SetLocation) Kind() string { return "set_location" }
+
+func (c SetLocation) Apply(w *world.World) error {
+	if !w.ECS().Alive(c.Entity) {
+		return fmt.Errorf("set_location %v: %w", c.Entity, ErrNotAlive)
+	}
+	comp.Of(w.ECS()).Location.Set(c.Entity, c.Location)
+	return nil
+}
+
+// EntitySpawned se emite al crear una entidad con Spawn.
+type EntitySpawned struct {
+	Entity ids.ID    `json:"entity"`
+	Name   comp.Name `json:"name,omitempty"`
+}
+
+func (EntitySpawned) Kind() string { return "entity_spawned" }
+
+// Register habilita los comandos y eventos de este paquete en w.
+func Register(w *world.World) error {
+	return errors.Join(
+		world.RegisterCommand[Spawn](w),
+		world.RegisterCommand[Despawn](w),
+		world.RegisterCommand[SetLocation](w),
+		world.RegisterEvent[EntitySpawned](w),
+	)
+}

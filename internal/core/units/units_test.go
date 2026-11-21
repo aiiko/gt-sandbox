@@ -70,3 +70,17 @@ func TestString(t *testing.T) {
 		}
 	}
 }
+
+func TestMass(t *testing.T) {
+	if Kilogram != 1_000_000_000 {
+		t.Fatalf("Kilogram = %d", Kilogram)
+	}
+	// Un tiny de 60 kg a escala 212,5× debe tener resolución de sobra.
+	tiny := 60 * Kilogram / (2125 * 2125 * 2125 / 1000) // 212,5³
+	if tiny < 5*Milligram || tiny > 7*Milligram {
+		t.Fatalf("masa tiny = %v", tiny)
+	}
+	if got := (6 * Milligram).String(); got != "6.000mg" {
+		t.Fatalf("String = %q", got)
+	}
+}

@@ -10,6 +10,7 @@
 package rng
 
 import (
+	"fmt"
 	"hash/fnv"
 	"math/rand/v2"
 	"slices"
@@ -91,6 +92,34 @@ func (s *Set) HashState(h *statehash.Hasher) {
 	for _, n := range names {
 		s.streams[n].HashState(h)
 	}
+}
+
+// State devuelve el estado serializado de cada stream, por nombre.
+func (s *Set) State() map[string][]byte {
+	out := make(map[string][]byte, len(s.streams))
+	for name, st := range s.streams {
+		b, err := st.MarshalBinary()
+		if err != nil {
+			panic(err) // PCG.MarshalBinary nunca falla
+		}
+		out[name] = b
+	}
+	return out
+}
+
+// Restore reemplaza semilla y streams por los de un estado guardado.
+func (s *Set) Restore(seed uint64, state map[string][]byte) error {
+	streams := make(map[string]*Stream, len(state))
+	for name, b := range state {
+		st := NewStream(seed, name)
+		if err := st.UnmarshalBinary(b); err != nil {
+			return fmt.Errorf("rng: stream %q: %w", name, err)
+		}
+		streams[name] = st
+	}
+	s.seed = seed
+	s.streams = streams
+	return nil
 }
 
 func splitmix64(x uint64) uint64 {
