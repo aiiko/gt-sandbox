@@ -173,7 +173,7 @@
     },
     {
       "ref": "door2",
-      "visual": "door",
+      "visual": "door_noren",
       "spawn": {
         "name": "door2",
         "components": {

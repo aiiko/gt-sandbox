@@ -547,6 +547,26 @@
           }
         }
       }
+    },
+    "door_noren": {
+      "macro": {
+        "pivot": [
+          7,
+          9
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "door_noren/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
     }
   }
 }

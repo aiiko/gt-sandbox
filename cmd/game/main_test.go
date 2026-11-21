@@ -138,9 +138,9 @@ func TestMorningMacroArt(t *testing.T) {
 	if g.visuals[g.sel] != "giantess" {
 		t.Fatalf("clic en la giantess devolvió %s", g.name(g.sel))
 	}
-	for _, x := range []int{180, 300} {
-		if id := scene.Pick(image.Pt(x, 135)); g.visuals[id] != "door" {
-			t.Errorf("umbral en (%d, 135): se seleccionó %s", x, g.name(id))
+	for x, want := range map[int]string{180: "door_noren", 300: "door"} {
+		if id := scene.Pick(image.Pt(x, 135)); g.visuals[id] != want {
+			t.Errorf("umbral en (%d, 135): se seleccionó %s, quería %s", x, g.name(id), want)
 		}
 	}
 	g.toggleFollow()

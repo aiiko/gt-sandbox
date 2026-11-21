@@ -35,7 +35,9 @@ La casa se abre con este comando. Hacé clic en la giantess para elegirla y puls
 go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json
 ```
 
-![Vista macro de la casa con la giantess en la cocina](img/m13-casa.png)
+La casa sigue la [ambientación japonesa](../propuesta.md#ambientación): dormitorio de tatami con futón, cocina con arrocera y pava, living de madera con zabuton y alfombra de seigaiha. El paso entre cocina y dormitorio usa el visual `door_noren` y el del living, `door` (fusuma). En micro, el labio del nido lleva la etiqueta de la caja de fósforos y la mesa del living, un posavasos de bambú.
+
+![Vista macro de la casa japonesa con la giantess en el escritorio, tick 400](img/m15-casa.png)
 
 La prueba del visor verifica el picking sobre la giantess y los umbrales, el seguimiento del dormitorio a la cocina y de regreso al dormitorio antes de llegar al living, y la igualdad del hash con la ejecución headless.
 
