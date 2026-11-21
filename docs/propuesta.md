@@ -194,38 +194,11 @@ En esta estructura existirían varios tipos de superficies:
 
 Esto permite agregar espacios nuevos sin reprogramar todo el juego.
 
-### \*\*3.2. Dos escalas visuales, pero una sola física\*\*
+### 3.2. Dos escalas visuales y una sola simulación
 
-Supongamos una giantess de 170 cm y un tiny de 8 mm.
+Una giantess de 170 cm mide unas 212 veces lo que un tiny de 8 mm. La vista macro encuadra habitaciones y permite seguir la rutina de la giantess. La vista micro encuadra una superficie navegable y permite leer a cada tiny, su carga y los bordes del terreno.
 
-Relación de alturas
-
-# \*\*212,5×\*\*
-
-La giantess mide 212,5 veces la altura del tiny
-
-Escala de cuadrícula propuesta
-
-# \*\*20×\*\*
-
-10 cm por celda macro frente a 5 mm por celda micro
-
-Son dos relaciones diferentes. La primera representa tamaños físicos; la segunda, resolución de las cuadrículas de navegación.
-
-Por eso \*\*no usaría un único tilemap gigantesco con zoom continuo\*\*.
-
-Una habitación de 4 × 4 metros necesitaría 640.000 celdas si la representáramos completamente con tiles de 5 mm. Si usáramos tiles de 2 mm, serían cuatro millones de celdas. Y todavía faltaría almacenar colisiones, materiales, temperatura y otros estados.
-
-En su lugar:
-
-- Vista macro: representación simplificada de la habitación.
-- Vista micro: chunks detallados de las superficies relevantes.
-- Mundo lógico: coordenadas físicas, alturas y relaciones entre entidades.
-- Renderizado: distintas ilustraciones y sprites para cada escala.
-
-Un mismo objeto podría tener un sprite de 16 × 16 píxeles en la vista macro y otro de 256 × 256 en la vista micro. Ambos representarían \*\*el mismo objeto y su mismo estado\*\*, no dos copias distintas.
-
-La transición de cámara podría disimular el cambio de representación, pero no necesitaríamos producir un sprite gigantesco y perfectamente continuo.
+Las dos vistas representan las mismas entidades, poses y estados. Cada superficie tiene su grilla de navegación y su arte puede usar una densidad de píxeles distinta. La cámara cambia el encuadre y la representación visual mientras el mundo conserva sus coordenadas físicas. Las reglas de proyección, densidad y transición se detallan en [Dirección visual](#11-dirección-visual).
 
 ## \*\*4. La giantess como mapa móvil\*\*
 
@@ -639,23 +612,16 @@ Si priorizáramos crear rápidamente escenas, animaciones y herramientas visuale
 | Motor 2D                  | Ebitengine 2.10+                                             |
 | Simulación                | Paquetes Go puros                                            |
 | Entidades                 | Structs y stores propios inicialmente; Ark ECS si hace falta |
-| Mapas diseñados a mano    | LDtk                                                         |
-| Carga de mapas            | ldtkgo                                                       |
-| Sprites y animación       | Aseprite                                                     |
-| UI                        | EbitenUI + componentes propios                               |
+| Mapas diseñados a mano    | JSON del proyecto. LDtk queda como posible importador        |
+| Sprites y animación       | PNG y metadatos JSON. Aseprite es una opción de autoría       |
+| UI                        | Componentes propios sobre Ebitengine                         |
 | Navegación                | A\\\* local + grafo jerárquico                                 |
 | Definiciones de contenido | JSON                                                         |
 | Tests                     | \`go test\`, benchmarks, fuzzing                               |
 | Profiling                 | \`pprof\`                                                      |
 | Guardado                  | Snapshots versionados + registro de eventos relevantes       |
 
-Los editores y librerías seleccionados tienen integraciones concretas: LDtk exporta mapas y entidades en JSON, \`ldtkgo\` incluye soporte para Ebitengine, Aseprite permite generar spritesheets por CLI y EbitenUI proporciona widgets para interfaces.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://ldtk.io\\&sz=32)
-
-LDtk+3
-
-
+El renderer de la próxima etapa cargará las exportaciones de arte y los datos del proyecto directamente. La elección del editor se puede ajustar durante la producción.
 
 ### \*\*¿Usaría ECS?\*\*
 
@@ -884,40 +850,9 @@ Este último punto requiere disciplina: orden estable de ejecución, control de 
 
 No utilizaría goroutines indiscriminadamente dentro de cada agente. Inicialmente ejecutaría la simulación secuencialmente. Después paralelizaría sistemas concretos si los benchmarks lo justifican.
 
-# \*\*10. Qué construiría realmente como primer prototipo\*\*
+## 10. Una mañana en la casa
 
-El error más peligroso sería intentar implementar The Sims, RimWorld y Dwarf Fortress completos antes de comprobar la mecánica distintiva.
-
-Propondría este primer escenario:
-
-\*\*Vertical Slice: Una mañana en la casa\*\*
-
-Prototipo objetivo
-
-# \*\*1\*\*
-
-Giantess autónoma
-
-# \*\*20\*\*
-
-Tinies con necesidades
-
-# \*\*3\*\*
-
-Espacios principales
-
-\*\*Contenido mínimo\*\*
-
-- Una habitación con escritorio, cama y acceso a la cocina.
-- Una giantess con tres necesidades y unas cinco acciones.
-- Una colonia tiny que busca comida, transporta recursos y descansa.
-- Una mano como primera superficie corporal explorable.
-- La posibilidad de que un tiny se suba, viaje sobre ella y descienda.
-- Cámara macro/micro, inspector de personajes y registro de eventos.
-
-El objetivo de esta versión sería producir una secuencia como la siguiente sin scripts narrativos:
-
-Ejemplo de historia generada por la simulación
+El escenario de referencia reúne un dormitorio con cama y escritorio, una cocina y un living. Una giantess autónoma convive con una colonia de 20 tinies en el escritorio. El simulador ya reproduce este recorrido a partir de necesidades, trabajos, percepción y contactos. [Spec del escenario](specs/manana-en-la-casa.md)
 
 1. La giantess decide desayunar porque su hambre es alta.
 2. Deja una taza y unas migajas sobre el escritorio.
@@ -926,24 +861,60 @@ Ejemplo de historia generada por la simulación
 5. La giantess levanta la mano y se dirige a otra habitación.
 6. El tiny viaja sobre una superficie móvil y termina explorando una nueva zona.
 
-Si logramos que estas seis cosas sucedan utilizando reglas generales, el concepto central está validado.
+La siguiente etapa lleva el recorrido al pixel art. En macro se debe entender qué hace la giantess y adónde va. En micro se debe poder seguir al mismo tiny desde el escritorio hasta la palma y la mesa del living. La secuencia se tiene que entender por lo que se ve en ambas vistas, con la historia como apoyo.
 
-El resto del desarrollo consiste principalmente en ampliar contenido, comportamientos y posibilidades.
+## 11. Dirección visual
 
-## \*\*11. Orden de implementación\*\*
+### Cámara y escala
 
-| Fase             | Objetivo                              | Entregable                 |
-| ---------------- | ------------------------------------- | -------------------------- |
-| 0. Fundaciones   | Loop de simulación, entidades y tests | Simulador headless         |
-| 1. Espacios      | Casa, superficies, alturas y portales | Tiny explorando escritorio |
-| 2. Giantess      | Personaje, movimiento y rutinas       | Giantess autónoma          |
-| 3. IA tiny       | Necesidades, trabajos y reservas      | 20 tinies activos          |
-| 4. Body Map      | Mano móvil, anclajes, transiciones    | Tiny viajando en la mano   |
-| 5. Interacción   | Contactos, objetos y percepción       | Historias emergentes       |
-| 6. Presentación  | Cámaras, sprites, UI e inspector      | Vertical slice jugable     |
-| 7. Escalabilidad | LOD, navegación jerárquica, profiling | Cientos de agentes         |
+El juego usa **pixel art top-down ortográfico**. El suelo se proyecta en planta, con el norte arriba en ambas vistas. Muebles y personajes muestran sus caras visibles mediante la silueta y el sombreado del sprite. Las posiciones, alturas y contactos provienen de la simulación.
 
-No intentaría trabajar en todas simultáneamente. Cada fase debe terminar con un escenario que funcione y una batería de tests.
+| Vista | Qué se lee | Densidad inicial de arte | Escena de referencia |
+| --- | --- | --- | --- |
+| Macro | Habitaciones, puertas, muebles, rutina y desplazamiento de la giantess | 16 px por 40 cm. La giantess de pie usa un lienzo aproximado de 24 × 32 px | La casa completa y el viaje del dormitorio al living |
+| Micro | Tinies individuales, migajas, bordes y pasos entre superficies | 16 px por 10 mm. El tiny tiene una silueta visible de 12–16 px de alto | El nido y las migajas sobre el escritorio, el borde de la palma y el descenso a la mesa del living |
+
+La escena se dibuja en un lienzo lógico de **480 × 270 px**. La ventana de escritorio admite ese lienzo a partir de 1×. Se usa el mayor factor entero que entre, con muestreo por vecino más cercano (nearest-neighbor) y bandas centradas cuando sobra espacio. La posición se interpola primero y se alinea a la cuadrícula de píxeles al dibujar. Las densidades son parámetros para la primera prueba de arte y se ajustan con capturas de la casa y la palma. La cuadrícula visual es independiente de las celdas de navegación.
+
+Macro muestra a los tinies mediante un marcador del nido y un indicador para el tiny seleccionado. Micro muestra el sprite de cada tiny, su carga y suficiente textura para distinguir madera, cerámica, papel y piel. De la giantess se dibuja la parte relevante, como la palma y la manga que entran por un borde del encuadre. La taza conserva su color, el lado del asa y su posición de apoyo en las dos representaciones.
+
+Entrar en micro centra la superficie elegida o al actor en seguimiento. Al volver a macro se recupera el encuadre anterior, salvo que haya una entidad en seguimiento. En ese caso se conserva el seguimiento. Un corte con fundido breve de unos 180 ms confirma el cambio de escala en el rótulo de ubicación. La opción de movimiento reducido usa un corte directo. Mientras un tiny viaja sobre la palma se lo sigue en el mismo modo micro. Si baja a otra superficie, cambia el contexto de ubicación y el encuadre continúa siguiendo al actor.
+
+### Paleta, materiales y capas
+
+La casa se siente habitada y cálida, con superficies relativamente tranquilas para que se lea el movimiento. La luz tiene una dirección fija desde arriba a la izquierda. Las sombras de contacto son cortas y la altura se aprecia por el canto del mueble, la separación de la sombra y el solapamiento.
+
+| Familia | Muestra de partida | Uso |
+| --- | --- | --- |
+| Crema cálido | `#E7D8BB` | Paredes y cerámica clara |
+| Madera miel | `#B98258` | Escritorio y mesa del living, con veta visible en micro |
+| Pizarra apagada | `#4F596A` | Sombras, contornos y texto oscuro |
+| Verde grisáceo | `#748C80` | Suelo y mobiliario de cocina |
+| Rosa ladrillo | `#B7726D` | Prenda de la giantess y contraste con el entorno |
+| Turquesa claro | `#76D8CB` | Selección y paso disponible |
+
+Las superficies tienen tres valores principales de luz y sombra. Los tinies se distinguen por silueta y contraste de valor sobre madera y piel. Un paso abierto se marca con dos extremos unidos y un paso cerrado pierde esa conexión. El icono y su forma permiten distinguir ambos estados con la imagen en escala de grises.
+
+Cada pieza de arte declara un pivote de apoyo y, cuando corresponda, un anclaje de mano o carga. La presentación dibuja suelo y sombras, superficies y frentes, y ocupantes por sus puntos de apoyo. Los frentes de primer plano pueden tapar parte de los sprites. La altura y el parentesco separan superficies superpuestas, y el orden dentro de cada superficie se resuelve con la posición de apoyo en pantalla y un desempate estable. Si un borde oculta a la entidad seleccionada, su contorno o marcador sigue visible. El punto de selección coincide con la entidad que se ve bajo el cursor.
+
+### Personajes, poses y animación
+
+| Elemento | Animación mínima para la escena |
+| --- | --- |
+| Giantess | Reposo y caminata en cuatro direcciones, mano apoyada y recogida, comer sentada y mirar TV. Escribir, dormir y tomar un snack pueden reutilizar poses coherentes cuando el motor muestra esas acciones |
+| Palma | Palma elevada y apoyada, con sombras y continuidad de manga. El dibujo se ancla al Space de la mano |
+| Tiny | Reposo, caminata en cuatro direcciones y acarreo. La carga se mueve con el tiny y su silueta sigue visible |
+| Objetos | Taza en mano y sobre la mesa, migajas sueltas y depósito del nido. Los cambios de estado se reflejan en la vista correspondiente |
+
+Se parte de ciclos de caminata de cuatro cuadros y una cadencia visual de 6–10 cuadros/s. Las direcciones se eligen entre variantes dibujadas y el pivote queda estable entre frames. El inicio de una pose o animación sale del estado o los eventos de la simulación. El paso entre mesa y mano solo se muestra transitable mientras el portal correspondiente está activo. Una animación puede suavizar el dibujo del gesto, con el apoyo, la posición de los pasajeros y el indicador de paso alineados al estado del mundo.
+
+### Interfaz y alcance de arte
+
+La interfaz de partida muestra hora, pausa y velocidad, ubicación, selección y seguimiento. El panel de historia destaca pocos cambios relevantes de la rutina y permite localizar al actor o la superficie cuando siguen disponibles. En micro, el rótulo identifica el contexto con una jerarquía como «Dormitorio › Escritorio» o «Giantess › Palma». La intervención del jugador se limita a los controles existentes de cámara, tiempo, inspección y órdenes de destino donde la simulación las acepta. Los overlays técnicos y el inspector de componentes quedan disponibles en el visor de debug.
+
+El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio, cocina y living. El lote micro cubre escritorio, palma, mesa del living, nido, tinies, taza y migajas. Las exportaciones que consume el juego son PNG transparentes y metadatos JSON con identificador visual, escala, rectángulos del atlas, pivotes, capas y clips. La asignación de arte usa identificadores visuales estables independientes del nombre mostrado. La paleta y los tamaños se calibran con la primera escena antes de extender el lote.
+
+El [plan de hitos](plan-motor.md) lleva estas reglas a entregables verificables sobre la misma escena.
 
 ## \*\*12. Riesgos que resolvería temprano\*\*
 
@@ -958,26 +929,8 @@ No intentaría trabajar en todas simultáneamente. Cada fase debe terminar con u
 | Bugs emergentes                 | Situaciones difíciles de reproducir                                 | Replay determinista y escenarios de prueba                |
 | Demasiadas interacciones únicas | Alto costo de mantenimiento                                         | Smart Objects y acciones reutilizables                    |
 
-## \*\*13. Qué elegiría y qué dejaría para después\*\*
+## 13. Alcance posterior
 
-MI PROPUESTA FINAL
+El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-## \*\*Go + Ebitengine + simulación multi-espacio + Utility AI + Jobs\*\*
-
-La arquitectura de espacios y entidades debería ser el núcleo del juego. El renderizado, la UI y la narrativa serían capas construidas sobre él.
-
-Empezaría por estas tres mecánicas fundamentales:
-
-1. \*\*Un tiny puede navegar entre superficies de distintos tamaños\*\*, con posiciones y alturas físicamente coherentes.
-2. \*\*Una giantess puede actuar de forma autónoma\*\* y modificar el entorno de los tinies.
-3. \*\*Una giantess puede convertirse en una superficie explorable y móvil\*\*, sin detener su simulación ni crear un universo separado.
-
-Después incorporaría las mecánicas de colonia, necesidades sociales, emociones, construcción, personalidades complejas y eventos ambientales.
-
-No empezaría por fluidos avanzados, simulación anatómica completa, cientos de muebles interactivos o una economía gigantesca. Todos esos sistemas podrían enriquecer el juego, pero ninguno es necesario para demostrar su idea más original.
-
-El resultado al que apuntaría es algo bastante distinto de los Giantess RPG tradicionales: \*\*una casa que funciona como un ecosistema vivo, donde los habitantes de ambas escalas tienen sus propias vidas y pueden afectarse mutuamente sin que el jugador lo ordene\*\*.
-
-Y hay una decisión de diseño que considero especialmente importante: que la giantess no tenga que estar permanentemente interesada en los tinies. Que pueda ignorarlos, desconocer su existencia o simplemente continuar con su vida cotidiana es lo que haría que la convivencia entre ambas escalas se sienta realmente emergente.
-
-Para un proyecto personal de aprendizaje, esa es la combinación que más valor te aportaría: un problema técnico original, sistemas reutilizables, una arquitectura razonable para Go y un objetivo alcanzable mediante prototipos sucesivos.
+La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores.
