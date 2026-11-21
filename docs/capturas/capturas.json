@@ -1,0 +1,77 @@
+{
+  "size": "960x540",
+  "captures": [
+    {
+      "name": "casa",
+      "description": "La casa al empezar la mañana: la giantess va a la cocina a preparar el desayuno.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 30,
+      "view": "macro",
+      "digest": "349b228140a2450d"
+    },
+    {
+      "name": "escritorio",
+      "description": "Las migajas y la taza en el escritorio: la colonia las descubre («!») y la mano apoyada asoma al borde.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 205,
+      "view": "micro",
+      "micro": "escritorio",
+      "pan": [
+        200,
+        -90
+      ],
+      "digest": "b7f33aae2579ac03"
+    },
+    {
+      "name": "mano-apoyada",
+      "description": "La palma apoyada en el escritorio: los tinies suben por el paso.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 300,
+      "view": "micro",
+      "micro": "palma",
+      "digest": "b32569fdf50f71cf"
+    },
+    {
+      "name": "viaje-macro",
+      "description": "El viaje: la giantess lleva la mano levantada del dormitorio al living.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 530,
+      "view": "macro",
+      "digest": "b5a159b52e55494a"
+    },
+    {
+      "name": "viaje",
+      "description": "El viaje visto desde la palma, siguiendo a Tiny 01.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 530,
+      "view": "micro",
+      "follow": "Tiny 01",
+      "digest": "a93c98ac03bbca28"
+    },
+    {
+      "name": "llegada-living",
+      "description": "La llegada al living: la mano se apoya en la mesa y los tinies bajan a explorar.",
+      "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+      "seed": 42,
+      "tick": 600,
+      "view": "micro",
+      "micro": "mesa del living",
+      "digest": "b253b1066c1e4c2a"
+    },
+    {
+      "name": "caida",
+      "description": "Un tiny cae de la palma levantada al escritorio y el seguimiento lo acompaña.",
+      "scenario": "tests/scenarios/tiny_cae_de_la_palma.json",
+      "seed": 1,
+      "tick": 17,
+      "view": "micro",
+      "follow": "Tiny 01",
+      "digest": "db6596a799adbb5b"
+    }
+  ]
+}

@@ -26,7 +26,7 @@
     {
       "ref": "roomA",
       "spawn": {
-        "name": "roomA",
+        "name": "dormitorio",
         "space": {
           "kind": "static",
           "extent": {
@@ -126,7 +126,7 @@
     {
       "ref": "roomB",
       "spawn": {
-        "name": "roomB",
+        "name": "living",
         "space": {
           "kind": "static",
           "extent": {
@@ -253,7 +253,7 @@
     {
       "ref": "desk1",
       "spawn": {
-        "name": "desk1",
+        "name": "escritorio",
         "space": {
           "kind": "elevated",
           "extent": {
@@ -317,7 +317,7 @@
     {
       "ref": "desk2",
       "spawn": {
-        "name": "desk2",
+        "name": "mesa del living",
         "space": {
           "kind": "elevated",
           "extent": {
@@ -414,7 +414,7 @@
     {
       "ref": "palm",
       "spawn": {
-        "name": "palm",
+        "name": "palma",
         "space": {
           "kind": "articulated",
           "extent": {

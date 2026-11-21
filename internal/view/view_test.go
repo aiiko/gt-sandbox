@@ -3,7 +3,6 @@ package view
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/scenario"
@@ -37,44 +36,6 @@ func newRunner(t *testing.T) (*scenario.Instance, *Runner) {
 		}
 		return p.Step()
 	})
-}
-
-// Aceptación de M6: velocidad, pausa, paso a paso, frames irregulares,
-// capturas, interpolación y picking no cambian el resultado.
-func TestSpeedDoesNotChangeHash(t *testing.T) {
-	ref, _ := load(t)
-	if fails, err := ref.Run(); err != nil || len(fails) > 0 {
-		t.Fatal(err, fails)
-	}
-	want := ref.World.Hash()
-
-	frame := time.Second / 60
-	cases := map[string]func(r *Runner, i int){
-		"x1":   func(r *Runner, _ int) { r.Advance(frame) },
-		"x16":  func(r *Runner, _ int) { r.Speed = 16; r.Advance(frame) },
-		"paso": func(r *Runner, _ int) { r.Paused = true; r.StepOnce() },
-		"mezcla": func(r *Runner, i int) {
-			r.Speed = Speeds[i%3]
-			r.Paused = i%7 == 0
-			r.Advance(time.Duration(i%40) * time.Millisecond)
-		},
-		"lento": func(r *Runner, _ int) { r.Speed = 16; r.Advance(time.Second) }, // pierde tiempo, no ticks
-	}
-	for name, drive := range cases {
-		in, r := newRunner(t)
-		for i := 0; r.Err == nil; i++ {
-			drive(r, i)
-			f := Interpolate(r.Prev, r.Cur, r.Alpha())
-			f.Pick(units.V2(units.Meter, units.Meter), units.Centimeter)
-			r.Hash()
-		}
-		if !errors.Is(r.Err, errEnd) {
-			t.Fatal(r.Err)
-		}
-		if got := in.World.Hash(); got != want {
-			t.Errorf("%s: hash %#x, quería %#x", name, got, want)
-		}
-	}
 }
 
 // El frame refleja el escenario: la palma lleva la grilla, el contacto abre un

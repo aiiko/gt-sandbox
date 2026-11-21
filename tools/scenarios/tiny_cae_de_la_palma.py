@@ -15,6 +15,9 @@ OUT = os.path.join(ROOT, 'tests', 'scenarios', 'tiny_cae_de_la_palma.json')
 VISUALS = {'roomA': 'bedroom', 'roomB': 'living', 'desk1': 'desk', 'desk2': 'table',
            'giantess': 'giantess', 'palm': 'palm', 'tiny': 'tiny', 'door': 'door'}
 
+NAMES = {'roomA': 'dormitorio', 'roomB': 'living', 'desk1': 'escritorio', 'desk2': 'mesa del living',
+         'palm': 'palma', 'tiny': 'Tiny 01', 'house': 'house'}
+
 
 def main():
     d = json.load(open(SRC, encoding='utf-8'))
@@ -27,8 +30,8 @@ def main():
     for e in d['entities']:
         if e['ref'] in VISUALS:
             e['visual'] = VISUALS[e['ref']]
-        if e['ref'] == 'tiny':
-            e['spawn']['name'] = 'Tiny 01'
+        if e['ref'] in NAMES:
+            e['spawn']['name'] = NAMES[e['ref']]
     d['commands'] = [{
         'tick': 10,
         'kind': 'set_location',

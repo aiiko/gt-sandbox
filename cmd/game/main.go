@@ -58,14 +58,13 @@ func main() {
 	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para -art")
 	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en -art")
 	debugArt := flag.Bool("debug", false, "en -art, arrancar con los overlays técnicos (F3)")
+	pan := flag.String("pan", "", "desplazar el encuadre inicial dx,dy píxeles del lienzo (capturas)")
+	bench := flag.Duration("bench", 0, "medir simulación y dibujo durante esta duración (a x4, sin vsync) y salir")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	flag.Parse()
 
 	if *scen == "" {
 		*scen = morningScenario
-		if *art {
-			*scen = artScenario
-		}
 	}
 	g, err := newGame(*scen, *crowd, *seed, *load)
 	if err != nil {
@@ -73,12 +72,27 @@ func main() {
 		os.Exit(1)
 	}
 	g.micro, g.followName = *micro, *follow
+	if *pan != "" {
+		dx, dy, _ := strings.Cut(*pan, ",")
+		x, errX := strconv.ParseFloat(dx, 64)
+		y, errY := strconv.ParseFloat(dy, 64)
+		if errX != nil || errY != nil {
+			fmt.Fprintln(os.Stderr, "game: -pan debe ser dx,dy, por ejemplo 200,-90")
+			os.Exit(1)
+		}
+		g.pan = [2]float64{x, y}
+	}
 	g.story = *scen == morningScenario && *load == "" && *crowd <= 0
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "story" {
 			g.story = *story
 		}
 	})
+	if *bench > 0 {
+		g.bench = &benchmark{duration: *bench}
+		g.run.Speed = 4
+		ebiten.SetVsyncEnabled(false)
+	}
 	if *shot != "" {
 		g.shot, g.shotTick = *shot, clock.Tick(*shotTick)+g.run.World.Tick()
 		g.run.Speed = view.Speeds[len(view.Speeds)-1]
@@ -136,9 +150,11 @@ type game struct {
 	story   bool
 	logBack int // líneas desde el final de la historia
 
-	micro      string // -micro
-	followName string // -follow
-	shot       string // captura pedida por -shot
+	micro      string     // -micro
+	followName string     // -follow
+	pan        [2]float64 // -pan
+	bench      *benchmark // -bench
+	shot       string     // captura pedida por -shot
 	shotTick   clock.Tick
 	shotDone   bool
 	shotErr    error
@@ -333,16 +349,7 @@ func (g *game) Update() error {
 		return nil // todavía sin Layout
 	}
 	if !g.fitted {
-		g.fit()
-		for _, sp := range g.run.Cur.Spaces {
-			if g.micro != "" && sp.Name == g.micro {
-				g.sel = sp.ID
-				g.proj = g.cam.Project(fixedmath.Identity, g.w, g.h)
-				g.toggleMicro()
-			}
-		}
-		g.startFollowing(g.followName)
-		g.fitted = true
+		g.startView()
 	}
 	dt := time.Second / time.Duration(ebiten.TPS())
 	if a := g.art; a != nil && !a.pendingFade {
@@ -353,12 +360,41 @@ func (g *game) Update() error {
 	g.keys()
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	g.mouse(f)
-	if g.shot != "" && g.run.World.Tick() >= g.shotTick {
+	switch {
+	case g.shot != "" && g.run.World.Tick() >= g.shotTick:
 		g.run.Paused = true
-	} else {
+	case g.bench != nil:
+		if g.bench.update(g) {
+			return ebiten.Termination
+		}
+	case g.shot != "":
+		// La captura cae exactamente en su tick: a x16 se avanza de a 16
+		// ticks sin pasarse.
+		for range min(clock.Tick(view.Speeds[len(view.Speeds)-1]), g.shotTick-g.run.World.Tick()) {
+			g.run.StepOnce()
+		}
+	default:
 		g.run.Advance(dt)
 	}
 	return nil
+}
+
+// startView arma el encuadre inicial: el general, la vista micro de -micro y
+// el seguimiento de -follow. Lo usan el juego y las pruebas de capturas.
+func (g *game) startView() {
+	g.fit()
+	for _, sp := range g.run.Cur.Spaces {
+		if g.micro != "" && sp.Name == g.micro {
+			g.sel = sp.ID
+			g.proj = g.cam.Project(fixedmath.Identity, g.w, g.h)
+			g.toggleMicro()
+		}
+	}
+	g.startFollowing(g.followName)
+	if g.pan != [2]float64{} {
+		g.cam.Pan(g.pan[0], g.pan[1])
+	}
+	g.fitted = true
 }
 
 func (g *game) keys() {
@@ -492,6 +528,9 @@ func (g *game) moveSelected(p units.Vec2) {
 func abs(v int) int { return max(v, -v) }
 
 func (g *game) Draw(screen *ebiten.Image) {
+	if g.bench != nil {
+		g.bench.draw()
+	}
 	g.w, g.h = screen.Bounds().Dx(), screen.Bounds().Dy()
 	f := g.frame()
 	proj := g.cam.Project(g.anchor(f), g.w, g.h)

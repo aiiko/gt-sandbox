@@ -1,6 +1,6 @@
 # Base de presentación
 
-`go run ./cmd/game -art` abre la prueba de arte del escritorio. Usa el mismo runner, simulación y cámara del visor. El escenario asigna un `visual` por entidad. El código de presentación vincula ese identificador al ID generacional que resolvió el escenario. El vínculo queda fuera del estado de simulación, el hash y los snapshots.
+`go run ./cmd/game -art` abre «Una mañana en la casa» en la interfaz de partida. La prueba de arte del escritorio de M12 se abre con `-scenario tests/scenarios/muestra_pixel_art.json`. Ambas usan el mismo runner, simulación y cámara del visor. El escenario asigna un `visual` por entidad. El código de presentación vincula ese identificador al ID generacional que resolvió el escenario. El vínculo queda fuera del estado de simulación, el hash y los snapshots.
 
 La presentación dibuja en un lienzo de 480 × 270 píxeles. Usa el mayor múltiplo entero disponible en la pantalla final y centra el lienzo con bandas. El cursor usa la transformación inversa de ese mismo rectángulo. Las bandas quedan fuera de la escena.
 
@@ -137,7 +137,7 @@ Las pruebas son las siguientes:
 - `TestPartidaShowsMorningCues` recorre la mañana. Verifica que el descubrimiento de las migajas, el ascenso a la palma, la exploración, el descanso en la taza y la TV se vean con su símbolo, y que el retrato pase por hambrienta, contenta, sorprendida y neutral.
 - `TestPartidaLocationAndCard` cubre el rótulo y el inspector.
 - `TestPartidaStoryFocus` cubre el enfoque desde la historia.
-- `TestPartidaSessionKeepsHash` cubre una sesión completa: cambia de escala, da un paso en pausa, sigue a un tiny, vuelve al encuadre general y activa el debug, y termina con el mismo hash que la ejecución headless.
+- `TestPresentationMatchesHeadless` (ver [Cierre](#cierre-de-la-entrega-visual)) cubre una sesión completa: sigue a un tiny, enfoca desde la historia, activa el debug y vuelve al encuadre general sin cambiar el hash.
 
 ```sh
 go run ./cmd/game -art                      # la mañana en la interfaz de partida
@@ -152,6 +152,64 @@ go run ./cmd/game -art -debug               # con rutas, portales y contactos
 ![Modo de debug sobre el escritorio con el descubrimiento de las migajas, y un tiny que descansa junto a la taza](img/m18-debug-descanso.png)
 
 ![Retrato de la giantess (neutral, contenta, hambrienta, sorprendida, somnolienta) y símbolos de expresión](img/m18-retrato.png)
+
+## Cierre de la entrega visual
+
+### Capturas de referencia
+
+Las capturas de [`docs/capturas`](../capturas/) recorren la entrega de principio a fin. Cada una está registrada en [`capturas.json`](../capturas/capturas.json) con todo lo necesario para reproducirla:
+
+- escenario y semilla;
+- tick, contado desde el inicio del escenario;
+- vista (macro o micro) y encuadre (`micro`, `follow`, `pan`);
+- tamaño de ventana.
+
+`go run ./cmd/capturas` las regenera todas (o una con `-only nombre`): compila `cmd/game` y saca cada una con `-shot`, que avanza exactamente hasta el tick pedido.
+
+| Captura | Escenario (semilla) | Tick | Vista y encuadre |
+| --- | --- | --- | --- |
+| [casa](../capturas/casa.png) | mañana (42) | 30 | macro general |
+| [escritorio](../capturas/escritorio.png) | mañana (42) | 205 | micro del escritorio, `pan` 200,−90 |
+| [mano-apoyada](../capturas/mano-apoyada.png) | mañana (42) | 300 | micro de la palma |
+| [viaje-macro](../capturas/viaje-macro.png) | mañana (42) | 530 | macro general |
+| [viaje](../capturas/viaje.png) | mañana (42) | 530 | micro siguiendo a Tiny 01 |
+| [llegada-living](../capturas/llegada-living.png) | mañana (42) | 600 | micro de la mesa del living |
+| [caida](../capturas/caida.png) | tiny_cae_de_la_palma (1) | 17 | micro siguiendo a Tiny 01 |
+
+`TestReferenceCaptures` reproduce cada captura sin GPU, con el mismo encuadre y los mismos pasos que `-shot`, y verifica cuatro cosas:
+
+- **Nitidez:** cada sprite se copia sin escalar a un destino entero, y el lienzo se amplía por un múltiplo entero.
+- **Orden de dibujo:** lo que se apoya en una superficie se dibuja después de ella.
+- **Animación y contacto:** la palma usa `rested` solo si está en un contacto.
+- **Resumen:** el resumen de la escena (sprites, cuadros, destinos, símbolos e interfaz) coincide con el registrado. Si el dibujo cambia a propósito, `go test ./cmd/game -run TestReferenceCaptures -update` reescribe los resúmenes y `go run ./cmd/capturas` regenera los PNG.
+
+### Continuidad de la simulación
+
+`TestPresentationMatchesHeadless` es la única prueba que compara con la ejecución sin pantalla. Recorre la mañana completa con cada forma de mirarla y exige el mismo hash en cada tick:
+
+- x1, x16, paso a paso, frames irregulares con pausas y frames lentos;
+- el visor de debug con su cámara y seguimiento;
+- el arte en macro y micro con interpolación, `Arrange` y picking;
+- el seguimiento de un tiny con la interfaz de partida, el enfoque desde la historia, el modo de debug y la vuelta al encuadre general.
+
+La aceptación de cinco semillas con continuación desde snapshots sigue en `TestUnaMananaEnLaCasa`.
+
+### Rendimiento
+
+La simulación se mide en lote y sin pantalla con `cmd/simbench`. La presentación se mide con `cmd/game -bench <duración>`, que corre a x4 sin vsync y divide el tiempo por los frames dibujados. Se mide así porque el reloj de Windows no resuelve llamadas de menos de un milisegundo.
+
+Equipo de referencia: AMD Ryzen 7 5800X3D, AMD Radeon RX 9070 XT, 32 GB, Windows 11, Go 1.27.4, ventana de 1920 × 1080. Mediciones del 21 de noviembre de 2026:
+
+| Medición | Comando | Resultado | Meta |
+| --- | --- | --- | --- |
+| Simulación, la mañana | `simbench -scenario …/una_manana_en_la_casa.json` | 0,034 ms/tick (p99 0,079) | — |
+| Simulación, 200 tinies | `simbench -n 200 -ticks 2000` | 0,037 ms/tick (p99 0,363) | < 2 ms/tick |
+| Presentación, la mañana en arte | `game -art -size 1920x1080 -bench 25s` | 3541 FPS (0,28 ms/frame) | 60 FPS |
+| Presentación, arte con debug | `game -art -debug -size 1920x1080 -bench 15s` | 1503 FPS (0,67 ms/frame) | 60 FPS |
+| Presentación, visor de debug | `game -size 1920x1080 -bench 15s` | 500 FPS (2,0 ms/frame) | — |
+| Presentación, visor con 200 tinies | `game -crowd 200 -size 1920x1080 -bench 15s` | 92 FPS (10,9 ms/frame) | 60 FPS |
+
+La multitud de `-crowd` no declara visuales, así que se dibuja con el visor de debug, que traza formas vectoriales y es el caso más caro.
 
 ## Superficies y colonia en micro
 
@@ -182,6 +240,6 @@ go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json -mic
 Las referencias muestran la [dirección anime](../propuesta.md#11-dirección-visual) en el tick inicial del [escenario de prueba](../../tests/scenarios/muestra_pixel_art.json), a 1×. El cárdigan lila vincula el sprite macro de la giantess con la manga de la vista micro. Se puede cargar otra exportación con `-atlas ruta/al/manifiesto.json` o usar `-size` para revisar otros tamaños de ventana.
 
 ```sh
-go run ./cmd/game -art -size 480x270 -shot macro.png
-go run ./cmd/game -art -micro Escritorio -size 480x270 -shot micro.png
+go run ./cmd/game -art -scenario tests/scenarios/muestra_pixel_art.json -size 480x270 -shot macro.png
+go run ./cmd/game -art -scenario tests/scenarios/muestra_pixel_art.json -micro Escritorio -size 480x270 -shot micro.png
 ```

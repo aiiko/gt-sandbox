@@ -74,6 +74,7 @@ type sprite struct {
 	z     units.Length
 	alpha float32 // 0 = opaco
 	ghost bool    // sombras y señales: no se eligen ni llevan el marco de selección
+	space bool
 }
 
 // look ajusta cómo se dibuja una colocación.
@@ -222,7 +223,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
 			if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
 				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height,
-					alpha: lk.alpha, ghost: lk.ghost})
+					alpha: lk.alpha, ghost: lk.ghost, space: isSpace})
 			}
 		}
 		addFrame(v.frame(name, uint64(f.Tick)), layer)
@@ -471,6 +472,26 @@ func (s ArtScene) Pick(p image.Point) ids.ID {
 		}
 	}
 	return ids.Nil
+}
+
+// Placement es un sprite colocado, en orden de dibujo.
+type Placement struct {
+	ID    ids.ID
+	Src   image.Rectangle // cuadro del atlas
+	Dest  image.Rectangle // destino en el lienzo, alineado al píxel
+	Layer int             // 0 fondo, 1 suelo, 2 profundidad, 3 primer plano
+	Alpha float32         // 0 = opaco
+	Ghost bool            // sombra o señal
+	Space bool            // una superficie (la base sobre la que se apoyan otros)
+}
+
+// Placements devuelve los sprites en el orden en que se dibujan.
+func (s ArtScene) Placements() []Placement {
+	out := make([]Placement, len(s.sprites))
+	for i, sp := range s.sprites {
+		out[i] = Placement{ID: sp.id, Src: sp.src, Dest: sp.dest, Layer: sp.layer, Alpha: sp.alpha, Ghost: sp.ghost, Space: sp.space}
+	}
+	return out
 }
 
 // Bounds devuelve el rectángulo de pantalla del sprite principal de una

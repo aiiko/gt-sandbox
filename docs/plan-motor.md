@@ -4,13 +4,7 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M19 — Cierre de la entrega visual
-
-- Conservar capturas de referencia de la casa, las migajas y la taza en el escritorio, la mano apoyada, el viaje y la llegada al living. Registrar semilla, vista, encuadre y tick para reproducir cada captura.
-- Reunir en una sola prueba las comparaciones de hash con la ejecución headless que hoy reparten los tests de velocidad, vistas y seguimiento. Reejecutar la aceptación de cinco semillas y la continuación desde snapshots.
-- Medir simulación y renderer por separado con el escenario completo y con `-crowd 200`. Registrar resolución y equipo de referencia. La meta es menos de 2 ms/tick de simulación con 200 tinies y 60 FPS de presentación a 1920 × 1080.
-
-**Aceptación.** El recorrido de principio a fin se entiende en macro y micro. Pasan los escenarios, se conserva la continuidad de la simulación y las capturas verifican nitidez, orden de dibujo y correspondencia entre animación y contacto.
+La entrega visual está cerrada. El [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne las capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. Los próximos hitos saldrán del [alcance posterior](propuesta.md#13-alcance-posterior).
 
 ## Contratos de integración
 
