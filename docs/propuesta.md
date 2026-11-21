@@ -867,11 +867,11 @@ La siguiente etapa lleva el recorrido al pixel art. En macro se debe entender qu
 
 ### Cámara y escala
 
-El juego usa **pixel art top-down ortográfico**. El suelo se proyecta en planta, con el norte arriba en ambas vistas. Muebles y personajes muestran sus caras visibles mediante la silueta y el sombreado del sprite. Las posiciones, alturas y contactos provienen de la simulación.
+El juego usa **pixel art top-down ortográfico de estética anime**. El suelo se proyecta en planta, con el norte arriba en ambas vistas. Los sprites muestran caras y frentes en tres cuartos mediante el dibujo. Las posiciones, alturas y contactos provienen de la simulación.
 
 | Vista | Qué se lee | Densidad inicial de arte | Escena de referencia |
 | --- | --- | --- | --- |
-| Macro | Habitaciones, puertas, muebles, rutina y desplazamiento de la giantess | 16 px por 40 cm. La giantess de pie usa un lienzo aproximado de 24 × 32 px | La casa completa y el viaje del dormitorio al living |
+| Macro | Habitaciones, puertas, muebles, rutina y desplazamiento de la giantess | 16 px por 40 cm. La referencia de la giantess de pie usa un lienzo de 31 × 38 px | La casa completa y el viaje del dormitorio al living |
 | Micro | Tinies individuales, migajas, bordes y pasos entre superficies | 16 px por 10 mm. El tiny tiene una silueta visible de 12–16 px de alto | El nido y las migajas sobre el escritorio, el borde de la palma y el descenso a la mesa del living |
 
 La escena se dibuja en un lienzo lógico de **480 × 270 px**. La ventana de escritorio admite ese lienzo a partir de 1×. Se usa el mayor factor entero que entre, con muestreo por vecino más cercano (nearest-neighbor) y bandas centradas cuando sobra espacio. La posición se interpola primero y se alinea a la cuadrícula de píxeles al dibujar. Las densidades son parámetros para la primera prueba de arte y se ajustan con capturas de la casa y la palma. La cuadrícula visual es independiente de las celdas de navegación.
@@ -880,18 +880,27 @@ Macro muestra a los tinies mediante un marcador del nido y un indicador para el 
 
 Entrar en micro centra la superficie elegida o al actor en seguimiento. Al volver a macro se recupera el encuadre anterior, salvo que haya una entidad en seguimiento. En ese caso se conserva el seguimiento. Un corte con fundido breve de unos 180 ms confirma el cambio de escala en el rótulo de ubicación. La opción de movimiento reducido usa un corte directo. Mientras un tiny viaja sobre la palma se lo sigue en el mismo modo micro. Si baja a otra superficie, cambia el contexto de ubicación y el encuadre continúa siguiendo al actor.
 
+### Personajes y lenguaje visual
+
+La dirección toma del anime cotidiano las expresiones claras, el vestuario reconocible y la luz de mañana sobre interiores habitados. En el estudio, el cabello violeta, el cárdigan lila y el acento coral identifican a la giantess. Al acercarse a la palma, la misma manga, su puño claro y el botón coral mantienen la continuidad entre escalas.
+
+Los personajes usan proporciones chibi para dar espacio al rostro y al peinado. En macro, la giantess se lee por el contorno del cabello y la separación entre cabeza, ropa y pies. En micro, el tiny se distingue por sus mechones azules, su bufanda menta y unos pocos píxeles de expresión. Cada postura conserva el apoyo de los pies o la mano sobre la superficie.
+
+El sombreado es plano, con bordes definidos como en la animación con celdas. Pelo, piel y ropa se dibujan con un color base, una sombra y uno o dos brillos agrupados. El contorno usa ciruela en cabello y ropa y malva cálido en piel. Los bordes que reciben luz pueden usar un tono del propio material. La madera reserva sus vetas más finas para micro y la cerámica concentra sus reflejos en el borde y el asa.
+
 ### Paleta, materiales y capas
 
-La casa se siente habitada y cálida, con superficies relativamente tranquilas para que se lea el movimiento. La luz tiene una dirección fija desde arriba a la izquierda. Las sombras de contacto son cortas y la altura se aprecia por el canto del mueble, la separación de la sombra y el solapamiento.
+La casa combina luz cálida de arriba a la izquierda con sombras violetas. El decorado usa contrastes suaves y reserva los acentos más vivos para personajes, objetos interactivos y señales. Las sombras de contacto son cortas y la altura se aprecia por el canto del mueble, la separación de la sombra y el solapamiento.
 
 | Familia | Muestra de partida | Uso |
 | --- | --- | --- |
-| Crema cálido | `#E7D8BB` | Paredes y cerámica clara |
-| Madera miel | `#B98258` | Escritorio y mesa del living, con veta visible en micro |
-| Pizarra apagada | `#4F596A` | Sombras, contornos y texto oscuro |
-| Verde grisáceo | `#748C80` | Suelo y mobiliario de cocina |
-| Rosa ladrillo | `#B7726D` | Prenda de la giantess y contraste con el entorno |
-| Turquesa claro | `#76D8CB` | Selección y paso disponible |
+| Marfil | `#FFF1D8` | Luz en paredes, cerámica y acabados de ropa |
+| Madera durazno | `#D5A07A` | Escritorio, con veta visible en micro |
+| Ciruela | `#3F365C` | Cabello, contornos y sombras profundas |
+| Lila | `#9A8BE3` | Cárdigan, manga y detalles de vestuario |
+| Coral | `#FF9CAD` | Lazo, botón y flor esmaltada de la taza |
+| Menta | `#9CE0D6` | Accesorios del tiny y cerámica |
+| Turquesa claro | `#76D8CB` | Selección y paso disponible, con señal por forma |
 
 Las superficies tienen tres valores principales de luz y sombra. Los tinies se distinguen por silueta y contraste de valor sobre madera y piel. Un paso abierto se marca con dos extremos unidos y un paso cerrado pierde esa conexión. El icono y su forma permiten distinguir ambos estados con la imagen en escala de grises.
 
@@ -914,7 +923,7 @@ La interfaz de partida muestra hora, pausa y velocidad, ubicación, selección y
 
 El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio, cocina y living. El lote micro cubre escritorio, palma, mesa del living, nido, tinies, taza y migajas. Las exportaciones que consume el juego son PNG transparentes y metadatos JSON con identificador visual, escala, rectángulos del atlas, pivotes, capas y clips. La asignación de arte usa identificadores visuales estables independientes del nombre mostrado. La paleta y los tamaños se calibran con la primera escena antes de extender el lote.
 
-El [plan de hitos](plan-motor.md) lleva estas reglas a entregables verificables sobre la misma escena.
+La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las referencias macro y micro de esta dirección. El [plan de hitos](plan-motor.md) lleva esas reglas al recorrido completo.
 
 ## \*\*12. Riesgos que resolvería temprano\*\*
 

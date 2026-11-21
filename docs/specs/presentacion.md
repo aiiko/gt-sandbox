@@ -16,7 +16,7 @@ El manifiesto JSON declara el PNG y dos variantes por sprite, `macro` y `micro`.
 | --- | --- |
 | ![Estudio con escritorio en macro](img/m12-macro.png) | ![Escritorio con taza, palma y tiny en micro](img/m12-micro.png) |
 
-Las referencias son capturas a 1× en el tick inicial del [escenario de prueba](../../tests/scenarios/muestra_pixel_art.json). Se puede cargar otra exportación con `-atlas ruta/al/manifiesto.json` o usar `-size` para revisar otros tamaños de ventana.
+Las referencias muestran la [dirección anime](../propuesta.md#11-dirección-visual) en el tick inicial del [escenario de prueba](../../tests/scenarios/muestra_pixel_art.json), a 1×. El cárdigan lila vincula el sprite macro de la giantess con la manga de la vista micro. Se puede cargar otra exportación con `-atlas ruta/al/manifiesto.json` o usar `-size` para revisar otros tamaños de ventana.
 
 ```sh
 go run ./cmd/game -art -size 480x270 -shot macro.png

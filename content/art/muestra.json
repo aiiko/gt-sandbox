@@ -22,8 +22,8 @@
       "macro": {"pivot": [0, 0], "clips": {"idle": {"frame_ticks": 1, "frames": [[1919, 1535, 1, 1]]}}}
     },
     "figure": {
-      "macro": {"pivot": [12, 29], "clips": {"idle": {"frame_ticks": 1, "frames": [[775, 1154, 25, 33]]}}},
-      "micro": {"pivot": [12, 29], "clips": {"idle": {"frame_ticks": 1, "frames": [[804, 1154, 25, 33]]}}}
+      "macro": {"pivot": [15, 34], "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 1322, 31, 38]]}}},
+      "micro": {"pivot": [15, 34], "clips": {"idle": {"frame_ticks": 1, "frames": [[33, 1322, 31, 38]]}}}
     },
     "tiny": {
       "macro": {"pivot": [2, 2], "clips": {"idle": {"frame_ticks": 1, "frames": [[834, 1154, 5, 4]]}}},
