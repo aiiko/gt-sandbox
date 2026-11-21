@@ -867,7 +867,7 @@ La siguiente etapa lleva el recorrido al pixel art. En macro se debe entender qu
 
 ### Cámara y escala
 
-El juego usa **pixel art top-down ortográfico de estética anime**. El suelo se proyecta en planta, con el norte arriba en ambas vistas. Los sprites muestran caras y frentes en tres cuartos mediante el dibujo. Las posiciones, alturas y contactos provienen de la simulación.
+El juego usa **pixel art top-down ortográfico de estética anime japonesa**, ambientado en un departamento japonés. El suelo se proyecta en planta, con el norte arriba en ambas vistas. Los sprites muestran caras y frentes en tres cuartos mediante el dibujo. Las posiciones, alturas y contactos provienen de la simulación.
 
 | Vista | Qué se lee | Densidad inicial de arte | Escena de referencia |
 | --- | --- | --- | --- |
@@ -880,13 +880,34 @@ Macro muestra a los tinies mediante un marcador del nido y un indicador para el 
 
 Entrar en micro centra la superficie elegida o al actor en seguimiento. Al volver a macro se recupera el encuadre anterior, salvo que haya una entidad en seguimiento. En ese caso se conserva el seguimiento. Un corte con fundido breve de unos 180 ms confirma el cambio de escala en el rótulo de ubicación. La opción de movimiento reducido usa un corte directo. Mientras un tiny viaja sobre la palma se lo sigue en el mismo modo micro. Si baja a otra superficie, cambia el contexto de ubicación y el encuadre continúa siguiendo al actor.
 
+### Ambientación
+
+La casa es un departamento japonés contemporáneo, como los de un anime de la vida cotidiana. La ambientación cambia el dibujo y no la simulación: cada mueble conserva su posición, su altura y sus ofertas del escenario.
+
+| Espacio | Rasgos de dibujo |
+| --- | --- |
+| Entrada y umbrales | Puertas corredizas con marco de madera clara. Las puertas entre ambientes alternan fusuma decorado y shoji de papel según el cuarto |
+| Dormitorio | Washitsu con tatami y bordes de tela, futón con edredón estampado, ventana con shoji y un escritorio de madera para estudiar. El escritorio mantiene sus 75 cm porque ahí vive la colonia |
+| Cocina | Cocina compacta de departamento con anafe de dos hornallas, arrocera, heladera chica con imanes, noren en el paso y vajilla de cerámica |
+| Living | Piso de madera, zabuton, planta en maceta, televisor bajo y una mesa de madera clara a la altura del escenario. Un kotatsu requeriría bajar la superficie en el escenario y queda como variante posterior |
+
+Los detalles que se leen a escala micro también son japoneses: la caja de fósforos del nido tiene una etiqueta con kana dibujada como textura sin texto legible, la taza es un yunomi o una taza con flor esmaltada y la mesa puede tener un posavasos de bambú. Los rótulos y la interfaz están en castellano.
+
 ### Personajes y lenguaje visual
 
 La dirección toma del anime cotidiano las expresiones claras, el vestuario reconocible y la luz de mañana sobre interiores habitados. En el estudio, el cabello violeta, el cárdigan lila y el acento coral identifican a la giantess. Al acercarse a la palma, la misma manga, su puño claro y el botón coral mantienen la continuidad entre escalas.
 
 Los personajes usan proporciones chibi para dar espacio al rostro y al peinado. En macro, la giantess se lee por el contorno del cabello y la separación entre cabeza, ropa y pies. En micro, el tiny se distingue por sus mechones azules, su bufanda menta y unos pocos píxeles de expresión. Cada postura conserva el apoyo de los pies o la mano sobre la superficie.
 
-El sombreado es plano, con bordes definidos como en la animación con celdas. Pelo, piel y ropa se dibujan con un color base, una sombra y uno o dos brillos agrupados. El contorno usa ciruela en cabello y ropa y malva cálido en piel. Los bordes que reciben luz pueden usar un tono del propio material. La madera reserva sus vetas más finas para micro y la cerámica concentra sus reflejos en el borde y el asa.
+El sombreado es plano, con bordes definidos como en la animación con celdas. Pelo, piel y ropa se dibujan con un color base, una sombra y uno o dos brillos agrupados. El contorno usa ciruela en cabello y ropa y malva cálido en piel. Los bordes que reciben luz pueden usar un tono del propio material. La madera reserva sus vetas más finas para micro y la cerámica concentra sus reflejos en el borde y el asa. Los ojos de los personajes llevan siempre un píxel de brillo, también en el tiny de 16 px.
+
+### Expresiones y señales
+
+Los personajes muestran su estado con símbolos de manga sobre la cabeza: «!» al descubrir algo, «?» al explorar, gota de sudor ante un peligro o al ser levantado, «zzz» al descansar, nota musical al divertirse y vena de enojo cuando se interrumpe una acción. Cada símbolo sale de un evento o del estado de la simulación, dura un tiempo fijo de presentación y no modifica el mundo. En micro se dibujan sobre cada tiny y en macro solo sobre la giantess y el tiny seleccionado. Cada símbolo tiene una forma distinta, así que también sirve como señal legible sin color.
+
+La giantess tiene un retrato de busto con expresiones neutral, contenta, hambrienta, sorprendida y somnolienta. El retrato acompaña el panel de historia y el inspector resumido, y la expresión sigue sus necesidades y su acción en curso. En micro nunca se le ve la cara, así que el retrato mantiene el vínculo con ella mientras se sigue a la colonia.
+
+En micro, la presencia de la giantess se anticipa con su sombra. Antes de que la mano entre en cuadro, una sombra violeta difusa crece sobre la superficie y se define al apoyarse. La sombra sale de la pose y la altura de la mano en el `Frame`.
 
 ### Paleta, materiales y capas
 
@@ -901,6 +922,8 @@ La casa combina luz cálida de arriba a la izquierda con sombras violetas. El de
 | Coral | `#FF9CAD` | Lazo, botón y flor esmaltada de la taza |
 | Menta | `#9CE0D6` | Accesorios del tiny y cerámica |
 | Turquesa claro | `#76D8CB` | Selección y paso disponible, con señal por forma |
+| Tatami | `#C8C98F` | Tatami del dormitorio, con borde de tela ciruela |
+| Papel shoji | `#F7EEDD` | Shoji y fusuma, con marco de madera durazno |
 
 Las superficies tienen tres valores principales de luz y sombra. Los tinies se distinguen por silueta y contraste de valor sobre madera y piel. Un paso abierto se marca con dos extremos unidos y un paso cerrado pierde esa conexión. El icono y su forma permiten distinguir ambos estados con la imagen en escala de grises.
 
@@ -912,8 +935,9 @@ Cada pieza de arte declara un pivote de apoyo y, cuando corresponda, un anclaje 
 | --- | --- |
 | Giantess | Reposo y caminata en cuatro direcciones, mano apoyada y recogida, comer sentada y mirar TV. Escribir, dormir y tomar un snack pueden reutilizar poses coherentes cuando el motor muestra esas acciones |
 | Palma | Palma elevada y apoyada, con sombras y continuidad de manga. El dibujo se ancla al Space de la mano |
-| Tiny | Reposo, caminata en cuatro direcciones y acarreo. La carga se mueve con el tiny y su silueta sigue visible |
+| Tiny | Reposo, caminata y acarreo en cuatro direcciones, y caída. La carga se mueve con el tiny y su silueta sigue visible |
 | Objetos | Taza en mano y sobre la mesa, migajas sueltas y depósito del nido. Los cambios de estado se reflejan en la vista correspondiente |
+| Expresiones | Símbolos de manga para giantess y tinies, y retrato de la giantess con cinco expresiones |
 
 Se parte de ciclos de caminata de cuatro cuadros y una cadencia visual de 6–10 cuadros/s. Las direcciones se eligen entre variantes dibujadas y el pivote queda estable entre frames. El inicio de una pose o animación sale del estado o los eventos de la simulación. El paso entre mesa y mano solo se muestra transitable mientras el portal correspondiente está activo. Una animación puede suavizar el dibujo del gesto, con el apoyo, la posición de los pasajeros y el indicador de paso alineados al estado del mundo.
 
@@ -921,7 +945,9 @@ Se parte de ciclos de caminata de cuatro cuadros y una cadencia visual de 6–10
 
 La interfaz de partida muestra hora, pausa y velocidad, ubicación, selección y seguimiento. El panel de historia destaca pocos cambios relevantes de la rutina y permite localizar al actor o la superficie cuando siguen disponibles. En micro, el rótulo identifica el contexto con una jerarquía como «Dormitorio › Escritorio» o «Giantess › Palma». La intervención del jugador se limita a los controles existentes de cámara, tiempo, inspección y órdenes de destino donde la simulación las acepta. Los overlays técnicos y el inspector de componentes quedan disponibles en el visor de debug.
 
-El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio, cocina y living. El lote micro cubre escritorio, palma, mesa del living, nido, tinies, taza y migajas. Las exportaciones que consume el juego son PNG transparentes y metadatos JSON con identificador visual, escala, rectángulos del atlas, pivotes, capas y clips. La asignación de arte usa identificadores visuales estables independientes del nombre mostrado. La paleta y los tamaños se calibran con la primera escena antes de extender el lote.
+La interfaz de partida tiene su propio estilo, distinto del visor de debug: paneles marfil con esquinas redondeadas y borde ciruela, una tipografía pixel con tildes y eñes, globos de historia con la cola apuntando al actor y el retrato de la giantess junto al panel. Las barras oscuras y la fuente monoespaciada quedan para el modo de debug.
+
+El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio, cocina y living con la ambientación japonesa. El lote micro cubre escritorio, palma, mesa del living, nido, tinies, taza y migajas. Cada pieza tiene un archivo fuente editable con capas, versionado junto al atlas, y un comando reproducible arma el PNG y el manifiesto a partir de esas fuentes. El atlas exportado no se edita a mano. Las exportaciones que consume el juego son PNG transparentes y metadatos JSON con identificador visual, escala, rectángulos del atlas, pivotes, capas y clips. La asignación de arte usa identificadores visuales estables independientes del nombre mostrado. La paleta y los tamaños se calibran con la primera escena antes de extender el lote.
 
 La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las referencias macro y micro de esta dirección. El [plan de hitos](plan-motor.md) lleva esas reglas al recorrido completo.
 
@@ -935,6 +961,7 @@ La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las r
 | IA errática                     | NPC que cambian de opinión constantemente                           | Utility AI con persistencia de objetivos                  |
 | Simulación costosa              | Caídas de FPS con muchos agentes                                    | Scheduling, LOD y profiling                               |
 | Arte de escala extrema          | Necesidad de sprites enormes                                        | Representaciones visuales específicas por escala          |
+| Arte sin fuente editable        | Cada sprite nuevo o corrección obliga a rehacer el atlas            | Fuentes por pieza y exportación reproducible del atlas    |
 | Bugs emergentes                 | Situaciones difíciles de reproducir                                 | Replay determinista y escenarios de prueba                |
 | Demasiadas interacciones únicas | Alto costo de mantenimiento                                         | Smart Objects y acciones reutilizables                    |
 
@@ -942,4 +969,4 @@ La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las r
 
 El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores.
+La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El audio también queda fuera de esta entrega: la música de ambiente y los efectos se diseñan cuando la escena visual esté cerrada, a partir de los mismos eventos que alimentan las expresiones.
