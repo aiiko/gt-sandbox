@@ -1,0 +1,61 @@
+{
+  "rate": 44100,
+  "sounds": [
+    {
+      "id": "ui_follow",
+      "file": "ui_follow.wav",
+      "category": "interfaz",
+      "ms": 620,
+      "voices": 1,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "ui_pause",
+      "file": "ui_pause.wav",
+      "category": "interfaz",
+      "ms": 320,
+      "voices": 1,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "ui_resume",
+      "file": "ui_resume.wav",
+      "category": "interfaz",
+      "ms": 260,
+      "voices": 1,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "ui_select",
+      "file": "ui_select.wav",
+      "category": "interfaz",
+      "ms": 35,
+      "voices": 2,
+      "cooldown_ms": 60
+    },
+    {
+      "id": "ui_story",
+      "file": "ui_story.wav",
+      "category": "interfaz",
+      "ms": 160,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "ui_zoom_in",
+      "file": "ui_zoom_in.wav",
+      "category": "interfaz",
+      "ms": 260,
+      "voices": 1,
+      "cooldown_ms": 150
+    },
+    {
+      "id": "ui_zoom_out",
+      "file": "ui_zoom_out.wav",
+      "category": "interfaz",
+      "ms": 260,
+      "voices": 1,
+      "cooldown_ms": 150
+    }
+  ]
+}

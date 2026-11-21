@@ -40,7 +40,7 @@ Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido 
 
 `T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. El escenario por defecto, «Una mañana en la casa», arranca en modo historia. `-story` lo activa al iniciar con otros escenarios.
 
-`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space y con `-follow <nombre>` siguiendo a esa entidad; `-pan dx,dy` desplaza el encuadre inicial. `-bench 20s` mide la presentación sin vsync y sale. En `-art`, `F3` o `-debug` superponen al arte rutas, portales y contactos.
+`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space y con `-follow <nombre>` siguiendo a esa entidad; `-pan dx,dy` desplaza el encuadre inicial. `-bench 20s` mide la presentación sin vsync y sale. `M` silencia el sonido; `-mute` arranca en silencio y `-volume` fija el volumen general (ver [sonido](sonido.md)). En `-art`, `F3` o `-debug` superponen al arte rutas, portales y contactos.
 
 ## Pendiente
 

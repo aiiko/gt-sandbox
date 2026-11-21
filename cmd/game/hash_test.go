@@ -48,7 +48,8 @@ func headlessHashes(t *testing.T, path string, extra int) (map[clock.Tick]uint64
 //   - vistas: el visor de debug con su cámara, y el arte en macro y micro con
 //     interpolación, Arrange y picking en cada frame;
 //   - seguimiento: seguir a un tiny por todo el viaje, la interfaz de partida,
-//     enfocar desde la historia, el modo de debug y volver al encuadre general.
+//     enfocar desde la historia, el modo de debug y volver al encuadre general;
+//   - sonido: en el arte, el mezclador observa la interfaz en cada frame.
 func TestPresentationMatchesHeadless(t *testing.T) {
 	const extra = 2 * view.MaxStepsPerFrame
 	want, end := headlessHashes(t, morningScenario, extra)
@@ -133,8 +134,13 @@ func TestPresentationMatchesHeadless(t *testing.T) {
 				g.w, g.h = (pixelGame{g}).Layout(960, 540)
 			}
 			g.fit()
+			var sounds *soundRecorder
+			if c.art {
+				sounds = withSound(t, g)
+			}
 			for i := 0; g.run.World.Tick() < end; i++ {
 				c.drive(g, i)
+				g.observeSound()
 				if g.run.Err != nil {
 					t.Fatal(g.run.Err)
 				}
@@ -149,6 +155,9 @@ func TestPresentationMatchesHeadless(t *testing.T) {
 				if i > 1_000_000 {
 					t.Fatal("no avanza")
 				}
+			}
+			if sounds != nil && len(sounds.played) == 0 {
+				t.Error("la interfaz no sonó")
 			}
 		})
 	}

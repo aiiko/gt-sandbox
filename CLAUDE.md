@@ -40,12 +40,13 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - IA (ver `docs/specs/ai.md`): `needs`, `agent` + `offers` (smart objects), `job`/`reservation`/`carried`. Las acciones (`ai.Action`) no guardan estado propio: todo va en `agent.doing`. Desde un sistema, mover con `nav.Approach`/`nav.Halt` y reservar con `jobs.Reserve`. Percepción con `agent.sight`/`known` (sin `sight` conoce todo), `watch` para notar agentes de otra escala; exploración con `curiosity`/`visited` (acción `explore` por portales); una oferta con mano apoyada o algo en la mano solo la corta algo urgente (`UrgentUtility`); colonias en `sim/colony` (nido = smart object con depósito en `portions`). Objetos en `content/objects/*.json`, usados en escenarios con `"object"`; las ofertas de varios pasos usan `steps`, y `"item": "<objeto>"` se expande al cargar.
 - Visor de debug (ver `docs/specs/visor.md`): `go run ./cmd/game` (Una mañana en la casa), `-scenario x.json`, `-crowd 200`, `-load s.json`; `-shot out.png -shot-tick N [-micro palma] [-follow "Tiny 01"] [-pan dx,dy]` guarda una captura y sale; `-bench 20s` mide la presentación. Capturas de referencia en `docs/capturas/capturas.json`: regenerar con `go run ./cmd/capturas` y, si el dibujo cambió a propósito, `go test ./cmd/game -run TestReferenceCaptures -update`. El renderer solo dibuja `view.Frame`; nunca leer el mundo desde `render`/`ui`. Con `-art` y la casa se abre la interfaz de partida (`ui.HUD`, armada en `cmd/game/hud.go`); `F3`/`-debug` superpone los overlays técnicos.
 - Arte (ver `docs/specs/presentacion.md`): editar las fuentes en `content/art/src/casa/` (un PNG por cuadro + `atlas.json`) y regenerar con `go run ./cmd/artpack`; nunca tocar `content/art/casa.{png,json}` a mano. Las piezas dibujadas por código salen de `tools/art/` (`python tools/art/build.py`, con `-check` para verificar): ajustarlas en el script, no en el PNG.
+- Sonido (ver `docs/specs/sonido.md`): solo presentación, nunca cambia el hash. Los sonidos se sintetizan desde `tools/audio/sounds.json` con `python tools/audio/build.py` (`-check` para verificar); nunca tocar `content/audio/` a mano. `internal/sound` decide qué suena (`Mixer`, `UIWatcher`) sin importar Ebitengine; la reproducción está en `cmd/game/audio.go`. `M` silencia; `-mute`, `-volume`.
 - Go: `go.mod` fija `toolchain go1.27.4` (lo descarga el comando `go`).
 
 ## Capas
 
 ```
-core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui  ←  cmd/*
+core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui, sound  ←  cmd/*
 ```
 
-`internal/archtest` lo verifica. `internal/sim` nunca importa Ebitengine ni `render`; `view` y `camera` tampoco importan Ebitengine. Si el test falla, mover el código, no relajar la regla.
+`internal/archtest` lo verifica. `internal/sim` nunca importa Ebitengine ni `render`; `view`, `camera` y `sound` tampoco importan Ebitengine. Si el test falla, mover el código, no relajar la regla.

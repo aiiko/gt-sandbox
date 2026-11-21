@@ -1,17 +1,8 @@
 # Plan de desarrollo
 
-La entrega visual de **Una mañana en la casa** está cerrada; el [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne sus capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La próxima entrega le suma **sonido sintetizado, sin música**, según la [propuesta de sonido](propuesta.md#sonido). El [escenario de referencia](specs/manana-en-la-casa.md) sigue fijando el recorrido con el que se integra cada hito.
+La entrega visual de **Una mañana en la casa** está cerrada; el [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne sus capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La próxima entrega le suma **sonido sintetizado, sin música**, según la [propuesta de sonido](propuesta.md#sonido). La base de audio (M20) está en la [spec de sonido](specs/sonido.md). El [escenario de referencia](specs/manana-en-la-casa.md) sigue fijando el recorrido con el que se integra cada hito.
 
 ## Hitos pendientes
-
-### M20 — Base de audio
-
-- Sintetizador en `tools/audio/` que lee los parámetros versionados de cada sonido y escribe WAV cortos en `content/audio/`, con un manifiesto de identificadores estables y un modo `-check` que verifica que lo exportado coincide con las fuentes, como el arte.
-- Paquete `internal/sound`, sin Ebitengine: traduce eventos, `Frame`, vista y cámara en pedidos de sonido (identificador, categoría, volumen, panorama, prioridad). `archtest` verifica que `sim` y `view` no lo importan.
-- Reproducción en `cmd/game` con el paquete `audio` de Ebitengine detrás de una interfaz, con un backend nulo para los tests. Categorías ambiente, efectos e interfaz con volumen propio, silencio con `M` y `-mute` al arrancar.
-- Primeros sonidos: los de la interfaz (elegir, seguir, cambio de escala con el fundido, pausa, entrada nueva en la historia).
-
-**Aceptación.** Las acciones de la interfaz suenan y `M` silencia. Recorrer la mañana con sonido mantiene el hash de la ejecución headless (`TestPresentationMatchesHeadless`). El sintetizador regenera los WAV de forma reproducible.
 
 ### M21 — Sonidos de la mañana
 

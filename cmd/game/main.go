@@ -38,6 +38,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/engine"
 	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sound"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -61,6 +62,8 @@ func main() {
 	pan := flag.String("pan", "", "desplazar el encuadre inicial dx,dy píxeles del lienzo (capturas)")
 	bench := flag.Duration("bench", 0, "medir simulación y dibujo durante esta duración (a x4, sin vsync) y salir")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
+	mute := flag.Bool("mute", false, "arrancar en silencio (M alterna)")
+	volume := flag.Float64("volume", 1, "volumen general del sonido, de 0 a 1")
 	flag.Parse()
 
 	if *scen == "" {
@@ -119,6 +122,11 @@ func main() {
 		}
 		width, height = w, h
 	}
+	if *shot == "" && *bench == 0 {
+		if err := g.enableSound(audioManifest, *volume, *mute); err != nil {
+			fmt.Fprintln(os.Stderr, "game: sin sonido:", err)
+		}
+	}
 	ebiten.SetWindowTitle("gt-sandbox | " + g.title)
 	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
@@ -154,7 +162,9 @@ type game struct {
 	followName string     // -follow
 	pan        [2]float64 // -pan
 	bench      *benchmark // -bench
-	shot       string     // captura pedida por -shot
+	sound      *sound.Mixer
+	uiSounds   sound.UIWatcher
+	shot       string // captura pedida por -shot
 	shotTick   clock.Tick
 	shotDone   bool
 	shotErr    error
@@ -376,6 +386,7 @@ func (g *game) Update() error {
 	default:
 		g.run.Advance(dt)
 	}
+	g.observeSound()
 	return nil
 }
 
@@ -416,6 +427,8 @@ func (g *game) keys() {
 		g.toggleMicro()
 	case k(ebiten.KeyT):
 		g.toggleFollow()
+	case k(ebiten.KeyM):
+		g.toggleMute()
 	case k(ebiten.KeyF3) && g.art != nil:
 		g.art.debug = !g.art.debug
 	case k(ebiten.KeyH):

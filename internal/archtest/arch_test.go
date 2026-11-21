@@ -1,9 +1,10 @@
 // Package archtest verifica la regla de dependencias entre capas:
 //
-//	core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui  ←  cmd/*
+//	core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui, sound  ←  cmd/*
 //
 // view y camera no importan Ebitengine: son los datos y la matemática del
-// visor, testeables sin ventana. camera solo depende de core.
+// visor, testeables sin ventana. camera solo depende de core. sound decide qué
+// suena sin reproducir nada: tampoco importa Ebitengine.
 // Si este test falla, no lo "arregles" relajando la regla: mové el código a la
 // capa correcta o registrá un ADR que justifique el cambio.
 package archtest
@@ -23,12 +24,19 @@ const module = "gtsandbox"
 
 // rules: paquetes bajo la clave no pueden importar nada con estos prefijos.
 var rules = map[string][]string{
+	"internal/sound": {
+		module + "/internal/render",
+		module + "/internal/ui",
+		module + "/internal/camera",
+		"github.com/hajimehoshi/ebiten",
+	},
 	"internal/core": {
 		module + "/internal/sim",
 		module + "/internal/content",
 		module + "/internal/scenario",
 		module + "/internal/view",
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/camera",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
@@ -38,6 +46,7 @@ var rules = map[string][]string{
 		module + "/internal/scenario",
 		module + "/internal/view",
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/camera",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
@@ -46,6 +55,7 @@ var rules = map[string][]string{
 		module + "/internal/scenario",
 		module + "/internal/view",
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/camera",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
@@ -53,12 +63,14 @@ var rules = map[string][]string{
 	"internal/scenario": {
 		module + "/internal/view",
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/camera",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
 	},
 	"internal/view": {
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
 	},
@@ -68,6 +80,7 @@ var rules = map[string][]string{
 		module + "/internal/scenario",
 		module + "/internal/view",
 		module + "/internal/render",
+		module + "/internal/sound",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
 	},
