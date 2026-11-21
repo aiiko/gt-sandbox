@@ -2,6 +2,8 @@
 
 El escenario `tests/scenarios/una_manana_en_la_casa.json` reúne un dormitorio con cama y escritorio, una cocina y un living con televisor y mesa. La giantess tiene hambre, energía y diversión, y elige entre cinco ofertas. Veinte tinies comparten un nido en el escritorio y pueden recolectar, comer, descansar o explorar según sus rasgos.
 
+La grilla de la palma sigue la silueta del dibujo de la mano (orientada al norte, una celda de 1 cm por cada 16 px): las celdas fuera de la mano están bloqueadas, así que los tinies caminan sobre la palma, los dedos y la manga, y no en el aire entre los dedos.
+
 El único comando del escenario, en el tick cero, configura las referencias de la giantess a su palma. Preparar el desayuno deja una taza y migajas, y comer mantiene la mano apoyada. La oferta de mirar televisión apoya la mano sobre la mesa del living. Objetos, necesidades, percepción, trabajos, poses y portales usan los sistemas del motor.
 
 La aceptación correlaciona eventos por entidad y destino. Exige que el desayuno deje recursos en el escritorio, que la colonia los descubra y asigne un acarreo, y que el mismo tiny suba a la palma, viaje con ella cuando la giantess levanta la mano y cambia de habitación, y baje a explorar el living. `TestUnaMananaEnLaCasa` usa las semillas 1, 7, 21, 42 y 99, verifica los invariantes cada tick y compara el log y el hash al continuar desde snapshots JSON tomados a lo largo de cada partida.

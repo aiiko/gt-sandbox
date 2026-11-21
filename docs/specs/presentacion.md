@@ -79,6 +79,10 @@ Las poses sentadas bajan el torso siete píxeles para que el escritorio o la mes
 
 ![La giantess desayuna en el dormitorio y mira la TV sentada en el living](img/m16-poses.png)
 
+La grilla de la palma en el escenario sigue la silueta de la mano dibujada, así que los tinies que viajan quedan sobre la mano en las cuatro orientaciones.
+
+![Tinies sobre la palma elevada durante el viaje al living, tick 520](img/m16-palma.png)
+
 ## Superficies y colonia en micro
 
 `Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.
