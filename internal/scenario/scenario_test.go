@@ -7,6 +7,7 @@ import (
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/engine"
 	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/world"
 )
 
 // Cada archivo de tests/scenarios debe cumplir todas sus expectativas, y
@@ -68,43 +69,56 @@ func TestCrowd(t *testing.T) {
 	}
 }
 
-// Guardar y cargar a mitad de un movimiento (grilla, ruta y estado del mover
-// en el snapshot) no cambia el futuro.
+// Guardar y cargar a mitad de un movimiento (grillas, portales, ruta y
+// estado del mover en el snapshot) no cambia el futuro, incluidos los
+// comandos posteriores al guardado.
 func TestSaveLoadMidMove(t *testing.T) {
-	spec, err := ReadFile("../../tests/scenarios/replan_when_gap_closes.json")
-	if err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		file       string
+		save, legs int // tick del guardado y tramos que debe tener la ruta
+	}{
+		{"replan_when_gap_closes", 60, 1},
+		{"portal_disabled_midway", 150, 3}, // suelo, pata A, escritorio
 	}
-	in, err := Build(spec)
-	if err != nil {
-		t.Fatal(err)
-	}
-	byTick, err := in.commands()
-	if err != nil {
-		t.Fatal(err)
-	}
-	w := in.World
-	for tick := range 60 {
-		for _, c := range byTick[tick] {
-			w.Enqueue(c)
+	for _, c := range cases {
+		spec, err := ReadFile("../../tests/scenarios/" + c.file + ".json")
+		if err != nil {
+			t.Fatal(err)
 		}
-		w.Step()
-	}
-	m, _ := ecs.Get[nav.Mover](w.ECS()).Get(in.Refs["tiny"])
-	if m.Status != nav.Moving || len(m.Path) < 2 {
-		t.Fatalf("el tiny debería estar a mitad de camino: %+v", m)
-	}
-	snap, err := w.Save()
-	if err != nil {
-		t.Fatal(err)
-	}
-	w2, err := engine.Restore(snap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	w.StepN(600)
-	w2.StepN(600)
-	if w.Hash() != w2.Hash() {
-		t.Fatal("el mundo restaurado divergió")
+		in, err := Build(spec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		byTick, err := in.commands()
+		if err != nil {
+			t.Fatal(err)
+		}
+		worlds := []*world.World{in.World}
+		for tick := range spec.Ticks {
+			if tick == c.save {
+				m, _ := ecs.Get[nav.Mover](in.World.ECS()).Get(in.Refs["tiny"])
+				if m.Status != nav.Moving || len(m.Legs) != c.legs {
+					t.Fatalf("%s: el tiny debería estar a mitad de camino: %+v", c.file, m)
+				}
+				snap, err := in.World.Save()
+				if err != nil {
+					t.Fatal(err)
+				}
+				w2, err := engine.Restore(snap)
+				if err != nil {
+					t.Fatal(err)
+				}
+				worlds = append(worlds, w2)
+			}
+			for _, w := range worlds {
+				for _, cmd := range byTick[tick] {
+					w.Enqueue(cmd)
+				}
+				w.Step()
+			}
+		}
+		if worlds[0].Hash() != worlds[1].Hash() {
+			t.Fatalf("%s: el mundo restaurado divergió", c.file)
+		}
 	}
 }

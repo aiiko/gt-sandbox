@@ -9,6 +9,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -18,7 +19,7 @@ type Status uint8
 const (
 	Idle     Status = iota
 	Planning        // espera ruta (nav.plan)
-	Moving          // recorriendo Path (nav.move)
+	Moving          // recorriendo Legs (nav.move)
 )
 
 var statusNames = [...]string{"idle", "planning", "moving"}
@@ -47,25 +48,26 @@ func (s *Status) UnmarshalText(b []byte) error {
 	return fmt.Errorf("nav: status desconocido %q", b)
 }
 
-// Mover es el componente de las entidades que caminan por su Space.
+// Mover es el componente de las entidades que caminan.
 //
-// Goal y Path están en coordenadas locales de Space (el Space en el que se
-// pidió el movimiento). Si la entidad cambia de Space, el movimiento falla.
+// GoalSpace/Goal es el destino (coordenadas locales de GoalSpace). Legs es
+// la ruta planificada: el primer tramo está en el Space actual de la entidad.
 type Mover struct {
-	Speed       units.Length `json:"speed"` // µm por segundo
-	Status      Status       `json:"status"`
-	Space       ids.ID       `json:"space"`
-	Goal        units.Vec2   `json:"goal"`
-	Path        []units.Vec2 `json:"path,omitempty"`
-	PathVersion uint64       `json:"path_version"`
+	Speed     units.Length `json:"speed"` // µm por segundo
+	Status    Status       `json:"status"`
+	GoalSpace ids.ID       `json:"goal_space"`
+	Goal      units.Vec2   `json:"goal"`
+	Legs      []Leg        `json:"legs,omitempty"`
 }
+
+// idle devuelve el mover detenido, conservando velocidad y último destino.
+func (m Mover) idle() Mover { return Mover{Speed: m.Speed, GoalSpace: m.GoalSpace, Goal: m.Goal} }
 
 // Razones de MoveFailed.
 const (
-	ReasonNoPath       = "no_path"
-	ReasonNotWalkable  = "not_walkable"
-	ReasonBudget       = "search_budget"
-	ReasonSpaceChanged = "space_changed"
+	ReasonNoPath      = "no_path"
+	ReasonNotWalkable = "not_walkable"
+	ReasonBudget      = "search_budget"
 )
 
 // MoveArrived se emite cuando un Mover llega a su destino.
@@ -83,10 +85,11 @@ type MoveFailed struct {
 
 func (MoveFailed) Kind() string { return "move_failed" }
 
-// MoveTo pide que una entidad camine hasta Goal (coordenadas locales de su
-// Space actual). Reemplaza cualquier movimiento en curso.
+// MoveTo pide que una entidad camine hasta Goal, en coordenadas locales de
+// Space (Nil = el Space actual). Reemplaza cualquier movimiento en curso.
 type MoveTo struct {
 	Entity ids.ID     `json:"entity"`
+	Space  ids.ID     `json:"space,omitempty"`
 	Goal   units.Vec2 `json:"goal"`
 }
 
@@ -98,7 +101,13 @@ func (c MoveTo) Apply(w *world.World) error {
 	if m == nil || !ok {
 		return fmt.Errorf("move_to %v: no es un mover ubicado", c.Entity)
 	}
-	*m = Mover{Speed: m.Speed, Status: Planning, Space: loc.Space, Goal: c.Goal}
+	target := c.Space
+	if target.IsNil() {
+		target = loc.Space
+	} else if !space.Of(w.ECS()).IsSpace(target) {
+		return fmt.Errorf("move_to %v: %w: %v", c.Entity, space.ErrNotSpace, target)
+	}
+	*m = Mover{Speed: m.Speed, Status: Planning, GoalSpace: target, Goal: c.Goal}
 	return nil
 }
 
@@ -114,7 +123,7 @@ func (c Stop) Apply(w *world.World) error {
 	if m == nil {
 		return fmt.Errorf("stop %v: no es un mover", c.Entity)
 	}
-	*m = Mover{Speed: m.Speed, Space: m.Space, Goal: m.Goal}
+	*m = m.idle()
 	return nil
 }
 
@@ -162,40 +171,31 @@ func (c SetCells) Apply(w *world.World) error {
 	return nil
 }
 
-// PlanBudget es la cantidad máxima de búsquedas A* por tick. Los movers que
-// no entran esperan al tick siguiente (en orden del store).
+// PlanBudget es la cantidad máxima de planificaciones por tick (cada una
+// corre hasta MaxSearches búsquedas A*). Los movers que no entran esperan al
+// tick siguiente, en orden del store.
 const PlanBudget = 64
 
-// planner corre A* para los movers en Planning.
-type planner struct{ search Searcher }
+// planner calcula rutas para los movers en Planning.
+type planner struct{ router Router }
 
 func (*planner) Name() string { return "nav.plan" }
 
 func (p *planner) Run(w *world.World) {
-	grids := ecs.Get[Grid](w.ECS())
 	locs := comp.Of(w.ECS()).Location
 	budget := PlanBudget
 	ecs.Get[Mover](w.ECS()).Each(func(e ids.ID, m *Mover) {
 		if m.Status != Planning || budget == 0 {
 			return
 		}
-		loc, _ := locs.Get(e)
-		if loc.Space != m.Space {
-			fail(w, e, m, ReasonSpaceChanged)
-			return
-		}
-		g := grids.Ptr(m.Space)
-		if g == nil { // Space sin grilla: línea recta
-			m.Status, m.Path = Moving, []units.Vec2{m.Goal}
-			return
-		}
 		budget--
-		path, err := p.search.FindPath(g, loc.Pos.XY(), m.Goal, g.W*g.H)
+		loc, _ := locs.Get(e)
+		legs, err := p.router.Route(w.ECS(), loc.Space, loc.Pos.XY(), m.GoalSpace, m.Goal)
 		if err != nil {
 			fail(w, e, m, reason(err))
 			return
 		}
-		m.Status, m.Path, m.PathVersion = Moving, path, g.Version
+		m.Status, m.Legs = Moving, legs
 	})
 }
 
@@ -211,55 +211,105 @@ func reason(err error) string {
 }
 
 func fail(w *world.World, e ids.ID, m *Mover, why string) {
-	*m = Mover{Speed: m.Speed, Space: m.Space, Goal: m.Goal}
+	*m = m.idle()
 	w.Emit(MoveFailed{Entity: e, Reason: why})
 }
 
-// mover avanza a los movers en Moving por su Path. Si la grilla cambió desde
-// que se planeó la ruta, el mover se queda quieto y vuelve a Planning.
+// mover avanza a los movers en Moving por sus tramos y cruza portales. Si la
+// ruta quedó obsoleta (cambió una grilla o un portal, o la entidad ya no está
+// en el Space del primer tramo), el mover se queda quieto este tick y vuelve
+// a Planning: la ruta se recalcula desde donde está.
 type mover struct{}
 
 func (mover) Name() string { return "nav.move" }
 
 func (mover) Run(w *world.World) {
-	grids := ecs.Get[Grid](w.ECS())
-	locs := comp.Of(w.ECS()).Location
-	ecs.Get[Mover](w.ECS()).Each(func(e ids.ID, m *Mover) {
+	reg := w.ECS()
+	grids := ecs.Get[Grid](reg)
+	portals := ecs.Get[Portal](reg)
+	locs := comp.Of(reg).Location
+	g := space.Of(reg)
+	ecs.Get[Mover](reg).Each(func(e ids.ID, m *Mover) {
 		if m.Status != Moving {
 			return
 		}
 		loc := locs.Ptr(e)
-		if loc == nil || loc.Space != m.Space {
-			fail(w, e, m, ReasonSpaceChanged)
-			return
-		}
-		if g := grids.Ptr(m.Space); g != nil && g.Version != m.PathVersion {
-			m.Status, m.Path = Planning, nil
+		if loc == nil || !routeValid(m.Legs, loc.Space, g, grids, portals) {
+			m.Status, m.Legs = Planning, nil
 			return
 		}
 		pos := loc.Pos.XY()
 		left := m.Speed / clock.TPS
-		for left > 0 && len(m.Path) > 0 {
-			d := m.Path[0].Sub(pos)
-			n := d.Len()
-			if n <= left {
-				pos, left = m.Path[0], left-n
-				m.Path = m.Path[1:]
-				continue
+		for len(m.Legs) > 0 {
+			leg := &m.Legs[0]
+			if len(leg.Path) > 0 {
+				if left == 0 {
+					break
+				}
+				d := leg.Path[0].Sub(pos)
+				n := d.Len()
+				if n <= left {
+					pos, left = leg.Path[0], left-n
+					leg.Path = leg.Path[1:]
+					continue
+				}
+				pos = pos.Add(units.Vec2{X: d.X.MulDiv(int64(left), int64(n)), Y: d.Y.MulDiv(int64(left), int64(n))})
+				left = 0
+				break
 			}
-			pos = pos.Add(units.Vec2{X: d.X.MulDiv(int64(left), int64(n)), Y: d.Y.MulDiv(int64(left), int64(n))})
-			left = 0
+			if leg.Portal.IsNil() { // fin de la ruta
+				m.Legs = nil
+				break
+			}
+			_, out := portals.Ptr(leg.Portal).ends(leg.Reverse)
+			if g.CanPlace(e, out.Space) != nil { // p. ej. cruzaría hacia sí mismo
+				loc.Pos.X, loc.Pos.Y = pos.X, pos.Y
+				fail(w, e, m, ReasonNoPath)
+				return
+			}
+			from := loc.Space
+			loc.Space, pos = out.Space, out.Pos
+			w.Emit(space.EntityReparented{Entity: e, From: from, To: out.Space, Cause: "portal"})
+			m.Legs = m.Legs[1:]
 		}
 		loc.Pos.X, loc.Pos.Y = pos.X, pos.Y
-		if len(m.Path) == 0 {
-			m.Status, m.Path = Idle, nil
+		if len(m.Legs) == 0 {
+			*m = m.idle()
 			w.Emit(MoveArrived{Entity: e})
 		}
 	})
 }
 
-// Install registra los stores "nav_grid" y "mover", comandos, eventos,
-// sistemas e invariantes de nav. Requiere comp y space.
+// routeValid indica si la ruta sigue vigente: cada tramo en un Space vivo
+// con la misma versión de grilla, y cada portal vivo, habilitado, con la
+// misma versión y conectando los Spaces de los tramos que une.
+func routeValid(legs []Leg, current ids.ID, g space.Graph, grids *ecs.Store[Grid], portals *ecs.Store[Portal]) bool {
+	if len(legs) == 0 || legs[0].Space != current {
+		return false
+	}
+	for i, l := range legs {
+		if !g.IsSpace(l.Space) {
+			return false
+		}
+		if grid := grids.Ptr(l.Space); grid != nil && grid.Version != l.GridVersion {
+			return false
+		}
+		if l.Portal.IsNil() {
+			return i == len(legs)-1
+		}
+		p := portals.Ptr(l.Portal)
+		if p == nil || p.Disabled || p.Version != l.PortalVersion || i+1 >= len(legs) {
+			return false
+		}
+		if in, out := p.ends(l.Reverse); in.Space != l.Space || out.Space != legs[i+1].Space {
+			return false
+		}
+	}
+	return true
+}
+
+// Install registra los stores "nav_grid", "mover" y "portal", comandos,
+// eventos, sistemas e invariantes de nav. Requiere comp y space.
 func Install(w *world.World) error {
 	r := w.ECS()
 	if _, err := ecs.Register[Grid](r, "nav_grid"); err != nil {
@@ -268,21 +318,30 @@ func Install(w *world.World) error {
 	if _, err := ecs.Register[Mover](r, "mover"); err != nil {
 		return err
 	}
-	w.AddInvariant("nav", checkInvariants)
+	if _, err := ecs.Register[Portal](r, "portal"); err != nil {
+		return err
+	}
+	w.AddInvariant("nav.mover", checkMovers)
+	w.AddInvariant("nav.portal", checkPortals)
 	return errors.Join(
 		world.RegisterCommand[MoveTo](w),
 		world.RegisterCommand[Stop](w),
 		world.RegisterCommand[SetCells](w),
+		world.RegisterCommand[SetPortal](w),
 		world.RegisterEvent[MoveArrived](w),
 		world.RegisterEvent[MoveFailed](w),
 		w.Register(world.SystemSpec{Phase: clock.PhaseAct}, &planner{}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseMove}, mover{}),
+		// Mismo Order que space.orphans y registrado después: corre a
+		// continuación, cuando ya se conocen todas las cascadas.
+		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 30}, portalCleanup{}),
 	)
 }
 
-// checkInvariants: un mover en Moving está en una celda transitable de su
-// grilla, y su ruta no es vacía.
-func checkInvariants(w *world.World) error {
+// checkMovers: un mover en Moving tiene ruta, y si su primer tramo está en el
+// Space donde se encuentra (si no, nav.move replaneará), está en una celda
+// transitable.
+func checkMovers(w *world.World) error {
 	grids := ecs.Get[Grid](w.ECS())
 	locs := comp.Of(w.ECS()).Location
 	var err error
@@ -290,12 +349,12 @@ func checkInvariants(w *world.World) error {
 		if err != nil || m.Status != Moving {
 			return
 		}
-		if len(m.Path) == 0 {
+		if len(m.Legs) == 0 {
 			err = fmt.Errorf("mover %v en moving sin ruta", e)
 			return
 		}
 		l, ok := locs.Get(e)
-		if g := grids.Ptr(m.Space); ok && g != nil && !g.Walkable(l.Pos.XY()) {
+		if g := grids.Ptr(l.Space); ok && l.Space == m.Legs[0].Space && g != nil && !g.Walkable(l.Pos.XY()) {
 			err = fmt.Errorf("mover %v en celda bloqueada %v", e, l.Pos)
 		}
 	})

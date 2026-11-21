@@ -9,8 +9,9 @@
 //	  "entities": [{"ref": "desk", "spawn": {<cmds.Spawn>}}],
 //	  "commands": [{"tick": 0, "kind": "move_to", "data": {...}}],
 //	  "expect":   [{"event": "move_arrived", "entity": "$tiny", "by": 500},
+//	               {"event": "entity_reparented", "match": {"to": "$desk"}},
 //	               {"no_event": "move_failed"},
-//	               {"at": "$tiny", "pos": {"x": 0, "y": 0}, "tol": 1000}]
+//	               {"at": "$tiny", "space": "$desk", "pos": {"x": 0, "y": 0}, "tol": 1000}]
 //	}
 //
 // Cualquier string "$ref" dentro de spawn o data se reemplaza por el ID de la
@@ -24,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -57,16 +59,20 @@ type CommandSpec struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// Expectation es exactamente una de: Event (ocurrió, opcionalmente para
-// Entity y antes de By), NoEvent (nunca ocurrió) o At (posición final).
+// Expectation es exactamente una de: Event (ocurrió antes de By, si By > 0),
+// NoEvent (nunca ocurrió) o At (posición final, opcionalmente en Space).
+// Para Event y NoEvent, Match filtra por campos del evento (con "$ref");
+// Entity es un atajo para {"entity": ...}.
 type Expectation struct {
-	Event   string      `json:"event,omitempty"`
-	Entity  string      `json:"entity,omitempty"`
-	By      int         `json:"by,omitempty"`
-	NoEvent string      `json:"no_event,omitempty"`
-	At      string      `json:"at,omitempty"`
-	Pos     *units.Vec2 `json:"pos,omitempty"`
-	Tol     int64       `json:"tol,omitempty"`
+	Event   string          `json:"event,omitempty"`
+	Entity  string          `json:"entity,omitempty"`
+	Match   json.RawMessage `json:"match,omitempty"`
+	By      int             `json:"by,omitempty"`
+	NoEvent string          `json:"no_event,omitempty"`
+	At      string          `json:"at,omitempty"`
+	Space   string          `json:"space,omitempty"` // con At: el Space esperado
+	Pos     *units.Vec2     `json:"pos,omitempty"`
+	Tol     int64           `json:"tol,omitempty"`
 }
 
 // Read parsea un Spec rechazando campos desconocidos.
@@ -236,27 +242,24 @@ func (in *Instance) check() ([]string, error) {
 	var fails []string
 	for _, x := range in.Spec.Expect {
 		switch {
-		case x.Event != "":
-			var want ids.ID
-			if x.Entity != "" {
-				id, ok := in.Refs[strings.TrimPrefix(x.Entity, "$")]
-				if !ok {
-					return nil, fmt.Errorf("scenario: ref desconocido %q", x.Entity)
-				}
-				want = id
+		case x.Event != "" || x.NoEvent != "":
+			match, err := in.matcher(x)
+			if err != nil {
+				return nil, err
 			}
-			if !in.happened(x.Event, want, x.By) {
-				fails = append(fails, fmt.Sprintf("no ocurrió %s %s (by %d)", x.Event, x.Entity, x.By))
-			}
-		case x.NoEvent != "":
-			if in.happened(x.NoEvent, ids.Nil, 0) {
-				fails = append(fails, "ocurrió "+x.NoEvent)
+			switch {
+			case x.Event != "" && !in.happened(x.Event, match, x.By):
+				fails = append(fails, fmt.Sprintf("no ocurrió %s %s%s (by %d)", x.Event, x.Entity, x.Match, x.By))
+			case x.NoEvent != "" && in.happened(x.NoEvent, match, 0):
+				fails = append(fails, fmt.Sprintf("ocurrió %s %s%s", x.NoEvent, x.Entity, x.Match))
 			}
 		case x.At != "" && x.Pos != nil:
 			id := in.Refs[strings.TrimPrefix(x.At, "$")]
 			l, ok := comp.Of(in.World.ECS()).Location.Get(id)
 			if !ok {
 				fails = append(fails, x.At+" sin Location")
+			} else if sp, want := in.Refs[strings.TrimPrefix(x.Space, "$")]; x.Space != "" && (!want || l.Space != sp) {
+				fails = append(fails, fmt.Sprintf("%s en el Space %v, se esperaba %s", x.At, l.Space, x.Space))
 			} else if d := l.Pos.XY().DistSq(*x.Pos); d > x.Tol*x.Tol {
 				fails = append(fails, fmt.Sprintf("%s en %v, se esperaba %v ±%d", x.At, l.Pos.XY(), *x.Pos, x.Tol))
 			}
@@ -267,21 +270,47 @@ func (in *Instance) check() ([]string, error) {
 	return fails, nil
 }
 
-// happened busca un evento del kind dado; con entity != Nil, debe tener ese
-// campo "entity"; con by > 0, debe ocurrir antes del tick by del escenario.
-func (in *Instance) happened(kind string, entity ids.ID, by int) bool {
+// matcher arma el filtro de campos de una expectativa de evento.
+func (in *Instance) matcher(x Expectation) (map[string]any, error) {
+	match := map[string]any{}
+	if len(x.Match) > 0 {
+		raw, err := in.resolve(x.Match)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(raw, &match); err != nil {
+			return nil, fmt.Errorf("scenario: match: %w", err)
+		}
+	}
+	if x.Entity != "" {
+		id, ok := in.Refs[strings.TrimPrefix(x.Entity, "$")]
+		if !ok {
+			return nil, fmt.Errorf("scenario: ref desconocido %q", x.Entity)
+		}
+		match["entity"] = id.String()
+	}
+	return match, nil
+}
+
+// happened busca un evento del kind dado cuyos campos coincidan con match;
+// con by > 0, debe ocurrir antes del tick by del escenario.
+func (in *Instance) happened(kind string, match map[string]any, by int) bool {
 	for _, e := range in.Events {
 		if e.Event.Kind() != kind || (by > 0 && int(e.Tick-in.Start) >= by) {
 			continue
 		}
-		if entity.IsNil() {
-			return true
-		}
 		b, _ := json.Marshal(e.Event)
-		var f struct {
-			Entity ids.ID `json:"entity"`
+		var fields map[string]any
+		if json.Unmarshal(b, &fields) != nil {
+			continue
 		}
-		if json.Unmarshal(b, &f) == nil && f.Entity == entity {
+		ok := true
+		for k, v := range match {
+			if !reflect.DeepEqual(fields[k], v) {
+				ok = false
+			}
+		}
+		if ok {
 			return true
 		}
 	}

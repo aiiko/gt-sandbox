@@ -72,7 +72,7 @@ func TestFindPathRandomGrids(t *testing.T) {
 			return units.V2(units.Length(r.IntN(g.W*cell)), units.Length(r.IntN(g.H*cell)))
 		}
 		from, to := rnd(), rnd()
-		path, err := s.FindPath(g, from, to, 0)
+		path, _, err := s.FindPath(g, from, to, 0)
 		sx, sy := g.CellOf(from)
 		tx, ty := g.CellOf(to)
 		switch {
@@ -104,7 +104,7 @@ func TestFindPathRandomGrids(t *testing.T) {
 			}
 			prev = p
 		}
-		again, _ := s.FindPath(g, from, to, 0)
+		again, _, _ := s.FindPath(g, from, to, 0)
 		if !slices.Equal(path, again) {
 			t.Fatal("A* no determinista")
 		}
@@ -115,11 +115,11 @@ func TestFindPathPrefersCheapCells(t *testing.T) {
 	// Cruzar la columna cara cuesta más que rodearla por la fila 2.
 	g := mustGrid(t, `{"origin":{"x":0,"y":0},"cell":10,"version":0,"rows":["..9..","..9..","....."]}`)
 	var s Searcher
-	path, err := s.FindPath(g, g.Center(0, 0), g.Center(4, 0), 0)
-	if err != nil || !slices.Contains(path, g.Center(2, 2)) {
-		t.Fatalf("path %v err %v", path, err)
+	path, cost, err := s.FindPath(g, g.Center(0, 0), g.Center(4, 0), 0)
+	if err != nil || !slices.Contains(path, g.Center(2, 2)) || cost != 4*14 {
+		t.Fatalf("path %v cost %v err %v", path, cost, err)
 	}
-	if _, err := s.FindPath(g, g.Center(0, 0), g.Center(4, 0), 3); err != ErrSearchBudget {
+	if _, _, err := s.FindPath(g, g.Center(0, 0), g.Center(4, 0), 3); err != ErrSearchBudget {
 		t.Fatalf("presupuesto: %v", err)
 	}
 }

@@ -57,20 +57,22 @@ func (s *Searcher) touch(i int32) {
 
 // FindPath busca un camino de from a to (coordenadas locales) y devuelve los
 // puntos a recorrer: centros de celda donde cambia la dirección, terminando
-// exactamente en to. No incluye from.
+// exactamente en to. No incluye from. También devuelve el costo de la ruta
+// como distancia equivalente (µm × costo de celda), comparable con otras
+// distancias para la búsqueda entre Spaces.
 //
 // Movimiento en 8 direcciones sin cortar esquinas: un paso diagonal requiere
 // que las dos celdas ortogonales adyacentes sean transitables. Así, el
 // segmento recto entre puntos consecutivos nunca toca una celda bloqueada.
 // maxExpand limita los nodos expandidos (0 = sin límite).
-func (s *Searcher) FindPath(g *Grid, from, to units.Vec2, maxExpand int) ([]units.Vec2, error) {
+func (s *Searcher) FindPath(g *Grid, from, to units.Vec2, maxExpand int) ([]units.Vec2, units.Length, error) {
 	sx, sy := g.CellOf(from)
 	tx, ty := g.CellOf(to)
 	if g.At(sx, sy) == Blocked || g.At(tx, ty) == Blocked {
-		return nil, ErrNotWalkable
+		return nil, 0, ErrNotWalkable
 	}
 	if sx == tx && sy == ty {
-		return []units.Vec2{to}, nil
+		return []units.Vec2{to}, to.Sub(from).Len(), nil
 	}
 	s.reset(g.W * g.H)
 	start, goal := int32(sy*g.W+sx), int32(ty*g.W+tx)
@@ -85,11 +87,11 @@ func (s *Searcher) FindPath(g *Grid, from, to units.Vec2, maxExpand int) ([]unit
 			continue
 		}
 		if cur.idx == goal {
-			return s.build(g, start, goal, to), nil
+			return s.build(g, start, goal, to), units.Length(s.g[goal]) * g.Cell / stepStraight, nil
 		}
 		s.closed[cur.idx] = true
 		if expanded++; maxExpand > 0 && expanded > maxExpand {
-			return nil, ErrSearchBudget
+			return nil, 0, ErrSearchBudget
 		}
 		cx, cy := int(cur.idx)%g.W, int(cur.idx)/g.W
 		for _, d := range dirs {
@@ -120,7 +122,7 @@ func (s *Searcher) FindPath(g *Grid, from, to units.Vec2, maxExpand int) ([]unit
 			s.open.push(node{f: ng + h, h: h, idx: ni})
 		}
 	}
-	return nil, ErrNoPath
+	return nil, 0, ErrNoPath
 }
 
 // heuristic octil, admisible porque el costo mínimo por celda es 1.

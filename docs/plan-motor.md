@@ -271,6 +271,13 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 
 **Aceptación:** tiny va del suelo a la superficie del escritorio por la pata; si se deshabilita el portal a mitad de camino, la ruta se recalcula o el movimiento se cancela con evento.
 
+**Estado: completado.** Spec en `docs/specs/nav.md` (sección portales y rutas). Decisiones tomadas en el camino:
+- Un portal es una entidad con componente `portal` (dos extremos punto `{space, pos}`), no una arista guardada en el Space. Se habilita/deshabilita con `set_portal`; se destruye solo si muere uno de sus Spaces.
+- La pata es un Space propio (con grilla) unido por dos portales: el tiempo de trepar sale de caminar, y el tiny puede quedar a mitad de camino.
+- Búsqueda jerárquica perezosa: Dijkstra sobre extremos de portales con tramos estimados en línea recta, refinando con A* solo los tramos de la mejor ruta candidata.
+- La ruta es una lista de tramos con las versiones de grilla y portal usadas; `nav.move` la valida cada tick y replanea desde la posición actual si algo cambió. `space_changed` desaparece: cambiar de Space ahora replanea.
+- Los escenarios ganan `match` (filtro por campos del evento) y `at.space`, para afirmar por qué portal pasó el tiny.
+
 ### M5 — Contactos y portales dinámicos
 - Sistema de contactos entre Spaces, reglas de contacto→portal.
 - Pose como conjunto de transforms; comando `SetPose`.
