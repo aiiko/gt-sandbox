@@ -1,16 +1,8 @@
 # Plan de desarrollo
 
-La entrega visual de **Una mañana en la casa** está cerrada; el [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne sus capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La próxima entrega le suma **sonido sintetizado, sin música**, según la [propuesta de sonido](propuesta.md#sonido). La base de audio (M20) está en la [spec de sonido](specs/sonido.md). El [escenario de referencia](specs/manana-en-la-casa.md) sigue fijando el recorrido con el que se integra cada hito.
+La entrega visual de **Una mañana en la casa** está cerrada; el [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne sus capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La próxima entrega le suma **sonido sintetizado, sin música**, según la [propuesta de sonido](propuesta.md#sonido). La base de audio (M20) y los sonidos de la mañana (M21) están en la [spec de sonido](specs/sonido.md). El [escenario de referencia](specs/manana-en-la-casa.md) sigue fijando el recorrido con el que se integra cada hito.
 
 ## Hitos pendientes
-
-### M21 — Sonidos de la mañana
-
-- Sonidos de la giantess, la mano, los tinies, los símbolos de expresión y la señal de paso, con perspectiva por escala: el mismo evento elige otro sonido o volumen en macro y en micro.
-- Panorama y volumen según la posición en pantalla; silencio fuera de cuadro.
-- Límite de voces por sonido, tiempo mínimo entre repeticiones y variación leve de tono. A x4 y x16 se omiten los sonidos menores; la pausa silencia los efectos.
-
-**Aceptación.** Una prueba recorre la mañana con el backend nulo y verifica que cada momento clave dispara su sonido en el tick correcto: el desayuno, el descubrimiento de las migajas, la mano apoyada, el ascenso, el viaje, la llegada al living y la caída. Con veinte tinies a la vez no se supera el límite de voces.
 
 ### M22 — Ambiente y mezcla
 

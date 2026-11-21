@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/attach"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/view"
 )
 
@@ -49,6 +52,53 @@ func TestManifestMatchesFiles(t *testing.T) {
 		if d, ok := lib.Def(id); !ok || d.Category != Interface {
 			t.Errorf("falta el sonido de interfaz %s", id)
 		}
+	}
+	scene := []string{StepTatami, StepWood, StepTile, DoorFusuma, DoorNoren, FridgeOpen, FridgeClose,
+		CupClink, Bite, Zabuton, TVOn, HandNear, HandLand, HandLift, HandTap, CrumbPop, CrumbTick,
+		NestStore, TinyHop, TinyFall, TinyLand, PassOpen, PassClose}
+	for _, step := range tinySteps {
+		scene = append(scene, step)
+	}
+	for _, e := range []string{view.EmoteDiscover, view.EmoteExplore, view.EmoteSweat, view.EmoteSleep, view.EmoteNote, view.EmoteVein} {
+		scene = append(scene, Emote+e)
+	}
+	for _, id := range scene {
+		if d, ok := lib.Def(id); !ok || d.Category != Effects {
+			t.Errorf("falta el efecto %s", id)
+		}
+	}
+	for id := range minor {
+		if _, ok := lib.Def(id); !ok {
+			t.Errorf("el sonido menor %s no existe", id)
+		}
+	}
+}
+
+// La primera observación solo registra: los eventos anteriores no suenan, y
+// un frame sin tick nuevo tampoco.
+func TestSceneStartsSilent(t *testing.T) {
+	everywhere := View{
+		Micro:      true,
+		Locate:     func(units.Vec3) (float64, bool) { return 0, true },
+		Visual:     func(ids.ID) string { return "" },
+		ShowsEmote: func(ids.ID) bool { return true },
+	}
+	hand := ids.Make(2, 1)
+	f0 := &view.Frame{Tick: 10, Spaces: []view.Space{{ID: hand, Kind: space.Articulated}}}
+	old := []view.Published{{Seq: 1, Tick: 9, Event: attach.ContactBegan{A: ids.Make(1, 1), B: hand}}}
+	var s Scene
+	if got := s.Sounds(f0, old, everywhere); got != nil {
+		t.Fatalf("la primera observación sonó %v", got)
+	}
+	everywhere.Focus = ids.Make(1, 1)
+	again := append(old, view.Published{Seq: 2, Tick: 10, Event: attach.ContactBegan{A: ids.Make(1, 1), B: hand}})
+	f1 := &view.Frame{Tick: 11, Spaces: f0.Spaces}
+	got := s.Sounds(f1, again, everywhere)
+	if len(got) != 1 || got[0].ID != HandLand {
+		t.Fatalf("solo el evento nuevo suena: %v", got)
+	}
+	if got := s.Sounds(f1, again, everywhere); got != nil {
+		t.Fatalf("el mismo tick no vuelve a sonar: %v", got)
 	}
 }
 

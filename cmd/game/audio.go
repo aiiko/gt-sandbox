@@ -10,6 +10,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 
+	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sound"
 )
 
@@ -125,8 +127,46 @@ func (g *game) observeSound() {
 		return
 	}
 	g.uiSounds.Observe(g.sound, g.uiState())
+	g.scene.Observe(g.sound, g.run.Cur, g.run.Events, g.soundView())
 	g.sound.Advance()
 }
+
+// soundView le dice al sonido qué se ve: la escala, la velocidad, dónde cae
+// cada punto en pantalla y de quién se dibuja el símbolo (como drawEmotes).
+func (g *game) soundView() sound.View {
+	f := g.run.Cur
+	focus := g.cam.Anchor
+	if g.art != nil {
+		focus = g.artFocus(f)
+	}
+	micro := !focus.IsNil()
+	proj := g.cam.Project(g.anchor(f), g.w, g.h)
+	w, h := float32(g.w), float32(g.h)
+	giantess := g.giantessID()
+	return sound.View{
+		Micro: micro,
+		Focus: focus,
+		Fast:  g.run.Speed > 1,
+		Locate: func(p units.Vec3) (float64, bool) {
+			x, y := proj.ToScreen(p)
+			if w <= 0 || x < -w/10 || x > w*1.1 || y < -h/10 || y > h*1.1 {
+				return 0, false
+			}
+			return max(-1, min(1, float64(x/w)*2-1)) * soundPanWidth, true
+		},
+		Visual: func(id ids.ID) string { return g.visuals[id] },
+		ShowsEmote: func(id ids.ID) bool {
+			if micro {
+				_, ok := f.ThingByID(id)
+				return ok
+			}
+			return !id.IsNil() && (id == giantess || id == g.sel || id == g.follow)
+		},
+	}
+}
+
+// soundPanWidth abre el panorama sin llevar nada del todo a un lado.
+const soundPanWidth = 0.7
 
 // toggleMute alterna el silencio; al volver suena el clic de interfaz.
 func (g *game) toggleMute() {

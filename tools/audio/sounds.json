@@ -64,6 +64,298 @@
         {"wave": "noise", "f0": 44100, "dur": 0.16, "attack": 0.03, "decay": 0.05, "gain": 0.22, "lp": 2600},
         {"wave": "noise", "f0": 44100, "dur": 0.08, "delay": 0.06, "attack": 0.01, "decay": 0.03, "gain": 0.12, "lp": 5000}
       ]
+    },
+    "giantess_step_tatami": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 120,
+      "layers": [
+        {"wave": "noise", "f0": 1800, "dur": 0.16, "f1": 700, "attack": 0.006, "decay": 0.04, "gain": 0.35, "lp": 900},
+        {"wave": "sine", "f0": 95, "dur": 0.12, "f1": 70, "attack": 0.003, "decay": 0.035, "gain": 0.3}
+      ]
+    },
+    "giantess_step_wood": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 120,
+      "layers": [
+        {"wave": "noise", "f0": 2600, "dur": 0.12, "f1": 1200, "attack": 0.003, "decay": 0.03, "gain": 0.3, "lp": 1600},
+        {"wave": "sine", "f0": 140, "dur": 0.14, "f1": 110, "attack": 0.002, "decay": 0.045, "gain": 0.35}
+      ]
+    },
+    "giantess_step_tile": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 120,
+      "layers": [
+        {"wave": "noise", "f0": 6000, "dur": 0.08, "f1": 3000, "attack": 0.002, "decay": 0.018, "gain": 0.28, "lp": 3500},
+        {"wave": "sine", "f0": 210, "dur": 0.08, "f1": 180, "attack": 0.001, "decay": 0.025, "gain": 0.25}
+      ]
+    },
+    "door_fusuma": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "noise", "f0": 1400, "dur": 0.55, "f1": 900, "attack": 0.08, "decay": 0.3, "gain": 0.3, "lp": 1200},
+        {"wave": "sine", "f0": 70, "dur": 0.08, "delay": 0.5, "attack": 0.002, "decay": 0.03, "gain": 0.35}
+      ]
+    },
+    "door_noren": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "noise", "f0": 5000, "dur": 0.35, "f1": 2500, "attack": 0.05, "decay": 0.12, "gain": 0.22, "lp": 4000},
+        {"wave": "noise", "f0": 3000, "dur": 0.25, "delay": 0.12, "attack": 0.04, "decay": 0.08, "gain": 0.15, "lp": 3000}
+      ]
+    },
+    "fridge_open": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 1000,
+      "layers": [
+        {"wave": "noise", "f0": 900, "dur": 0.1, "attack": 0.002, "decay": 0.03, "gain": 0.3, "lp": 700},
+        {"wave": "sine", "f0": 60, "dur": 0.9, "attack": 0.25, "decay": 0.6, "gain": 0.18, "vibrato": [3, 0.2]},
+        {"wave": "sine", "f0": 120, "dur": 0.9, "attack": 0.25, "decay": 0.6, "gain": 0.08}
+      ]
+    },
+    "fridge_close": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 1000,
+      "layers": [
+        {"wave": "sine", "f0": 75, "dur": 0.18, "f1": 55, "attack": 0.002, "decay": 0.05, "gain": 0.45},
+        {"wave": "noise", "f0": 1200, "dur": 0.1, "attack": 0.001, "decay": 0.025, "gain": 0.25, "lp": 900}
+      ]
+    },
+    "cup_clink": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 150,
+      "layers": [
+        {"wave": "sine", "f0": 2350, "dur": 0.45, "attack": 0.001, "decay": 0.09, "gain": 0.22},
+        {"wave": "sine", "f0": 3720, "dur": 0.3, "attack": 0.001, "decay": 0.05, "gain": 0.14},
+        {"wave": "sine", "f0": 5480, "dur": 0.2, "attack": 0.001, "decay": 0.03, "gain": 0.08},
+        {"wave": "noise", "f0": 44100, "dur": 0.02, "attack": 0.0005, "decay": 0.004, "gain": 0.15, "lp": 8000}
+      ]
+    },
+    "giantess_bite": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 500,
+      "layers": [
+        {"wave": "noise", "f0": 7000, "dur": 0.05, "attack": 0.002, "decay": 0.012, "gain": 0.3, "lp": 5000},
+        {"wave": "noise", "f0": 5000, "dur": 0.05, "delay": 0.07, "attack": 0.002, "decay": 0.012, "gain": 0.22, "lp": 4500},
+        {"wave": "noise", "f0": 6000, "dur": 0.04, "delay": 0.15, "attack": 0.002, "decay": 0.01, "gain": 0.16, "lp": 4500}
+      ]
+    },
+    "zabuton": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 800,
+      "layers": [
+        {"wave": "noise", "f0": 700, "dur": 0.3, "f1": 300, "attack": 0.02, "decay": 0.09, "gain": 0.4, "lp": 500},
+        {"wave": "sine", "f0": 80, "dur": 0.2, "f1": 55, "attack": 0.01, "decay": 0.06, "gain": 0.25}
+      ]
+    },
+    "tv_on": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 1000,
+      "layers": [
+        {"wave": "square", "f0": 220, "dur": 0.03, "attack": 0.001, "decay": 0.01, "gain": 0.15, "lp": 3000},
+        {"wave": "sine", "f0": 7800, "dur": 0.6, "delay": 0.03, "attack": 0.05, "decay": 0.25, "gain": 0.035},
+        {"wave": "noise", "f0": 44100, "dur": 0.35, "delay": 0.05, "attack": 0.03, "decay": 0.12, "gain": 0.12, "lp": 6000}
+      ]
+    },
+    "hand_near": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 800,
+      "layers": [
+        {"wave": "noise", "f0": 600, "dur": 0.9, "f1": 1400, "attack": 0.7, "decay": 0.0, "gain": 0.3, "lp": 900},
+        {"wave": "sine", "f0": 45, "dur": 0.9, "f1": 60, "attack": 0.7, "gain": 0.15}
+      ]
+    },
+    "hand_land": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 500,
+      "volume": 0.95,
+      "layers": [
+        {"wave": "sine", "f0": 62, "dur": 0.55, "f1": 42, "attack": 0.004, "decay": 0.18, "gain": 0.6},
+        {"wave": "noise", "f0": 500, "dur": 0.3, "f1": 150, "attack": 0.003, "decay": 0.08, "gain": 0.35, "lp": 400},
+        {"wave": "triangle", "f0": 124, "dur": 0.2, "f1": 90, "attack": 0.003, "decay": 0.05, "gain": 0.15}
+      ]
+    },
+    "hand_lift": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 500,
+      "layers": [
+        {"wave": "noise", "f0": 1400, "dur": 0.7, "f1": 500, "attack": 0.05, "decay": 0.3, "gain": 0.3, "lp": 1000},
+        {"wave": "sine", "f0": 60, "dur": 0.5, "f1": 45, "attack": 0.04, "decay": 0.2, "gain": 0.15}
+      ]
+    },
+    "hand_tap": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "sine", "f0": 180, "dur": 0.14, "f1": 140, "attack": 0.002, "decay": 0.04, "gain": 0.35},
+        {"wave": "noise", "f0": 1500, "dur": 0.06, "attack": 0.001, "decay": 0.015, "gain": 0.18, "lp": 1200}
+      ]
+    },
+    "tiny_step_1": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 110,
+      "layers": [
+        {"wave": "noise", "f0": 9600, "dur": 0.025, "attack": 0.0008, "decay": 0.006, "gain": 0.25, "lp": 4800},
+        {"wave": "sine", "f0": 3200, "dur": 0.02, "attack": 0.0005, "decay": 0.005, "gain": 0.12}
+      ]
+    },
+    "tiny_step_2": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 110,
+      "layers": [
+        {"wave": "noise", "f0": 8100, "dur": 0.025, "attack": 0.0008, "decay": 0.006, "gain": 0.25, "lp": 4050},
+        {"wave": "sine", "f0": 2700, "dur": 0.02, "attack": 0.0005, "decay": 0.005, "gain": 0.12}
+      ]
+    },
+    "tiny_step_3": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 110,
+      "layers": [
+        {"wave": "noise", "f0": 11100, "dur": 0.025, "attack": 0.0008, "decay": 0.006, "gain": 0.25, "lp": 5550},
+        {"wave": "sine", "f0": 3700, "dur": 0.02, "attack": 0.0005, "decay": 0.005, "gain": 0.12}
+      ]
+    },
+    "crumb_pop": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 80,
+      "layers": [
+        {"wave": "sine", "f0": 520, "dur": 0.08, "f1": 1250, "attack": 0.001, "decay": 0.03, "gain": 0.35}
+      ]
+    },
+    "crumb_tick": {
+      "category": "efectos",
+      "voices": 3,
+      "cooldown_ms": 30,
+      "layers": [
+        {"wave": "noise", "f0": 44100, "dur": 0.03, "attack": 0.0005, "decay": 0.006, "gain": 0.25, "lp": 7000},
+        {"wave": "sine", "f0": 1900, "dur": 0.04, "attack": 0.0005, "decay": 0.01, "gain": 0.1}
+      ]
+    },
+    "nest_store": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 300,
+      "layers": [
+        {"wave": "sine", "f0": 1567.98, "dur": 0.25, "attack": 0.001, "decay": 0.07, "gain": 0.25},
+        {"wave": "sine", "f0": 2349.32, "dur": 0.4, "delay": 0.08, "attack": 0.001, "decay": 0.12, "gain": 0.22},
+        {"wave": "sine", "f0": 3135.96, "dur": 0.5, "delay": 0.16, "attack": 0.001, "decay": 0.15, "gain": 0.14}
+      ]
+    },
+    "tiny_hop": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 100,
+      "layers": [
+        {"wave": "square", "f0": 420, "dur": 0.11, "f1": 980, "attack": 0.002, "decay": 0.04, "gain": 0.2, "duty": 0.3, "lp": 4000}
+      ]
+    },
+    "tiny_fall": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "sine", "f0": 1700, "dur": 0.5, "f1": 320, "attack": 0.01, "decay": 0.0, "gain": 0.3, "vibrato": [9, 0.4]}
+      ]
+    },
+    "tiny_land": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 150,
+      "layers": [
+        {"wave": "noise", "f0": 2500, "dur": 0.14, "f1": 600, "attack": 0.002, "decay": 0.035, "gain": 0.35, "lp": 1800},
+        {"wave": "sine", "f0": 260, "dur": 0.08, "f1": 160, "attack": 0.001, "decay": 0.02, "gain": 0.2}
+      ]
+    },
+    "emote_discover": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 120,
+      "layers": [
+        {"wave": "square", "f0": 1568, "dur": 0.06, "attack": 0.001, "decay": 0.02, "gain": 0.16, "duty": 0.25},
+        {"wave": "square", "f0": 2093, "dur": 0.09, "delay": 0.06, "attack": 0.001, "decay": 0.03, "gain": 0.16, "duty": 0.25}
+      ]
+    },
+    "emote_explore": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "triangle", "f0": 660, "dur": 0.07, "f1": 760, "attack": 0.002, "decay": 0.025, "gain": 0.25},
+        {"wave": "triangle", "f0": 880, "dur": 0.12, "f1": 1100, "delay": 0.09, "attack": 0.002, "decay": 0.04, "gain": 0.25}
+      ]
+    },
+    "emote_sweat": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 120,
+      "layers": [
+        {"wave": "sine", "f0": 1100, "dur": 0.12, "f1": 2600, "attack": 0.001, "decay": 0.035, "gain": 0.3}
+      ]
+    },
+    "emote_sleep": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "noise", "f0": 400, "dur": 0.5, "f1": 250, "attack": 0.15, "decay": 0.2, "gain": 0.25, "lp": 500, "vibrato": [18, 2]},
+        {"wave": "sine", "f0": 110, "dur": 0.5, "f1": 90, "attack": 0.15, "decay": 0.2, "gain": 0.08}
+      ]
+    },
+    "emote_note": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "triangle", "f0": 1046.5, "dur": 0.12, "attack": 0.002, "decay": 0.05, "gain": 0.22},
+        {"wave": "triangle", "f0": 1318.5, "dur": 0.12, "delay": 0.1, "attack": 0.002, "decay": 0.05, "gain": 0.22},
+        {"wave": "triangle", "f0": 1568, "dur": 0.22, "delay": 0.2, "attack": 0.002, "decay": 0.08, "gain": 0.22}
+      ]
+    },
+    "emote_vein": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "saw", "f0": 140, "dur": 0.22, "f1": 110, "attack": 0.005, "decay": 0.08, "gain": 0.16, "lp": 1200, "vibrato": [25, 1.5]}
+      ]
+    },
+    "pass_open": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "sine", "f0": 880, "dur": 0.12, "attack": 0.002, "decay": 0.05, "gain": 0.22},
+        {"wave": "sine", "f0": 1318.5, "dur": 0.2, "delay": 0.1, "attack": 0.002, "decay": 0.08, "gain": 0.22}
+      ]
+    },
+    "pass_close": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "sine", "f0": 1318.5, "dur": 0.12, "attack": 0.002, "decay": 0.05, "gain": 0.2},
+        {"wave": "sine", "f0": 880, "dur": 0.2, "delay": 0.1, "attack": 0.002, "decay": 0.08, "gain": 0.2}
+      ]
     }
   }
 }

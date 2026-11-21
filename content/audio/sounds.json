@@ -2,6 +2,254 @@
   "rate": 44100,
   "sounds": [
     {
+      "id": "crumb_pop",
+      "file": "crumb_pop.wav",
+      "category": "efectos",
+      "ms": 80,
+      "voices": 2,
+      "cooldown_ms": 80
+    },
+    {
+      "id": "crumb_tick",
+      "file": "crumb_tick.wav",
+      "category": "efectos",
+      "ms": 40,
+      "voices": 3,
+      "cooldown_ms": 30
+    },
+    {
+      "id": "cup_clink",
+      "file": "cup_clink.wav",
+      "category": "efectos",
+      "ms": 450,
+      "voices": 2,
+      "cooldown_ms": 150
+    },
+    {
+      "id": "door_fusuma",
+      "file": "door_fusuma.wav",
+      "category": "efectos",
+      "ms": 580,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "door_noren",
+      "file": "door_noren.wav",
+      "category": "efectos",
+      "ms": 370,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "emote_discover",
+      "file": "emote_discover.wav",
+      "category": "efectos",
+      "ms": 150,
+      "voices": 2,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "emote_explore",
+      "file": "emote_explore.wav",
+      "category": "efectos",
+      "ms": 210,
+      "voices": 2,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "emote_note",
+      "file": "emote_note.wav",
+      "category": "efectos",
+      "ms": 420,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "emote_sleep",
+      "file": "emote_sleep.wav",
+      "category": "efectos",
+      "ms": 500,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "emote_sweat",
+      "file": "emote_sweat.wav",
+      "category": "efectos",
+      "ms": 120,
+      "voices": 2,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "emote_vein",
+      "file": "emote_vein.wav",
+      "category": "efectos",
+      "ms": 220,
+      "voices": 1,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "fridge_close",
+      "file": "fridge_close.wav",
+      "category": "efectos",
+      "ms": 180,
+      "voices": 1,
+      "cooldown_ms": 1000
+    },
+    {
+      "id": "fridge_open",
+      "file": "fridge_open.wav",
+      "category": "efectos",
+      "ms": 900,
+      "voices": 1,
+      "cooldown_ms": 1000
+    },
+    {
+      "id": "giantess_bite",
+      "file": "giantess_bite.wav",
+      "category": "efectos",
+      "ms": 190,
+      "voices": 1,
+      "cooldown_ms": 500
+    },
+    {
+      "id": "giantess_step_tatami",
+      "file": "giantess_step_tatami.wav",
+      "category": "efectos",
+      "ms": 160,
+      "voices": 2,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "giantess_step_tile",
+      "file": "giantess_step_tile.wav",
+      "category": "efectos",
+      "ms": 80,
+      "voices": 2,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "giantess_step_wood",
+      "file": "giantess_step_wood.wav",
+      "category": "efectos",
+      "ms": 140,
+      "voices": 2,
+      "cooldown_ms": 120
+    },
+    {
+      "id": "hand_land",
+      "file": "hand_land.wav",
+      "category": "efectos",
+      "ms": 550,
+      "voices": 1,
+      "cooldown_ms": 500
+    },
+    {
+      "id": "hand_lift",
+      "file": "hand_lift.wav",
+      "category": "efectos",
+      "ms": 700,
+      "voices": 1,
+      "cooldown_ms": 500
+    },
+    {
+      "id": "hand_near",
+      "file": "hand_near.wav",
+      "category": "efectos",
+      "ms": 900,
+      "voices": 1,
+      "cooldown_ms": 800
+    },
+    {
+      "id": "hand_tap",
+      "file": "hand_tap.wav",
+      "category": "efectos",
+      "ms": 140,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "nest_store",
+      "file": "nest_store.wav",
+      "category": "efectos",
+      "ms": 660,
+      "voices": 1,
+      "cooldown_ms": 300
+    },
+    {
+      "id": "pass_close",
+      "file": "pass_close.wav",
+      "category": "efectos",
+      "ms": 300,
+      "voices": 1,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "pass_open",
+      "file": "pass_open.wav",
+      "category": "efectos",
+      "ms": 300,
+      "voices": 1,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "tiny_fall",
+      "file": "tiny_fall.wav",
+      "category": "efectos",
+      "ms": 500,
+      "voices": 2,
+      "cooldown_ms": 200
+    },
+    {
+      "id": "tiny_hop",
+      "file": "tiny_hop.wav",
+      "category": "efectos",
+      "ms": 110,
+      "voices": 2,
+      "cooldown_ms": 100
+    },
+    {
+      "id": "tiny_land",
+      "file": "tiny_land.wav",
+      "category": "efectos",
+      "ms": 140,
+      "voices": 2,
+      "cooldown_ms": 150
+    },
+    {
+      "id": "tiny_step_1",
+      "file": "tiny_step_1.wav",
+      "category": "efectos",
+      "ms": 25,
+      "voices": 2,
+      "cooldown_ms": 110
+    },
+    {
+      "id": "tiny_step_2",
+      "file": "tiny_step_2.wav",
+      "category": "efectos",
+      "ms": 25,
+      "voices": 2,
+      "cooldown_ms": 110
+    },
+    {
+      "id": "tiny_step_3",
+      "file": "tiny_step_3.wav",
+      "category": "efectos",
+      "ms": 25,
+      "voices": 2,
+      "cooldown_ms": 110
+    },
+    {
+      "id": "tv_on",
+      "file": "tv_on.wav",
+      "category": "efectos",
+      "ms": 630,
+      "voices": 1,
+      "cooldown_ms": 1000
+    },
+    {
       "id": "ui_follow",
       "file": "ui_follow.wav",
       "category": "interfaz",
@@ -56,6 +304,14 @@
       "ms": 260,
       "voices": 1,
       "cooldown_ms": 150
+    },
+    {
+      "id": "zabuton",
+      "file": "zabuton.wav",
+      "category": "efectos",
+      "ms": 300,
+      "voices": 1,
+      "cooldown_ms": 800
     }
   ]
 }

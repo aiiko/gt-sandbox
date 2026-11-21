@@ -28,6 +28,15 @@ type Logged struct {
 	Data string
 }
 
+// Published es un evento publicado con su tipo, para quien reacciona a los
+// eventos sin leer el mundo (el sonido). Seq crece con cada evento, así se
+// distinguen los nuevos aunque pasen varios ticks en un frame.
+type Published struct {
+	Seq   uint64
+	Tick  clock.Tick
+	Event world.Event
+}
+
 // Runner avanza un mundo según el tiempo real, con pausa, paso a paso y
 // velocidad. Solo decide cuántas veces llamar a Step: la simulación es la
 // misma a cualquier velocidad o tasa de frames.
@@ -42,9 +51,11 @@ type Runner struct {
 	Prev, Cur *Frame       // estado antes y después del último Step
 	Log       []Logged     // últimos LogSize eventos, del más viejo al más nuevo
 	Story     []StoryEntry // últimos LogSize resúmenes, en orden de publicación
-	Err       error        // primer error de step; detiene el Runner
-	falls     []Fall       // caídas recientes, para animarlas
-	cues      []Cue        // señales recientes, para las expresiones
+	Events    []Published  // últimos LogSize eventos con su tipo
+	seq       uint64
+	Err       error  // primer error de step; detiene el Runner
+	falls     []Fall // caídas recientes, para animarlas
+	cues      []Cue  // señales recientes, para las expresiones
 
 	hashed   bool
 	hashTick clock.Tick
@@ -143,6 +154,8 @@ func (r *Runner) record() {
 			data = []byte(err.Error())
 		}
 		r.Log = append(r.Log, Logged{Tick: e.Tick, Kind: e.Event.Kind(), Data: string(data)})
+		r.seq++
+		r.Events = append(r.Events, Published{Seq: r.seq, Tick: e.Tick, Event: e.Event})
 		if summary := storyText(r.World.ECS(), e.Event); summary != "" {
 			actor, place := storySubjects(e.Event)
 			entry := StoryEntry{Tick: e.Tick, Text: summary, Actor: actor, Place: place}
@@ -153,6 +166,9 @@ func (r *Runner) record() {
 	}
 	if over := len(r.Log) - LogSize; over > 0 {
 		r.Log = append(r.Log[:0], r.Log[over:]...)
+	}
+	if over := len(r.Events) - LogSize; over > 0 {
+		r.Events = append(r.Events[:0], r.Events[over:]...)
 	}
 	if over := len(r.Story) - LogSize; over > 0 {
 		r.Story = append(r.Story[:0], r.Story[over:]...)

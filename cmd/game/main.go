@@ -164,6 +164,7 @@ type game struct {
 	bench      *benchmark // -bench
 	sound      *sound.Mixer
 	uiSounds   sound.UIWatcher
+	scene      sound.Scene
 	shot       string // captura pedida por -shot
 	shotTick   clock.Tick
 	shotDone   bool
