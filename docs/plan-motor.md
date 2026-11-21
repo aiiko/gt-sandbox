@@ -407,6 +407,8 @@ Cada hito cubre algunos pasos y termina con escenarios en `tests/scenarios` que 
 
 **Aceptación:** los seis pasos se cumplen con al menos 3 de 5 semillas fijas, en menos de 20 minutos simulados, sin romper invariantes. Guardar y cargar en cualquier momento no cambia el resultado. Se puede mirar en `cmd/game` de principio a fin.
 
+**Estado: completado.** Spec en `docs/specs/manana-en-la-casa.md`. El escenario `una_manana_en_la_casa` completa los seis pasos con las cinco semillas fijas en menos de 31 s simulados. La prueba compara el log y el hash después de recargas durante el recorrido. `cmd/game` abre el escenario con el modo historia y permite seguir a una entidad. `simbench -scenario` midió 0,034 ms/tick promedio con la semilla por defecto.
+
 ---
 
 ## 5. Qué queda explícitamente fuera del motor base

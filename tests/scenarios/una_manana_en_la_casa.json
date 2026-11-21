@@ -1,0 +1,712 @@
+{
+  "name": "Una mañana en la casa",
+  "seed": 42,
+  "ticks": 1600,
+  "notes": "La giantess prepara el desayuno en el escritorio. La colonia puede recolectar las migajas mientras come. Al mirar televisión, la giantess vuelve a apoyar la mano, esta vez en el living.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {"kind": "static", "extent": {"min": {"x": 0, "y": 0}, "max": {"x": 0, "y": 0}}}
+      }
+    },
+    {
+      "ref": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {"kind": "static", "extent": {"min": {"x": 0, "y": 0}, "max": {"x": 3000000, "y": 3000000}}},
+        "location": {"space": "$house", "pos": {"x": 3000000, "y": 0, "z": 0}},
+        "components": {
+          "nav_grid": {
+            "origin": {"x": 0, "y": 0},
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "living",
+      "spawn": {
+        "name": "living",
+        "space": {"kind": "static", "extent": {"min": {"x": 0, "y": 0}, "max": {"x": 3000000, "y": 3000000}}},
+        "location": {"space": "$house", "pos": {"x": 6000000, "y": 0, "z": 0}},
+        "components": {
+          "nav_grid": {
+            "origin": {"x": 0, "y": 0},
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "kitchen",
+      "spawn": {
+        "name": "cocina",
+        "space": {"kind": "static", "extent": {"min": {"x": 0, "y": 0}, "max": {"x": 3000000, "y": 3000000}}},
+        "location": {"space": "$house", "pos": {"x": 0, "y": 0, "z": 0}},
+        "components": {
+          "nav_grid": {
+            "origin": {"x": 0, "y": 0},
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "door1",
+      "spawn": {
+        "name": "door1",
+        "components": {
+          "portal": {
+            "a": {"space": "$bedroom", "pos": {"x": 2900000, "y": 1500000}},
+            "b": {"space": "$living", "pos": {"x": 100000, "y": 1500000}},
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "door2",
+      "spawn": {
+        "name": "door2",
+        "components": {
+          "portal": {
+            "a": {"space": "$kitchen", "pos": {"x": 2900000, "y": 1500000}},
+            "b": {"space": "$bedroom", "pos": {"x": 100000, "y": 1500000}},
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "desk1",
+      "object": "desk",
+      "spawn": {
+        "name": "escritorio",
+        "location": {"space": "$bedroom", "pos": {"x": 1500000, "y": 1000000, "z": 750000}}
+      }
+    },
+    {
+      "ref": "desk2",
+      "object": "desk",
+      "spawn": {
+        "name": "mesa del living",
+        "location": {"space": "$living", "pos": {"x": 1500000, "y": 1000000, "z": 750000}},
+        "components": {
+          "place": {"tags": ["living_table"], "spot": {"x": 300000, "y": -300000}, "facing": 1024},
+          "offers": []
+        }
+      }
+    },
+    {
+      "ref": "fridge",
+      "object": "fridge",
+      "spawn": {
+        "name": "heladera",
+        "location": {"space": "$kitchen", "pos": {"x": 1500000, "y": 2600000, "z": 0}},
+        "components": {
+          "offers": [
+            {
+              "action": "snack",
+              "scale": "giantess",
+              "effects": [{"need": "hunger", "amount": 250}],
+              "duration": 200,
+              "approach": {"x": 0, "y": -500000}
+            },
+            {
+              "action": "breakfast",
+              "scale": "giantess",
+              "effects": [{"need": "hunger", "amount": 600}],
+              "approach": {"x": 0, "y": -500000},
+              "steps": [
+                {"do": "goto"},
+                {"do": "wait", "ticks": 40},
+                {"do": "take", "item": "cup"},
+                {"do": "goto", "place": "desk"},
+                {"do": "pose", "pose": "set_table"},
+                {"do": "drop", "offset": {"x": 50000, "y": 150000}},
+                {
+                  "do": "spawn",
+                  "item": "crumb",
+                  "count": 3,
+                  "offset": {"x": 140000, "y": 0},
+                  "spread": 40000
+                },
+                {"do": "pose", "pose": "hand_rest"},
+                {"do": "use", "ticks": 300}
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "spawn": {
+        "name": "giantess",
+        "space": {"kind": "body", "extent": {"min": {"x": 0, "y": 0}, "max": {"x": 0, "y": 0}}},
+        "location": {"space": "$bedroom", "pos": {"x": 1300000, "y": 2000000, "z": 0}},
+        "components": {
+          "mover": {"speed": 1000000},
+          "needs": [
+            {"name": "hunger", "value": 220, "decay": 0},
+            {"name": "energy", "value": 950, "decay": 1},
+            {"name": "fun", "value": 460, "decay": 0}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "palm",
+      "spawn": {
+        "name": "palma",
+        "space": {
+          "kind": "articulated",
+          "extent": {"min": {"x": -50000, "y": -90000}, "max": {"x": 50000, "y": 90000}}
+        },
+        "location": {"space": "$giantess", "pos": {"x": 300000, "y": 0, "z": 1400000}},
+        "components": {
+          "nav_grid": {
+            "origin": {"x": -50000, "y": -90000},
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "contact_surface": {"tolerance": 0, "min_overlap": 0}
+        }
+      }
+    },
+    {
+      "ref": "bed",
+      "object": "bed",
+      "spawn": {
+        "name": "cama",
+        "location": {"space": "$bedroom", "pos": {"x": 900000, "y": 2100000, "z": 0}}
+      }
+    },
+    {
+      "ref": "tv",
+      "object": "tv",
+      "spawn": {
+        "name": "televisor",
+        "location": {"space": "$living", "pos": {"x": 1800000, "y": 2200000, "z": 0}},
+        "components": {
+          "offers": [
+            {
+              "action": "watch",
+              "scale": "giantess",
+              "effects": [{"need": "fun", "amount": 500}],
+              "approach": {"x": 0, "y": -1500000},
+              "steps": [
+                {"do": "goto", "place": "living_table"},
+                {"do": "pose", "pose": "hand_rest"},
+                {"do": "use", "ticks": 300}
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "nest",
+      "object": "nest",
+      "spawn": {"name": "nido", "location": {"space": "$desk1", "pos": {"x": 455000, "y": 290000, "z": 0}}}
+    },
+    {
+      "ref": "tiny01",
+      "spawn": {
+        "name": "Tiny 01",
+        "location": {"space": "$desk1", "pos": {"x": 420000, "y": 330000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 0.2, "distance_cost": 0.2, "sight": 200000, "curiosity": 0.8},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny02",
+      "spawn": {
+        "name": "Tiny 02",
+        "location": {"space": "$desk1", "pos": {"x": 435000, "y": 330000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 0.2, "distance_cost": 0.2, "sight": 200000, "curiosity": 0.8},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny03",
+      "spawn": {
+        "name": "Tiny 03",
+        "location": {"space": "$desk1", "pos": {"x": 450000, "y": 330000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 0.2, "distance_cost": 0.2, "sight": 200000, "curiosity": 0.8},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny04",
+      "spawn": {
+        "name": "Tiny 04",
+        "location": {"space": "$desk1", "pos": {"x": 461000, "y": 262000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny05",
+      "spawn": {
+        "name": "Tiny 05",
+        "location": {"space": "$desk1", "pos": {"x": 483000, "y": 262000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny06",
+      "spawn": {
+        "name": "Tiny 06",
+        "location": {"space": "$desk1", "pos": {"x": 395000, "y": 280000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny07",
+      "spawn": {
+        "name": "Tiny 07",
+        "location": {"space": "$desk1", "pos": {"x": 417000, "y": 280000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny08",
+      "spawn": {
+        "name": "Tiny 08",
+        "location": {"space": "$desk1", "pos": {"x": 439000, "y": 280000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny09",
+      "spawn": {
+        "name": "Tiny 09",
+        "location": {"space": "$desk1", "pos": {"x": 461000, "y": 280000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny10",
+      "spawn": {
+        "name": "Tiny 10",
+        "location": {"space": "$desk1", "pos": {"x": 483000, "y": 280000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny11",
+      "spawn": {
+        "name": "Tiny 11",
+        "location": {"space": "$desk1", "pos": {"x": 395000, "y": 298000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny12",
+      "spawn": {
+        "name": "Tiny 12",
+        "location": {"space": "$desk1", "pos": {"x": 417000, "y": 298000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny13",
+      "spawn": {
+        "name": "Tiny 13",
+        "location": {"space": "$desk1", "pos": {"x": 439000, "y": 298000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny14",
+      "spawn": {
+        "name": "Tiny 14",
+        "location": {"space": "$desk1", "pos": {"x": 461000, "y": 298000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny15",
+      "spawn": {
+        "name": "Tiny 15",
+        "location": {"space": "$desk1", "pos": {"x": 483000, "y": 298000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny16",
+      "spawn": {
+        "name": "Tiny 16",
+        "location": {"space": "$desk1", "pos": {"x": 395000, "y": 316000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny17",
+      "spawn": {
+        "name": "Tiny 17",
+        "location": {"space": "$desk1", "pos": {"x": 417000, "y": 316000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny18",
+      "spawn": {
+        "name": "Tiny 18",
+        "location": {"space": "$desk1", "pos": {"x": 439000, "y": 316000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny19",
+      "spawn": {
+        "name": "Tiny 19",
+        "location": {"space": "$desk1", "pos": {"x": 461000, "y": 316000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny20",
+      "spawn": {
+        "name": "Tiny 20",
+        "location": {"space": "$desk1", "pos": {"x": 483000, "y": 316000, "z": 0}},
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000},
+          "agent": {"scale": "tiny", "work": 1, "distance_cost": 0.2, "sight": 200000},
+          "member": {"colony": "$nest", "forage": 0.02},
+          "needs": [
+            {"name": "hunger", "value": 800, "decay": 2},
+            {"name": "energy", "value": 900, "decay": 1}
+          ]
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$giantess",
+        "components": {
+          "poses": {
+            "idle": [{"part": "$palm", "pos": {"x": 300000, "y": 0, "z": 1400000}, "facing": 0}],
+            "hand_rest": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 770000}, "facing": 0}],
+            "set_table": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 900000}, "facing": 0}]
+          },
+          "agent": {
+            "scale": "giantess",
+            "distance_cost": 0.01,
+            "hand": "$palm",
+            "idle_pose": "idle",
+            "watch": 2000000
+          }
+        }
+      }
+    }
+  ],
+  "expect": [
+    {"event": "action_started", "match": {"entity": "$giantess", "what": "breakfast"}},
+    {"event": "item_dropped", "match": {"entity": "$giantess", "on": "$desk1"}},
+    {"event": "stored", "match": {"colony": "$nest"}},
+    {"event": "explored", "match": {"space": "$palm"}},
+    {
+      "event": "entity_reparented",
+      "match": {"entity": "$giantess", "from": "$bedroom", "to": "$living"}
+    },
+    {"event": "explored", "match": {"space": "$desk2"}},
+    {"no_event": "command_rejected"}
+  ]
+}

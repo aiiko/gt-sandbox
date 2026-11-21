@@ -16,7 +16,7 @@ El renderer dibuja solo desde el Frame. `view.Inspect(w, id)` es la única lectu
 
 - `Advance(dt)` acumula `dt × velocidad` y corre los `Step` que entran (máximo 64 por frame; el resto se descarta y la simulación se ralentiza). `StepOnce` es el paso a paso. Velocidades: x1, x4, x16.
 - Guarda `Prev` y `Cur` (Frames antes y después del último Step) y `Alpha` (fracción del tick siguiente). `Interpolate(prev, cur, alpha)` interpola poses de Spaces y Things para dibujar a 60 FPS; saltos de más de 1 m no se interpolan.
-- Guarda los últimos 200 eventos ya serializados. `Hash()` se calcula una vez por tick.
+- Guarda los últimos 200 eventos ya serializados y hasta 200 resúmenes de historia. Resume los eventos al publicarse, incluso en un frame con varios ticks simulados. `Hash()` se calcula una vez por tick.
 - El paso de un escenario es `scenario.Player.Step` (encola los comandos del tick); pasado el final, el mundo sigue sin comandos y el HUD muestra el resultado de las expectativas.
 
 **Garantía:** el visor solo decide *cuántas* veces llamar a `Step` y encola comandos del jugador. Cámara, velocidad, pausa, capturas, interpolación y picking no cambian el hash (`TestSpeedDoesNotChangeHash`).
@@ -29,9 +29,13 @@ Sigue a un Space ancla (`Nil` = mundo): el centro está en coordenadas locales d
 
 Spaces como polígonos por kind (los marcos sin extensión, como el cuerpo de la giantess, como una cruz con su orientación); celdas bloqueadas y lentas; líneas de grilla si la celda mide ≥ 10 px. Portales cian (estáticos), magenta (de contacto) o gris (deshabilitados). Contactos como línea entre centros. Rutas en amarillo. Things como círculos (mínimo 3 px) coloreados por estado del mover. Con más de 40 things solo se rotula la elegida.
 
+Con `T`, el visor centra la cámara en la entidad seleccionada y usa su posición de mundo interpolada como origen. La vista mantiene su orientación aunque la entidad cambie de Space. Si la entidad desaparece, se conserva el último centro de la cámara.
+
 ## Controles
 
 Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido (o del Space de la entidad elegida) / macro · F encuadrar · rueda zoom · arrastrar o flechas para mover · click elegir · click derecho `move_to` de la entidad elegida a la superficie más alta bajo el cursor · G/P/C/R/L overlays · Esc soltar.
+
+`T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. El escenario por defecto, «Una mañana en la casa», arranca en modo historia. `-story` lo activa al iniciar con otros escenarios.
 
 `-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space.
 

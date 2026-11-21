@@ -1,7 +1,7 @@
 // game es el visor de debug (M6): corre la simulación a 20 TPS, la dibuja a
 // 60 FPS interpolando, y permite inspeccionar y mandar comandos.
 //
-//	go run ./cmd/game                                   # escenario de M5
+//	go run ./cmd/game                                   # Una mañana en la casa
 //	go run ./cmd/game -scenario tests/scenarios/floor_to_desk_by_leg.json
 //	go run ./cmd/game -crowd 200 -seed 7
 //	go run ./cmd/game -load s.json
@@ -9,8 +9,8 @@
 // Controles: Espacio pausa | N paso | 1/2/3 velocidad x1/x4/x16 | Tab vista
 // micro del Space elegido / macro | F encuadrar | rueda zoom | arrastrar o
 // flechas para mover | click elegir | click derecho mover lo elegido ·
-// G/P/C/R/L overlays (grillas, portales, contactos, rutas, nombres) | Esc
-// soltar.
+// T seguir | H historia/eventos | RePág/AvPág recorrer la historia |
+// G/P/C/R/L overlays (grillas, portales, contactos, rutas, nombres) | Esc soltar.
 package main
 
 import (
@@ -38,14 +38,17 @@ import (
 	"gtsandbox/internal/view"
 )
 
+const morningScenario = "tests/scenarios/una_manana_en_la_casa.json"
+
 func main() {
-	scen := flag.String("scenario", "tests/scenarios/giantess_carries_tiny.json", "escenario JSON a reproducir")
+	scen := flag.String("scenario", morningScenario, "escenario JSON a reproducir")
 	crowd := flag.Int("crowd", 0, "en vez de un escenario, n tinies caminando por un escritorio")
 	seed := flag.Uint64("seed", 1, "semilla para -crowd")
 	load := flag.String("load", "", "en vez de un escenario, continuar un snapshot JSON")
 	shot := flag.String("shot", "", "guardar una captura PNG al llegar a -shot-tick y salir")
 	micro := flag.String("micro", "", "empezar en la vista micro del Space con este nombre")
 	shotTick := flag.Int("shot-tick", 0, "tick del escenario (o del mundo) para -shot; corre a x16")
+	story := flag.Bool("story", false, "iniciar en modo historia")
 	flag.Parse()
 
 	g, err := newGame(*scen, *crowd, *seed, *load)
@@ -54,6 +57,12 @@ func main() {
 		os.Exit(1)
 	}
 	g.micro = *micro
+	g.story = *scen == morningScenario && *load == "" && *crowd <= 0
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "story" {
+			g.story = *story
+		}
+	})
 	if *shot != "" {
 		g.shot, g.shotTick = *shot, clock.Tick(*shotTick)+g.run.World.Tick()
 		g.run.Speed = view.Speeds[len(view.Speeds)-1]
@@ -76,11 +85,14 @@ type game struct {
 	proj    camera.Projector
 	layers  render.Layers
 	sel     ids.ID
+	follow  ids.ID
 	w, h    int
 	fitted  bool
 	drag    bool
 	pressAt [2]int
 	last    [2]int
+	story   bool
+	logBack int // líneas desde el final de la historia
 
 	micro    string // -micro
 	shot     string // captura pedida por -shot
@@ -151,9 +163,15 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 
 func (g *game) Layout(w, h int) (int, int) { return w, h }
 
-// anchor devuelve la pose del ancla de la cámara; si el ancla ya no existe,
-// vuelve a la vista macro.
+// anchor usa la pose interpolada de la entidad seguida o del Space micro.
+// El seguimiento acompaña la traslación sin rotar con cada giro del actor.
 func (g *game) anchor(f *view.Frame) fixedmath.Transform {
+	if !g.follow.IsNil() {
+		if p, ok := entityPose(f, g.follow); ok {
+			return fixedmath.Transform{Pos: p.Pos}
+		}
+		g.stopFollowing()
+	}
 	if !g.cam.Anchor.IsNil() {
 		if s, ok := f.SpaceByID(g.cam.Anchor); ok {
 			return s.Pose.Transform()
@@ -163,11 +181,43 @@ func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 	return fixedmath.Identity
 }
 
+func entityPose(f *view.Frame, id ids.ID) (view.Pose, bool) {
+	if t, ok := f.ThingByID(id); ok {
+		return t.Pose, true
+	}
+	if s, ok := f.SpaceByID(id); ok {
+		return s.Pose, true
+	}
+	return view.Pose{}, false
+}
+
+func (g *game) toggleFollow() {
+	if g.sel.IsNil() || g.follow == g.sel {
+		g.stopFollowing()
+		return
+	}
+	if _, ok := entityPose(g.run.Cur, g.sel); ok {
+		g.follow = g.sel
+		g.cam.Anchor, g.cam.X, g.cam.Y = ids.Nil, 0, 0
+	}
+}
+
+func (g *game) stopFollowing() {
+	if !g.follow.IsNil() {
+		g.follow = ids.Nil
+		g.cam.Follow(ids.Nil, fixedmath.Identity, g.proj)
+	}
+}
+
 func (g *game) frame() *view.Frame {
 	return view.Interpolate(g.run.Prev, g.run.Cur, g.run.Alpha())
 }
 
 func (g *game) fit() {
+	if !g.follow.IsNil() {
+		g.cam.X, g.cam.Y = 0, 0
+		return
+	}
 	f := g.run.Cur
 	if s, ok := f.SpaceByID(g.cam.Anchor); ok && !s.Extent.Empty() {
 		g.cam.Fit(s.Extent, g.w, g.h)
@@ -196,9 +246,11 @@ func (g *game) Update() error {
 			}
 		}
 	}
-	g.proj = g.cam.Project(g.anchor(g.frame()), g.w, g.h)
+	f := g.frame()
+	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	g.keys()
-	g.mouse()
+	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
+	g.mouse(f)
 	if g.shotDone {
 		return ebiten.Termination
 	}
@@ -227,10 +279,19 @@ func (g *game) keys() {
 		}
 	case k(ebiten.KeyTab):
 		g.toggleMicro()
+	case k(ebiten.KeyT):
+		g.toggleFollow()
+	case k(ebiten.KeyH):
+		g.story, g.logBack = !g.story, 0
+	case g.story && k(ebiten.KeyPageUp):
+		g.logBack = min(g.logBack+storyRows, max(0, len(r.Story)-storyRows))
+	case g.story && k(ebiten.KeyPageDown):
+		g.logBack = max(0, g.logBack-storyRows)
 	case k(ebiten.KeyF):
 		g.fit()
 	case k(ebiten.KeyEscape):
 		g.sel = ids.Nil
+		g.stopFollowing()
 	case k(ebiten.KeyG):
 		g.layers.Grids = !g.layers.Grids
 	case k(ebiten.KeyP):
@@ -257,6 +318,7 @@ func (g *game) keys() {
 // elegido (o del Space donde está la entidad elegida).
 func (g *game) toggleMicro() {
 	f := g.run.Cur
+	g.stopFollowing()
 	if !g.cam.Anchor.IsNil() {
 		g.cam.Follow(ids.Nil, fixedmath.Identity, g.proj)
 		g.fit()
@@ -274,7 +336,7 @@ func (g *game) toggleMicro() {
 	}
 }
 
-func (g *game) mouse() {
+func (g *game) mouse(f *view.Frame) {
 	x, y := ebiten.CursorPosition()
 	if _, wy := ebiten.Wheel(); wy != 0 {
 		f := 1.25
@@ -296,7 +358,7 @@ func (g *game) mouse() {
 		g.last = [2]int{x, y}
 	case inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) && !g.drag:
 		tol := units.Length(6 / g.cam.Zoom) // 6 px
-		g.sel = g.run.Cur.Pick(g.proj.ToWorld(float64(x), float64(y)), tol)
+		g.sel = f.Pick(g.proj.ToWorld(float64(x), float64(y)), tol)
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		g.moveSelected(g.proj.ToWorld(float64(x), float64(y)))
@@ -321,7 +383,9 @@ func (g *game) Draw(screen *ebiten.Image) {
 	g.w, g.h = screen.Bounds().Dx(), screen.Bounds().Dy()
 	f := g.frame()
 	proj := g.cam.Project(g.anchor(f), g.w, g.h)
-	render.Draw(screen, render.Scene{Frame: f, Proj: proj, Layers: g.layers, Selected: g.sel})
+	render.Draw(screen, render.Scene{
+		Frame: f, Proj: proj, Layers: g.layers, Selected: g.sel, HideMoverLabels: g.story,
+	})
 	g.hud(screen)
 	if g.shot != "" && g.run.Paused && g.run.World.Tick() >= g.shotTick && !g.shotDone {
 		g.shotDone = true
@@ -353,7 +417,9 @@ func (g *game) hud(screen *ebiten.Image) {
 		state = "PAUSA"
 	}
 	mode := "macro"
-	if !g.cam.Anchor.IsNil() {
+	if !g.follow.IsNil() {
+		mode = "siguiendo a " + g.name(g.follow)
+	} else if !g.cam.Anchor.IsNil() {
 		mode = "micro " + g.name(g.cam.Anchor)
 	}
 	lines := []string{
@@ -366,7 +432,8 @@ func (g *game) hud(screen *ebiten.Image) {
 	if r.Err != nil {
 		lines = append(lines, "ERROR: "+r.Err.Error())
 	}
-	lines = append(lines, "espacio pausa | N paso | 1/2/3 vel | tab micro | F encuadrar | click elegir | click der. mover | G P C R L capas")
+	lines = append(lines, "espacio pausa | N paso | 1/2/3 vel | tab micro | F encuadrar | click elegir | T seguir | H historia",
+		"click der. mover | G P C R L capas")
 	ui.Panel(screen, 8, 8, ui.Wrap(lines, (g.w-40)/ui.CharW))
 
 	if !g.sel.IsNil() {
@@ -374,6 +441,10 @@ func (g *game) hud(screen *ebiten.Image) {
 		ui.Panel(screen, g.w-cols*ui.CharW-20, 8, ui.Wrap(view.Inspect(r.World, g.sel), cols))
 	}
 
+	if g.story {
+		g.storyPanel(screen)
+		return
+	}
 	const n = 12
 	log := r.Log[max(0, len(r.Log)-n):]
 	names := g.names()
@@ -381,7 +452,28 @@ func (g *game) hud(screen *ebiten.Image) {
 	for _, e := range log {
 		lines = append(lines, fmt.Sprintf("%5d %s %s", e.Tick, e.Kind, names.Replace(e.Data)))
 	}
-	cols := (g.w - 40) / ui.CharW
+	g.logPanel(screen, lines)
+}
+
+const storyRows = 8
+
+func (g *game) storyPanel(screen *ebiten.Image) {
+	story := g.run.Story
+	end := len(story) - g.logBack
+	start := max(0, end-storyRows)
+	lines := []string{"Historia | H eventos | RePág/AvPág recorrer"}
+	if end == 0 {
+		lines = append(lines, "Todavía no ocurrieron eventos de la historia.")
+	}
+	for _, e := range story[start:end] {
+		sec := e.Tick / clock.TPS
+		lines = append(lines, fmt.Sprintf("%02d:%02d  %s", sec/60, sec%60, e.Text))
+	}
+	g.logPanel(screen, lines)
+}
+
+func (g *game) logPanel(screen *ebiten.Image, lines []string) {
+	cols := max(8, (g.w-40)/ui.CharW)
 	for i := range lines {
 		if r := []rune(lines[i]); len(r) > cols {
 			lines[i] = string(r[:cols-1]) + "~"
@@ -410,6 +502,9 @@ func (g *game) names() *strings.Replacer {
 func (g *game) name(id ids.ID) string {
 	if s, ok := g.run.Cur.SpaceByID(id); ok && s.Name != "" {
 		return s.Name
+	}
+	if t, ok := g.run.Cur.ThingByID(id); ok && t.Name != "" {
+		return t.Name
 	}
 	return id.String()
 }

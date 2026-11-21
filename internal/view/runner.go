@@ -2,6 +2,7 @@ package view
 
 import (
 	"encoding/json"
+	"slices"
 	"time"
 
 	"gtsandbox/internal/sim/clock"
@@ -37,9 +38,10 @@ type Runner struct {
 	Speed  int // multiplicador; uno de Speeds
 	acc    time.Duration
 
-	Prev, Cur *Frame   // estado antes y después del último Step
-	Log       []Logged // últimos LogSize eventos, del más viejo al más nuevo
-	Err       error    // primer error de step; detiene el Runner
+	Prev, Cur *Frame       // estado antes y después del último Step
+	Log       []Logged     // últimos LogSize eventos, del más viejo al más nuevo
+	Story     []StoryEntry // últimos LogSize resúmenes, en orden de publicación
+	Err       error        // primer error de step; detiene el Runner
 
 	hashed   bool
 	hashTick clock.Tick
@@ -101,15 +103,25 @@ func (r *Runner) steps(n int) {
 }
 
 func (r *Runner) record() {
+	first := len(r.Story)
 	for _, e := range r.World.Events() {
 		data, err := json.Marshal(e.Event)
 		if err != nil {
 			data = []byte(err.Error())
 		}
 		r.Log = append(r.Log, Logged{Tick: e.Tick, Kind: e.Event.Kind(), Data: string(data)})
+		if summary := storyText(r.World.ECS(), e.Event); summary != "" {
+			entry := StoryEntry{Tick: e.Tick, Text: summary}
+			if !slices.Contains(r.Story[first:], entry) {
+				r.Story = append(r.Story, entry)
+			}
+		}
 	}
 	if over := len(r.Log) - LogSize; over > 0 {
 		r.Log = append(r.Log[:0], r.Log[over:]...)
+	}
+	if over := len(r.Story) - LogSize; over > 0 {
+		r.Story = append(r.Story[:0], r.Story[over:]...)
 	}
 }
 

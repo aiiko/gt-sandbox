@@ -31,10 +31,11 @@ const MaxThingLabels = 40
 
 // Scene es todo lo que hace falta para dibujar un frame.
 type Scene struct {
-	Frame    *view.Frame
-	Proj     camera.Projector
-	Layers   Layers
-	Selected ids.ID
+	Frame           *view.Frame
+	Proj            camera.Projector
+	Layers          Layers
+	Selected        ids.ID
+	HideMoverLabels bool
 }
 
 // Colores.
@@ -112,7 +113,7 @@ func Draw(dst *ebiten.Image, s Scene) {
 		}
 		crowded := len(f.Things) > MaxThingLabels
 		for _, t := range f.Things {
-			if t.Name != "" && (!crowded || t.ID == s.Selected) {
+			if t.Name != "" && (t.ID == s.Selected || !crowded && (!s.HideMoverLabels || t.Mover == nil)) {
 				x, y := p.ToScreen(t.Pose.Pos)
 				label := t.Name
 				if t.Activity != "" {
