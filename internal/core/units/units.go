@@ -8,7 +8,10 @@
 // por eje, muy por encima de cualquier casa.
 package units
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // Length es una longitud en micrómetros.
 type Length int64
@@ -150,3 +153,19 @@ func (r Rect) Intersect(o Rect) Rect {
 func (r Rect) Overlaps(o Rect) bool { return !r.Intersect(o).Empty() }
 
 func (r Rect) String() string { return fmt.Sprintf("[%v - %v]", r.Min, r.Max) }
+
+// Len devuelve la norma de v, redondeada hacia abajo al µm.
+func (a Vec2) Len() Length { return Length(Isqrt(uint64(a.LengthSq()))) }
+
+// Isqrt devuelve ⌊√n⌋ en enteros. math.Sqrt es correctamente redondeado en
+// IEEE 754 (igual en todas las plataformas); el ajuste final lo hace exacto.
+func Isqrt(n uint64) uint64 {
+	x := uint64(math.Sqrt(float64(n)))
+	for x > 0 && x*x > n {
+		x--
+	}
+	for (x+1)*(x+1) <= n {
+		x++
+	}
+	return x
+}

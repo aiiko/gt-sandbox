@@ -1,0 +1,84 @@
+{
+  "name": "unreachable_goal",
+  "seed": 1,
+  "ticks": 40,
+  "notes": "El destino está dentro de una caja cerrada: el movimiento falla sin moverse. Bloquear la celda del tiny se rechaza.",
+  "entities": [
+    {
+      "ref": "desk",
+      "spawn": {
+        "name": "desk",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {"x": 0, "y": 0},
+            "max": {"x": 400000, "y": 200000}
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {"x": 0, "y": 0},
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....................",
+              "....................",
+              "....................",
+              ".............#####..",
+              ".............#...#..",
+              ".............#...#..",
+              ".............#...#..",
+              ".............#####..",
+              "....................",
+              "...................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny",
+      "spawn": {
+        "name": "tiny",
+        "location": {
+          "space": "$desk",
+          "pos": {"x": 50000, "y": 110000, "z": 0}
+        },
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000}
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny",
+        "goal": {"x": 310000, "y": 110000}
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_cells",
+      "data": {
+        "space": "$desk",
+        "cells": [
+          {"x": 2, "y": 5, "cost": 0}
+        ]
+      }
+    }
+  ],
+  "expect": [
+    {"event": "move_failed", "entity": "$tiny", "by": 5},
+    {"no_event": "move_arrived"},
+    {"event": "command_rejected", "by": 1},
+    {
+      "at": "$tiny",
+      "pos": {"x": 50000, "y": 110000},
+      "tol": 0
+    }
+  ]
+}

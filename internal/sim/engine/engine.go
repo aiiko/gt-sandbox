@@ -12,7 +12,9 @@ import (
 
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
+	"gtsandbox/internal/sim/spatial"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -28,6 +30,12 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	}
 	if err := space.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: spaces: %w", err)
+	}
+	if err := nav.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: nav: %w", err)
+	}
+	if err := spatial.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: spatial: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

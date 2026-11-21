@@ -84,3 +84,15 @@ func TestMass(t *testing.T) {
 		t.Fatalf("String = %q", got)
 	}
 }
+
+func TestIsqrt(t *testing.T) {
+	for _, n := range []uint64{0, 1, 2, 3, 4, 15, 16, 17, 1 << 52, 1<<52 + 1, 1<<62 - 1} {
+		r := Isqrt(n)
+		if r*r > n || (r+1)*(r+1) <= n {
+			t.Fatalf("Isqrt(%d) = %d", n, r)
+		}
+	}
+	if V2(3*Millimeter, 4*Millimeter).Len() != 5*Millimeter {
+		t.Fatal("Len")
+	}
+}

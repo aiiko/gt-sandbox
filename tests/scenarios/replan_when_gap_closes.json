@@ -1,0 +1,84 @@
+{
+  "name": "replan_when_gap_closes",
+  "seed": 1,
+  "ticks": 900,
+  "notes": "El tiny va hacia el hueco de la pared; a los 20 ticks se cierra y debe replanear por el paso del borde.",
+  "entities": [
+    {
+      "ref": "desk",
+      "spawn": {
+        "name": "desk",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {"x": 0, "y": 0},
+            "max": {"x": 400000, "y": 200000}
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {"x": 0, "y": 0},
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "..........#.........",
+              "..........#.........",
+              "..........#.........",
+              "..........#.........",
+              "....................",
+              "..........#.........",
+              "..........#.........",
+              "..........#.........",
+              "..........#.........",
+              "...................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny",
+      "spawn": {
+        "name": "tiny",
+        "location": {
+          "space": "$desk",
+          "pos": {"x": 50000, "y": 90000, "z": 0}
+        },
+        "body": {"radius": 2000, "height": 8000, "mass": 0},
+        "components": {
+          "mover": {"speed": 20000}
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny",
+        "goal": {"x": 350000, "y": 90000}
+      }
+    },
+    {
+      "tick": 20,
+      "kind": "set_cells",
+      "data": {
+        "space": "$desk",
+        "cells": [
+          {"x": 10, "y": 4, "cost": 0}
+        ]
+      }
+    }
+  ],
+  "expect": [
+    {"event": "move_arrived", "entity": "$tiny", "by": 850},
+    {"no_event": "move_failed"},
+    {"no_event": "command_rejected"},
+    {
+      "at": "$tiny",
+      "pos": {"x": 350000, "y": 90000},
+      "tol": 0
+    }
+  ]
+}

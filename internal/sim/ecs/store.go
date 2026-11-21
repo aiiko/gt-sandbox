@@ -177,6 +177,14 @@ func (s *Store[T]) decode(raw json.RawMessage) error {
 	return nil
 }
 
+func (s *Store[T]) decodeValue(raw json.RawMessage) (func(ids.ID), error) {
+	var v T
+	if err := strictUnmarshal(raw, &v); err != nil {
+		return nil, fmt.Errorf("ecs: store %s: %w", s.name, err)
+	}
+	return func(id ids.ID) { s.Set(id, v) }, nil
+}
+
 func (s *Store[T]) check() error {
 	present := 0
 	for _, p := range s.sparse {

@@ -253,7 +253,16 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 - `spatial`: índice por Space (grid hash) para consultas de vecinos.
 - `cmd/simrun` funcional con escenarios.
 
-**Aceptación:** tiny cruza el escritorio esquivando obstáculos; 200 tinies con rutas en un Space bajo X ms/tick (fijar X tras primer benchmark).
+**Aceptación:** tiny cruza el escritorio esquivando obstáculos; 200 tinies con rutas en un Space bajo 1 ms/tick promedio (medido con `cmd/simbench`: ~0,03 ms/tick; 1000 tinies ~0,2 ms/tick).
+
+**Estado: completado.** Spec en `docs/specs/nav.md`. Decisiones tomadas en el camino:
+- La grilla (`nav_grid`) es un componente del Space, serializada como filas de texto (`#`, `.`, `2`–`9`) para que sea legible en snapshots y escribible a mano en escenarios.
+- A* en 8 direcciones sin cortar esquinas, con costos enteros (10/14 × costo de celda); así el segmento recto entre waypoints nunca pisa una celda bloqueada.
+- Las rutas recuerdan la `Version` de la grilla; si cambia, el mover se detiene y replanea. Presupuesto de 64 búsquedas por tick.
+- `set_cells` rechaza bloquear una celda ocupada por un mover (aplastar tinies es de M5+).
+- `spatial.Index` es un recurso derivado (no se guarda ni hashea), reconstruido dos veces por tick.
+- Escenarios JSON en `tests/scenarios/` con referencias `$ref`, comandos programados y expectativas; `scenario.Crowd` genera carga para benchmarks.
+- Sin colisiones entre tinies ni orientación (`Facing`) al caminar: llegan con la IA (M7) o cuando haga falta.
 
 ### M4 — Grafo de spaces y portales
 - Portales estáticos desde el mapa, pathfinding jerárquico (grafo → local).

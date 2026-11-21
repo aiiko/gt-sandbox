@@ -7,8 +7,10 @@
 package cmds
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/comp"
@@ -27,7 +29,13 @@ type Spawn struct {
 	Location *comp.Location `json:"location,omitempty"`
 	Body     *comp.Body     `json:"body,omitempty"`
 	Space    *space.Space   `json:"space,omitempty"`
+	// Components asigna componentes de otros subsistemas por nombre de store
+	// (p. ej. "mover", "nav_grid"). Los que tienen campo propio arriba no
+	// pueden ir acá: sus campos propios pasan por validación.
+	Components map[string]json.RawMessage `json:"components,omitempty"`
 }
+
+var typedStores = map[string]bool{"name": true, "location": true, "body": true, "space": true}
 
 func (Spawn) Kind() string { return "spawn" }
 
@@ -40,8 +48,27 @@ func (c Spawn) Apply(w *world.World) error {
 			return fmt.Errorf("spawn: %w", err)
 		}
 	}
+	names := make([]string, 0, len(c.Components))
+	for n := range c.Components {
+		if typedStores[n] {
+			return fmt.Errorf("spawn: %q debe ir en su campo propio", n)
+		}
+		names = append(names, n)
+	}
+	slices.Sort(names)
+	setters := make([]func(ids.ID), len(names))
+	for i, n := range names {
+		set, err := w.ECS().DecodeComponent(n, c.Components[n])
+		if err != nil {
+			return fmt.Errorf("spawn: %w", err)
+		}
+		setters[i] = set
+	}
 	s := comp.Of(w.ECS())
 	id := w.ECS().Spawn()
+	for _, set := range setters {
+		set(id)
+	}
 	if c.Name != "" {
 		s.Name.Set(id, c.Name)
 	}

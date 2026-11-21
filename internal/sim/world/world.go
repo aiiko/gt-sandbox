@@ -17,6 +17,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"sync"
 
@@ -85,6 +86,7 @@ type World struct {
 	cmdLog    []CommandRecord
 
 	invariants []invariant
+	resources  map[reflect.Type]any
 }
 
 type invariant struct {

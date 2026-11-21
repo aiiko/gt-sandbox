@@ -2,8 +2,7 @@
 //
 //	go run ./cmd/simrun -seed 42 -ticks 1000 -spawn 100 -save out.json
 //	go run ./cmd/simrun -load out.json -ticks 500
-//
-// A partir de M3 cargará escenarios.
+//	go run ./cmd/simrun -scenario tests/scenarios/tiny_crosses_desk.json
 package main
 
 import (
@@ -14,6 +13,7 @@ import (
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/scenario"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/engine"
@@ -27,12 +27,46 @@ func main() {
 	spawn := flag.Int("spawn", 0, "entidades a crear en el primer tick (en grilla)")
 	load := flag.String("load", "", "snapshot JSON desde el cual continuar")
 	save := flag.String("save", "", "guardar snapshot JSON al terminar")
+	scen := flag.String("scenario", "", "correr un escenario JSON y verificar sus expectativas")
 	flag.Parse()
 
+	if *scen != "" {
+		if err := runScenario(*scen); err != nil {
+			fmt.Fprintln(os.Stderr, "simrun:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(*seed, *ticks, *spawn, *load, *save); err != nil {
 		fmt.Fprintln(os.Stderr, "simrun:", err)
 		os.Exit(1)
 	}
+}
+
+func runScenario(path string) error {
+	spec, err := scenario.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	in, err := scenario.Build(spec)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fails, err := in.Run()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s: ticks=%d eventos=%d real=%v hash=%#016x\n",
+		spec.Name, spec.Ticks, len(in.Events), time.Since(start), in.World.Hash())
+	for _, f := range fails {
+		fmt.Println("  FALLA:", f)
+	}
+	if len(fails) > 0 {
+		return fmt.Errorf("%d expectativas fallaron", len(fails))
+	}
+	fmt.Printf("  %d expectativas OK\n", len(spec.Expect))
+	return nil
 }
 
 // spawnFloor crea un Space raíz de 10×10 m (consume un tick) y devuelve su ID.

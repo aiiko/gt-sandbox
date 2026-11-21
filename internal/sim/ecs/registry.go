@@ -29,6 +29,7 @@ type anyStore interface {
 	hashState(h *statehash.Hasher)
 	encode() (json.RawMessage, error)
 	decode(json.RawMessage) error
+	decodeValue(json.RawMessage) (func(ids.ID), error)
 	check() error
 }
 
@@ -109,6 +110,18 @@ func (r *Registry) StoreNames() []string {
 		out[i] = s.Name()
 	}
 	return out
+}
+
+// DecodeComponent decodifica un valor JSON para el store `name` y devuelve
+// una función que lo asigna a una entidad. Permite crear entidades con
+// componentes arbitrarios desde datos (comandos, escenarios) validando todo
+// antes de modificar nada.
+func (r *Registry) DecodeComponent(name string, raw json.RawMessage) (func(ids.ID), error) {
+	s, ok := r.byName[name]
+	if !ok {
+		return nil, fmt.Errorf("ecs: store %q desconocido", name)
+	}
+	return s.decodeValue(raw)
 }
 
 // Spawn crea una entidad sin componentes.

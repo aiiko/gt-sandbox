@@ -30,8 +30,12 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - Jerarquía espacial: un Space es una entidad con `space.Space`; todo cuelga por `comp.Location` (ver `docs/specs/space.md`). Posiciones de mundo siempre vía `space.Of(reg)` (`Frame`, `WorldPose`, `Reparent`), nunca sumando offsets a mano.
 - Ángulos con `fixedmath.Angle`; nunca `math.Sin`/`math.Cos` en la simulación. La tabla se regenera con `go generate ./internal/core/fixedmath`.
 - Cada subsistema registra sus invariantes con `world.AddInvariant`.
+- Estado derivado (cachés, índices) va en recursos (`world.SetResource`/`world.Resource`), nunca en componentes: no se hashea ni se guarda.
+- Navegación (ver `docs/specs/nav.md`): grilla `nav_grid` en el Space, componente `mover`, comandos `move_to`/`stop`/`set_cells`.
 - Cambiar qué se hashea → incrementar `world.HashVersion`. Cambio incompatible en snapshots → incrementar `world.SnapshotSchema`.
-- `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`.
+- `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario.
+- Escenarios de integración en `tests/scenarios/*.json` (los corre `TestScenarios`). Escribir archivos con UTF-8 y LF.
+- Rendimiento: `go run ./cmd/simbench -n 200`.
 
 ## Capas
 
