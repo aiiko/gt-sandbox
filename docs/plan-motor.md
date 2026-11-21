@@ -218,6 +218,8 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 
 **Aceptación:** `go test ./...` corre; un test de 10.000 ticks vacíos con misma semilla da el mismo hash dos veces.
 
+**Estado: completado.** Módulo `gtsandbox`. Además del alcance: `core/statehash`, `cmd/simrun`, test que prohíbe `math/rand`/`time` en `sim`/`core`, y `CLAUDE.md`. Pendiente: `staticcheck` y `-race` (no hay gcc instalado para cgo).
+
 ### M1 — Entidades, comandos, eventos
 - `ecs` con `Store[T]`, despawn diferido, IDs generacionales.
 - Cola de comandos con secuencia, bus de eventos diferido.
