@@ -37,6 +37,7 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario.
 - Escenarios de integración en `tests/scenarios/*.json` (los corre `TestScenarios`). Escribir archivos con UTF-8 y LF.
 - Rendimiento: `go run ./cmd/simbench -n 200`.
+- IA (ver `docs/specs/ai.md`): `needs`, `agent` + `offers` (smart objects), `job`/`reservation`/`carried`. Las acciones (`ai.Action`) no guardan estado propio: todo va en `agent.doing`. Desde un sistema, mover con `nav.Approach`/`nav.Halt` y reservar con `jobs.Reserve`. Objetos en `content/objects/*.json`, usados en escenarios con `"object"`.
 - Visor de debug (ver `docs/specs/visor.md`): `go run ./cmd/game` (escenario de M5), `-scenario x.json`, `-crowd 200`, `-load s.json`; `-shot out.png -shot-tick N [-micro palm]` guarda una captura y sale (sirve para revisar cambios visuales sin interactuar). El renderer solo dibuja `view.Frame`; nunca leer el mundo desde `render`/`ui`.
 - Go: `go.mod` fija `toolchain go1.27.4` (lo descarga el comando `go`).
 

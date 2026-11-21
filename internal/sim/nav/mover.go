@@ -111,6 +111,57 @@ func (c MoveTo) Apply(w *world.World) error {
 	return nil
 }
 
+// Progress es el resultado de Approach.
+type Progress uint8
+
+const (
+	Underway Progress = iota // pedido o en camino
+	Arrived
+	Failed // el movimiento pedido terminó sin llegar
+)
+
+// ArriveTolerance es cuán cerca del destino cuenta como llegar.
+const ArriveTolerance = units.Millimeter
+
+// Approach es el movimiento visto desde un sistema (IA, jobs): pide caminar
+// a goal (en coordenadas de sp) si hace falta, e informa si ya llegó.
+// requested es estado del llamador: indica que el pedido ya se hizo, para
+// distinguir "todavía no pedí" de "pedí y el mover se detuvo sin llegar".
+// Volver a ponerlo en false hace que el próximo llamado pida de nuevo.
+func Approach(w *world.World, e, sp ids.ID, goal units.Vec2, requested *bool) Progress {
+	loc, ok := comp.Of(w.ECS()).Location.Get(e)
+	m := ecs.Get[Mover](w.ECS()).Ptr(e)
+	if !ok || m == nil {
+		return Failed
+	}
+	if loc.Space == sp && loc.Pos.XY().DistSq(goal) <= int64(ArriveTolerance)*int64(ArriveTolerance) {
+		*requested = false
+		if m.Status != Idle {
+			*m = m.idle()
+		}
+		return Arrived
+	}
+	if *requested {
+		if m.Status != Idle && m.GoalSpace == sp && m.Goal == goal {
+			return Underway
+		}
+		*requested = false
+		return Failed
+	}
+	if err := (MoveTo{Entity: e, Space: sp, Goal: goal}).Apply(w); err != nil {
+		return Failed
+	}
+	*requested = true
+	return Underway
+}
+
+// Halt detiene el movimiento de e (sin evento), si es un mover.
+func Halt(w *world.World, e ids.ID) {
+	if m := ecs.Get[Mover](w.ECS()).Ptr(e); m != nil {
+		*m = m.idle()
+	}
+}
+
 // Stop detiene el movimiento de una entidad, sin evento.
 type Stop struct {
 	Entity ids.ID `json:"entity"`

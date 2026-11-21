@@ -80,6 +80,8 @@ func TestSaveLoadMidMove(t *testing.T) {
 		{"replan_when_gap_closes", "tiny", 60, 1},
 		{"portal_disabled_midway", "tiny", 150, 3},    // suelo, pata A, escritorio
 		{"giantess_carries_tiny", "giantess", 120, 2}, // habitación A, puerta, B
+		{"job_resumes_after_fall", "tiny", 100, 1},    // trabajo retomado, IA y reservas en curso
+		{"giantess_needs_stable", "giantess", 260, 1}, // yendo a la heladera
 	}
 	for _, c := range cases {
 		spec, err := ReadFile("../../tests/scenarios/" + c.file + ".json")

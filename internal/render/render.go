@@ -114,7 +114,11 @@ func Draw(dst *ebiten.Image, s Scene) {
 		for _, t := range f.Things {
 			if t.Name != "" && (!crowded || t.ID == s.Selected) {
 				x, y := p.ToScreen(t.Pose.Pos)
-				ebitenutil.DebugPrintAt(dst, t.Name, int(x)+6, int(y)+2)
+				label := t.Name
+				if t.Activity != "" {
+					label += " [" + t.Activity + "]"
+				}
+				ebitenutil.DebugPrintAt(dst, label, int(x)+6, int(y)+2)
 			}
 		}
 	}

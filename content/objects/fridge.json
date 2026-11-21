@@ -1,0 +1,9 @@
+{
+  "name": "fridge",
+  "body": {"radius": 350000, "height": 1800000, "mass": 0},
+  "components": {
+    "offers": [
+      {"action": "eat", "scale": "giantess", "effects": [{"need": "hunger", "amount": 600}], "duration": 200, "approach": {"x": 0, "y": -500000}}
+    ]
+  }
+}

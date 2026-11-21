@@ -56,7 +56,7 @@ gt-sandbox/
 │   │   ├── spatial/           # Índice espacial por Space
 │   │   ├── nav/               # Grid local + grafo de portales
 │   │   ├── attach/            # Contactos, portales dinámicos y poses
-│   │   ├── ai/  needs/  jobs/ # Esqueletos en M7, contenido después
+│   │   ├── ai/  needs/  jobs/ # Utility AI, necesidades, reservas y trabajos (M7)
 │   ├── content/               # Carga y validación de definiciones JSON
 │   ├── scenario/              # Formato y runner de escenarios de test
 │   ├── view/  camera/         # Frame plano del mundo y proyección, sin Ebitengine
@@ -321,6 +321,16 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 - `jobs`: cola de trabajos, reservas con expiración, liberación al morir/cancelar.
 
 **Aceptación:** dos tinies no reservan la misma migaja; una giantess con 3 necesidades y 3 acciones elige de forma estable (no oscila); un job interrumpido por un evento se retoma.
+
+**Estado: completado.** Spec en `docs/specs/ai.md`. Decisiones tomadas en el camino:
+- Necesidades enteras en [0, 1000]; utilidad en float (D6) con curva cuadrática de urgencia y costo por distancia.
+- Histéresis como inercia aditiva de la acción en curso. Seguir con una acción vale lo que falta de su efecto. Sin inercia, la giantess oscila entre heladera y tele; el test lo verifica.
+- Las acciones no guardan estado: todo va en `agent.doing`, que se guarda y se hashea. Las acciones del núcleo son `use` (smart objects) y `work` (jobs). `ai.Install` acepta acciones extra.
+- Las reservas son un componente de la cosa reservada, lo que las hace exclusivas por construcción. Vencen si no se renuevan.
+- La etapa de un trabajo vive en el trabajo. Un evento (por ahora `entity_fell`) suspende la acción y, tras recuperarse, el agente la retoma.
+- `nav.Approach` y `nav.Halt` permiten que los sistemas pidan movimiento sin pasar por comandos.
+- Definiciones de objetos en `content/objects/*.json` (embebidas), cargadas por `internal/content` con validación estricta. Los escenarios las usan con `"object"`.
+- `SnapshotSchema` sube a 5 (stores nuevos).
 
 **Al terminar M7 el motor base está listo** y se puede atacar el vertical slice ("Una mañana en la casa") de la propuesta como trabajo de contenido y comportamiento, no de infraestructura.
 

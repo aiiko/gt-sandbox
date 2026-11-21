@@ -1,0 +1,9 @@
+{
+  "name": "tv",
+  "body": {"radius": 500000, "height": 600000, "mass": 0},
+  "components": {
+    "offers": [
+      {"action": "watch", "scale": "giantess", "effects": [{"need": "fun", "amount": 500}], "duration": 300, "approach": {"x": 0, "y": -1500000}}
+    ]
+  }
+}

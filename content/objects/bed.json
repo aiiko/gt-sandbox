@@ -1,0 +1,9 @@
+{
+  "name": "bed",
+  "body": {"radius": 900000, "height": 500000, "mass": 0},
+  "components": {
+    "offers": [
+      {"action": "sleep", "scale": "giantess", "effects": [{"need": "energy", "amount": 800}], "duration": 600}
+    ]
+  }
+}

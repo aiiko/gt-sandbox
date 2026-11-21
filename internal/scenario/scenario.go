@@ -29,6 +29,7 @@ import (
 	"slices"
 	"strings"
 
+	"gtsandbox/internal/content"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
@@ -48,9 +49,12 @@ type Spec struct {
 	Notes    string        `json:"notes,omitempty"` // libre, para humanos
 }
 
+// EntitySpec es una entidad a crear. Con Object, Spawn se combina con esa
+// definición de content/objects (Spawn reemplaza campos y componentes).
 type EntitySpec struct {
-	Ref   string          `json:"ref"`
-	Spawn json.RawMessage `json:"spawn"`
+	Ref    string          `json:"ref"`
+	Object string          `json:"object,omitempty"`
+	Spawn  json.RawMessage `json:"spawn"`
 }
 
 type CommandSpec struct {
@@ -120,7 +124,17 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 		var wave []EntitySpec
 		var rest []EntitySpec
 		for _, e := range pending {
-			raw, err := in.resolve(e.Spawn)
+			spawn := e.Spawn
+			if e.Object != "" {
+				lib, err := content.Default()
+				if err != nil {
+					return nil, err
+				}
+				if spawn, err = lib.Spawn(e.Object, spawn); err != nil {
+					return nil, fmt.Errorf("scenario: entidad %q: %w", e.Ref, err)
+				}
+			}
+			raw, err := in.resolve(spawn)
 			if err != nil {
 				rest = append(rest, e)
 				continue

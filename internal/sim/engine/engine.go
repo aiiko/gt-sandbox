@@ -10,10 +10,13 @@ import (
 	"fmt"
 	"io"
 
+	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/needs"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/spatial"
 	"gtsandbox/internal/sim/world"
@@ -40,6 +43,15 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	}
 	if err := attach.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: attach: %w", err)
+	}
+	if err := needs.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: needs: %w", err)
+	}
+	if err := jobs.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: jobs: %w", err)
+	}
+	if err := ai.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: ai: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

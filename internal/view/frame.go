@@ -13,6 +13,7 @@ import (
 	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
@@ -64,6 +65,8 @@ type Thing struct {
 	Height units.Length `json:"height"`
 	Body   bool         `json:"body"`
 	Mover  *Mover       `json:"mover,omitempty"`
+	// Activity resume lo que hace un agente ("use:eat", "work", "work (suspendida)").
+	Activity string `json:"activity,omitempty"`
 }
 
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
@@ -170,6 +173,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	})
 
 	movers := ecs.Get[nav.Mover](r)
+	agents := ecs.Get[ai.Agent](r)
 	spaces := ecs.Get[space.Space](r)
 	cs.Location.Each(func(id ids.ID, l *comp.Location) {
 		if spaces.Has(id) {
@@ -188,6 +192,9 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			if m.Status == nav.Moving {
 				t.Mover.Route = route(g, p.Pos, m.Legs)
 			}
+		}
+		if a, ok := agents.Get(id); ok {
+			t.Activity = activity(r, a)
 		}
 		f.Things = append(f.Things, t)
 	})
@@ -224,6 +231,21 @@ func (c *Capturer) grid(id ids.ID, g *nav.Grid) *Grid {
 	}
 	c.grids[id] = v
 	return v
+}
+
+func activity(r *ecs.Registry, a ai.Agent) string {
+	d, suffix := a.Doing, ""
+	if d == nil && a.Suspended != nil {
+		d, suffix = a.Suspended, " (suspendida)"
+	}
+	if d == nil {
+		return ""
+	}
+	name := d.Action
+	if os, ok := ecs.Get[ai.Offers](r).Get(d.Target); ok && d.Action == "use" && d.Offer < len(os) {
+		name += ":" + os[d.Offer].Action
+	}
+	return name + suffix
 }
 
 // route pasa los tramos pendientes a puntos de mundo.
