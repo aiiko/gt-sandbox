@@ -374,6 +374,14 @@ Cada hito cubre algunos pasos y termina con escenarios en `tests/scenarios` que 
 
 **Aceptación:** aparecen migajas fuera del alcance de visión; hasta que un tiny las ve no hay trabajos. Después la colonia publica trabajos, varios recolectores las llevan al nido y el depósito sube. Ningún tiny se muere de hambre en 10 minutos simulados. Un trabajo inalcanzable no se reintenta en loop (`TestScenarios` cuenta las asignaciones).
 
+**Estado: completado.** Spec en `docs/specs/ai.md` (secciones percepción, reintentos y colonias). Decisiones tomadas en el camino:
+- La percepción vive en `ai` (`agent.sight`, `agent.known`, sistema `ai.look`): lo interesante son los smart objects, y `ai` es quien los conoce. Sin `sight`, el agente conoce todo.
+- Se comparte de inmediato con toda la colonia (la opción simple del plan).
+- La colonia es un smart object más: el depósito es `portions` y comer del depósito es una oferta con `consume` + `keep`. No hizo falta una acción nueva para comer ni para descansar.
+- Para que alguien encuentre la comida hacía falta salir a buscar: la acción `forage` (paseo al azar con utilidad baja) se adelantó de M10. M10 suma la curiosidad por superficies y portales desconocidos.
+- Los reintentos se resolvieron en `ai` y no en `jobs`: cualquier acción que falla deja su objetivo evitado durante 30 s, sea un trabajo o un objeto.
+- `SnapshotSchema` sube a 6 (stores de M8 y M9).
+
 ### M10 — Curiosidad y exploración (pasos 4 y 6)
 - Necesidad o rasgo `curiosity` y acción `explore`: valora las superficies y portales que no conoce, en especial los dinámicos (la mano). La utilidad decae con lo ya visitado.
 - Subir a la giantess por decisión propia: si el portal mano↔escritorio está activo y el tiny es curioso, cruza. Si la mano se levanta, el tiny queda en la palma (ya resuelto en M5) y la IA lo trata como un cambio de Space, no como un error.

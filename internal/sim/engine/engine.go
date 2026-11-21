@@ -13,6 +13,7 @@ import (
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/cmds"
+	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
@@ -50,8 +51,11 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	if err := jobs.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: jobs: %w", err)
 	}
-	if err := ai.Install(w); err != nil {
+	if err := ai.Install(w, colony.Forage{}); err != nil {
 		return nil, fmt.Errorf("engine: ai: %w", err)
+	}
+	if err := colony.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: colony: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

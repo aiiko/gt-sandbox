@@ -47,7 +47,7 @@ const (
 	StepTake    = "take"    // crear Item y cargarlo
 	StepDrop    = "drop"    // dejar lo cargado en Offset
 	StepSpawn   = "spawn"   // crear Count copias de Item alrededor de Offset
-	StepConsume = "consume" // gastar Amount porciones del objeto (sin porciones, todo)
+	StepConsume = "consume" // gastar Amount porciones del objeto (sin porciones, todo; ver Keep)
 )
 
 // Step es un paso de una oferta. Offset es relativo a la mano del actor
@@ -63,6 +63,7 @@ type Step struct {
 	Offset units.Vec2   `json:"offset,omitempty"`
 	Spread units.Length `json:"spread,omitempty"`
 	Amount int32        `json:"amount,omitempty"`
+	Keep   bool         `json:"keep,omitempty"` // consume: en 0 porciones no desaparece (un depósito)
 }
 
 // Place marca un lugar donde se hacen cosas (componente "place"): un
@@ -241,7 +242,7 @@ func (use) Options(c *Ctx) []Option {
 		}
 	offers:
 		for i, o := range *os {
-			if o.Scale != c.Agent.Scale || wasteful(c, o.Effects) || o.Validate() != nil {
+			if o.Scale != c.Agent.Scale || wasteful(c, o.Effects) || !c.Agent.Knows(e) || !stocked(c, e, o) || o.Validate() != nil {
 				continue
 			}
 			for _, s := range o.plan() {
@@ -256,6 +257,20 @@ func (use) Options(c *Ctx) []Option {
 		}
 	})
 	return out
+}
+
+// stocked: si la oferta consume porciones, el objeto tiene suficientes.
+func stocked(c *Ctx, e ids.ID, o Offer) bool {
+	p, ok := ecs.Get[Portions](c.W.ECS()).Get(e)
+	if !ok {
+		return true
+	}
+	for _, s := range o.plan() {
+		if s.Do == StepConsume && p.Left < max(s.Amount, 1) {
+			return false
+		}
+	}
+	return true
 }
 
 // wasteful: todos los efectos se desperdiciarían en más de la mitad (no se
@@ -406,7 +421,7 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 			left = p.Left
 		}
 		w.Emit(Consumed{Entity: c.Actor, Target: d.Target, Left: left})
-		if left == 0 {
+		if left == 0 && !s.Keep {
 			w.ECS().Despawn(d.Target)
 		}
 	}

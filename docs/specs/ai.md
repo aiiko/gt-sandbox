@@ -1,6 +1,6 @@
-# Spec: Necesidades, IA, smart objects y trabajos (M7)
+# Spec: Necesidades, IA, smart objects, trabajos y colonias (M7–M9)
 
-Paquetes: `sim/needs`, `sim/jobs`, `sim/ai`, `content` (datos) e `internal/content` (carga). Es un esqueleto: la infraestructura está y el contenido es mínimo.
+Paquetes: `sim/needs`, `sim/jobs`, `sim/ai`, `sim/colony`, `content` (datos) e `internal/content` (carga). Es un esqueleto: la infraestructura está y el contenido es mínimo.
 
 ## Necesidades (`needs`)
 
@@ -30,7 +30,7 @@ Una oferta de varios pasos se describe con datos. Los pasos instantáneos se enc
 | `take` | Crea `item` y lo carga (`carried` + reserva). |
 | `drop` | Deja lo cargado en `offset` (`item_dropped`). |
 | `spawn` | Crea `count` copias de `item` en un anillo de radio `spread` alrededor de `offset`. |
-| `consume` | Gasta `amount` porciones del objeto (`portions {left}`); en 0, o si no tiene porciones, el objeto desaparece (`consumed`). |
+| `consume` | Gasta `amount` porciones del objeto (`portions {left}`); en 0, o si no tiene porciones, el objeto desaparece (`consumed`), salvo con `keep` (un depósito). Si no quedan porciones suficientes, la oferta no es una opción. |
 
 - `offset` es relativo a la mano del actor (`agent.hand`, un Space montado sobre él) o, si no tiene, al actor, y gira con él. Lo que se deja o se crea cae enseguida a la superficie de abajo (`space.Land`, que emite `entity_fell`): así la taza y las migajas que suelta la mano apoyada terminan sobre el escritorio.
 - En el JSON de `content`, `"item": "<nombre>"` se reemplaza por la definición completa de ese objeto (con detección de ciclos). La simulación recibe datos autocontenidos y no conoce la biblioteca.
@@ -54,6 +54,28 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
   - `use`: reserva el objeto, camina al punto de uso y aplica los efectos de a poco durante `duration`; al terminar suman exactamente `amount`.
   - `work`: toma un trabajo abierto y lo ejecuta.
 - **Movimiento desde sistemas:** `nav.Approach` pide caminar y avisa si el agente llegó o si falló. `nav.Halt` lo detiene.
+
+## Percepción y memoria
+
+- Un agente con `sight > 0` solo usa los smart objects que conoce (`agent.known`). Sin `sight` conoce todo (la giantess, por ahora).
+- `ai.look` (fase Decide, antes del selector) mira cada `LookPeriod` (10 ticks) con el índice espacial: los objetos con `offers` a distancia ≤ `sight` en su mismo Space. Algo nuevo se agrega con `noticed {entity, target}`. Olvida lo que ya no existe y, pasado `MaxKnown` (64), lo más viejo.
+- `ai.Learn` hace que un agente conozca algo sin verlo (se lo contaron).
+- Los trabajos no dependen de la memoria: la cola es conocimiento compartido.
+
+## Reintentos
+
+Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 s): `agent.avoid`. Vale para cualquier acción; un trabajo inalcanzable vuelve a la cola y el que falló no lo retoma enseguida.
+
+## Colonias (`colony`)
+
+- La colonia es una entidad en el nido con `colony {radius}`. También es un smart object: `portions` es su depósito, y sus ofertas son comer del depósito (`consume` con `keep`) y descansar. Definición en `content/objects/nest.json`.
+- Los miembros tienen `member {colony, forage}`.
+- `colony.share` (fase Decide, entre `ai.look` y el selector):
+  - cada miembro conoce su nido;
+  - lo que un miembro notó en el tick anterior lo aprenden los demás;
+  - si es comida (`food`), no está en el nido y nadie la lleva ni tiene un trabajo sobre ella, la colonia publica un `haul` al nido.
+- `colony.store` (fase Consequences): la comida suelta, sin reservar y a menos de `radius` del nido se guarda; suma sus porciones (o 1) al depósito y desaparece (`stored {colony, item, portions, total}`).
+- Acción `forage` (de `colony`, instalada como acción extra de `ai`): caminar a un punto transitable al azar a menos de `ForageRange` (30 cm), con el RNG `colony.forage`. Vale `member.forage`, así que solo gana cuando no hay nada mejor. Así se encuentran cosas fuera de la vista.
 
 ## Suspensión y reanudación
 
@@ -85,12 +107,13 @@ Hay eventos que interrumpen: por ahora `entity_fell`. Cuando le pasa a un agente
 - `job_resumes_after_fall` (aceptación): el tiny toma el trabajo, la palma desaparece y el tiny cae. El trabajo se suspende, se retoma y termina, sin que la reserva venza.
 - `giantess_breakfast` (aceptación de M8): casa con cocina, dormitorio y living. Con hambre alta, la giantess desayuna en el escritorio con la mano apoyada (portal mano↔escritorio), deja la taza y tres migajas sobre el escritorio, levanta la mano y no repite el desayuno sin hambre. `TestBreakfastInterrupted` la interrumpe mientras come: la mano se levanta y la taza queda en el piso, sin carga ni reserva.
 - `tiny_eats_crumb` (aceptación de M8): un tiny come una migaja de tres porciones hasta que desaparece.
+- `colony_gathers` (aceptación de M9): seis tinies, un nido y ocho migajas fuera de su vista. Salen a buscar, la colonia acarrea lo que ven y comen del depósito. `TestColonyFeeds` verifica que no hay trabajos sobre algo que nadie vio, que nadie usa algo que no conoce, que se guarda comida y que en 10 minutos nadie llega a hambre 0.
+- `unreachable_food_retry` (aceptación de M9): una migaja encerrada; el tiny toma el trabajo, falla y lo vuelve a tomar recién 30 s después (exactamente dos asignaciones en 50 s).
 
 ## Pendiente
 
-- Percepción: hoy los agentes conocen todas las ofertas y trabajos. Personalidad más allá de pesos. Curvas de utilidad por contenido.
+- Percepción: solo un radio y solo el propio Space (no se ve de la palma al escritorio). Lo que se ve se comparte con la colonia de inmediato, no al volver al nido. Personalidad más allá de pesos. Curvas de utilidad por contenido.
 - Más eventos que interrumpan, y prioridades de emergencia (huir) por encima de la utilidad.
-- Reintentos con espera: un trabajo inalcanzable vuelve a la cola y puede volver a elegirse enseguida.
 - Compromiso: una acción a medias vale solo lo que le falta, así que con dos necesidades urgentes la giantess puede alternar (dormir ↔ desayunar) y deja una taza en el piso cada vez. Hace falta que el compromiso crezca con el avance, o retomar acciones a medias.
 - Lugares reservables (hoy dos agentes pueden elegir el mismo escritorio).
 - `spawn` en anillo fijo: variar posiciones con RNG cuando importe.

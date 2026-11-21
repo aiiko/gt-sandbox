@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
@@ -54,6 +55,7 @@ type Doing struct {
 	Place    ids.ID     `json:"place,omitempty"`
 	Item     ids.ID     `json:"item,omitempty"`
 	Posed    bool       `json:"posed,omitempty"`
+	Goal     units.Vec2 `json:"goal,omitempty"` // destino de acciones sin objetivo (forage)
 	Since    clock.Tick `json:"since"`
 }
 
@@ -69,6 +71,11 @@ type Agent struct {
 	// actor); IdlePose, la pose a la que vuelve al terminar una oferta.
 	Hand     ids.ID `json:"hand,omitempty"`
 	IdlePose string `json:"idle_pose,omitempty"`
+	// Sight es el radio de visión (0 = conoce todo); Known, lo que conoce.
+	Sight units.Length `json:"sight,omitempty"`
+	Known []Known      `json:"known,omitempty"`
+	// Avoid son objetivos con los que falló hace poco (ver RetryTicks).
+	Avoid []Avoid `json:"avoid,omitempty"`
 
 	Doing        *Doing     `json:"doing,omitempty"`
 	Suspended    *Doing     `json:"suspended,omitempty"`
@@ -285,6 +292,7 @@ func (s decide) Run(w *world.World) {
 		if !clock.Staggered(w.Tick(), DecidePeriod, uint64(c.Actor.Index())) {
 			return
 		}
+		a.prune(w.Tick())
 		best, ok := s.best(c)
 		if !ok || best.Utility < MinUtility {
 			return
@@ -316,6 +324,9 @@ func (s decide) best(c *Ctx) (Option, bool) {
 	for _, act := range s.acts.list {
 		for _, o := range act.Options(c) {
 			o.Action = act.Name()
+			if !o.Target.IsNil() && c.Agent.avoids(o.Target, c.W.Tick()) {
+				continue
+			}
 			if !found || o.Utility > best.Utility || o.Utility == best.Utility && cmp.Or(
 				cmp.Compare(o.Action, best.Action), cmp.Compare(o.Target, best.Target), cmp.Compare(o.Offer, best.Offer)) < 0 {
 				best, found = o, true
@@ -360,6 +371,9 @@ func (s act) Run(w *world.World) {
 		case Failed:
 			x.Stop(c, d, false)
 			a.Doing = nil
+			if !d.Target.IsNil() {
+				a.avoid(d.Target, w.Tick())
+			}
 			w.Emit(ActionFailed{Entity: c.Actor, Action: d.Action, What: what, Target: d.Target})
 		}
 	})
@@ -403,6 +417,8 @@ func Install(w *world.World, extra ...Action) error {
 		world.RegisterEvent[ActionInterrupted](w),
 		world.RegisterEvent[ActionSuspended](w),
 		world.RegisterEvent[ActionResumed](w),
+		world.RegisterEvent[Noticed](w),
+		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -50}, look{it}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide}, decide{acts, it}),
 		// Antes de nav.plan, para que los pedidos de movimiento se planeen
 		// en el mismo tick.
