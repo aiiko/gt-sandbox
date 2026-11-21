@@ -74,11 +74,12 @@ func TestCrowd(t *testing.T) {
 // comandos posteriores al guardado.
 func TestSaveLoadMidMove(t *testing.T) {
 	cases := []struct {
-		file       string
-		save, legs int // tick del guardado y tramos que debe tener la ruta
+		file, who  string
+		save, legs int // tick del guardado y tramos que debe tener la ruta de who
 	}{
-		{"replan_when_gap_closes", 60, 1},
-		{"portal_disabled_midway", 150, 3}, // suelo, pata A, escritorio
+		{"replan_when_gap_closes", "tiny", 60, 1},
+		{"portal_disabled_midway", "tiny", 150, 3},    // suelo, pata A, escritorio
+		{"giantess_carries_tiny", "giantess", 120, 2}, // habitación A, puerta, B
 	}
 	for _, c := range cases {
 		spec, err := ReadFile("../../tests/scenarios/" + c.file + ".json")
@@ -96,9 +97,9 @@ func TestSaveLoadMidMove(t *testing.T) {
 		worlds := []*world.World{in.World}
 		for tick := range spec.Ticks {
 			if tick == c.save {
-				m, _ := ecs.Get[nav.Mover](in.World.ECS()).Get(in.Refs["tiny"])
+				m, _ := ecs.Get[nav.Mover](in.World.ECS()).Get(in.Refs[c.who])
 				if m.Status != nav.Moving || len(m.Legs) != c.legs {
-					t.Fatalf("%s: el tiny debería estar a mitad de camino: %+v", c.file, m)
+					t.Fatalf("%s: %s debería estar a mitad de camino: %+v", c.file, c.who, m)
 				}
 				snap, err := in.World.Save()
 				if err != nil {

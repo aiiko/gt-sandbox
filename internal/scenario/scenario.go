@@ -59,7 +59,8 @@ type CommandSpec struct {
 	Data json.RawMessage `json:"data"`
 }
 
-// Expectation es exactamente una de: Event (ocurrió antes de By, si By > 0),
+// Expectation es exactamente una de: Event (ocurrió en [After, By), By = 0
+// sin límite),
 // NoEvent (nunca ocurrió) o At (posición final, opcionalmente en Space).
 // Para Event y NoEvent, Match filtra por campos del evento (con "$ref");
 // Entity es un atajo para {"entity": ...}.
@@ -68,6 +69,7 @@ type Expectation struct {
 	Entity  string          `json:"entity,omitempty"`
 	Match   json.RawMessage `json:"match,omitempty"`
 	By      int             `json:"by,omitempty"`
+	After   int             `json:"after,omitempty"`
 	NoEvent string          `json:"no_event,omitempty"`
 	At      string          `json:"at,omitempty"`
 	Space   string          `json:"space,omitempty"` // con At: el Space esperado
@@ -248,9 +250,9 @@ func (in *Instance) check() ([]string, error) {
 				return nil, err
 			}
 			switch {
-			case x.Event != "" && !in.happened(x.Event, match, x.By):
-				fails = append(fails, fmt.Sprintf("no ocurrió %s %s%s (by %d)", x.Event, x.Entity, x.Match, x.By))
-			case x.NoEvent != "" && in.happened(x.NoEvent, match, 0):
+			case x.Event != "" && !in.happened(x.Event, match, x.After, x.By):
+				fails = append(fails, fmt.Sprintf("no ocurrió %s %s%s (en [%d, %d))", x.Event, x.Entity, x.Match, x.After, x.By))
+			case x.NoEvent != "" && in.happened(x.NoEvent, match, x.After, x.By):
 				fails = append(fails, fmt.Sprintf("ocurrió %s %s%s", x.NoEvent, x.Entity, x.Match))
 			}
 		case x.At != "" && x.Pos != nil:
@@ -293,10 +295,12 @@ func (in *Instance) matcher(x Expectation) (map[string]any, error) {
 }
 
 // happened busca un evento del kind dado cuyos campos coincidan con match;
-// con by > 0, debe ocurrir antes del tick by del escenario.
-func (in *Instance) happened(kind string, match map[string]any, by int) bool {
+// debe ocurrir en el intervalo de ticks del escenario [after, by) (by = 0:
+// sin límite).
+func (in *Instance) happened(kind string, match map[string]any, after, by int) bool {
 	for _, e := range in.Events {
-		if e.Event.Kind() != kind || (by > 0 && int(e.Tick-in.Start) >= by) {
+		t := int(e.Tick - in.Start)
+		if e.Event.Kind() != kind || t < after || (by > 0 && t >= by) {
 			continue
 		}
 		b, _ := json.Marshal(e.Event)

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/nav"
@@ -36,6 +37,9 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	}
 	if err := spatial.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: spatial: %w", err)
+	}
+	if err := attach.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: attach: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

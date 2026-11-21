@@ -20,14 +20,16 @@ type EntityReparented struct {
 
 func (EntityReparented) Kind() string { return "entity_reparented" }
 
-// Install registra el store "space", sus eventos, el sistema de huérfanos y
-// las invariantes. Requiere que comp ya esté registrado.
+// Install registra el store "space", sus eventos, los sistemas de huérfanos
+// y caídas, y las invariantes. Requiere que comp ya esté registrado.
 func Install(w *world.World) error {
 	if _, err := ecs.Register[Space](w.ECS(), "space"); err != nil {
 		return err
 	}
 	err := errors.Join(
 		world.RegisterEvent[EntityReparented](w),
+		world.RegisterEvent[EntityFell](w),
+		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences}, falls{}),
 		// Último de la fase Flush: después de él solo queda ecs.Flush.
 		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 30}, orphans{}),
 	)

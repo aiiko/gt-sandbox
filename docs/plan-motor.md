@@ -55,7 +55,7 @@ gt-sandbox/
 │   │   ├── space/             # Spaces, jerarquía, transforms, superficies
 │   │   ├── spatial/           # Índice espacial por Space
 │   │   ├── nav/               # Grid local + grafo de portales
-│   │   ├── attach/            # Anclajes y contactos dinámicos
+│   │   ├── attach/            # Contactos, portales dinámicos y poses
 │   │   ├── ai/  needs/  jobs/ # Esqueletos en M7, contenido después
 │   ├── content/               # Carga y validación de definiciones JSON
 │   ├── scenario/              # Formato y runner de escenarios de test
@@ -286,6 +286,14 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 **Aceptación (el núcleo de la idea):**
 - Mano toca mesa → aparece ruta válida; mano se levanta → la ruta se invalida.
 - Escenario completo: tiny camina del escritorio a la palma apoyada, la giantess levanta la mano, se mueve a otra habitación, la apoya, el tiny baja. **Sin ningún script específico**: solo comandos de pose/movimiento sobre la giantess y una orden `MoveTo` al tiny.
+
+**Estado: completado.** Spec en `docs/specs/attach.md`. Decisiones tomadas en el camino:
+- Un contacto es una entidad (`contact`) y, si permite pasar, la misma entidad lleva el `portal`: abrir/cerrar el portal es agregar/quitar ese componente, y las rutas se invalidan por el mecanismo de M4.
+- Contacto = misma raíz, alturas dentro de una tolerancia y cajas de las extensiones solapadas en el mundo. El portal se recalcula solo si sus extremos se separan más de 5 mm.
+- Las poses son conjuntos de Locations de partes con nombre (`poses`, `set_pose`), instantáneas.
+- Caídas en `space.falls`: una entidad con `body` sin apoyo aterriza en la superficie más alta debajo. La inclinación queda pendiente: las transformaciones solo rotan sobre Z.
+- El escenario de aceptación usa dos `move_to` al tiny (ir a la palma y bajar al otro escritorio) en lugar de uno: sin un sistema de espera/objetivos, una sola orden no puede esperar a que aparezca la ruta.
+- Nuevo comando `set_components` para referencias circulares en escenarios; las expectativas ganan `after`.
 
 ### M6 — Renderer de debug (Ebitengine)
 - `cmd/game`: loop Ebitengine que llama `Step()` a 20 TPS e interpola snapshots a 60 FPS.

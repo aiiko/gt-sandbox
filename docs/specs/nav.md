@@ -24,7 +24,7 @@ Paquetes: `sim/nav`, `sim/spatial`, `scenario`. Herramientas: `simrun -scenario`
 - `cost` es un costo extra de cruce como distancia equivalente. Un recorrido físico (trepar una pata) se modela mejor como un Space propio con su grilla, unido por dos portales: así el tiny tarda lo que corresponde y puede quedar a mitad de camino.
 - `set_portal {portal, enabled}` cambia el estado y sube `version`.
 - El sistema `nav.portals` (último del Flush, después de `space.orphans`) destruye los portales cuyos extremos están en Spaces que se destruyen.
-- Los portales estáticos vienen del mapa (escenario o contenido); los dinámicos los creará el sistema de contactos (M5).
+- Los portales estáticos vienen del mapa (escenario o contenido); los dinámicos los crea y destruye `attach.contacts` (ver `docs/specs/attach.md`).
 
 ## Rutas entre Spaces (`Router`)
 

@@ -45,6 +45,10 @@ El sistema `space.orphans` corre último en la fase Flush. Mueve los ocupantes d
 - `reparent {entity, space}`.
 - Evento `entity_reparented {entity, from, to, cause}`.
 
+## Caídas (M5)
+
+`space.falls` (fase Consequences) hace aterrizar a las entidades con `body` que no están apoyadas en su Space (fuera de la extensión o despegadas de la superficie) sobre la superficie más alta que tengan debajo, y emite `entity_fell`. Detalles en `docs/specs/attach.md`. `Graph.Supported(e)` y `Graph.Below(e)` exponen la consulta.
+
 ## Tolerancia de Reparent
 
 Exacto con ángulos de 90°. Con ángulos arbitrarios, unos pocos µm (el test acota 3 µm), despreciable frente a un tiny de 8 mm.

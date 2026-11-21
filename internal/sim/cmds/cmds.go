@@ -48,21 +48,9 @@ func (c Spawn) Apply(w *world.World) error {
 			return fmt.Errorf("spawn: %w", err)
 		}
 	}
-	names := make([]string, 0, len(c.Components))
-	for n := range c.Components {
-		if typedStores[n] {
-			return fmt.Errorf("spawn: %q debe ir en su campo propio", n)
-		}
-		names = append(names, n)
-	}
-	slices.Sort(names)
-	setters := make([]func(ids.ID), len(names))
-	for i, n := range names {
-		set, err := w.ECS().DecodeComponent(n, c.Components[n])
-		if err != nil {
-			return fmt.Errorf("spawn: %w", err)
-		}
-		setters[i] = set
+	setters, err := decodeComponents(w, c.Components)
+	if err != nil {
+		return fmt.Errorf("spawn: %w", err)
 	}
 	s := comp.Of(w.ECS())
 	id := w.ECS().Spawn()
@@ -82,6 +70,53 @@ func (c Spawn) Apply(w *world.World) error {
 		ecs.Get[space.Space](w.ECS()).Set(id, *c.Space)
 	}
 	w.Emit(EntitySpawned{Entity: id, Name: c.Name})
+	return nil
+}
+
+// decodeComponents valida y decodifica componentes por nombre de store, en
+// orden de nombre. No modifica nada: devuelve los setters.
+func decodeComponents(w *world.World, cs map[string]json.RawMessage) ([]func(ids.ID), error) {
+	names := make([]string, 0, len(cs))
+	for n := range cs {
+		if typedStores[n] {
+			return nil, fmt.Errorf("%q debe ir en su campo propio", n)
+		}
+		names = append(names, n)
+	}
+	slices.Sort(names)
+	setters := make([]func(ids.ID), len(names))
+	for i, n := range names {
+		set, err := w.ECS().DecodeComponent(n, cs[n])
+		if err != nil {
+			return nil, err
+		}
+		setters[i] = set
+	}
+	return setters, nil
+}
+
+// SetComponents agrega o reemplaza componentes de una entidad existente, por
+// nombre de store (mismas reglas que Spawn.Components). Sirve para
+// escenarios y herramientas, p. ej. para referencias circulares que no se
+// pueden expresar al crear.
+type SetComponents struct {
+	Entity     ids.ID                     `json:"entity"`
+	Components map[string]json.RawMessage `json:"components"`
+}
+
+func (SetComponents) Kind() string { return "set_components" }
+
+func (c SetComponents) Apply(w *world.World) error {
+	if !w.ECS().Alive(c.Entity) {
+		return fmt.Errorf("set_components %v: %w", c.Entity, ErrNotAlive)
+	}
+	setters, err := decodeComponents(w, c.Components)
+	if err != nil {
+		return fmt.Errorf("set_components %v: %w", c.Entity, err)
+	}
+	for _, set := range setters {
+		set(c.Entity)
+	}
 	return nil
 }
 
@@ -158,6 +193,7 @@ func Register(w *world.World) error {
 		world.RegisterCommand[Despawn](w),
 		world.RegisterCommand[SetLocation](w),
 		world.RegisterCommand[Reparent](w),
+		world.RegisterCommand[SetComponents](w),
 		world.RegisterEvent[EntitySpawned](w),
 	)
 }

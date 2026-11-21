@@ -32,6 +32,7 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - Cada subsistema registra sus invariantes con `world.AddInvariant`.
 - Estado derivado (cachés, índices) va en recursos (`world.SetResource`/`world.Resource`), nunca en componentes: no se hashea ni se guarda.
 - Navegación (ver `docs/specs/nav.md`): grilla `nav_grid` en el Space, portales como entidades con `portal`, componente `mover` con ruta en tramos; comandos `move_to`/`stop`/`set_cells`/`set_portal`. Para generar escenarios grandes, escribir un script que emita el JSON.
+- Contactos, portales dinámicos y poses en `sim/attach` (ver `docs/specs/attach.md`); caídas en `space.falls`. Una entidad con `comp.Body` debe estar apoyada en su Space (dentro de la extensión, Z≈0) o caerá.
 - Cambiar qué se hashea → incrementar `world.HashVersion`. Cambio incompatible en snapshots → incrementar `world.SnapshotSchema`.
 - `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario.
 - Escenarios de integración en `tests/scenarios/*.json` (los corre `TestScenarios`). Escribir archivos con UTF-8 y LF.
