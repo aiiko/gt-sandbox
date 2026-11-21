@@ -135,7 +135,19 @@ type HUD struct {
 	Story     []StoryLine
 	Face      string // expresión del retrato; "" oculta el panel de historia
 	Controls  []Control
+	Sound     *Sound // nil: sin sonido (capturas, sin dispositivo)
 }
+
+// Sound es el estado del sonido que muestra la barra superior: un parlante
+// con ondas según el volumen, o tachado en silencio, y la tecla que lo
+// alterna. Se lee por forma, sin color.
+type Sound struct {
+	Muted  bool
+	Volume float64 // 0..1
+}
+
+// SoundWidth es el ancho del indicador de sonido en la barra superior.
+const SoundWidth = 30
 
 // Layout son las zonas interactivas que dejó el último Draw.
 type Layout struct {
@@ -168,6 +180,11 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 		state = "Pausa"
 	}
 	DrawText(dst, state, sx+14, 4, Plum)
+	left := sx + 14 + TextWidth("Pausa") + 10
+	if h.Sound != nil {
+		h.Sound.draw(dst, left, 5)
+		left += SoundWidth + 6
+	}
 	loc := strings.Join(h.Location, Separator)
 	right := W - 8
 	if h.Following != "" {
@@ -177,7 +194,6 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 		DrawText(dst, f, right-fw, 4, Plum)
 		right -= fw + 20
 	}
-	left := sx + 14 + TextWidth("Pausa") + 10
 	loc = Fit(loc, right-left)
 	lx := max(left, (W-TextWidth(loc))/2)
 	DrawText(dst, loc, lx, 4, Plum)
@@ -361,6 +377,39 @@ func drawSpeed(dst *ebiten.Image, x, y int, paused bool, speed int) {
 			vector.FillRect(dst, ox+float32(k), fy+float32(k), 1, float32(8-2*k), Plum, false)
 		}
 	}
+}
+
+// Waves es cuántas ondas muestra el parlante: ninguna en silencio y de una a
+// tres según el volumen.
+func (s Sound) Waves() int {
+	if s.Muted || s.Volume <= 0 {
+		return 0
+	}
+	return min(3, 1+int(s.Volume*3-0.001))
+}
+
+// draw dibuja el parlante y la tecla M.
+func (s Sound) draw(dst *ebiten.Image, x, y int) {
+	fx, fy := float32(x), float32(y)
+	vector.FillRect(dst, fx, fy+3, 3, 4, Plum, false)
+	for k := range 4 {
+		vector.FillRect(dst, fx+3+float32(k), fy+2-float32(k), 1, 6+2*float32(k), Plum, false)
+	}
+	if s.Muted || s.Volume <= 0 {
+		for k := range 5 { // tachado: una equis junto al parlante
+			vector.FillRect(dst, fx+9+float32(k), fy+2+float32(k), 1, 1, Coral, false)
+			vector.FillRect(dst, fx+13-float32(k), fy+2+float32(k), 1, 1, Coral, false)
+		}
+	} else {
+		for i := range s.Waves() {
+			ox := fx + 9 + float32(2*i)
+			h := float32(2 + 2*i)
+			vector.FillRect(dst, ox, fy+5-h/2, 1, h, Plum, false)
+		}
+	}
+	kx := x + 17
+	Box(dst, image.Rect(kx, y-2, kx+TextWidth("M")+6, y+11), IvoryDim)
+	DrawText(dst, "M", kx+3, y-2, Plum)
 }
 
 func drawEye(dst *ebiten.Image, x, y int) {

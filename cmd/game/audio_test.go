@@ -12,10 +12,17 @@ import (
 type soundRecorder struct {
 	played  []string
 	stopped int
+	loops   map[string]float64
 }
 
 func (r *soundRecorder) Play(id string, _, _ float64) { r.played = append(r.played, id) }
 func (r *soundRecorder) StopAll()                     { r.stopped++ }
+func (r *soundRecorder) Loop(id string, v float64) {
+	if r.loops == nil {
+		r.loops = map[string]float64{}
+	}
+	r.loops[id] = v
+}
 
 // withSound conecta al juego un mezclador con los sonidos reales y un
 // grabador en lugar del dispositivo.
@@ -77,9 +84,21 @@ func TestInterfaceSounds(t *testing.T) {
 		t.Error("las entradas nuevas de la historia no sonaron")
 	}
 
+	if h := g.partida(g.run.Cur, g.artFocus(g.run.Cur)); h.Sound == nil || h.Sound.Muted || h.Sound.Waves() != 3 {
+		t.Fatalf("indicador de sonido %+v", h.Sound)
+	}
 	g.toggleMute()
 	if !g.sound.Muted() || r.stopped != 1 {
 		t.Fatal("M no silenció")
+	}
+	if h := g.partida(g.run.Cur, g.artFocus(g.run.Cur)); h.Sound == nil || !h.Sound.Muted || h.Sound.Waves() != 0 {
+		t.Fatalf("el indicador no muestra el silencio: %+v", h.Sound)
+	}
+	for _, id := range sound.Ambients {
+		g.observeSound()
+		if g.sound.LoopVolume(id) != 0 {
+			t.Errorf("en silencio suena el ambiente %s", id)
+		}
 	}
 	g.run.Paused = true
 	expect("en silencio")

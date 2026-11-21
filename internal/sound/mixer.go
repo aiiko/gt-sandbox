@@ -17,6 +17,7 @@ type Mixer struct {
 
 	muted  bool
 	frame  int64
+	loops  map[string]float64 // volumen final de cada bucle
 	last   map[string]int64   // último comienzo de cada sonido
 	voices map[string][]int64 // fin de cada voz activa
 }
@@ -30,7 +31,7 @@ const LogSize = 64
 // NewMixer arma un mezclador con los volúmenes por defecto.
 func NewMixer(lib *Library, out Backend) *Mixer {
 	m := &Mixer{Lib: lib, Out: out, Master: 1, Volumes: map[Category]float64{},
-		last: map[string]int64{}, voices: map[string][]int64{}}
+		last: map[string]int64{}, voices: map[string][]int64{}, loops: map[string]float64{}}
 	for c, v := range DefaultVolumes {
 		m.Volumes[c] = v
 	}
@@ -58,6 +59,32 @@ func (m *Mixer) SetMuted(muted bool) {
 }
 
 func frames(ms int) int64 { return int64(ms) * FPS / 1000 }
+
+// Loop fija el nivel (0..1) de un bucle de ambiente; el mezclador le aplica
+// el volumen general, el de su categoría y el silencio.
+func (m *Mixer) Loop(id string, level float64) {
+	if m.Lib == nil {
+		return
+	}
+	d, ok := m.Lib.Def(id)
+	if !ok {
+		return
+	}
+	v := level * m.Master * m.Volumes[d.Category]
+	if m.muted {
+		v = 0
+	}
+	if old, ok := m.loops[id]; ok && old == v {
+		return
+	}
+	m.loops[id] = v
+	if m.Out != nil {
+		m.Out.Loop(id, v)
+	}
+}
+
+// LoopVolume es el volumen final de un bucle.
+func (m *Mixer) LoopVolume(id string) float64 { return m.loops[id] }
 
 // Play pide un sonido con un volumen relativo (0..1) y un panorama (-1
 // izquierda, 0 centro, 1 derecha). Devuelve si sonó.

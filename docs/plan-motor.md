@@ -1,16 +1,10 @@
 # Plan de desarrollo
 
-La entrega visual de **Una mañana en la casa** está cerrada; el [cierre](specs/presentacion.md#cierre-de-la-entrega-visual) reúne sus capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La próxima entrega le suma **sonido sintetizado, sin música**, según la [propuesta de sonido](propuesta.md#sonido). La base de audio (M20) y los sonidos de la mañana (M21) están en la [spec de sonido](specs/sonido.md). El [escenario de referencia](specs/manana-en-la-casa.md) sigue fijando el recorrido con el que se integra cada hito.
+**Una mañana en la casa** está cerrada en imagen y sonido. El [cierre visual](specs/presentacion.md#cierre-de-la-entrega-visual) reúne las capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La [spec de sonido](specs/sonido.md) cubre el sonido sintetizado y sin música (M20 a M22): la base de audio, los sonidos de la mañana con perspectiva por escala, el ambiente por habitación y la mezcla de referencia. El [escenario de referencia](specs/manana-en-la-casa.md) fija el recorrido con el que se integró cada hito.
 
 ## Hitos pendientes
 
-### M22 — Ambiente y mezcla
-
-- Ambiente por habitación (dormitorio, cocina, living) y tono de sala en micro, con fundidos al cambiar de habitación seguida o de escala. La TV encendida suma su murmullo al living.
-- Mezcla de referencia: un comando renderiza la mañana completa a un WAV sin pantalla, a partir de los mismos pedidos de sonido. Un resumen de esa mezcla (pedidos por tick) queda registrado como las capturas de referencia.
-- Indicador de silencio y volumen en la interfaz de partida.
-
-**Aceptación.** La mañana completa se escucha con ambiente continuo y sin cortes al cambiar de vista. La mezcla de referencia es reproducible y su resumen coincide con el registrado. Pasan los escenarios y se conserva la continuidad de la simulación.
+No hay hitos pendientes. Los próximos saldrán del [alcance posterior](propuesta.md#13-alcance-posterior).
 
 ## Contratos de integración
 

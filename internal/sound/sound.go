@@ -32,9 +32,10 @@ type Def struct {
 	ID         string   `json:"id"`
 	File       string   `json:"file"`
 	Category   Category `json:"category"`
-	MS         int      `json:"ms"`          // duración
-	Voices     int      `json:"voices"`      // copias simultáneas como máximo
-	CooldownMS int      `json:"cooldown_ms"` // tiempo mínimo entre comienzos
+	MS         int      `json:"ms"`             // duración
+	Voices     int      `json:"voices"`         // copias simultáneas como máximo
+	CooldownMS int      `json:"cooldown_ms"`    // tiempo mínimo entre comienzos
+	Loop       bool     `json:"loop,omitempty"` // bucle de ambiente
 }
 
 // Library es el manifiesto cargado.
@@ -82,9 +83,14 @@ func (l *Library) Def(id string) (Def, bool) {
 func (l *Library) Path(d Def) string { return filepath.Join(l.Dir, d.File) }
 
 // Backend reproduce los pedidos. El juego usa el audio de Ebitengine; las
-// pruebas, un grabador.
+// pruebas, un grabador; la mezcla de referencia, un mezclador sin pantalla.
 type Backend interface {
+	// Play hace sonar una vez un sonido.
 	Play(id string, volume, pan float64)
+	// Loop fija el volumen de un sonido que se repite sin fin (el ambiente);
+	// con 0 queda en silencio.
+	Loop(id string, volume float64)
+	// StopAll corta los sonidos que se están reproduciendo una vez.
 	StopAll()
 }
 

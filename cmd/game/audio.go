@@ -25,10 +25,11 @@ type ebitenAudio struct {
 	ctx     *audio.Context
 	pcm     map[string][]byte
 	players []*audio.Player
+	loops   map[string]*audio.Player
 }
 
 func newEbitenAudio(lib *sound.Library) (*ebitenAudio, error) {
-	a := &ebitenAudio{ctx: audio.NewContext(lib.Rate), pcm: map[string][]byte{}}
+	a := &ebitenAudio{ctx: audio.NewContext(lib.Rate), pcm: map[string][]byte{}, loops: map[string]*audio.Player{}}
 	for _, d := range lib.Sounds {
 		data, err := os.ReadFile(lib.Path(d))
 		if err != nil {
@@ -68,6 +69,31 @@ func (a *ebitenAudio) Play(id string, volume, pan float64) {
 	p.SetVolume(volume)
 	p.Play()
 	a.players = append(a.players, p)
+}
+
+// Loop crea el reproductor del bucle la primera vez y le fija el volumen; en
+// silencio lo pausa.
+func (a *ebitenAudio) Loop(id string, volume float64) {
+	p, ok := a.loops[id]
+	if !ok {
+		pcm, ok := a.pcm[id]
+		if !ok || volume <= 0 {
+			return
+		}
+		player, err := a.ctx.NewPlayer(audio.NewInfiniteLoop(bytes.NewReader(pcm), int64(len(pcm))))
+		if err != nil {
+			return
+		}
+		p = player
+		a.loops[id] = p
+	}
+	p.SetVolume(volume)
+	switch {
+	case volume <= 0 && p.IsPlaying():
+		p.Pause()
+	case volume > 0 && !p.IsPlaying():
+		p.Play()
+	}
 }
 
 func (a *ebitenAudio) StopAll() {
@@ -126,8 +152,10 @@ func (g *game) observeSound() {
 	if g.sound == nil {
 		return
 	}
+	v := g.soundView()
 	g.uiSounds.Observe(g.sound, g.uiState())
-	g.scene.Observe(g.sound, g.run.Cur, g.run.Events, g.soundView())
+	g.scene.Observe(g.sound, g.run.Cur, g.run.Events, v)
+	g.ambience.Observe(g.sound, g.run.Cur, v, g.follow, g.run.Paused)
 	g.sound.Advance()
 }
 

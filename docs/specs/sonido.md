@@ -44,6 +44,7 @@ El manifiesto exportado, `content/audio/sounds.json`, describe cada sonido con e
   - `Mixer` aplica las reglas de mezcla y pasa los pedidos a un `Backend`.
   - `UIWatcher` traduce los cambios de la interfaz en sonidos.
   - `Scene` traduce los eventos publicados y los cambios entre frames en sonidos de la escena.
+  - `Ambience` lleva los bucles de ambiente con sus fundidos.
 - **`cmd/game/audio.go`** es el `Backend` real. Usa el paquete `audio` de Ebitengine, decodifica cada WAV una vez y aplica el panorama copiando el PCM con una ganancia por canal. Las pruebas usan un grabador en su lugar.
 
 ## Mezclador
@@ -113,10 +114,57 @@ Compara el frame con el anterior que observó y devuelve los pedidos. La primera
 - `TestMorningSounds` recorre la mañana en macro, en el micro del escritorio y siguiendo a Tiny 01, más el escenario de caída. Verifica qué suena y qué no en cada escala, y que cada evento con sonido suene en el mismo frame en que se publica. También verifica el orden: la mano se acerca antes de apoyarse, y el descubrimiento llega antes del ascenso. Comprueba el viaje (levantar, apoyar en el living, bajar), que el aterrizaje llegue `FallTicks − 1` ticks después de la caída, y que los pasitos respeten su límite.
 - `TestFastAndPausedSounds` cubre las velocidades rápidas y la pausa.
 
+## Ambiente
+
+La casa no tiene música: suena por su ambiente. Son cinco bucles sintetizados, marcados con `"loop": true` y un `length` fijo:
+
+| Bucle | Qué es |
+| --- | --- |
+| `amb_bedroom` | Aire de la habitación, gorriones por la ventana y un fūrin (8 s) |
+| `amb_kitchen` | El zumbido de la heladera (6 s) |
+| `amb_living` | El tic-tac del reloj de pared (6 s) |
+| `amb_tv` | El murmullo de la TV: sílabas de ruido filtrado y una melodía suave (6 s) |
+| `amb_micro` | Tono de sala grave, como si todo estuviera amplificado (6 s) |
+
+En un bucle, lo que una capa deja pasado el final vuelve al principio, y las capas que cubren todo el largo no se funden al terminar, así el bucle no se nota.
+
+`AmbientTargets` decide qué suena según lo que se mira:
+
+- **La habitación de lo que se mira.** En macro es la de lo seguido o, si no hay nada seguido, la de la giantess. En micro es la de la superficie enfocada, y la palma cuenta como de la habitación donde está la giantess.
+- **En micro**, el tono de sala va a pleno y la habitación queda detrás, al 45 %.
+- **La TV encendida** suma su murmullo cuando esa habitación es el living y la giantess está mirando la TV.
+- **La pausa** baja todo el ambiente al 40 %.
+
+`Ambience` acerca cada bucle a su nivel de a 1/48 por frame, así que pasar de silencio a pleno lleva 0,8 s. Al cambiar de habitación o de escala, un bucle se funde mientras el otro sube, sin cortes. El mezclador aplica a los bucles el volumen general, el de la categoría ambiente y el silencio (`Mixer.Loop`). El `Backend` los reproduce sin fin (`audio.NewInfiniteLoop`) y los pausa en 0.
+
+## Mezcla de referencia
+
+[`docs/sonido/mezcla.json`](../sonido/mezcla.json) registra un recorrido de cámara por la mañana completa, con el escenario, la semilla, el tamaño y los ticks:
+
+1. macro;
+2. micro del escritorio;
+3. siguiendo a Tiny 01 en el ascenso y el viaje;
+4. macro mientras la giantess va al living y enciende la TV;
+5. siguiendo a Tiny 01 al bajar en el living;
+6. macro hasta el final.
+
+```sh
+go run ./cmd/game -mix manana.wav    # renderiza los 80 s a un WAV estéreo
+```
+
+`-mix` recorre el escenario a x1, de a un frame de 1/60 s y sin pantalla, con el mismo juego, sonido y mezclador que la ventana. Mezcla en memoria cada pedido y cada bucle con su volumen y panorama, y guarda el resultado con un limitador suave. El WAV no se versiona: se regenera.
+
+`TestReferenceMix` corre el mismo recorrido sin generar samples y verifica:
+
+- **Resumen:** cada pedido (frame, sonido, volumen, panorama) y los niveles del ambiente por segundo coinciden con el resumen y los conteos registrados. El resumen no depende de cómo suena cada WAV, solo de qué suena y cuándo. Si cambia a propósito, `go test ./cmd/game -run TestReferenceMix -update` lo reescribe.
+- **Continuidad:** el ambiente nunca queda en silencio después del primer fundido, y ningún bucle salta más de un paso de fundido entre dos frames.
+- **Momentos clave:** la mezcla incluye la mano, el ascenso, el descubrimiento, la puerta del living y la TV.
+
 ## Controles
 
-- `M` silencia o devuelve el sonido; al volver suena el clic.
+- `M` silencia o devuelve el sonido (efectos, interfaz y ambiente); al volver suena el clic.
 - `-mute` arranca en silencio.
 - `-volume 0.5` fija el volumen general.
+- La barra superior de la interfaz de partida muestra un parlante con una a tres ondas según el volumen, o tachado en silencio, junto a la tecla `M`. Si el juego no tiene sonido (por ejemplo, en las capturas), el indicador no aparece.
 
 `-shot` y `-bench` no abren el dispositivo de audio.

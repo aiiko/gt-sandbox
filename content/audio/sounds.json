@@ -2,6 +2,51 @@
   "rate": 44100,
   "sounds": [
     {
+      "id": "amb_bedroom",
+      "file": "amb_bedroom.wav",
+      "category": "ambiente",
+      "ms": 8000,
+      "voices": 1,
+      "cooldown_ms": 0,
+      "loop": true
+    },
+    {
+      "id": "amb_kitchen",
+      "file": "amb_kitchen.wav",
+      "category": "ambiente",
+      "ms": 6000,
+      "voices": 1,
+      "cooldown_ms": 0,
+      "loop": true
+    },
+    {
+      "id": "amb_living",
+      "file": "amb_living.wav",
+      "category": "ambiente",
+      "ms": 6000,
+      "voices": 1,
+      "cooldown_ms": 0,
+      "loop": true
+    },
+    {
+      "id": "amb_micro",
+      "file": "amb_micro.wav",
+      "category": "ambiente",
+      "ms": 6000,
+      "voices": 1,
+      "cooldown_ms": 0,
+      "loop": true
+    },
+    {
+      "id": "amb_tv",
+      "file": "amb_tv.wav",
+      "category": "ambiente",
+      "ms": 6000,
+      "voices": 1,
+      "cooldown_ms": 0,
+      "loop": true
+    },
+    {
       "id": "crumb_pop",
       "file": "crumb_pop.wav",
       "category": "efectos",

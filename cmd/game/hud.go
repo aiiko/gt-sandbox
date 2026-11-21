@@ -222,6 +222,9 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 	if !g.follow.IsNil() {
 		h.Following = capital(g.display(g.follow))
 	}
+	if g.sound != nil {
+		h.Sound = &ui.Sound{Muted: g.sound.Muted(), Volume: g.sound.Master}
+	}
 	if !g.sel.IsNil() && g.sel != focus {
 		h.Card = g.card(f, g.sel)
 	}

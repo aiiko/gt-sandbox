@@ -18,6 +18,10 @@ tiene forma de onda, barrido de frecuencia, envolvente, filtro y retardo:
     vibrato   [Hz, profundidad en semitonos]
     seed      semilla del ruido (por defecto, derivada del nombre)
 
+Un sonido con "loop": true es un bucle de ambiente de "length" segundos: lo
+que una capa deja pasado el final vuelve al principio, y las capas que cubren
+todo el largo no se funden al terminar, así el bucle no se nota.
+
 Todo es determinista: el ruido sale de un generador congruencial propio y el
 resultado se redondea a 16 bits, mono, a la frecuencia de muestreo del
 manifiesto. El manifiesto exportado (content/audio/sounds.json) nombra cada
@@ -68,7 +72,7 @@ def oscillator(wave_name, phase, duty, noise):
     raise ValueError('forma de onda desconocida: ' + wave_name)
 
 
-def render_layer(layer, rate, name, index):
+def render_layer(layer, rate, name, index, fade=True):
     dur = layer['dur']
     n = int(round(dur * rate))
     f0 = layer.get('f0', 440.0)
@@ -107,7 +111,7 @@ def render_layer(layer, rate, name, index):
         if decay > 0:
             env *= math.exp(-max(0.0, t - attack) / decay)
         remaining = dur - t
-        if remaining < FADE:
+        if fade and remaining < FADE:
             env *= max(0.0, remaining / FADE)
         filtered += alpha * (v - filtered)
         out.append(filtered * env * gain)
@@ -116,12 +120,19 @@ def render_layer(layer, rate, name, index):
 
 def render(name, sound, rate):
     layers = sound['layers']
-    length = max(layer.get('delay', 0) + layer['dur'] for layer in layers)
+    loop = sound.get('loop', False)
+    if loop:
+        length = sound['length']
+    else:
+        length = max(layer.get('delay', 0) + layer['dur'] for layer in layers)
     mix = [0.0] * int(round(length * rate))
     for index, layer in enumerate(layers):
         start = int(round(layer.get('delay', 0) * rate))
-        for i, v in enumerate(render_layer(layer, rate, name, index)):
-            if start + i < len(mix):
+        fade = not (loop and layer['dur'] >= length)
+        for i, v in enumerate(render_layer(layer, rate, name, index, fade)):
+            if loop:
+                mix[(start + i) % len(mix)] += v
+            elif start + i < len(mix):
                 mix[start + i] += v
     volume = sound.get('volume', 1.0)
     pcm = bytearray()
@@ -157,6 +168,8 @@ def build():
             'voices': sound.get('voices', 1),
             'cooldown_ms': sound.get('cooldown_ms', 0),
         })
+        if sound.get('loop', False):
+            manifest['sounds'][-1]['loop'] = True
     text = json.dumps(manifest, ensure_ascii=False, indent=2) + '\n'
     files['sounds.json'] = text.encode('utf-8')
     return files

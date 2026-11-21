@@ -111,6 +111,7 @@ type recorder struct {
 
 func (r *recorder) Play(id string, _, _ float64) { r.played = append(r.played, id) }
 func (r *recorder) StopAll()                     { r.stopped++ }
+func (r *recorder) Loop(string, float64)         {}
 
 func testLibrary() *Library {
 	lib := &Library{byID: map[string]Def{}}

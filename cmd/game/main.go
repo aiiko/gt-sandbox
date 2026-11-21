@@ -64,7 +64,16 @@ func main() {
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	mute := flag.Bool("mute", false, "arrancar en silencio (M alterna)")
 	volume := flag.Float64("volume", 1, "volumen general del sonido, de 0 a 1")
+	mix := flag.String("mix", "", "renderizar la mezcla de referencia ("+mixManifest+") a este WAV y salir")
 	flag.Parse()
+
+	if *mix != "" {
+		if err := renderMix(*mix); err != nil {
+			fmt.Fprintln(os.Stderr, "game:", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if *scen == "" {
 		*scen = morningScenario
@@ -165,6 +174,7 @@ type game struct {
 	sound      *sound.Mixer
 	uiSounds   sound.UIWatcher
 	scene      sound.Scene
+	ambience   sound.Ambience
 	shot       string // captura pedida por -shot
 	shotTick   clock.Tick
 	shotDone   bool
