@@ -1,0 +1,101 @@
+{
+  "image": "casa.png",
+  "scales": ["macro"],
+  "sprites": {
+    "kitchen": {
+      "macro": {
+        "pivot": [0, 122],
+        "layer": "background",
+        "foreground": [0, 131, 120, 129],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 0, 120, 129]]}}
+      }
+    },
+    "bedroom": {
+      "macro": {
+        "pivot": [0, 122],
+        "layer": "background",
+        "foreground": [122, 131, 120, 129],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[122, 0, 120, 129]]}}
+      }
+    },
+    "living": {
+      "macro": {
+        "pivot": [0, 122],
+        "layer": "background",
+        "foreground": [244, 131, 120, 129],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[244, 0, 120, 129]]}}
+      }
+    },
+    "door": {
+      "macro": {
+        "pivot": [7, 9],
+        "layer": "ground",
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[368, 0, 14, 18]]}}
+      }
+    },
+    "bed": {
+      "macro": {
+        "pivot": [16, 35],
+        "depth_offset": 10,
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[384, 0, 34, 49]]}}
+      }
+    },
+    "desk": {
+      "macro": {
+        "pivot": [3, 17],
+        "depth_offset": 7,
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[420, 0, 31, 27]]}}
+      }
+    },
+    "table": {
+      "macro": {
+        "pivot": [3, 17],
+        "depth_offset": 7,
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[452, 0, 31, 27]]}}
+      }
+    },
+    "fridge": {
+      "macro": {
+        "pivot": [11, 16],
+        "depth_offset": 16,
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[368, 54, 23, 35]]}}
+      }
+    },
+    "tv": {
+      "macro": {
+        "pivot": [18, 24],
+        "depth_offset": 2,
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[394, 54, 36, 29]]}}
+      }
+    },
+    "nest": {"macro": {"pivot": [4, 7], "clips": {"idle": {"frame_ticks": 1, "frames": [[432, 54, 9, 10]]}}}},
+    "giantess": {
+      "macro": {
+        "pivot": [15, 34],
+        "clips": {
+          "idle_east": {"frame_ticks": 1, "frames": [[0, 264, 31, 38]]},
+          "walk_east": {
+            "frame_ticks": 2,
+            "frames": [[33, 264, 31, 38], [66, 264, 31, 38], [99, 264, 31, 38], [132, 264, 31, 38]]
+          },
+          "idle_north": {"frame_ticks": 1, "frames": [[170, 264, 31, 38]]},
+          "walk_north": {
+            "frame_ticks": 2,
+            "frames": [[203, 264, 31, 38], [236, 264, 31, 38], [269, 264, 31, 38], [302, 264, 31, 38]]
+          },
+          "idle_west": {"frame_ticks": 1, "frames": [[0, 304, 31, 38]]},
+          "walk_west": {
+            "frame_ticks": 2,
+            "frames": [[33, 304, 31, 38], [66, 304, 31, 38], [99, 304, 31, 38], [132, 304, 31, 38]]
+          },
+          "idle_south": {"frame_ticks": 1, "frames": [[170, 304, 31, 38]]},
+          "walk_south": {
+            "frame_ticks": 2,
+            "frames": [[203, 304, 31, 38], [236, 304, 31, 38], [269, 304, 31, 38], [302, 304, 31, 38]]
+          },
+          "idle": {"frame_ticks": 1, "frames": [[170, 304, 31, 38]]}
+        }
+      }
+    }
+  }
+}

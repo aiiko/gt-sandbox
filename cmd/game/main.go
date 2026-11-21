@@ -3,6 +3,7 @@
 //
 //	go run ./cmd/game                                   # Una mañana en la casa
 //	go run ./cmd/game -art                              # prueba de pixel art
+//	go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json
 //	go run ./cmd/game -scenario tests/scenarios/floor_to_desk_by_leg.json
 //	go run ./cmd/game -crowd 200 -seed 7
 //	go run ./cmd/game -load s.json
@@ -20,6 +21,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -51,8 +53,8 @@ func main() {
 	micro := flag.String("micro", "", "empezar en la vista micro del Space con este nombre")
 	shotTick := flag.Int("shot-tick", 0, "tick del escenario (o del mundo) para -shot; corre a x16")
 	story := flag.Bool("story", false, "iniciar en modo historia")
-	art := flag.Bool("art", false, "abrir la prueba de pixel art")
-	atlas := flag.String("atlas", "content/art/muestra.json", "manifiesto JSON para -art")
+	art := flag.Bool("art", false, "dibujar el escenario en pixel art (por defecto, la muestra)")
+	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para -art")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	flag.Parse()
 
@@ -109,12 +111,13 @@ func main() {
 }
 
 type game struct {
-	title   string
-	run     *view.Runner
-	status  func() string // estado del escenario, para el HUD
-	visuals map[ids.ID]string
-	artDesk ids.ID
-	art     *artMode
+	title    string
+	run      *view.Runner
+	status   func() string // estado del escenario, para el HUD
+	visuals  map[ids.ID]string
+	artDesk  ids.ID
+	artAtlas string
+	art      *artMode
 
 	cam     camera.Camera
 	proj    camera.Projector
@@ -176,6 +179,9 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 		g.title = spec.Name
 		g.visuals = in.Visuals
 		g.artDesk = in.Refs["desk"]
+		if spec.Atlas != "" {
+			g.artAtlas = filepath.Join(filepath.Dir(scen), spec.Atlas)
+		}
 		g.run = view.NewRunner(in.World, p.Step)
 		var verdict string
 		g.status = func() string {
@@ -336,6 +342,9 @@ func (g *game) keys() {
 	case g.story && k(ebiten.KeyPageDown):
 		g.logBack = max(0, g.logBack-storyRows)
 	case k(ebiten.KeyF):
+		if g.art != nil && !g.art.atlas.Supports(render.Micro) {
+			g.stopFollowing()
+		}
 		g.fit()
 	case k(ebiten.KeyEscape):
 		g.sel = ids.Nil

@@ -1,14 +1,17 @@
 package render
 
 import (
+	"cmp"
 	"image"
 	"image/color"
 	"math"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"gtsandbox/internal/camera"
+	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/view"
@@ -60,10 +63,20 @@ func (v Viewport) Blit(screen interface {
 }
 
 type sprite struct {
-	id   ids.ID
-	src  image.Rectangle
-	dest image.Rectangle
+	id    ids.ID
+	src   image.Rectangle
+	dest  image.Rectangle
+	layer int
+	y     float32
+	group ids.ID
 }
+
+const (
+	layerBackground = iota
+	layerGround
+	layerDepth
+	layerForeground
+)
 
 // ArtScene comparte las colocaciones de sprites entre el dibujo y el picking.
 type ArtScene struct {
@@ -91,34 +104,102 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		return false
 	}
 	out := ArtScene{atlas: a}
-	add := func(id ids.ID, pos units.Vec3, name string) {
-		src, pivot, ok := a.frame(visuals[id], scale, name, uint64(f.Tick))
+	add := func(id, support ids.ID, pos units.Vec3, name string) {
+		v, ok := a.sprites[visuals[id]][scale]
 		if !ok {
 			return
 		}
 		x, y := p.ToScreen(pos)
-		at := image.Pt(int(math.Round(float64(x))), int(math.Round(float64(y)))).Sub(pivot)
-		dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
-		if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
-			out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest})
+		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1])
+		group, depth := id, y+float32(v.DepthOffset)
+		layer := layerDepth
+		switch v.Layer {
+		case "background":
+			layer = layerBackground
+		case "ground":
+			layer = layerGround
+		default:
+			if scale == Macro {
+				group, depth = a.depthGroup(f, p, visuals, support, id, depth)
+			}
+		}
+		addFrame := func(src image.Rectangle, layer int) {
+			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
+			if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
+				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group})
+			}
+		}
+		addFrame(v.frame(name, uint64(f.Tick)), layer)
+		if v.Foreground != nil {
+			addFrame(frameRect(v.Foreground), layerForeground)
 		}
 	}
 	for _, s := range f.Spaces {
 		if inFocus(s.ID) {
-			add(s.ID, s.Pose.Pos, "idle")
+			add(s.ID, s.Parent, s.Pose.Pos, artClip(s.Mover, s.Pose.Rot))
+		}
+	}
+	if scale == Macro {
+		for _, pt := range f.Portals {
+			if !pt.Dynamic && !pt.Disabled {
+				mid := units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z)
+				add(pt.ID, ids.Nil, mid, "idle")
+			}
 		}
 	}
 	for _, t := range f.Things {
-		if !inFocus(t.Space) {
-			continue
+		if inFocus(t.Space) {
+			add(t.ID, t.Space, t.Pose.Pos, artClip(t.Mover, t.Pose.Rot))
 		}
-		name := "idle"
-		if t.Mover != nil && t.Mover.Status == "moving" {
-			name = "walk"
-		}
-		add(t.ID, t.Pose.Pos, name)
+	}
+	if scale == Macro {
+		slices.SortStableFunc(out.sprites, func(a, b sprite) int {
+			return cmp.Or(cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y), cmp.Compare(a.group, b.group))
+		})
 	}
 	return out
+}
+
+// depthGroup mantiene al ocupante junto al mueble que lo sostiene.
+func (a *Atlas) depthGroup(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, support, group ids.ID, depth float32) (ids.ID, float32) {
+	for !support.IsNil() {
+		s, ok := f.SpaceByID(support)
+		if !ok {
+			break
+		}
+		if v, ok := a.sprites[visuals[s.ID]][Macro]; ok && v.Layer == "" && !s.Extent.Empty() {
+			_, y := p.ToScreen(s.Pose.Pos)
+			group, depth = s.ID, y+float32(v.DepthOffset)
+		}
+		support = s.Parent
+	}
+	return group, depth
+}
+
+func artClip(m *view.Mover, facing fixedmath.Angle) string {
+	if m == nil {
+		return "idle"
+	}
+	directions := [...]string{"east", "north", "west", "south"}
+	quarter := fixedmath.QuarterTurn
+	direction := directions[((facing.Norm()+quarter/2)/quarter)%4]
+	if m.Status != "moving" {
+		return "idle_" + direction
+	}
+	if len(m.Route) > 1 {
+		d := m.Route[1].Sub(m.Route[0])
+		switch {
+		case d.X.Abs() >= d.Y.Abs() && d.X > 0:
+			direction = "east"
+		case d.X.Abs() >= d.Y.Abs() && d.X < 0:
+			direction = "west"
+		case d.Y > 0:
+			direction = "north"
+		case d.Y < 0:
+			direction = "south"
+		}
+	}
+	return "walk_" + direction
 }
 
 // Pick devuelve el sprite visible en el píxel, respetando su transparencia.

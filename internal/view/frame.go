@@ -53,6 +53,7 @@ type Space struct {
 	Grid    *Grid      `json:"grid,omitempty"`
 	Surface bool       `json:"surface,omitempty"` // tiene contact_surface
 	Depth   int        `json:"depth"`             // 0 = raíz
+	Mover   *Mover     `json:"mover,omitempty"`
 }
 
 // Thing es una entidad ubicada que no es un Space (un tiny, un objeto).
@@ -144,6 +145,18 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	}
 	f := &Frame{Tick: w.Tick()}
 
+	movers := ecs.Get[nav.Mover](r)
+	mover := func(id ids.ID, pos units.Vec3) *Mover {
+		m, ok := movers.Get(id)
+		if !ok {
+			return nil
+		}
+		out := &Mover{Status: m.Status.String()}
+		if m.Status == nav.Moving {
+			out.Route = route(g, pos, m.Legs)
+		}
+		return out
+	}
 	grids := ecs.Get[nav.Grid](r)
 	surfaces := ecs.Get[attach.Surface](r)
 	seen := map[ids.ID]bool{}
@@ -153,7 +166,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			return
 		}
 		s := Space{ID: id, Name: names(id), Kind: sp.Kind, Parent: g.Parent(id), Pose: p,
-			Extent: sp.Extent, Surface: surfaces.Has(id)}
+			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos)}
 		for e := s.Parent; !e.IsNil() && s.Depth < space.MaxDepth; e = g.Parent(e) {
 			s.Depth++
 		}
@@ -172,7 +185,6 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		return cmp.Or(cmp.Compare(a.Pose.Pos.Z, b.Pose.Pos.Z), cmp.Compare(a.ID, b.ID))
 	})
 
-	movers := ecs.Get[nav.Mover](r)
 	agents := ecs.Get[ai.Agent](r)
 	spaces := ecs.Get[space.Space](r)
 	cs.Location.Each(func(id ids.ID, l *comp.Location) {
@@ -187,12 +199,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if b, ok := cs.Body.Get(id); ok {
 			t.Radius, t.Height, t.Body = b.Radius, b.Height, true
 		}
-		if m, ok := movers.Get(id); ok {
-			t.Mover = &Mover{Status: m.Status.String()}
-			if m.Status == nav.Moving {
-				t.Mover.Route = route(g, p.Pos, m.Legs)
-			}
-		}
+		t.Mover = mover(id, p.Pos)
 		if a, ok := agents.Get(id); ok {
 			t.Activity = activity(r, a)
 		}

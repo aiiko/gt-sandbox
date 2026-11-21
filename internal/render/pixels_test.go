@@ -121,3 +121,59 @@ func TestSpritePickingUsesSnappedInterpolatedFrame(t *testing.T) {
 		t.Fatalf("fuera de los sprites: %v", got)
 	}
 }
+
+func TestMacroOcclusionUsesSupportAndForeground(t *testing.T) {
+	room := `{"pivot":[1,1],"layer":"background","foreground":[3,0,3,3],"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	manifest := `{"image":"atlas.png","scales":["macro"],"sprites":{"room":{"macro":` + room +
+		`},"thing":{"macro":` + sampleVariant + `}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	frame := &view.Frame{
+		Spaces: []view.Space{
+			{ID: 1},
+			{ID: 2, Parent: 1, Extent: units.RectWH(0, 0, 1000, 1000), Pose: view.Pose{Pos: units.V3(-1000, 0, 2000)}},
+		},
+		Things: []view.Thing{
+			{ID: 3, Space: 2, Pose: view.Pose{Pos: units.V3(-1000, 1000, 2000)}},
+			{ID: 4, Space: 1, Pose: view.Pose{Pos: units.V3(-1000, 1000, 0)}},
+		},
+	}
+	visuals := map[ids.ID]string{1: "room", 2: "thing", 3: "thing", 4: "thing"}
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	behind := a.Arrange(frame, proj, visuals, Macro, ids.Nil)
+	if id := behind.Pick(image.Pt(239, 134)); id != 3 {
+		t.Fatalf("detrás de la mesa y su ocupante: se eligió %s", id)
+	}
+	frame.Things[1].Pose.Pos.Y = -1000
+	front := a.Arrange(frame, proj, visuals, Macro, ids.Nil)
+	if id := front.Pick(image.Pt(239, 135)); id != 4 {
+		t.Fatalf("delante de la mesa: se eligió %s", id)
+	}
+	if id := front.Pick(image.Pt(240, 135)); id != 1 {
+		t.Fatalf("pared de primer plano: se eligió %s", id)
+	}
+}
+
+func TestArtDirection(t *testing.T) {
+	m := &view.Mover{Status: "moving"}
+	for _, c := range []struct {
+		goal units.Vec3
+		name string
+	}{
+		{units.V3(20, 1, 0), "walk_east"},
+		{units.V3(1, 20, 0), "walk_north"},
+		{units.V3(-20, 1, 0), "walk_west"},
+		{units.V3(1, -20, 0), "walk_south"},
+	} {
+		m.Route = []units.Vec3{{}, c.goal}
+		if got := artClip(m, 0); got != c.name {
+			t.Errorf("ruta a %v: %s, quería %s", c.goal, got, c.name)
+		}
+	}
+	m.Status = "idle"
+	if got := artClip(m, fixedmath.QuarterTurn); got != "idle_north" {
+		t.Fatalf("reposo hacia el norte: %s", got)
+	}
+}

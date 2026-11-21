@@ -48,6 +48,7 @@ type Spec struct {
 	Commands []CommandSpec `json:"commands"`
 	Expect   []Expectation `json:"expect"`
 	Notes    string        `json:"notes,omitempty"` // libre, para humanos
+	Atlas    string        `json:"atlas,omitempty"` // presentación, relativo al archivo
 }
 
 // EntitySpec es una entidad a crear. Con Object, Spawn se combina con esa

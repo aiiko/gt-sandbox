@@ -10,6 +10,7 @@ import (
 	"maps"
 	"path"
 	"slices"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -24,12 +25,16 @@ const (
 
 type atlasManifest struct {
 	Image   string                       `json:"image"`
+	Scales  []Scale                      `json:"scales,omitempty"`
 	Sprites map[string]map[Scale]variant `json:"sprites"`
 }
 
 type variant struct {
-	Pivot []int           `json:"pivot"`
-	Clips map[string]clip `json:"clips"`
+	Pivot       []int           `json:"pivot"`
+	Clips       map[string]clip `json:"clips"`
+	Layer       string          `json:"layer,omitempty"`
+	DepthOffset int             `json:"depth_offset,omitempty"`
+	Foreground  []int           `json:"foreground,omitempty"`
 }
 
 type clip struct {
@@ -42,6 +47,7 @@ type Atlas struct {
 	source  string
 	pixels  image.Image
 	texture *ebiten.Image
+	scales  []Scale
 	sprites map[string]map[Scale]variant
 }
 
@@ -77,17 +83,28 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 	if len(manifest.Sprites) == 0 {
 		return nil, fmt.Errorf("atlas %s: falta al menos un sprite", file)
 	}
+	if manifest.Scales == nil {
+		manifest.Scales = []Scale{Macro, Micro}
+	}
+	if len(manifest.Scales) == 0 {
+		return nil, fmt.Errorf("atlas %s: falta al menos una escala", file)
+	}
+	for i, scale := range manifest.Scales {
+		if (scale != Macro && scale != Micro) || slices.Contains(manifest.Scales[:i], scale) {
+			return nil, fmt.Errorf("atlas %s: escala inválida o duplicada %q", file, scale)
+		}
+	}
 	for _, id := range slices.Sorted(maps.Keys(manifest.Sprites)) {
 		if id == "" {
 			return nil, fmt.Errorf("atlas %s: identificador de sprite vacío", file)
 		}
 		variants := manifest.Sprites[id]
 		for _, scale := range slices.Sorted(maps.Keys(variants)) {
-			if scale != Macro && scale != Micro {
+			if !slices.Contains(manifest.Scales, scale) {
 				return nil, fmt.Errorf("atlas %s, sprite %q: variante desconocida %q", file, id, scale)
 			}
 		}
-		for _, scale := range []Scale{Macro, Micro} {
+		for _, scale := range manifest.Scales {
 			v, ok := variants[scale]
 			context := fmt.Sprintf("atlas %s, sprite %q, variante %s", file, id, scale)
 			if !ok {
@@ -98,7 +115,7 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 			}
 		}
 	}
-	return &Atlas{source: file, pixels: pixels, sprites: manifest.Sprites}, nil
+	return &Atlas{source: file, pixels: pixels, scales: manifest.Scales, sprites: manifest.Sprites}, nil
 }
 
 func validateVariant(v variant, bounds image.Rectangle, context string) error {
@@ -107,6 +124,14 @@ func validateVariant(v variant, bounds image.Rectangle, context string) error {
 	}
 	if _, ok := v.Clips["idle"]; !ok {
 		return fmt.Errorf("%s: falta el clip idle", context)
+	}
+	if v.Layer != "" && v.Layer != "background" && v.Layer != "ground" {
+		return fmt.Errorf("%s: capa desconocida %q", context, v.Layer)
+	}
+	if v.Foreground != nil {
+		if !validFrame(v.Foreground, bounds) || v.Pivot[0] >= v.Foreground[2] || v.Pivot[1] >= v.Foreground[3] {
+			return fmt.Errorf("%s: rectángulo o pivote de primer plano inválido", context)
+		}
 	}
 	for _, name := range slices.Sorted(maps.Keys(v.Clips)) {
 		c := v.Clips[name]
@@ -119,6 +144,9 @@ func validateVariant(v variant, bounds image.Rectangle, context string) error {
 			}
 			if v.Pivot[0] >= frame[2] || v.Pivot[1] >= frame[3] {
 				return fmt.Errorf("%s, clip %q, cuadro %d: pivote %v fuera del cuadro", context, name, i+1, v.Pivot)
+			}
+			if v.DepthOffset < -frame[3] || v.DepthOffset > frame[3] {
+				return fmt.Errorf("%s, clip %q, cuadro %d: desplazamiento de profundidad fuera del cuadro", context, name, i+1)
 			}
 		}
 	}
@@ -138,15 +166,18 @@ func (a *Atlas) Require(id string) error {
 	return nil
 }
 
-func (a *Atlas) frame(id string, scale Scale, name string, tick uint64) (image.Rectangle, image.Point, bool) {
-	v, ok := a.sprites[id][scale]
-	if !ok {
-		return image.Rectangle{}, image.Point{}, false
-	}
+func (a *Atlas) Supports(scale Scale) bool { return slices.Contains(a.scales, scale) }
+
+func (v variant) frame(name string, tick uint64) image.Rectangle {
 	c, ok := v.Clips[name]
+	if !ok {
+		base, _, _ := strings.Cut(name, "_")
+		c, ok = v.Clips[base]
+	}
 	if !ok {
 		c = v.Clips["idle"]
 	}
-	r := c.Frames[(tick/c.FrameTicks)%uint64(len(c.Frames))]
-	return image.Rect(r[0], r[1], r[0]+r[2], r[1]+r[3]), image.Pt(v.Pivot[0], v.Pivot[1]), true
+	return frameRect(c.Frames[(tick/c.FrameTicks)%uint64(len(c.Frames))])
 }
+
+func frameRect(r []int) image.Rectangle { return image.Rect(r[0], r[1], r[0]+r[2], r[1]+r[3]) }

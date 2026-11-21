@@ -6,7 +6,7 @@
       "macro": {"pivot": [24, 14], "clips": {"idle": {"frame_ticks": 1, "frames": [[294, 1154, 48, 29]]}}}
     },
     "floor": {
-      "macro": {"pivot": [142, 80], "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 1154, 288, 166]]}}},
+      "macro": {"pivot": [142, 80], "layer": "background", "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 1154, 288, 166]]}}},
       "micro": {"pivot": [0, 0], "clips": {"idle": {"frame_ticks": 1, "frames": [[290, 1154, 1, 1]]}}}
     },
     "palm": {

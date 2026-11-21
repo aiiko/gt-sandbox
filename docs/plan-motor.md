@@ -4,14 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M13 — La casa en macro
-
-- Producir tiles y sprites para dormitorio, cocina y living. Dibujar suelo, paredes, puertas, cama, escritorio, heladera, mesa y televisor.
-- Representar a la giantess con su sprite direccional y a la colonia con el marcador del nido. Añadir profundidad por punto de apoyo y tratamiento de paredes de primer plano.
-- Encuadrar la casa y permitir seleccionar y seguir a la giantess durante el recorrido.
-
-**Aceptación.** En una ejecución del escenario se distinguen las tres habitaciones y sus conexiones, se identifica la ida a la cocina y el regreso al escritorio, y la giantess puede seguirse hasta el living con las superposiciones coherentes.
-
 ### M14 — Superficies y colonia en micro
 
 - Producir el arte de escritorio, nido, palma, mesa del living, taza, migajas y tinies. Dibujar superficies con su contorno útil y detalles ajustados a la vista micro.

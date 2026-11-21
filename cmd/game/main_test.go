@@ -8,8 +8,76 @@ import (
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/render"
+	"gtsandbox/internal/scenario"
 	"gtsandbox/internal/view"
 )
+
+func TestMorningMacroArt(t *testing.T) {
+	path := "../../" + morningScenario
+	g, err := newGame(path, 0, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.enableArt(""); err != nil {
+		t.Fatal(err)
+	}
+	if g.art.atlas.Supports(render.Micro) {
+		t.Fatal("el atlas de la casa debería ofrecer macro")
+	}
+	g.w, g.h = (pixelGame{g}).Layout(960, 540)
+	g.fit()
+	f := g.run.Cur
+	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
+	scene := g.art.atlas.Arrange(f, g.proj, g.visuals, render.Macro, ids.Nil)
+	g.sel = scene.Pick(image.Pt(238, 93))
+	if g.visuals[g.sel] != "giantess" {
+		t.Fatalf("clic en la giantess devolvió %s", g.name(g.sel))
+	}
+	for _, x := range []int{180, 300} {
+		if id := scene.Pick(image.Pt(x, 135)); g.visuals[id] != "door" {
+			t.Errorf("umbral en (%d, 135): se seleccionó %s", x, g.name(id))
+		}
+	}
+	g.toggleFollow()
+	spec, err := scenario.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var visited []string
+	for range spec.Ticks {
+		g.run.StepOnce()
+		if g.run.Err != nil {
+			t.Fatal(g.run.Err)
+		}
+		f = view.Interpolate(g.run.Prev, g.run.Cur, 0.5)
+		actor, ok := f.SpaceByID(g.follow)
+		if !ok {
+			t.Fatal("se perdió el seguimiento")
+		}
+		room := g.name(actor.Parent)
+		if len(visited) == 0 || visited[len(visited)-1] != room {
+			visited = append(visited, room)
+		}
+		proj := g.cam.Project(g.anchor(f), g.w, g.h)
+		if x, y := proj.ToScreen(actor.Pose.Pos); x != float32(g.w)/2 || y != float32(g.h)/2 {
+			t.Fatalf("seguimiento en %s: punto de apoyo en (%f, %f)", room, x, y)
+		}
+	}
+	want := []string{"dormitorio", "cocina", "dormitorio", "living"}
+	if !slices.Equal(visited, want) {
+		t.Fatalf("recorrido de cámara %v, quería %v", visited, want)
+	}
+	headless, err := scenario.Build(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fails, err := headless.Run(); err != nil || len(fails) > 0 {
+		t.Fatalf("ejecución headless: %v %v", err, fails)
+	}
+	if got := g.run.World.Hash(); got != headless.World.Hash() {
+		t.Fatalf("hash del visor %#x, hash headless %#x", got, headless.World.Hash())
+	}
+}
 
 func TestArtSampleUsesSameEntitiesAtBothScales(t *testing.T) {
 	g, err := newGame("../../"+artScenario, 0, 0, "")
