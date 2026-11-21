@@ -243,6 +243,7 @@
                   "offset": {"x": 140000, "y": 0},
                   "spread": 40000
                 },
+                {"do": "wait", "ticks": 12},
                 {"do": "pose", "pose": "hand_rest"},
                 {"do": "use", "ticks": 300}
               ]
@@ -333,6 +334,8 @@
               "approach": {"x": 0, "y": -1500000},
               "steps": [
                 {"do": "goto", "place": "living_table"},
+                {"do": "pose", "pose": "hand_hover"},
+                {"do": "wait", "ticks": 12},
                 {"do": "pose", "pose": "hand_rest"},
                 {"do": "use", "ticks": 300}
               ]
@@ -718,7 +721,8 @@
           "poses": {
             "idle": [{"part": "$palm", "pos": {"x": 300000, "y": 0, "z": 1400000}, "facing": 0}],
             "hand_rest": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 770000}, "facing": 0}],
-            "set_table": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 900000}, "facing": 0}]
+            "set_table": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 900000}, "facing": 0}],
+            "hand_hover": [{"part": "$palm", "pos": {"x": 400000, "y": 0, "z": 880000}, "facing": 0}]
           },
           "agent": {
             "scale": "giantess",

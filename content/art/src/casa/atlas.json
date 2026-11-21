@@ -487,6 +487,30 @@
             "frames": [
               "palm/micro_raised_west.png"
             ]
+          },
+          "shadow_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_shadow_north.png"
+            ]
+          },
+          "shadow_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_shadow_east.png"
+            ]
+          },
+          "shadow_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_shadow_south.png"
+            ]
+          },
+          "shadow_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_shadow_west.png"
+            ]
           }
         }
       }
@@ -699,6 +723,12 @@
               "tiny/micro_fall_1.png",
               "tiny/micro_fall_2.png"
             ]
+          },
+          "shadow": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_shadow.png"
+            ]
           }
         }
       }
@@ -849,6 +879,12 @@
             "frames": [
               "tiny_lavender/micro_fall_1.png",
               "tiny_lavender/micro_fall_2.png"
+            ]
+          },
+          "shadow": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_shadow.png"
             ]
           }
         }
@@ -1001,6 +1037,12 @@
               "tiny_ochre/micro_fall_1.png",
               "tiny_ochre/micro_fall_2.png"
             ]
+          },
+          "shadow": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_shadow.png"
+            ]
           }
         }
       }
@@ -1023,6 +1065,38 @@
       },
       "micro": {
         "hidden": true
+      }
+    },
+    "pass": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          11,
+          5
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "pass/micro_open_1.png"
+            ]
+          },
+          "open": {
+            "frame_ticks": 12,
+            "frames": [
+              "pass/micro_open_1.png",
+              "pass/micro_open_2.png"
+            ]
+          },
+          "closed": {
+            "frame_ticks": 1,
+            "frames": [
+              "pass/micro_closed.png"
+            ]
+          }
+        }
       }
     }
   }

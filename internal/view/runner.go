@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -42,6 +43,7 @@ type Runner struct {
 	Log       []Logged     // últimos LogSize eventos, del más viejo al más nuevo
 	Story     []StoryEntry // últimos LogSize resúmenes, en orden de publicación
 	Err       error        // primer error de step; detiene el Runner
+	falls     []Fall       // caídas recientes, para animarlas
 
 	hashed   bool
 	hashTick clock.Tick
@@ -99,12 +101,31 @@ func (r *Runner) steps(n int) {
 	}
 	if n > 0 {
 		r.Cur = r.cap.Capture(r.World)
+		r.attachFalls(r.Cur)
+		if n > 1 {
+			r.attachFalls(r.Prev)
+		}
+	}
+}
+
+// attachFalls copia al frame las caídas que siguen animándose en su tick.
+func (r *Runner) attachFalls(f *Frame) {
+	r.falls = slices.DeleteFunc(r.falls, func(fl Fall) bool { return r.Cur.Tick-fl.Tick >= FallTicks })
+	f.Falls = nil
+	for _, fl := range r.falls {
+		if fl.Tick <= f.Tick && f.Tick-fl.Tick < FallTicks {
+			f.Falls = append(f.Falls, fl)
+		}
 	}
 }
 
 func (r *Runner) record() {
 	first := len(r.Story)
 	for _, e := range r.World.Events() {
+		if fell, ok := e.Event.(space.EntityFell); ok {
+			// cuenta desde el primer frame que ya la muestra resuelta
+			r.falls = append(r.falls, Fall{Entity: fell.Entity, From: fell.From, To: fell.To, Height: fell.Height, Tick: r.World.Tick()})
+		}
 		data, err := json.Marshal(e.Event)
 		if err != nil {
 			data = []byte(err.Error())

@@ -85,6 +85,33 @@ La grilla de la palma en el escenario sale de `hand.grid_rows()`: una celda de 1
 
 ![Tinies sobre la palma elevada durante el viaje al living, tick 520](img/m16-palma.png)
 
+## Contacto, viaje y caídas
+
+**Señal del paso.** En micro, cada portal de contacto muestra el visual `pass` en sus dos extremos cuando la superficie de ese extremo está en el foco. El clip `open` muestra dos anillos turquesa unidos que laten, y `closed` los muestra lilas y separados si el portal está deshabilitado. `view.Portal` trae el Space de cada extremo (`a_space`, `b_space`). Durante el viaje no hay contacto, así que no hay señal. La palma apoyada se distingue de la levantada por la silueta (`rested`/`raised`), por la sombra pegada o separada y por la señal.
+
+**Sombra anticipada.** Una superficie móvil que no está en el foco proyecta `shadow_<dir>` sobre la superficie enfocada cuando está encima, a menos de 1 m y con el centro sobre ella o a menos de media extensión del borde. Cuanto más baja, más oscura y más pegada al apoyo. La sombra es una silueta tramada que se desvanece hacia el antebrazo. En la mañana, la giantess sostiene la mano suspendida 12 ticks antes de apoyarla, en el desayuno y frente a la TV, así que la sombra se ve antes de la llegada.
+
+**Seguimiento.** Seguir a un tiny (`T`, o `-follow <nombre>` al arrancar) mantiene la vista micro en la superficie donde está. Cuando el tiny pasa del escritorio a la palma o de la palma a la mesa, el foco y el rótulo cambian con él. Si una superficie más alta lo tapa (al bajar, el extremo del paso queda bajo la mano), lo seguido se dibuja además translúcido por encima de todo.
+
+**Caídas.** La simulación resuelve una caída en un tick y publica `entity_fell`. El `Runner` guarda las caídas recientes en `Frame.Falls`, y durante `view.FallTicks` (10 ticks) el tiny usa el clip `fall`. Arranca a la altura de la caída en pantalla, hasta 48 px, y baja con aceleración hasta su apoyo, donde su sombra (`shadow`) se oscurece a medida que llega. Las caídas no tienen sombra horneada. El escenario `tiny_cae_de_la_palma.json` sale de `tools/scenarios/tiny_cae_de_la_palma.py`: un tiny queda fuera del borde de la palma levantada y cae 65 cm sobre el escritorio.
+
+`ArtScene.Marks(id)` lista las sombras y señales colocadas para una entidad, y `ArtScene.Lift(id)` lista cuánto se levantó su sprite. Las pruebas recorren la mañana:
+
+- `TestMorningPassSignalMatchesPortals` verifica que las señales coincidan con los portales en cada tick.
+- `TestHandShadowAnticipatesContact` verifica que haya sombra antes de cada apoyo y ninguna con la mano apoyada.
+- `TestFollowTinyThroughTrip` verifica que Tiny 01 vaya del escritorio a la palma y a la mesa del living con el foco y la cámara sobre él.
+
+`TestFallIsAnimatedAndFollowed` cubre la caída en su escenario.
+
+```sh
+go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json -follow "Tiny 01"
+go run ./cmd/game -art -scenario tests/scenarios/tiny_cae_de_la_palma.json -follow "Tiny 01"
+```
+
+![Sombra de la mano suspendida sobre la mesa del living antes de apoyarse](img/m17-sombra.png)
+
+![Tiny 01 recién bajado a la mesa, visto a través de la mano, y un tiny cayendo sobre el escritorio](img/m17-paso-caida.png)
+
 ## Superficies y colonia en micro
 
 `Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.

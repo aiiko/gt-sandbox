@@ -108,7 +108,8 @@ def shadow(c, w=10):
 
 def tiny_frame(pal, facing, legs, bob=0, arms_up=False, fall=None):
     c = Canvas(16, 18)
-    shadow(c, 8 if fall else 10)
+    if not fall:
+        shadow(c, 10)
     side = facing in ('east', 'west')
     upper = UPPER['east' if side else facing]
     table = LEGS_SIDE if side else LEGS_FRONT
@@ -334,10 +335,94 @@ def cup():
     save(c.im, 'cup/macro_held.png')
 
 
+def tiny_shadow():
+    """Sombra sola del tiny, opaca: la presentación le da la transparencia."""
+    c = Canvas(16, 18)
+    c.ellipse(8, 16, 5, 1, INK)
+    for name in TINY_PALETTES:
+        save(c.im, f'{name}/micro_shadow.png')
+
+
+def soft_silhouette(img):
+    """Silueta opaca con el borde punteado, para una sombra difusa."""
+    a = img.split()[3]
+    w, h = img.size
+    out = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    src, dst = a.load(), out.load()
+    ink = hexc(INK)
+    for y in range(h):
+        for x in range(w):
+            if not src[x, y]:
+                continue
+            edge = 0
+            for r in (1, 2, 3):
+                if any(not (0 <= x + dx < w and 0 <= y + dy < h) or not src[x + dx, y + dy]
+                       for dx, dy in ((r, 0), (-r, 0), (0, r), (0, -r))):
+                    edge = r
+                    break
+            if edge == 0 or (edge == 2 and (x + y) % 2 == 0):
+                dst[x, y] = ink
+    return out
+
+
+BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+
+
+def fade_forearm(img, start=hand.W - 24, length=110):
+    """Desvanece la sombra a lo largo del antebrazo con un tramado ordenado."""
+    px = img.load()
+    for y in range(img.height):
+        for x in range(start, img.width):
+            keep = 1 - (x - start) / length
+            if px[x, y][3] and BAYER4[y % 4][x % 4] / 16 >= keep:
+                px[x, y] = (0, 0, 0, 0)
+    return img
+
+
+def palm_shadows():
+    sil = fade_forearm(soft_silhouette(palm_shadowless()))
+    for facing, turn in PALM_TURNS.items():
+        sq = Image.new('RGBA', (PALM_SIZE, PALM_SIZE), (0, 0, 0, 0))
+        sq.alpha_composite(sil, (PALM_SIZE // 2 - hand.W // 2, PALM_SIZE // 2 - hand.H // 2))
+        save(sq.rotate(turn) if turn else sq, f'palm/micro_shadow_{facing}.png')
+
+
+def pass_sign():
+    """Señal del paso: dos anillos unidos (abierto) o separados (cerrado)."""
+    teal, teal_hi, teal_sh = '#76D8CB', '#D8F6F0', '#3D9295'
+    muted, muted_sh = '#B3A7EC', '#7969A4'
+
+    def ring(c, cx, fill, shade):
+        c.ellipse(cx, 5, 4, 4, INK)
+        c.ellipse(cx, 5, 3, 3, fill)
+        c.ellipse(cx, 5, 1, 1, INK)
+        c.px(cx - 2, 3, teal_hi if fill == teal else '#E4DEFA')
+        c.px(cx + 2, 7, shade)
+
+    for name, fill, shade, bar in (('open_1', teal, teal_sh, teal), ('open_2', teal, teal_sh, teal_hi),
+                                   ('closed', muted, muted_sh, None)):
+        c = Canvas(22, 11)
+        c.ellipse(11, 9, 9, 1, hexc(INK, 70))
+        if bar:
+            c.rect(6, 3, 10, 5, INK)
+            c.rect(6, 4, 10, 3, bar)
+            c.hline(6, 4, 10, teal_hi)
+        else:
+            # cabos cortados: la unión falta
+            c.rect(7, 4, 2, 3, INK)
+            c.rect(13, 4, 2, 3, INK)
+        ring(c, 5, fill, shade)
+        ring(c, 16, fill, shade)
+        save(c.im, f'pass/micro_{name}.png')
+
+
 def main(src, base):
     global SRC, BASE
     SRC, BASE = src, base
     tinies()
+    tiny_shadow()
     giantess()
     palm()
+    palm_shadows()
+    pass_sign()
     cup()

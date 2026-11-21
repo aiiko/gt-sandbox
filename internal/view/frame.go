@@ -84,11 +84,14 @@ type Mover struct {
 	Route  []units.Vec3 `json:"route,omitempty"`
 }
 
-// Portal es un portal con sus extremos en coordenadas de mundo.
+// Portal es un portal con sus extremos en coordenadas de mundo y el Space de
+// cada extremo.
 type Portal struct {
 	ID       ids.ID     `json:"id"`
 	A        units.Vec3 `json:"a"`
 	B        units.Vec3 `json:"b"`
+	ASpace   ids.ID     `json:"a_space"`
+	BSpace   ids.ID     `json:"b_space"`
 	Disabled bool       `json:"disabled,omitempty"`
 	Dynamic  bool       `json:"dynamic,omitempty"` // lo creó un contacto
 }
@@ -101,14 +104,39 @@ type Contact struct {
 	Since clock.Tick `json:"since"`
 }
 
+// Fall es una caída reciente (evento entity_fell). La simulación la resuelve
+// en un tick; la presentación la anima durante FallTicks.
+type Fall struct {
+	Entity ids.ID       `json:"entity"`
+	From   ids.ID       `json:"from"`
+	To     ids.ID       `json:"to"`
+	Height units.Length `json:"height"`
+	Tick   clock.Tick   `json:"tick"` // primer frame en que el tiny ya está en To
+}
+
+// FallTicks es cuánto dura la animación de una caída.
+const FallTicks = 10
+
 // Frame es lo que hay que dibujar de un tick. Spaces va de abajo hacia
-// arriba (por altura de mundo y luego ID); el resto, por ID.
+// arriba (por altura de mundo y luego ID); el resto, por ID. Falls la
+// completa el Runner con las caídas de los últimos FallTicks.
 type Frame struct {
 	Tick     clock.Tick `json:"tick"`
 	Spaces   []Space    `json:"spaces"`
 	Things   []Thing    `json:"things"`
 	Portals  []Portal   `json:"portals"`
 	Contacts []Contact  `json:"contacts"`
+	Falls    []Fall     `json:"falls,omitempty"`
+}
+
+// FallOf devuelve la caída en curso de una entidad.
+func (f *Frame) FallOf(id ids.ID) (Fall, bool) {
+	for _, fl := range f.Falls {
+		if fl.Entity == id && f.Tick-fl.Tick < FallTicks {
+			return fl, true
+		}
+	}
+	return Fall{}, false
 }
 
 // SpaceByID busca un Space del frame.
@@ -227,7 +255,8 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if errA != nil || errB != nil {
 			return
 		}
-		f.Portals = append(f.Portals, Portal{ID: id, A: a, B: b, Disabled: p.Disabled, Dynamic: contacts.Has(id)})
+		f.Portals = append(f.Portals, Portal{ID: id, A: a, B: b, ASpace: p.A.Space, BSpace: p.B.Space,
+			Disabled: p.Disabled, Dynamic: contacts.Has(id)})
 	})
 	contacts.Each(func(id ids.ID, k *attach.Contact) {
 		f.Contacts = append(f.Contacts, Contact{ID: id, A: k.A, B: k.B, Since: k.Since})

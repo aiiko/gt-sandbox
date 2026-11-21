@@ -4,14 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M17 — Contacto, viaje y caídas
-
-- Mostrar cuándo el paso entre mano y mueble está disponible. Diferenciar mano elevada y apoyada mediante silueta, sombra y señal del paso. La sombra de la mano anticipa su llegada a la superficie.
-- Mantener el seguimiento micro durante el viaje y actualizar el contexto cuando el tiny baja de la mano.
-- Mostrar las caídas de `space.falls`: el tiny que cae conserva su marcador hasta apoyarse y el seguimiento lo acompaña a la superficie de destino.
-
-**Aceptación.** Se puede seguir visualmente al mismo tiny al subir del escritorio a la mano, viajar en la palma y bajar en el living. La señal del paso coincide con el portal real en ambos apoyos y durante el trayecto. Un escenario de prueba con un tiny que cae de la palma muestra la caída y mantiene el seguimiento.
-
 ### M18 — Experiencia de partida
 
 - Preservar un modo de debug e integrar una interfaz de partida con reloj, pausa, velocidad, cambio de escala, selección, seguimiento e inspector resumido, con el estilo de interfaz de la propuesta.

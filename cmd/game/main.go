@@ -51,6 +51,7 @@ func main() {
 	load := flag.String("load", "", "en vez de un escenario, continuar un snapshot JSON")
 	shot := flag.String("shot", "", "guardar una captura PNG al llegar a -shot-tick y salir")
 	micro := flag.String("micro", "", "empezar en la vista micro del Space con este nombre")
+	follow := flag.String("follow", "", "empezar siguiendo a la entidad con este nombre (en -art, en su vista micro)")
 	shotTick := flag.Int("shot-tick", 0, "tick del escenario (o del mundo) para -shot; corre a x16")
 	story := flag.Bool("story", false, "iniciar en modo historia")
 	art := flag.Bool("art", false, "dibujar el escenario en pixel art (por defecto, la muestra)")
@@ -70,7 +71,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "game:", err)
 		os.Exit(1)
 	}
-	g.micro = *micro
+	g.micro, g.followName = *micro, *follow
 	g.story = *scen == morningScenario && *load == "" && *crowd <= 0
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "story" {
@@ -134,11 +135,12 @@ type game struct {
 	story   bool
 	logBack int // líneas desde el final de la historia
 
-	micro    string // -micro
-	shot     string // captura pedida por -shot
-	shotTick clock.Tick
-	shotDone bool
-	shotErr  error
+	micro      string // -micro
+	followName string // -follow
+	shot       string // captura pedida por -shot
+	shotTick   clock.Tick
+	shotDone   bool
+	shotErr    error
 }
 
 func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
@@ -257,6 +259,32 @@ func (g *game) toggleFollow() {
 	}
 }
 
+// startFollowing elige y sigue a la entidad con ese nombre; en -art pasa a
+// la vista micro de la superficie donde está.
+func (g *game) startFollowing(name string) {
+	if name == "" {
+		return
+	}
+	f := g.run.Cur
+	for _, t := range f.Things {
+		if t.Name == name {
+			g.sel = t.ID
+		}
+	}
+	for _, s := range f.Spaces {
+		if s.Name == name {
+			g.sel = s.ID
+		}
+	}
+	if g.sel.IsNil() {
+		return
+	}
+	g.toggleFollow()
+	if g.art != nil && g.art.focus.IsNil() {
+		g.toggleMicro()
+	}
+}
+
 func (g *game) stopFollowing() {
 	if !g.follow.IsNil() {
 		if g.art != nil {
@@ -312,6 +340,7 @@ func (g *game) Update() error {
 				g.toggleMicro()
 			}
 		}
+		g.startFollowing(g.followName)
 		g.fitted = true
 	}
 	dt := time.Second / time.Duration(ebiten.TPS())

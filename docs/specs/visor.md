@@ -9,7 +9,8 @@ Foto plana y serializable de un tick, armada por `Capturer.Capture(w)` (solo lee
 - `spaces`: id, nombre, kind, padre, profundidad, pose de mundo, extensión, copia de la grilla (cacheada por versión) y si es superficie de contacto. Los Spaces móviles pueden incluir el estado y la ruta del mover. Ordenados de abajo hacia arriba (Z de mundo, luego ID).
 - Los Spaces con `agent` (la giantess) incluyen `activity` y `step`, igual que las Things.
 - `things`: entidades con `location` que no son Spaces: pose de mundo, cuerpo, porteador para los objetos cargados y, si tienen `mover`, su estado y la ruta pendiente en puntos de mundo.
-- `portals` (extremos en el mundo; `dynamic` si los creó un contacto) y `contacts`.
+- `portals` (extremos en el mundo y el Space de cada uno; `dynamic` si los creó un contacto) y `contacts`.
+- `falls`: las caídas (`entity_fell`) de los últimos `FallTicks`, que completa el `Runner` para animarlas. `FallOf(id)` devuelve la caída en curso de una entidad.
 
 El renderer dibuja solo desde el Frame. `view.Inspect(w, id)` es la única lectura directa del mundo (el panel del inspector: JSON de cada componente vía `ecs.Registry.Components`).
 
@@ -38,7 +39,7 @@ Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido 
 
 `T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. El escenario por defecto, «Una mañana en la casa», arranca en modo historia. `-story` lo activa al iniciar con otros escenarios.
 
-`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space.
+`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space y con `-follow <nombre>` siguiendo a esa entidad.
 
 ## Pendiente
 

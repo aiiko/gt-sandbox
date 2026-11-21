@@ -15,6 +15,7 @@ import (
 	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/view"
 )
 
@@ -71,7 +72,27 @@ type sprite struct {
 	y     float32
 	group ids.ID
 	z     units.Length
+	alpha float32 // 0 = opaco
+	ghost bool    // sombras y señales: no se eligen ni llevan el marco de selección
 }
+
+// look ajusta cómo se dibuja una colocación.
+type look struct {
+	visual string  // "" = el visual de la entidad
+	alpha  float32 // 0 = opaco
+	ghost  bool
+	layer  int  // 0 = la capa de la variante
+	top    bool // encima de todo (el reflejo de lo seguido bajo una superficie más alta)
+}
+
+const (
+	// PassVisual es el visual de la señal de un paso entre superficies en contacto.
+	PassVisual = "pass"
+	// ShadowReach es la altura a la que la sombra anticipada de una mano deja de verse.
+	ShadowReach = units.Meter
+	// fallLift limita cuántos píxeles cae un sprite en la animación de caída.
+	fallLift = 48
+)
 
 const (
 	layerBackground = iota
@@ -85,10 +106,20 @@ type ArtScene struct {
 	atlas   *Atlas
 	sprites []sprite
 	clips   map[ids.ID]string
+	marks   map[ids.ID][]string
+	lifts   map[ids.ID]int
 }
 
 // Clip devuelve el clip con el que se dibujó una entidad, o "" si no se dibujó.
 func (s ArtScene) Clip(id ids.ID) string { return s.clips[id] }
+
+// Marks devuelve los clips de las sombras y señales colocadas para una
+// entidad (un portal, una mano, un tiny que cae), estén o no en pantalla.
+func (s ArtScene) Marks(id ids.ID) []string { return s.marks[id] }
+
+// Lift devuelve cuántos píxeles por encima de su pivote se dibujó una
+// entidad (una carga en la mano, un tiny que cae).
+func (s ArtScene) Lift(id ids.ID) int { return s.lifts[id] }
 
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
@@ -118,11 +149,12 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 		return false
 	}
-	visible := func(id ids.ID) (variant, bool) {
-		v, ok := a.sprites[visuals[id]][scale]
+	visibleAs := func(id ids.ID, visual string) (variant, bool) {
+		v, ok := a.sprites[visual][scale]
 		return v, ok && !v.Hidden && (!v.SelectedOnly || slices.Contains(featured, id))
 	}
-	out := ArtScene{atlas: a, clips: map[ids.ID]string{}}
+	visible := func(id ids.ID) (variant, bool) { return visibleAs(id, visuals[id]) }
+	out := ArtScene{atlas: a, clips: map[ids.ID]string{}, marks: map[ids.ID][]string{}, lifts: map[ids.ID]int{}}
 	carrying, inContact, resting := map[ids.ID]bool{}, map[ids.ID]bool{}, map[ids.ID]bool{}
 	for _, t := range f.Things {
 		if !t.CarriedBy.IsNil() {
@@ -137,13 +169,23 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			resting[s.Parent] = true
 		}
 	}
-	add := func(id, support, carrier ids.ID, pos units.Vec3, names []string, isSpace bool, offset image.Point) {
-		v, ok := visible(id)
+	add := func(id, support, carrier ids.ID, pos units.Vec3, names []string, isSpace bool, offset image.Point, lk look) {
+		visual := lk.visual
+		if visual == "" {
+			visual = visuals[id]
+		}
+		v, ok := visibleAs(id, visual)
 		if !ok {
 			return
 		}
 		name := v.resolve(names)
-		out.clips[id] = name
+		if lk.top {
+			// no es una marca: es la misma entidad vista a través de lo que la tapa
+		} else if lk.ghost {
+			out.marks[id] = append(out.marks[id], name)
+		} else {
+			out.clips[id], out.lifts[id] = name, -offset.Y
+		}
 		x, y := p.ToScreen(pos)
 		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1]).Add(offset)
 		group, depth := id, y+float32(v.DepthOffset)
@@ -170,10 +212,17 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 				group, height = sp.ID, sp.Pose.Pos.Z
 			}
 		}
+		if lk.layer != 0 {
+			layer = lk.layer
+		}
+		if lk.top {
+			group, height, layer = id, units.Length(math.MaxInt64), layerForeground
+		}
 		addFrame := func(src image.Rectangle, layer int) {
 			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
 			if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
-				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height})
+				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height,
+					alpha: lk.alpha, ghost: lk.ghost})
 			}
 		}
 		addFrame(v.frame(name, uint64(f.Tick)), layer)
@@ -190,13 +239,46 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if s.Mover == nil && !s.Extent.Empty() {
 			names = surfaceClips(s.Pose.Rot, inContact[s.ID])
 		}
-		add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, names, true, image.Point{})
+		add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, names, true, image.Point{}, look{})
 	}
 	if scale == Macro {
 		for _, pt := range f.Portals {
 			if !pt.Dynamic && !pt.Disabled {
 				mid := units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z)
-				add(pt.ID, ids.Nil, ids.Nil, mid, []string{"idle"}, false, image.Point{})
+				add(pt.ID, ids.Nil, ids.Nil, mid, []string{"idle"}, false, image.Point{}, look{})
+			}
+		}
+	}
+	if scale == Micro {
+		// Señal del paso en cada extremo visible de un portal de contacto.
+		for _, pt := range f.Portals {
+			if !pt.Dynamic {
+				continue
+			}
+			state := []string{"open"}
+			if pt.Disabled {
+				state = []string{"closed"}
+			}
+			for _, end := range []struct {
+				pos   units.Vec3
+				space ids.ID
+			}{{pt.A, pt.ASpace}, {pt.B, pt.BSpace}} {
+				if inFocus(end.space) {
+					add(pt.ID, end.space, ids.Nil, end.pos, state, false, image.Point{},
+						look{visual: PassVisual, ghost: true, layer: layerGround})
+				}
+			}
+		}
+		// Sombra anticipada de una superficie móvil que todavía no se apoya
+		// sobre la superficie enfocada.
+		if fs, ok := f.SpaceByID(focus); ok {
+			for _, s := range f.Spaces {
+				if s.Mover != nil || s.Extent.Empty() || inFocus(s.ID) {
+					continue
+				}
+				if lk, offset, ok := handShadow(fs, s); ok {
+					add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{"shadow_" + compass(s.Pose.Rot)}, false, offset, lk)
+				}
 			}
 		}
 	}
@@ -204,7 +286,20 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if t.CarriedBy.IsNil() && inFocus(t.Space) {
 			names := actor{mover: t.Mover, facing: t.Pose.Rot, activity: t.Activity, step: t.Step,
 				carrying: carrying[t.ID]}.clips()
-			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, image.Point{})
+			var offset image.Point
+			if fl, ok := f.FallOf(t.ID); ok {
+				// Cae desde arriba con aceleración; su sombra lo espera en el apoyo.
+				lift := fallOffset(p, fl, f.Tick)
+				names, offset = append([]string{"fall"}, names...), image.Pt(0, -lift)
+				add(t.ID, t.Space, ids.Nil, t.Pose.Pos, []string{"shadow"}, false, image.Point{},
+					look{ghost: true, layer: layerGround, alpha: 0.3 + 0.5*float32(fallLift-lift)/fallLift})
+			}
+			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, offset, look{})
+			if scale == Micro && slices.Contains(featured, t.ID) {
+				// Lo seguido se ve a través de una superficie que lo tapa (la
+				// mano apoyada encima del extremo del paso).
+				add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, offset, look{ghost: true, top: true, alpha: 0.45})
+			}
 		}
 	}
 	for _, t := range f.Things {
@@ -233,7 +328,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 					offset.X = -offset.X
 				}
 			}
-			add(t.ID, support, t.CarriedBy, pos, []string{"held"}, false, offset)
+			add(t.ID, support, t.CarriedBy, pos, []string{"held"}, false, offset, look{})
 		}
 	}
 	slices.SortStableFunc(out.sprites, func(a, b sprite) int {
@@ -243,6 +338,37 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		return cmp.Or(cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y), cmp.Compare(a.group, b.group))
 	})
 	return out
+}
+
+// handShadow decide si una superficie móvil s (una mano) proyecta su sombra
+// sobre la superficie enfocada fs: está encima, a menos de ShadowReach, y su
+// centro cae sobre fs o cerca del borde. Cuanto más baja, más oscura y más
+// pegada al apoyo.
+func handShadow(fs *view.Space, s view.Space) (look, image.Point, bool) {
+	dz := s.Pose.Pos.Z - fs.Pose.Pos.Z
+	if fs.Extent.Empty() || dz <= 0 || dz >= ShadowReach {
+		return look{}, image.Point{}, false
+	}
+	local := fs.Pose.Transform().ApplyInv(s.Pose.Pos).XY()
+	margin := max(s.Extent.Max.X-s.Extent.Min.X, s.Extent.Max.Y-s.Extent.Min.Y) / 2
+	r := fs.Extent
+	if local.X < r.Min.X-margin || local.X > r.Max.X+margin || local.Y < r.Min.Y-margin || local.Y > r.Max.Y+margin {
+		return look{}, image.Point{}, false
+	}
+	h := float64(dz) / float64(ShadowReach)
+	offset := image.Pt(2+int(math.Round(12*h)), 4+int(math.Round(18*h)))
+	return look{ghost: true, layer: layerGround, alpha: float32(0.42 - 0.27*h)}, offset, true
+}
+
+// fallOffset es cuántos píxeles por encima de su apoyo se dibuja una entidad
+// que cae: parte de la altura de la caída (limitada a fallLift) y baja con
+// aceleración hasta tocar el apoyo al final de view.FallTicks.
+func fallOffset(p camera.Projector, fl view.Fall, tick clock.Tick) int {
+	x0, _ := p.ToScreen(units.V3(0, 0, 0))
+	x1, _ := p.ToScreen(units.V3(fl.Height, 0, 0))
+	start := min(math.Abs(float64(x1-x0)), fallLift)
+	t := min(float64(tick-fl.Tick)/float64(view.FallTicks), 1)
+	return int(math.Round(start * (1 - t*t)))
 }
 
 // depthGroup mantiene al ocupante junto al mueble que lo sostiene.
@@ -337,7 +463,7 @@ func surfaceClips(facing fixedmath.Angle, contact bool) []string {
 func (s ArtScene) Pick(p image.Point) ids.ID {
 	for i := len(s.sprites) - 1; i >= 0; i-- {
 		sp := s.sprites[i]
-		if p.In(sp.dest) {
+		if !sp.ghost && p.In(sp.dest) {
 			at := p.Sub(sp.dest.Min).Add(sp.src.Min)
 			if _, _, _, alpha := s.atlas.pixels.At(at.X, at.Y).RGBA(); alpha > 0 {
 				return sp.id
@@ -356,8 +482,11 @@ func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 	for _, sp := range s.sprites {
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Translate(float64(sp.dest.Min.X), float64(sp.dest.Min.Y))
+		if sp.alpha > 0 {
+			op.ColorScale.ScaleAlpha(sp.alpha)
+		}
 		dst.DrawImage(s.atlas.texture.SubImage(sp.src).(*ebiten.Image), op)
-		if sp.id == selected {
+		if sp.id == selected && !sp.ghost {
 			selection = sp.dest.Inset(-2)
 		}
 	}
