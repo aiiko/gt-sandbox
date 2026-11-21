@@ -183,3 +183,14 @@ func FuzzRegistry(f *testing.F) {
 		}
 	})
 }
+
+func TestComponents(t *testing.T) {
+	r, ps, ts := setup()
+	a := r.Spawn()
+	ts.Set(a, tag{"x"})
+	ps.Set(a, pos{1, 2})
+	got := r.Components(a)
+	if len(got) != 2 || got[0].Store != "pos" || string(got[1].JSON) != `{"Label":"x"}` {
+		t.Fatalf("%+v", got)
+	}
+}

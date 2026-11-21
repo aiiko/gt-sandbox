@@ -36,7 +36,7 @@ Ligeramente ajustada respecto a la propuesta para que las dependencias vayan en 
 gt-sandbox/
 ├── go.mod                     # module gtsandbox (o el nombre que elijas)
 ├── cmd/
-│   ├── game/                  # Ebitengine (llega en M6)
+│   ├── game/                  # Visor de debug con Ebitengine (M6)
 │   ├── simrun/                # Corre escenarios headless, imprime log/hash
 │   └── simbench/              # Benchmarks con N agentes
 ├── internal/
@@ -59,7 +59,8 @@ gt-sandbox/
 │   │   ├── ai/  needs/  jobs/ # Esqueletos en M7, contenido después
 │   ├── content/               # Carga y validación de definiciones JSON
 │   ├── scenario/              # Formato y runner de escenarios de test
-│   ├── render/  camera/  ui/  # Solo leen snapshots
+│   ├── view/  camera/         # Frame plano del mundo y proyección, sin Ebitengine
+│   ├── render/  ui/           # Dibujan con Ebitengine; solo leen Frames
 ├── content/                   # Datos: objetos, actores, mapas
 ├── tests/scenarios/           # Escenarios .json + golden files
 └── docs/
@@ -72,8 +73,10 @@ gt-sandbox/
 **Regla de dependencias** (verificable con un test que analice imports):
 
 ```
-core  ←  sim/*  ←  content, scenario  ←  render/ui  ←  cmd/*
+core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui  ←  cmd/*
 ```
+
+`view` y `camera` no importan Ebitengine; `camera` solo depende de `core`.
 
 `sim/*` nunca importa Ebitengine. `render` nunca escribe en `sim`.
 
@@ -303,6 +306,14 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 
 **Aceptación:** cambiar de cámara o de velocidad no cambia el hash; el escenario de M5 se ve funcionando.
 
+**Estado: completado.** Spec en `docs/specs/visor.md`. Decisiones tomadas en el camino:
+- Ebitengine 2.10.6, que pide Go ≥ 1.25: `go.mod` pasa a `go 1.25.0` con `toolchain go1.27.4` (el comando `go` lo descarga solo). Compila sin cgo en Windows.
+- El renderer no lee el mundo: dibuja un `view.Frame` plano y serializable (poses de mundo, grillas, portales, contactos, rutas). Un visor web futuro podría usar el mismo Frame.
+- `view.Runner` decide cuántos `Step` correr según el tiempo real y la velocidad; esa es toda su influencia sobre la simulación. Un test corre el escenario de M5 a x1, x16, paso a paso, con frames irregulares y con frames lentos, y compara el hash con `Instance.Run`.
+- La cámara sigue a un Space ancla: la vista macro ancla en el mundo y la micro en un Space (gira y se mueve con él).
+- `scenario.Player` corre un escenario tick a tick; `Instance.Run` lo usa. `ecs.Registry.Components` da el JSON de los componentes de una entidad para el inspector.
+- Interacción: click derecho manda `move_to`; es un comando como cualquier otro (cambia el hash, como debe ser).
+
 ### M7 — Esqueleto de IA (sin contenido rico)
 - `needs`: valores con decaimiento por intervalo.
 - `ai`: interfaz `Action` (precondiciones, utilidad, ejecución por pasos, interrumpible), selector utility con histéresis.
@@ -342,5 +353,5 @@ Cada uno de estos debería poder agregarse como **un sistema nuevo registrado en
 
 ## 7. Cosas a verificar antes de arrancar
 
-- La propuesta afirma que **Ebitengine 2.10** salió en septiembre de 2026 con builds en Go puro y virtualización para tests con agentes. Conviene confirmar la versión actual y su requisito de Go (localmente hay Go 1.24.13; probablemente haya que actualizar a la versión que pida Ebitengine). No bloquea nada hasta M6.
+- ~~Confirmar la versión de Ebitengine y su requisito de Go~~: resuelto en M6 (2.10.6, Go ≥ 1.25, toolchain 1.27.4).
 - Elegir el nombre del módulo Go.

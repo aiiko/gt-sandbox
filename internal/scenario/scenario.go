@@ -203,24 +203,56 @@ func (in *Instance) resolve(raw json.RawMessage) (json.RawMessage, error) {
 
 // Run corre el escenario completo y devuelve las expectativas que fallaron.
 func (in *Instance) Run() ([]string, error) {
-	w := in.World
+	p, err := in.Player()
+	if err != nil {
+		return nil, err
+	}
+	for !p.Done() {
+		if err := p.Step(); err != nil {
+			return nil, err
+		}
+	}
+	return in.Check()
+}
+
+// Player corre un escenario tick a tick, para visores interactivos. Pasado
+// Spec.Ticks sigue avanzando el mundo, sin comandos.
+type Player struct {
+	in     *Instance
+	byTick map[int][]world.Command
+	t      int
+}
+
+// Player prepara la reproducción tick a tick.
+func (in *Instance) Player() (*Player, error) {
 	byTick, err := in.commands()
 	if err != nil {
 		return nil, err
 	}
-	for t := range in.Spec.Ticks {
-		for _, c := range byTick[t] {
-			if _, err := w.Enqueue(c); err != nil {
-				return nil, err
-			}
-		}
-		w.Step()
-		in.Events = append(in.Events, w.Events()...)
-		if err := w.CheckInvariants(); err != nil {
-			return nil, fmt.Errorf("scenario: tick %d: %w", t, err)
+	return &Player{in: in, byTick: byTick}, nil
+}
+
+// Tick es el próximo tick del escenario (relativo a Start).
+func (p *Player) Tick() int { return p.t }
+
+// Done indica si ya se corrieron los Spec.Ticks del escenario.
+func (p *Player) Done() bool { return p.t >= p.in.Spec.Ticks }
+
+// Step encola los comandos del tick, avanza el mundo y chequea invariantes.
+func (p *Player) Step() error {
+	w := p.in.World
+	for _, c := range p.byTick[p.t] {
+		if _, err := w.Enqueue(c); err != nil {
+			return err
 		}
 	}
-	return in.check()
+	w.Step()
+	p.in.Events = append(p.in.Events, w.Events()...)
+	if err := w.CheckInvariants(); err != nil {
+		return fmt.Errorf("scenario: tick %d: %w", p.t, err)
+	}
+	p.t++
+	return nil
 }
 
 // commands decodifica los comandos del Spec, agrupados por tick.
@@ -240,7 +272,8 @@ func (in *Instance) commands() (map[int][]world.Command, error) {
 	return byTick, nil
 }
 
-func (in *Instance) check() ([]string, error) {
+// Check evalúa las expectativas contra los eventos acumulados.
+func (in *Instance) Check() ([]string, error) {
 	var fails []string
 	for _, x := range in.Spec.Expect {
 		switch {

@@ -159,6 +159,18 @@ func (s *Store[T]) encode() (json.RawMessage, error) {
 	return json.Marshal(out)
 }
 
+func (s *Store[T]) encodeOne(id ids.ID) (json.RawMessage, bool) {
+	v, ok := s.Get(id)
+	if !ok {
+		return nil, false
+	}
+	raw, err := json.Marshal(v)
+	if err != nil {
+		raw, _ = json.Marshal(err.Error())
+	}
+	return raw, true
+}
+
 func (s *Store[T]) decode(raw json.RawMessage) error {
 	var in []entry[T]
 	if err := strictUnmarshal(raw, &in); err != nil {

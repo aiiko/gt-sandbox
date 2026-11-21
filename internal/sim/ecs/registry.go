@@ -28,6 +28,7 @@ type anyStore interface {
 	remove(ids.ID) bool
 	hashState(h *statehash.Hasher)
 	encode() (json.RawMessage, error)
+	encodeOne(ids.ID) (json.RawMessage, bool)
 	decode(json.RawMessage) error
 	decodeValue(json.RawMessage) (func(ids.ID), error)
 	check() error
@@ -122,6 +123,24 @@ func (r *Registry) DecodeComponent(name string, raw json.RawMessage) (func(ids.I
 		return nil, fmt.Errorf("ecs: store %q desconocido", name)
 	}
 	return s.decodeValue(raw)
+}
+
+// NamedComponent es un componente de una entidad, con el nombre de su store.
+type NamedComponent struct {
+	Store string
+	JSON  json.RawMessage
+}
+
+// Components devuelve los componentes de id en orden de registro de los
+// stores, codificados como en los snapshots. Solo lectura, para inspectores.
+func (r *Registry) Components(id ids.ID) []NamedComponent {
+	var out []NamedComponent
+	for _, s := range r.stores {
+		if raw, ok := s.encodeOne(id); ok {
+			out = append(out, NamedComponent{s.Name(), raw})
+		}
+	}
+	return out
 }
 
 // Spawn crea una entidad sin componentes.

@@ -37,11 +37,13 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`; `-scenario tests/scenarios/x.json` corre un escenario.
 - Escenarios de integración en `tests/scenarios/*.json` (los corre `TestScenarios`). Escribir archivos con UTF-8 y LF.
 - Rendimiento: `go run ./cmd/simbench -n 200`.
+- Visor de debug (ver `docs/specs/visor.md`): `go run ./cmd/game` (escenario de M5), `-scenario x.json`, `-crowd 200`, `-load s.json`; `-shot out.png -shot-tick N [-micro palm]` guarda una captura y sale (sirve para revisar cambios visuales sin interactuar). El renderer solo dibuja `view.Frame`; nunca leer el mundo desde `render`/`ui`.
+- Go: `go.mod` fija `toolchain go1.27.4` (lo descarga el comando `go`).
 
 ## Capas
 
 ```
-core  ←  sim/*  ←  content, scenario  ←  render/camera/ui  ←  cmd/*
+core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui  ←  cmd/*
 ```
 
-`internal/archtest` lo verifica. `internal/sim` nunca importa Ebitengine ni `render`. Si el test falla, mover el código, no relajar la regla.
+`internal/archtest` lo verifica. `internal/sim` nunca importa Ebitengine ni `render`; `view` y `camera` tampoco importan Ebitengine. Si el test falla, mover el código, no relajar la regla.

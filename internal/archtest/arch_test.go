@@ -1,7 +1,9 @@
 // Package archtest verifica la regla de dependencias entre capas:
 //
-//	core  ←  sim/*  ←  content, scenario  ←  render/camera/ui  ←  cmd/*
+//	core  ←  sim/*  ←  content, scenario  ←  view, camera  ←  render/ui  ←  cmd/*
 //
+// view y camera no importan Ebitengine: son los datos y la matemática del
+// visor, testeables sin ventana. camera solo depende de core.
 // Si este test falla, no lo "arregles" relajando la regla: mové el código a la
 // capa correcta o registrá un ADR que justifique el cambio.
 package archtest
@@ -25,6 +27,7 @@ var rules = map[string][]string{
 		module + "/internal/sim",
 		module + "/internal/content",
 		module + "/internal/scenario",
+		module + "/internal/view",
 		module + "/internal/render",
 		module + "/internal/camera",
 		module + "/internal/ui",
@@ -33,6 +36,7 @@ var rules = map[string][]string{
 	"internal/sim": {
 		module + "/internal/content",
 		module + "/internal/scenario",
+		module + "/internal/view",
 		module + "/internal/render",
 		module + "/internal/camera",
 		module + "/internal/ui",
@@ -40,14 +44,30 @@ var rules = map[string][]string{
 	},
 	"internal/content": {
 		module + "/internal/scenario",
+		module + "/internal/view",
 		module + "/internal/render",
 		module + "/internal/camera",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
 	},
 	"internal/scenario": {
+		module + "/internal/view",
 		module + "/internal/render",
 		module + "/internal/camera",
+		module + "/internal/ui",
+		"github.com/hajimehoshi/ebiten",
+	},
+	"internal/view": {
+		module + "/internal/render",
+		module + "/internal/ui",
+		"github.com/hajimehoshi/ebiten",
+	},
+	"internal/camera": {
+		module + "/internal/sim",
+		module + "/internal/content",
+		module + "/internal/scenario",
+		module + "/internal/view",
+		module + "/internal/render",
 		module + "/internal/ui",
 		"github.com/hajimehoshi/ebiten",
 	},
