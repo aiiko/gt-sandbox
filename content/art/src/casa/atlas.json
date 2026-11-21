@@ -1,0 +1,552 @@
+{
+  "image": "casa.png",
+  "width": 2048,
+  "scales": [
+    "macro",
+    "micro"
+  ],
+  "sprites": {
+    "kitchen": {
+      "macro": {
+        "pivot": [
+          0,
+          122
+        ],
+        "layer": "background",
+        "foreground": "kitchen/macro_fg.png",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "kitchen/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "bedroom": {
+      "macro": {
+        "pivot": [
+          0,
+          122
+        ],
+        "layer": "background",
+        "foreground": "bedroom/macro_fg.png",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "bedroom/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "living": {
+      "macro": {
+        "pivot": [
+          0,
+          122
+        ],
+        "layer": "background",
+        "foreground": "living/macro_fg.png",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "living/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "door": {
+      "macro": {
+        "pivot": [
+          7,
+          9
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "door/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "bed": {
+      "macro": {
+        "pivot": [
+          16,
+          35
+        ],
+        "depth_offset": 10,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "bed/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "desk": {
+      "macro": {
+        "pivot": [
+          3,
+          17
+        ],
+        "depth_offset": 7,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "desk/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          0,
+          640
+        ],
+        "foreground": "desk/micro_fg.png",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "desk/micro_idle.png"
+            ]
+          }
+        },
+        "focus": [
+          610,
+          230
+        ]
+      }
+    },
+    "table": {
+      "macro": {
+        "pivot": [
+          3,
+          17
+        ],
+        "depth_offset": 7,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "table/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          0,
+          640
+        ],
+        "foreground": "table/micro_fg.png",
+        "focus": [
+          480,
+          462
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "table/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "fridge": {
+      "macro": {
+        "pivot": [
+          11,
+          16
+        ],
+        "depth_offset": 16,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "fridge/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "tv": {
+      "macro": {
+        "pivot": [
+          18,
+          24
+        ],
+        "depth_offset": 2,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tv/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "nest": {
+      "macro": {
+        "pivot": [
+          4,
+          7
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          46,
+          53
+        ],
+        "layer": "ground",
+        "foreground": "nest/micro_fg.png",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "giantess": {
+      "macro": {
+        "pivot": [
+          15,
+          34
+        ],
+        "clips": {
+          "idle_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_idle_east.png"
+            ]
+          },
+          "walk_east": {
+            "frame_ticks": 2,
+            "frames": [
+              "giantess/macro_walk_east_1.png",
+              "giantess/macro_walk_east_2.png",
+              "giantess/macro_walk_east_3.png",
+              "giantess/macro_walk_east_4.png"
+            ]
+          },
+          "idle_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_idle_north.png"
+            ]
+          },
+          "walk_north": {
+            "frame_ticks": 2,
+            "frames": [
+              "giantess/macro_walk_north_1.png",
+              "giantess/macro_walk_north_2.png",
+              "giantess/macro_walk_north_3.png",
+              "giantess/macro_walk_north_4.png"
+            ]
+          },
+          "idle_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_idle_west.png"
+            ]
+          },
+          "walk_west": {
+            "frame_ticks": 2,
+            "frames": [
+              "giantess/macro_walk_west_1.png",
+              "giantess/macro_walk_west_2.png",
+              "giantess/macro_walk_west_3.png",
+              "giantess/macro_walk_west_4.png"
+            ]
+          },
+          "idle_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_idle_south.png"
+            ]
+          },
+          "walk_south": {
+            "frame_ticks": 2,
+            "frames": [
+              "giantess/macro_walk_south_1.png",
+              "giantess/macro_walk_south_2.png",
+              "giantess/macro_walk_south_3.png",
+              "giantess/macro_walk_south_4.png"
+            ]
+          },
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "giantess/macro_idle_south.png"
+            ]
+          }
+        },
+        "carry": [
+          12,
+          -12
+        ]
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "palm": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          144,
+          80
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "palm/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "cup": {
+      "macro": {
+        "pivot": [
+          6,
+          3
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "cup/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          50,
+          77
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "cup/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "crumb": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          6,
+          5
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "crumb/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "tiny": {
+      "macro": {
+        "pivot": [
+          2,
+          2
+        ],
+        "selected_only": true,
+        "carry": [
+          2,
+          -3
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          8,
+          15
+        ],
+        "carry": [
+          5,
+          -9
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny/micro_idle.png"
+            ]
+          },
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [
+              "tiny/micro_walk_1.png",
+              "tiny/micro_walk_2.png",
+              "tiny/micro_walk_3.png",
+              "tiny/micro_walk_4.png"
+            ]
+          }
+        }
+      }
+    },
+    "tiny_lavender": {
+      "macro": {
+        "pivot": [
+          2,
+          2
+        ],
+        "selected_only": true,
+        "carry": [
+          2,
+          -3
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          8,
+          15
+        ],
+        "carry": [
+          5,
+          -9
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_lavender/micro_idle.png"
+            ]
+          },
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [
+              "tiny_lavender/micro_walk_1.png",
+              "tiny_lavender/micro_walk_2.png",
+              "tiny_lavender/micro_walk_3.png",
+              "tiny_lavender/micro_walk_4.png"
+            ]
+          }
+        }
+      }
+    },
+    "tiny_ochre": {
+      "macro": {
+        "pivot": [
+          2,
+          2
+        ],
+        "selected_only": true,
+        "carry": [
+          2,
+          -3
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          8,
+          15
+        ],
+        "carry": [
+          5,
+          -9
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "tiny_ochre/micro_idle.png"
+            ]
+          },
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [
+              "tiny_ochre/micro_walk_1.png",
+              "tiny_ochre/micro_walk_2.png",
+              "tiny_ochre/micro_walk_3.png",
+              "tiny_ochre/micro_walk_4.png"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

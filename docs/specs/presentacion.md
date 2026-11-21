@@ -8,6 +8,19 @@ Cada variante se dibuja a escala nativa con el pivote en la posición de mundo i
 
 El manifiesto JSON declara el PNG y las variantes por escala de cada sprite. Cada variante declara un pivote `[x, y]` relativo al cuadro y clips con duración en ticks y cuadros `[x, y, ancho, alto]` en el atlas. El clip `idle` es obligatorio. La carga identifica el manifiesto y el sprite, variante, clip o cuadro ante una exportación inválida.
 
+## Fuentes del arte
+
+`content/art/casa.png` y `content/art/casa.json` se generan a partir de `content/art/src/casa/` y no se editan a mano. La carpeta de fuentes tiene un PNG por cuadro, agrupado por sprite, y un `atlas.json` con la misma forma que el manifiesto exportado. La diferencia es que cada cuadro y cada `foreground` nombra un archivo en lugar de un rectángulo. Un cuadro también puede ser una lista de capas del mismo tamaño, que se componen de abajo hacia arriba.
+
+`artpack` ubica los cuadros en estantes, ordenados por alto, ancho y nombre, con un píxel de separación. Los cuadros con los mismos píxeles comparten lugar. Las mismas fuentes producen los mismos bytes, y `TestCasaAtlasMatchesSources` falla si el atlas versionado se desfasa de ellas.
+
+```sh
+go run ./cmd/artpack                # rearma content/art/casa.{png,json}
+go run ./cmd/artpack -check         # solo verifica
+```
+
+La muestra de M12 (`content/art/muestra.*`) queda congelada como referencia y no tiene fuentes.
+
 ## La casa en macro
 
 El escenario de «Una mañana en la casa» enlaza su atlas por la ruta `atlas`, relativa al archivo del escenario. El manifiesto puede declarar las escalas disponibles. Un atlas sin esa lista ofrece las dos escalas. `-atlas` permite reemplazar el manifiesto elegido por el escenario.
