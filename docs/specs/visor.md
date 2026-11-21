@@ -7,7 +7,7 @@ Paquetes: `view` (Frame, Runner, picking), `camera` (proyección), `render` (dib
 Foto plana y serializable de un tick, armada por `Capturer.Capture(w)` (solo lee el mundo):
 
 - `spaces`: id, nombre, kind, padre, profundidad, pose de mundo, extensión, copia de la grilla (cacheada por versión) y si es superficie de contacto. Los Spaces móviles pueden incluir el estado y la ruta del mover. Ordenados de abajo hacia arriba (Z de mundo, luego ID).
-- `things`: entidades con `location` que no son Spaces: pose de mundo, cuerpo y, si tienen `mover`, su estado y la ruta pendiente en puntos de mundo.
+- `things`: entidades con `location` que no son Spaces: pose de mundo, cuerpo, porteador para los objetos cargados y, si tienen `mover`, su estado y la ruta pendiente en puntos de mundo.
 - `portals` (extremos en el mundo; `dynamic` si los creó un contacto) y `contacts`.
 
 El renderer dibuja solo desde el Frame. `view.Inspect(w, id)` es la única lectura directa del mundo (el panel del inspector: JSON de cada componente vía `ecs.Registry.Components`).

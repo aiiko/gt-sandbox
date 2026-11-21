@@ -18,6 +18,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
@@ -58,14 +59,15 @@ type Space struct {
 
 // Thing es una entidad ubicada que no es un Space (un tiny, un objeto).
 type Thing struct {
-	ID     ids.ID       `json:"id"`
-	Name   string       `json:"name,omitempty"`
-	Space  ids.ID       `json:"space"`
-	Pose   Pose         `json:"pose"`
-	Radius units.Length `json:"radius"`
-	Height units.Length `json:"height"`
-	Body   bool         `json:"body"`
-	Mover  *Mover       `json:"mover,omitempty"`
+	ID        ids.ID       `json:"id"`
+	Name      string       `json:"name,omitempty"`
+	Space     ids.ID       `json:"space"`
+	Pose      Pose         `json:"pose"`
+	Radius    units.Length `json:"radius"`
+	Height    units.Length `json:"height"`
+	Body      bool         `json:"body"`
+	Mover     *Mover       `json:"mover,omitempty"`
+	CarriedBy ids.ID       `json:"carried_by,omitempty"`
 	// Activity resume lo que hace un agente ("use:eat", "work", "work (suspendida)").
 	Activity string `json:"activity,omitempty"`
 }
@@ -186,6 +188,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	})
 
 	agents := ecs.Get[ai.Agent](r)
+	carried := ecs.Get[jobs.Carried](r)
 	spaces := ecs.Get[space.Space](r)
 	cs.Location.Each(func(id ids.ID, l *comp.Location) {
 		if spaces.Has(id) {
@@ -200,6 +203,9 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			t.Radius, t.Height, t.Body = b.Radius, b.Height, true
 		}
 		t.Mover = mover(id, p.Pos)
+		if c, ok := carried.Get(id); ok {
+			t.CarriedBy = c.By
+		}
 		if a, ok := agents.Get(id); ok {
 			t.Activity = activity(r, a)
 		}

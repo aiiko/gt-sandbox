@@ -26,6 +26,7 @@ var ErrNotAlive = errors.New("entidad no viva")
 // un Space sin Location es una raíz.
 type Spawn struct {
 	Name     comp.Name      `json:"name,omitempty"`
+	Visual   string         `json:"visual,omitempty"`
 	Location *comp.Location `json:"location,omitempty"`
 	Body     *comp.Body     `json:"body,omitempty"`
 	Space    *space.Space   `json:"space,omitempty"`
@@ -76,7 +77,7 @@ func (c Spawn) Do(w *world.World) (ids.ID, error) {
 	if c.Space != nil {
 		ecs.Get[space.Space](w.ECS()).Set(id, *c.Space)
 	}
-	w.Emit(EntitySpawned{Entity: id, Name: c.Name})
+	w.Emit(EntitySpawned{Entity: id, Name: c.Name, Visual: c.Visual})
 	return id, nil
 }
 
@@ -189,6 +190,7 @@ func (c Reparent) Apply(w *world.World) error {
 type EntitySpawned struct {
 	Entity ids.ID    `json:"entity"`
 	Name   comp.Name `json:"name,omitempty"`
+	Visual string    `json:"visual,omitempty"`
 }
 
 func (EntitySpawned) Kind() string { return "entity_spawned" }

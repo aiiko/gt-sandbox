@@ -123,7 +123,7 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 	if err != nil {
 		return nil, err
 	}
-	in := &Instance{Spec: s, World: w, Refs: map[string]ids.ID{}}
+	in := &Instance{Spec: s, World: w, Refs: map[string]ids.ID{}, Visuals: map[ids.ID]string{}}
 	pending := slices.Clone(s.Entities)
 	for len(pending) > 0 {
 		var wave []EntitySpec
@@ -148,6 +148,9 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 			if err := strictUnmarshal(raw, &sp); err != nil {
 				return nil, fmt.Errorf("scenario: entidad %q: %w", e.Ref, err)
 			}
+			if e.Visual != "" {
+				sp.Visual = e.Visual
+			}
 			if _, err := w.Enqueue(sp); err != nil {
 				return nil, err
 			}
@@ -159,6 +162,7 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 		w.Step()
 		var spawned []ids.ID
 		for _, ev := range w.Events() {
+			in.recordVisual(ev.Event)
 			switch e := ev.Event.(type) {
 			case cmds.EntitySpawned:
 				spawned = append(spawned, e.Entity)
@@ -167,12 +171,6 @@ func Build(s *Spec, opts ...engine.Option) (*Instance, error) {
 			}
 		}
 		for i, e := range wave {
-			if e.Visual != "" {
-				if in.Visuals == nil {
-					in.Visuals = make(map[ids.ID]string)
-				}
-				in.Visuals[spawned[i]] = e.Visual
-			}
 			if e.Ref != "" {
 				if _, dup := in.Refs[e.Ref]; dup {
 					return nil, fmt.Errorf("scenario: ref duplicado %q", e.Ref)
@@ -273,11 +271,25 @@ func (p *Player) Step() error {
 	}
 	w.Step()
 	p.in.Events = append(p.in.Events, w.Events()...)
+	for _, e := range w.Events() {
+		p.in.recordVisual(e.Event)
+	}
 	if err := w.CheckInvariants(); err != nil {
 		return fmt.Errorf("scenario: tick %d: %w", p.t, err)
 	}
 	p.t++
 	return nil
+}
+
+func (in *Instance) recordVisual(event world.Event) {
+	switch e := event.(type) {
+	case cmds.EntitySpawned:
+		if e.Visual != "" {
+			in.Visuals[e.Entity] = e.Visual
+		}
+	case world.EntityDespawned:
+		delete(in.Visuals, e.Entity)
+	}
 }
 
 // commands decodifica los comandos del Spec, agrupados por tick.

@@ -1,6 +1,6 @@
 {
   "image": "casa.png",
-  "scales": ["macro"],
+  "scales": ["macro", "micro"],
   "sprites": {
     "kitchen": {
       "macro": {
@@ -8,7 +8,8 @@
         "layer": "background",
         "foreground": [0, 131, 120, 129],
         "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 0, 120, 129]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "bedroom": {
       "macro": {
@@ -16,7 +17,8 @@
         "layer": "background",
         "foreground": [122, 131, 120, 129],
         "clips": {"idle": {"frame_ticks": 1, "frames": [[122, 0, 120, 129]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "living": {
       "macro": {
@@ -24,27 +26,36 @@
         "layer": "background",
         "foreground": [244, 131, 120, 129],
         "clips": {"idle": {"frame_ticks": 1, "frames": [[244, 0, 120, 129]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "door": {
       "macro": {
         "pivot": [7, 9],
         "layer": "ground",
         "clips": {"idle": {"frame_ticks": 1, "frames": [[368, 0, 14, 18]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "bed": {
       "macro": {
         "pivot": [16, 35],
         "depth_offset": 10,
         "clips": {"idle": {"frame_ticks": 1, "frames": [[384, 0, 34, 49]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "desk": {
       "macro": {
         "pivot": [3, 17],
         "depth_offset": 7,
         "clips": {"idle": {"frame_ticks": 1, "frames": [[420, 0, 31, 27]]}}
+      },
+      "micro": {
+        "pivot": [0, 640],
+        "foreground": [0, 1194, 960, 656],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[0, 522, 960, 656]]}},
+        "focus": [610, 230]
       }
     },
     "table": {
@@ -52,6 +63,12 @@
         "pivot": [3, 17],
         "depth_offset": 7,
         "clips": {"idle": {"frame_ticks": 1, "frames": [[452, 0, 31, 27]]}}
+      },
+      "micro": {
+        "pivot": [0, 640],
+        "foreground": [976, 1194, 960, 656],
+        "focus": [480, 462],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[976, 522, 960, 656]]}}
       }
     },
     "fridge": {
@@ -59,16 +76,26 @@
         "pivot": [11, 16],
         "depth_offset": 16,
         "clips": {"idle": {"frame_ticks": 1, "frames": [[368, 54, 23, 35]]}}
-      }
+      },
+      "micro": {"hidden": true}
     },
     "tv": {
       "macro": {
         "pivot": [18, 24],
         "depth_offset": 2,
         "clips": {"idle": {"frame_ticks": 1, "frames": [[394, 54, 36, 29]]}}
+      },
+      "micro": {"hidden": true}
+    },
+    "nest": {
+      "macro": {"pivot": [4, 7], "clips": {"idle": {"frame_ticks": 1, "frames": [[432, 54, 9, 10]]}}},
+      "micro": {
+        "pivot": [46, 53],
+        "layer": "ground",
+        "foreground": [630, 0, 96, 78],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[530, 0, 96, 78]]}}
       }
     },
-    "nest": {"macro": {"pivot": [4, 7], "clips": {"idle": {"frame_ticks": 1, "frames": [[432, 54, 9, 10]]}}}},
     "giantess": {
       "macro": {
         "pivot": [15, 34],
@@ -94,6 +121,77 @@
             "frames": [[203, 304, 31, 38], [236, 304, 31, 38], [269, 304, 31, 38], [302, 304, 31, 38]]
           },
           "idle": {"frame_ticks": 1, "frames": [[170, 304, 31, 38]]}
+        },
+        "carry": [12, -12]
+      },
+      "micro": {"hidden": true}
+    },
+    "palm": {
+      "macro": {"hidden": true},
+      "micro": {"pivot": [144, 80], "clips": {"idle": {"frame_ticks": 1, "frames": [[738, 0, 288, 160]]}}}
+    },
+    "cup": {
+      "macro": {"pivot": [6, 3], "clips": {"idle": {"frame_ticks": 1, "frames": [[1158, 0, 8, 5]]}}},
+      "micro": {"pivot": [50, 77], "clips": {"idle": {"frame_ticks": 1, "frames": [[1034, 0, 122, 106]]}}}
+    },
+    "crumb": {
+      "macro": {"hidden": true},
+      "micro": {"pivot": [6, 5], "clips": {"idle": {"frame_ticks": 1, "frames": [[1169, 0, 12, 8]]}}}
+    },
+    "tiny": {
+      "macro": {
+        "pivot": [2, 2],
+        "selected_only": true,
+        "carry": [2, -3],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[1176, 105, 5, 4]]}}
+      },
+      "micro": {
+        "pivot": [8, 15],
+        "carry": [5, -9],
+        "clips": {
+          "idle": {"frame_ticks": 1, "frames": [[1186, 105, 16, 18]]},
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [[1204, 105, 16, 18], [1222, 105, 16, 18], [1240, 105, 16, 18], [1258, 105, 16, 18]]
+          }
+        }
+      }
+    },
+    "tiny_lavender": {
+      "macro": {
+        "pivot": [2, 2],
+        "selected_only": true,
+        "carry": [2, -3],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[1176, 131, 5, 4]]}}
+      },
+      "micro": {
+        "pivot": [8, 15],
+        "carry": [5, -9],
+        "clips": {
+          "idle": {"frame_ticks": 1, "frames": [[1186, 131, 16, 18]]},
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [[1204, 131, 16, 18], [1222, 131, 16, 18], [1240, 131, 16, 18], [1258, 131, 16, 18]]
+          }
+        }
+      }
+    },
+    "tiny_ochre": {
+      "macro": {
+        "pivot": [2, 2],
+        "selected_only": true,
+        "carry": [2, -3],
+        "clips": {"idle": {"frame_ticks": 1, "frames": [[1176, 157, 5, 4]]}}
+      },
+      "micro": {
+        "pivot": [8, 15],
+        "carry": [5, -9],
+        "clips": {
+          "idle": {"frame_ticks": 1, "frames": [[1186, 157, 16, 18]]},
+          "walk": {
+            "frame_ticks": 2,
+            "frames": [[1204, 157, 16, 18], [1222, 157, 16, 18], [1240, 157, 16, 18], [1258, 157, 16, 18]]
+          }
         }
       }
     }

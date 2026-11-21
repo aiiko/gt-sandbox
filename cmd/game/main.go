@@ -55,6 +55,7 @@ func main() {
 	story := flag.Bool("story", false, "iniciar en modo historia")
 	art := flag.Bool("art", false, "dibujar el escenario en pixel art (por defecto, la muestra)")
 	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para -art")
+	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en -art")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	flag.Parse()
 
@@ -87,6 +88,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "game:", err)
 			os.Exit(1)
 		}
+		g.art.cut = *reducedMotion
 		app = pixelGame{g}
 		width, height = render.CanvasWidth*2, render.CanvasHeight*2
 		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
@@ -179,6 +181,9 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 		g.title = spec.Name
 		g.visuals = in.Visuals
 		g.artDesk = in.Refs["desk"]
+		if g.artDesk.IsNil() {
+			g.artDesk = in.Refs["desk1"]
+		}
 		if spec.Atlas != "" {
 			g.artAtlas = filepath.Join(filepath.Dir(scen), spec.Atlas)
 		}
@@ -211,10 +216,11 @@ func (g *game) Layout(w, h int) (int, int) { return w, h }
 // El seguimiento acompaña la traslación sin rotar con cada giro del actor.
 func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 	if !g.follow.IsNil() {
-		if p, ok := entityPose(f, g.follow); ok {
+		if p, ok := entityPose(f, g.follow); !ok {
+			g.stopFollowing()
+		} else if g.followsInView(f) {
 			return fixedmath.Transform{Pos: p.Pos}
 		}
-		g.stopFollowing()
 	}
 	if !g.cam.Anchor.IsNil() {
 		if s, ok := f.SpaceByID(g.cam.Anchor); ok {
@@ -245,12 +251,17 @@ func (g *game) toggleFollow() {
 	}
 	if _, ok := entityPose(g.run.Cur, g.sel); ok {
 		g.follow = g.sel
-		g.cam.Anchor, g.cam.X, g.cam.Y = ids.Nil, 0, 0
+		if g.followsInView(g.run.Cur) {
+			g.cam.Anchor, g.cam.X, g.cam.Y = ids.Nil, 0, 0
+		}
 	}
 }
 
 func (g *game) stopFollowing() {
 	if !g.follow.IsNil() {
+		if g.art != nil {
+			g.art.focus = g.artFocus(g.run.Cur)
+		}
 		g.follow = ids.Nil
 		g.cam.Follow(ids.Nil, fixedmath.Identity, g.proj)
 	}
@@ -294,7 +305,6 @@ func (g *game) Update() error {
 	}
 	if !g.fitted {
 		g.fit()
-		g.fitted = true
 		for _, sp := range g.run.Cur.Spaces {
 			if g.micro != "" && sp.Name == g.micro {
 				g.sel = sp.ID
@@ -302,6 +312,11 @@ func (g *game) Update() error {
 				g.toggleMicro()
 			}
 		}
+		g.fitted = true
+	}
+	dt := time.Second / time.Duration(ebiten.TPS())
+	if a := g.art; a != nil && !a.pendingFade {
+		a.fade = max(0, a.fade-dt)
 	}
 	f := g.frame()
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
@@ -311,7 +326,7 @@ func (g *game) Update() error {
 	if g.shot != "" && g.run.World.Tick() >= g.shotTick {
 		g.run.Paused = true
 	} else {
-		g.run.Advance(time.Second / time.Duration(ebiten.TPS()))
+		g.run.Advance(dt)
 	}
 	return nil
 }
@@ -342,7 +357,7 @@ func (g *game) keys() {
 	case g.story && k(ebiten.KeyPageDown):
 		g.logBack = max(0, g.logBack-storyRows)
 	case k(ebiten.KeyF):
-		if g.art != nil && !g.art.atlas.Supports(render.Micro) {
+		if g.art != nil && g.artAtlas != "" && g.art.focus.IsNil() {
 			g.stopFollowing()
 		}
 		g.fit()

@@ -177,3 +177,46 @@ func TestArtDirection(t *testing.T) {
 		t.Fatalf("reposo hacia el norte: %s", got)
 	}
 }
+
+func TestMicroCargoAndContactLayers(t *testing.T) {
+	carrier := `{"pivot":[1,1],"carry":[4,-2],"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	nest := `{"pivot":[1,1],"layer":"ground","foreground":[3,0,3,3],"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	manifest := `{"image":"atlas.png","scales":["micro"],"sprites":{
+		"surface":{"micro":` + sampleVariant + `},
+		"nest":{"micro":` + nest + `},
+		"carrier":{"micro":` + carrier + `}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &view.Frame{
+		Spaces: []view.Space{
+			{ID: 1, Pose: view.Pose{Pos: units.V3(-5000, 0, 0)}},
+			{ID: 2, Pose: view.Pose{Pos: units.V3(-5000, 0, 2000)}},
+		},
+		Things: []view.Thing{
+			{ID: 3, Space: 1},
+			{ID: 4, Space: 1, CarriedBy: 3, Pose: view.Pose{Pos: units.V3(-9000, 0, 0)}},
+			{ID: 5, Space: 1},
+		},
+		Contacts: []view.Contact{{A: 1, B: 2}},
+	}
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	visuals := map[ids.ID]string{1: "surface", 2: "surface", 3: "carrier", 4: "surface", 5: "nest"}
+	s := a.Arrange(f, proj, visuals, Micro, 1)
+	for point, want := range map[image.Point]ids.ID{
+		image.Pt(244, 133): 4, // el anclaje del porteador, no el punto propio del objeto
+		image.Pt(239, 135): 3, // tiny delante de la base del nido
+		image.Pt(240, 135): 5, // borde del nido tapa parte del tiny
+		image.Pt(235, 135): 2, // palma más alta en contacto con el escritorio
+	} {
+		if got := s.Pick(point); got != want {
+			t.Errorf("píxel %v: %s, quería %s", point, got, want)
+		}
+	}
+	f.Contacts = nil
+	s = a.Arrange(f, proj, visuals, Micro, 1)
+	if got := s.Pick(image.Pt(235, 135)); got != 1 {
+		t.Fatalf("palma fuera del foco: %s, quería escritorio", got)
+	}
+}

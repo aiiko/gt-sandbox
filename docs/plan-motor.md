@@ -4,14 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M14 — Superficies y colonia en micro
-
-- Producir el arte de escritorio, nido, palma, mesa del living, taza, migajas y tinies. Dibujar superficies con su contorno útil y detalles ajustados a la vista micro.
-- Mostrar el tiny, su carga y su ubicación con puntos de apoyo compartidos con la escena macro. Resolver oclusión en bordes y conservar selección y seguimiento al cambiar de vista.
-- Incorporar el cambio macro/micro y la vuelta al encuadre anterior, con fundido breve y una opción de corte directo.
-
-**Aceptación.** Al enfocar el escritorio se distinguen nido, recursos y tinies sin overlays técnicos. La misma taza aparece en el lugar correcto en ambas vistas. Cambiar de escala conserva la identidad del tiny seleccionado y su punto de selección coincide con su posición en pantalla.
-
 ### M15 — Animación, contacto y viaje
 
 - Vincular poses, caminata, reposo, comer y acarreo al estado que recibe la presentación. Alinear manga, palma y carga con los anclajes de cada vista.

@@ -30,11 +30,15 @@ type atlasManifest struct {
 }
 
 type variant struct {
-	Pivot       []int           `json:"pivot"`
-	Clips       map[string]clip `json:"clips"`
-	Layer       string          `json:"layer,omitempty"`
-	DepthOffset int             `json:"depth_offset,omitempty"`
-	Foreground  []int           `json:"foreground,omitempty"`
+	Pivot        []int           `json:"pivot"`
+	Clips        map[string]clip `json:"clips"`
+	Layer        string          `json:"layer,omitempty"`
+	DepthOffset  int             `json:"depth_offset,omitempty"`
+	Foreground   []int           `json:"foreground,omitempty"`
+	Focus        []int           `json:"focus,omitempty"`
+	Carry        []int           `json:"carry,omitempty"`
+	Hidden       bool            `json:"hidden,omitempty"`
+	SelectedOnly bool            `json:"selected_only,omitempty"`
 }
 
 type clip struct {
@@ -119,6 +123,13 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 }
 
 func validateVariant(v variant, bounds image.Rectangle, context string) error {
+	if v.Hidden {
+		if len(v.Pivot) != 0 || len(v.Clips) != 0 || v.Layer != "" || v.DepthOffset != 0 ||
+			v.Foreground != nil || v.Focus != nil || v.Carry != nil || v.SelectedOnly {
+			return fmt.Errorf("%s: la variante oculta tiene datos de dibujo", context)
+		}
+		return nil
+	}
 	if len(v.Pivot) != 2 || v.Pivot[0] < 0 || v.Pivot[1] < 0 {
 		return fmt.Errorf("%s: pivote inválido %v", context, v.Pivot)
 	}
@@ -132,6 +143,12 @@ func validateVariant(v variant, bounds image.Rectangle, context string) error {
 		if !validFrame(v.Foreground, bounds) || v.Pivot[0] >= v.Foreground[2] || v.Pivot[1] >= v.Foreground[3] {
 			return fmt.Errorf("%s: rectángulo o pivote de primer plano inválido", context)
 		}
+	}
+	if v.Carry != nil && len(v.Carry) != 2 {
+		return fmt.Errorf("%s: se requieren dos coordenadas para carry", context)
+	}
+	if v.Focus != nil && (len(v.Focus) != 2 || v.Focus[0] < 0 || v.Focus[1] < 0) {
+		return fmt.Errorf("%s: foco inválido %v", context, v.Focus)
 	}
 	for _, name := range slices.Sorted(maps.Keys(v.Clips)) {
 		c := v.Clips[name]
@@ -147,6 +164,9 @@ func validateVariant(v variant, bounds image.Rectangle, context string) error {
 			}
 			if v.DepthOffset < -frame[3] || v.DepthOffset > frame[3] {
 				return fmt.Errorf("%s, clip %q, cuadro %d: desplazamiento de profundidad fuera del cuadro", context, name, i+1)
+			}
+			if v.Focus != nil && (v.Focus[0] >= frame[2] || v.Focus[1] >= frame[3]) {
+				return fmt.Errorf("%s, clip %q, cuadro %d: foco fuera del cuadro", context, name, i+1)
 			}
 		}
 	}
@@ -167,6 +187,20 @@ func (a *Atlas) Require(id string) error {
 }
 
 func (a *Atlas) Supports(scale Scale) bool { return slices.Contains(a.scales, scale) }
+
+func (a *Atlas) Visible(id string, scale Scale) bool {
+	v, ok := a.sprites[id][scale]
+	return ok && !v.Hidden
+}
+
+// MicroFocus devuelve el desplazamiento del centro de interés respecto del pivote.
+func (a *Atlas) MicroFocus(id string) (image.Point, bool) {
+	v := a.sprites[id][Micro]
+	if v.Focus == nil {
+		return image.Point{}, false
+	}
+	return image.Pt(v.Focus[0]-v.Pivot[0], v.Focus[1]-v.Pivot[1]), true
+}
 
 func (v variant) frame(name string, tick uint64) image.Rectangle {
 	c, ok := v.Clips[name]

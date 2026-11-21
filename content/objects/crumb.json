@@ -1,5 +1,6 @@
 {
   "name": "crumb",
+  "visual": "crumb",
   "body": {"radius": 1500, "height": 1000, "mass": 0},
   "components": {
     "portions": {"left": 3},

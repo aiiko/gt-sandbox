@@ -69,6 +69,7 @@ type sprite struct {
 	layer int
 	y     float32
 	group ids.ID
+	z     units.Length
 }
 
 const (
@@ -86,13 +87,22 @@ type ArtScene struct {
 
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
-func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, scale Scale, focus ids.ID) ArtScene {
+func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, scale Scale, focus ids.ID, featured ...ids.ID) ArtScene {
+	scope := map[ids.ID]bool{focus: true}
+	for _, c := range f.Contacts {
+		if c.A == focus {
+			scope[c.B] = true
+		}
+		if c.B == focus {
+			scope[c.A] = true
+		}
+	}
 	inFocus := func(spaceID ids.ID) bool {
 		if focus.IsNil() {
 			return true
 		}
 		for !spaceID.IsNil() {
-			if spaceID == focus {
+			if scope[spaceID] {
 				return true
 			}
 			s, ok := f.SpaceByID(spaceID)
@@ -103,15 +113,20 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 		return false
 	}
-	out := ArtScene{atlas: a}
-	add := func(id, support ids.ID, pos units.Vec3, name string) {
+	visible := func(id ids.ID) (variant, bool) {
 		v, ok := a.sprites[visuals[id]][scale]
+		return v, ok && !v.Hidden && (!v.SelectedOnly || slices.Contains(featured, id))
+	}
+	out := ArtScene{atlas: a}
+	add := func(id, support, carrier ids.ID, pos units.Vec3, name string, isSpace bool, offset image.Point) {
+		v, ok := visible(id)
 		if !ok {
 			return
 		}
 		x, y := p.ToScreen(pos)
-		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1])
+		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1]).Add(offset)
 		group, depth := id, y+float32(v.DepthOffset)
+		height := pos.Z
 		layer := layerDepth
 		switch v.Layer {
 		case "background":
@@ -119,14 +134,25 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		case "ground":
 			layer = layerGround
 		default:
+			if !carrier.IsNil() {
+				group = carrier
+				depth = y + float32(a.sprites[visuals[carrier]][scale].DepthOffset)
+			}
 			if scale == Macro {
-				group, depth = a.depthGroup(f, p, visuals, support, id, depth)
+				group, depth = a.depthGroup(f, p, visuals, support, group, depth)
+			}
+		}
+		if scale == Micro {
+			if isSpace {
+				layer = layerBackground
+			} else if sp, ok := f.SpaceByID(support); ok {
+				group, height = sp.ID, sp.Pose.Pos.Z
 			}
 		}
 		addFrame := func(src image.Rectangle, layer int) {
 			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
 			if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
-				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group})
+				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height})
 			}
 		}
 		addFrame(v.frame(name, uint64(f.Tick)), layer)
@@ -136,27 +162,53 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 	}
 	for _, s := range f.Spaces {
 		if inFocus(s.ID) {
-			add(s.ID, s.Parent, s.Pose.Pos, artClip(s.Mover, s.Pose.Rot))
+			add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, artClip(s.Mover, s.Pose.Rot), true, image.Point{})
 		}
 	}
 	if scale == Macro {
 		for _, pt := range f.Portals {
 			if !pt.Dynamic && !pt.Disabled {
 				mid := units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z)
-				add(pt.ID, ids.Nil, mid, "idle")
+				add(pt.ID, ids.Nil, ids.Nil, mid, "idle", false, image.Point{})
 			}
 		}
 	}
 	for _, t := range f.Things {
-		if inFocus(t.Space) {
-			add(t.ID, t.Space, t.Pose.Pos, artClip(t.Mover, t.Pose.Rot))
+		if t.CarriedBy.IsNil() && inFocus(t.Space) {
+			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, artClip(t.Mover, t.Pose.Rot), false, image.Point{})
 		}
 	}
-	if scale == Macro {
-		slices.SortStableFunc(out.sprites, func(a, b sprite) int {
-			return cmp.Or(cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y), cmp.Compare(a.group, b.group))
-		})
+	for _, t := range f.Things {
+		if t.CarriedBy.IsNil() {
+			continue
+		}
+		v, ok := visible(t.CarriedBy)
+		if !ok {
+			continue
+		}
+		var support ids.ID
+		var pos units.Vec3
+		if carrier, ok := f.ThingByID(t.CarriedBy); ok {
+			support, pos = carrier.Space, carrier.Pose.Pos
+		} else if carrier, ok := f.SpaceByID(t.CarriedBy); ok {
+			support, pos = carrier.Parent, carrier.Pose.Pos
+		} else {
+			continue
+		}
+		if inFocus(support) {
+			var offset image.Point
+			if v.Carry != nil {
+				offset = image.Pt(v.Carry[0], v.Carry[1])
+			}
+			add(t.ID, support, t.CarriedBy, pos, "carried", false, offset)
+		}
 	}
+	slices.SortStableFunc(out.sprites, func(a, b sprite) int {
+		if scale == Micro {
+			return cmp.Or(cmp.Compare(a.z, b.z), cmp.Compare(a.group, b.group), cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y))
+		}
+		return cmp.Or(cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y), cmp.Compare(a.group, b.group))
+	})
 	return out
 }
 

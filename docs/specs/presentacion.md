@@ -10,7 +10,7 @@ El manifiesto JSON declara el PNG y las variantes por escala de cada sprite. Cad
 
 ## La casa en macro
 
-El escenario de «Una mañana en la casa» enlaza su atlas por la ruta `atlas`, relativa al archivo del escenario. El manifiesto de la casa declara `scales: ["macro"]`. Un atlas sin esa lista ofrece las dos escalas. `-atlas` permite reemplazar el manifiesto elegido por el escenario.
+El escenario de «Una mañana en la casa» enlaza su atlas por la ruta `atlas`, relativa al archivo del escenario. El manifiesto puede declarar las escalas disponibles. Un atlas sin esa lista ofrece las dos escalas. `-atlas` permite reemplazar el manifiesto elegido por el escenario.
 
 El dibujo macro coloca primero las variantes `layer: "background"`, después los umbrales y detalles del suelo de `layer: "ground"`, luego las piezas por su línea de apoyo en pantalla y por último su `foreground` opcional. El primer plano usa el mismo pivote que el cuadro base. `depth_offset` desplaza la línea de apoyo vertical en píxeles. Los ocupantes de un mueble comparten su orden de profundidad y se dibujan encima del mueble. El picking usa el orden final y el alfa de cada capa.
 
@@ -25,6 +25,24 @@ go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json
 ![Vista macro de la casa con la giantess en la cocina](img/m13-casa.png)
 
 La prueba del visor verifica el picking sobre la giantess y los umbrales, el seguimiento del dormitorio a la cocina y de regreso al dormitorio antes de llegar al living, y la igualdad del hash con la ejecución headless.
+
+## Superficies y colonia en micro
+
+`Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.
+
+El escritorio, la mesa del living y la palma tienen variantes micro. El nido se reconoce por la caja de fósforos y la manta. El contorno de los muebles y el labio del nido usan `foreground`. Micro dibuja cada superficie por altura, con sus ocupantes entre la base y el borde frontal. Las superficies en contacto aparecen juntas cuando se enfoca una de ellas.
+
+El atlas puede declarar una variante `hidden: true` o limitar un marcador a las entidades seleccionadas o seguidas con `selected_only`. `focus` indica el centro de interés de una superficie dentro de su imagen. `carry` desplaza la carga respecto del pivote del porteador en píxeles. La presentación toma el porteador del `Frame` e interpola su posición antes de aplicar ese desplazamiento.
+
+El escenario registra el identificador `visual` de `entity_spawned` y lo asocia al ID publicado. La taza y las migajas lo declaran en sus definiciones de contenido, así que conservan su apariencia al pasar de la mano a una superficie o durante un acarreo. Al destruirse se elimina la asociación. La prueba verifica que la taza del desayuno se selecciona en ambas vistas con el mismo ID y que cambiar de escala conserva el seguimiento y el hash.
+
+```sh
+go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json -micro escritorio
+```
+
+| Escritorio | Mesa del living |
+| --- | --- |
+| ![Vista micro del escritorio durante el desayuno](img/m14-escritorio.png) | ![Palma y tiny en la mesa del living](img/m14-living.png) |
 
 ## Prueba de arte
 

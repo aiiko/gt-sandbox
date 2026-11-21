@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"math"
 	"slices"
 	"strings"
 	"testing"
@@ -12,6 +13,110 @@ import (
 	"gtsandbox/internal/view"
 )
 
+func TestMorningMicroArtKeepsIdentityAndCamera(t *testing.T) {
+	g, err := newGame("../../"+morningScenario, 0, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.enableArt(""); err != nil {
+		t.Fatal(err)
+	}
+	g.w, g.h = (pixelGame{g}).Layout(960, 540)
+	g.fit()
+	g.cam.Pan(11, 3)
+	macro := g.cam
+
+	var carriedCup ids.ID
+	var sawHaul bool
+	for range 565 {
+		g.run.StepOnce()
+		for _, item := range g.run.Cur.Things {
+			if !item.CarriedBy.IsNil() {
+				switch g.visuals[item.ID] {
+				case "cup":
+					carriedCup = item.ID
+				case "crumb":
+					sawHaul = true
+				}
+			}
+		}
+	}
+	if g.run.Err != nil {
+		t.Fatal(g.run.Err)
+	}
+	f := g.run.Cur
+	var cup, tiny view.Thing
+	for _, item := range f.Things {
+		switch {
+		case g.visuals[item.ID] == "cup":
+			cup = item
+		case item.Name == "Tiny 04":
+			tiny = item
+		}
+	}
+	if cup.ID.IsNil() || cup.ID != carriedCup || cup.Space != g.artDesk || !cup.CarriedBy.IsNil() {
+		t.Fatalf("la taza debe estar sobre el escritorio: %+v", cup)
+	}
+	if !sawHaul {
+		t.Fatal("el visor no recibió una migaja en acarreo")
+	}
+	if tiny.ID.IsNil() {
+		t.Fatal("falta el tiny")
+	}
+	pickAround := func(scale render.Scale, target view.Thing, radius int) ids.ID {
+		t.Helper()
+		g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
+		scene := g.art.atlas.Arrange(f, g.proj, g.visuals, scale, g.artFocus(f), g.sel, g.follow)
+		x, y := g.proj.ToScreen(target.Pose.Pos)
+		p := image.Pt(int(math.Round(float64(x))), int(math.Round(float64(y))))
+		for dy := -radius; dy <= radius; dy++ {
+			for dx := -radius; dx <= radius; dx++ {
+				if got := scene.Pick(p.Add(image.Pt(dx, dy))); got == target.ID {
+					return got
+				}
+			}
+		}
+		return ids.Nil
+	}
+	hash := g.run.World.Hash()
+	g.sel = pickAround(render.Macro, cup, 8)
+	if g.sel != cup.ID {
+		t.Fatal("la taza del desayuno no se puede seleccionar en macro")
+	}
+	g.toggleArtMicro()
+	if g.artFocus(f) != g.artDesk || g.sel != cup.ID || pickAround(render.Micro, cup, 0) != cup.ID {
+		t.Fatal("micro debe centrar y mostrar la misma taza")
+	}
+	g.toggleArtMicro()
+	if g.cam != macro || g.sel != cup.ID {
+		t.Fatal("al salir de micro se perdió el encuadre anterior o la selección")
+	}
+
+	g.sel = tiny.ID
+	g.toggleFollow()
+	for step, scale := range []render.Scale{render.Macro, render.Micro, render.Macro} {
+		if pickAround(scale, tiny, 16) != tiny.ID {
+			t.Fatalf("no se seleccionó el tiny en %s", scale)
+		}
+		x, y := g.proj.ToScreen(tiny.Pose.Pos)
+		if x != 240 || y != 135 || g.follow != tiny.ID || g.sel != tiny.ID {
+			t.Fatalf("%s: se perdió el seguimiento en (%f, %f)", scale, x, y)
+		}
+		if scale == render.Macro && !g.art.focus.IsNil() {
+			t.Fatal("no volvió a macro")
+		}
+		if scale == render.Micro && g.art.focus != tiny.Space {
+			t.Fatal("micro no enfocó el Space del tiny")
+		}
+		if step < 2 {
+			g.toggleArtMicro()
+		}
+	}
+	if g.run.World.Hash() != hash {
+		t.Fatal("cambiar de escala alteró el hash")
+	}
+}
+
 func TestMorningMacroArt(t *testing.T) {
 	path := "../../" + morningScenario
 	g, err := newGame(path, 0, 0, "")
@@ -21,8 +126,8 @@ func TestMorningMacroArt(t *testing.T) {
 	if err := g.enableArt(""); err != nil {
 		t.Fatal(err)
 	}
-	if g.art.atlas.Supports(render.Micro) {
-		t.Fatal("el atlas de la casa debería ofrecer macro")
+	if !g.art.atlas.Supports(render.Macro) {
+		t.Fatal("el atlas de la casa debe ofrecer macro")
 	}
 	g.w, g.h = (pixelGame{g}).Layout(960, 540)
 	g.fit()
@@ -115,7 +220,7 @@ func TestArtSampleUsesSameEntitiesAtBothScales(t *testing.T) {
 		if got := scene.Pick(layout.tiny); tiny.IsNil() || got != tiny {
 			t.Errorf("%s: seleccionar al tiny devolvió %s, quería %s", layout.scale, got, tiny)
 		}
-		g.sel = tiny
+		g.sel = g.artDesk
 		g.toggleMicro()
 	}
 	if got := g.run.World.Hash(); got != hash {

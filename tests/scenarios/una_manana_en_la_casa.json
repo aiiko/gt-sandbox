@@ -270,6 +270,7 @@
     },
     {
       "ref": "palm",
+      "visual": "palm",
       "spawn": {
         "name": "palma",
         "space": {
@@ -348,6 +349,7 @@
     },
     {
       "ref": "tiny01",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 01",
         "location": {"space": "$desk1", "pos": {"x": 420000, "y": 330000, "z": 0}},
@@ -365,6 +367,7 @@
     },
     {
       "ref": "tiny02",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 02",
         "location": {"space": "$desk1", "pos": {"x": 435000, "y": 330000, "z": 0}},
@@ -382,6 +385,7 @@
     },
     {
       "ref": "tiny03",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 03",
         "location": {"space": "$desk1", "pos": {"x": 450000, "y": 330000, "z": 0}},
@@ -399,6 +403,7 @@
     },
     {
       "ref": "tiny04",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 04",
         "location": {"space": "$desk1", "pos": {"x": 461000, "y": 262000, "z": 0}},
@@ -416,6 +421,7 @@
     },
     {
       "ref": "tiny05",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 05",
         "location": {"space": "$desk1", "pos": {"x": 483000, "y": 262000, "z": 0}},
@@ -433,6 +439,7 @@
     },
     {
       "ref": "tiny06",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 06",
         "location": {"space": "$desk1", "pos": {"x": 395000, "y": 280000, "z": 0}},
@@ -450,6 +457,7 @@
     },
     {
       "ref": "tiny07",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 07",
         "location": {"space": "$desk1", "pos": {"x": 417000, "y": 280000, "z": 0}},
@@ -467,6 +475,7 @@
     },
     {
       "ref": "tiny08",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 08",
         "location": {"space": "$desk1", "pos": {"x": 439000, "y": 280000, "z": 0}},
@@ -484,6 +493,7 @@
     },
     {
       "ref": "tiny09",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 09",
         "location": {"space": "$desk1", "pos": {"x": 461000, "y": 280000, "z": 0}},
@@ -501,6 +511,7 @@
     },
     {
       "ref": "tiny10",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 10",
         "location": {"space": "$desk1", "pos": {"x": 483000, "y": 280000, "z": 0}},
@@ -518,6 +529,7 @@
     },
     {
       "ref": "tiny11",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 11",
         "location": {"space": "$desk1", "pos": {"x": 395000, "y": 298000, "z": 0}},
@@ -535,6 +547,7 @@
     },
     {
       "ref": "tiny12",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 12",
         "location": {"space": "$desk1", "pos": {"x": 417000, "y": 298000, "z": 0}},
@@ -552,6 +565,7 @@
     },
     {
       "ref": "tiny13",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 13",
         "location": {"space": "$desk1", "pos": {"x": 439000, "y": 298000, "z": 0}},
@@ -569,6 +583,7 @@
     },
     {
       "ref": "tiny14",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 14",
         "location": {"space": "$desk1", "pos": {"x": 461000, "y": 298000, "z": 0}},
@@ -586,6 +601,7 @@
     },
     {
       "ref": "tiny15",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 15",
         "location": {"space": "$desk1", "pos": {"x": 483000, "y": 298000, "z": 0}},
@@ -603,6 +619,7 @@
     },
     {
       "ref": "tiny16",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 16",
         "location": {"space": "$desk1", "pos": {"x": 395000, "y": 316000, "z": 0}},
@@ -620,6 +637,7 @@
     },
     {
       "ref": "tiny17",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 17",
         "location": {"space": "$desk1", "pos": {"x": 417000, "y": 316000, "z": 0}},
@@ -637,6 +655,7 @@
     },
     {
       "ref": "tiny18",
+      "visual": "tiny_ochre",
       "spawn": {
         "name": "Tiny 18",
         "location": {"space": "$desk1", "pos": {"x": 439000, "y": 316000, "z": 0}},
@@ -654,6 +673,7 @@
     },
     {
       "ref": "tiny19",
+      "visual": "tiny",
       "spawn": {
         "name": "Tiny 19",
         "location": {"space": "$desk1", "pos": {"x": 461000, "y": 316000, "z": 0}},
@@ -671,6 +691,7 @@
     },
     {
       "ref": "tiny20",
+      "visual": "tiny_lavender",
       "spawn": {
         "name": "Tiny 20",
         "location": {"space": "$desk1", "pos": {"x": 483000, "y": 316000, "z": 0}},
