@@ -334,6 +334,53 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 
 **Al terminar M7 el motor base está listo** y se puede atacar el vertical slice ("Una mañana en la casa") de la propuesta como trabajo de contenido y comportamiento, no de infraestructura.
 
+### Hacia el vertical slice (M8–M11)
+
+Objetivo, de la propuesta: que la secuencia de "Una mañana en la casa" ocurra con reglas generales, sin scripts narrativos.
+
+1. La giantess decide desayunar porque su hambre es alta.
+2. Deja una taza y unas migajas sobre el escritorio.
+3. La colonia tiny detecta nuevos recursos y asigna recolectores.
+4. Un tiny alcanza su mano mientras está apoyada sobre el escritorio.
+5. La giantess levanta la mano y se dirige a otra habitación.
+6. El tiny viaja sobre una superficie móvil y termina explorando una nueva zona.
+
+Cada hito cubre algunos pasos y termina con escenarios en `tests/scenarios` que los verifican por eventos. Los escenarios fuerzan solo las condiciones iniciales, nunca el resultado.
+
+### M8 — Acciones que cambian el mundo (pasos 1, 2 y 5)
+- Efectos de oferta más allá de necesidades: crear entidades (`spawn` de un objeto de `content` relativo al objeto o al actor), consumir el objeto (o una porción) y mover cosas.
+- Poses ligadas a acciones: una oferta puede pedir una pose (`hand_rest` sobre una superficie, `stand`) que `sim/attach` aplica al empezar y deshace al terminar. Mientras la mano está apoyada se crea el portal dinámico mano↔superficie.
+- Objetos que una acción deja en el mundo: la taza (smart object con ofertas propias) y las migajas (recurso con `amount`).
+- Ofertas de varios pasos, encadenadas por datos: "desayunar" busca la comida en la cocina, la lleva al escritorio y come ahí, apoyando la mano.
+- Contenido: cocina, desayuno, taza y migaja con porciones. La giantess suma acciones hasta tener unas cinco (desayunar, dormir, mirar tele, trabajar en el escritorio, ir a otra habitación).
+
+**Aceptación:** con hambre alta, la giantess desayuna en el escritorio y deja una taza y migajas, sin comandos (`object_spawned`). Mientras come, la mano está apoyada y existe un portal mano↔escritorio, que desaparece cuando la levanta. Un tiny que come una migaja la reduce hasta que la migaja desaparece.
+
+### M9 — Colonia y percepción (paso 3)
+- Percepción simple, sin canales: cada agente tiene `memory` con lo que vio (entidad, Space, posición, tick), actualizada cada cierto período con un radio de visión. Las opciones de IA solo usan lo conocido, no todo el mundo. Usa el índice espacial de `sim/spatial`.
+- Colonia: entidad `colony` con nido (Space y punto), depósito de comida y miembros. Lo que ven los miembros se comparte con la colonia cuando vuelven al nido (o, para empezar, de inmediato).
+- La colonia publica trabajos sola: cuando conoce un recurso nuevo, crea trabajos `haul` hacia el depósito y les asigna prioridad.
+- Tinies con hambre y energía: comen del depósito o de la migaja y descansan en el nido.
+- Reintentos con espera: un trabajo que falla por ruta queda bloqueado para ese agente durante un tiempo (pendiente de M7).
+
+**Aceptación:** aparecen migajas fuera del alcance de visión; hasta que un tiny las ve no hay trabajos. Después la colonia publica trabajos, varios recolectores las llevan al nido y el depósito sube. Ningún tiny se muere de hambre en 10 minutos simulados. Un trabajo inalcanzable no se reintenta en loop (`TestScenarios` cuenta las asignaciones).
+
+### M10 — Curiosidad y exploración (pasos 4 y 6)
+- Necesidad o rasgo `curiosity` y acción `explore`: valora las superficies y portales que no conoce, en especial los dinámicos (la mano). La utilidad decae con lo ya visitado.
+- Subir a la giantess por decisión propia: si el portal mano↔escritorio está activo y el tiny es curioso, cruza. Si la mano se levanta, el tiny queda en la palma (ya resuelto en M5) y la IA lo trata como un cambio de Space, no como un error.
+- Bajar: cuando la mano vuelve a apoyarse en otra superficie, el tiny explora el lugar nuevo y lo agrega a su memoria (y a la de la colonia al volver).
+- Reacción de la giantess a los tinies que ve (percepción de M9): por ahora solo los nota (`noticed`), sin cambiar su plan. Sirve para el log y deja el gancho para comportamientos sociales.
+
+**Aceptación:** con la mano apoyada en el escritorio, un tiny curioso sube por decisión propia. La giantess se va a otra habitación con el tiny en la palma, apoya la mano y el tiny baja y explora la habitación nueva. Ningún tiny cae por error de IA en el viaje.
+
+### M11 — Vertical slice "Una mañana en la casa"
+- Escenario completo: tres espacios (habitación con escritorio y cama, cocina y otra habitación), una giantess con tres necesidades y unas cinco acciones, y una colonia de 20 tinies.
+- Test de aceptación que recorre el log de eventos y verifica que los seis pasos ocurren en orden, con varias semillas. Es la medida de que la secuencia sale de las reglas y no de un caso particular.
+- Visor: modo historia que resume los eventos importantes del log ("la giantess desayuna", "un tiny sube a la mano"), y seguir con la cámara a una entidad elegida.
+- Rendimiento: `simbench` con el escenario completo (meta: menos de 2 ms/tick promedio). Si no llega, perfilar antes de agregar nada.
+
+**Aceptación:** los seis pasos se cumplen con al menos 3 de 5 semillas fijas, en menos de 20 minutos simulados, sin romper invariantes. Guardar y cargar en cualquier momento no cambia el resultado. Se puede mirar en `cmd/game` de principio a fin.
+
 ---
 
 ## 5. Qué queda explícitamente fuera del motor base
@@ -341,7 +388,7 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 Para no caer en la "explosión de complejidad" de la propuesta:
 
 - LOD de simulación (se diseña la API del scheduler para permitirlo, pero no se implementa).
-- Percepción con canales (visión/sonido/vibración) — llega con el vertical slice.
+- Percepción con canales (visión/sonido/vibración). El vertical slice usa solo un radio de visión (M9).
 - Fluidos, temperatura, materiales.
 - Construcción tiny, relaciones, personalidad.
 - Arte, animación, LDtk, EbitenUI.
