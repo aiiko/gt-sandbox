@@ -12,10 +12,12 @@ import (
 	"os"
 	"time"
 
+	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/engine"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -31,6 +33,23 @@ func main() {
 		fmt.Fprintln(os.Stderr, "simrun:", err)
 		os.Exit(1)
 	}
+}
+
+// spawnFloor crea un Space raíz de 10×10 m (consume un tick) y devuelve su ID.
+func spawnFloor(w *world.World) (ids.ID, error) {
+	if _, err := w.Enqueue(cmds.Spawn{
+		Name:  "suelo",
+		Space: &space.Space{Kind: space.Static, Extent: units.RectWH(0, 0, 10*units.Meter, 10*units.Meter)},
+	}); err != nil {
+		return ids.Nil, err
+	}
+	w.Step()
+	for _, e := range w.Events() {
+		if s, ok := e.Event.(cmds.EntitySpawned); ok {
+			return s.Entity, nil
+		}
+	}
+	return ids.Nil, fmt.Errorf("no se pudo crear el suelo")
 }
 
 func run(seed uint64, ticks, spawn int, load, save string) error {
@@ -54,14 +73,20 @@ func run(seed uint64, ticks, spawn int, load, save string) error {
 		return err
 	}
 
-	for i := range spawn {
-		x := units.Length(i%100) * units.Centimeter
-		y := units.Length(i/100) * units.Centimeter
-		if _, err := w.Enqueue(cmds.Spawn{
-			Name:     comp.Name(fmt.Sprintf("e%d", i)),
-			Location: &comp.Location{Pos: units.V3(x, y, 0)},
-		}); err != nil {
+	if spawn > 0 {
+		floor, err := spawnFloor(w)
+		if err != nil {
 			return err
+		}
+		for i := range spawn {
+			x := units.Length(i%100) * units.Centimeter
+			y := units.Length(i/100) * units.Centimeter
+			if _, err := w.Enqueue(cmds.Spawn{
+				Name:     comp.Name(fmt.Sprintf("e%d", i)),
+				Location: &comp.Location{Space: floor, Pos: units.V3(x, y, 0)},
+			}); err != nil {
+				return err
+			}
 		}
 	}
 

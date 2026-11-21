@@ -1,5 +1,5 @@
-// Package cmds define los comandos genéricos del motor: crear, destruir y
-// reubicar entidades. Son la base para escenarios, herramientas de debug y
+// Package cmds define los comandos genéricos del motor: crear, destruir,
+// ubicar y reubicar entidades. Son la base para escenarios, herramientas de debug y
 // replays. Los comandos de gameplay (órdenes a tinies, etc.) llegarán con sus
 // propios sistemas.
 //
@@ -12,17 +12,21 @@ import (
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
 var ErrNotAlive = errors.New("entidad no viva")
 
 // Spawn crea una entidad con los componentes básicos indicados y emite
-// EntitySpawned con el ID asignado.
+// EntitySpawned con el ID asignado. Con Space, la entidad es una superficie;
+// un Space sin Location es una raíz.
 type Spawn struct {
 	Name     comp.Name      `json:"name,omitempty"`
 	Location *comp.Location `json:"location,omitempty"`
 	Body     *comp.Body     `json:"body,omitempty"`
+	Space    *space.Space   `json:"space,omitempty"`
 }
 
 func (Spawn) Kind() string { return "spawn" }
@@ -30,6 +34,11 @@ func (Spawn) Kind() string { return "spawn" }
 func (c Spawn) Apply(w *world.World) error {
 	if c.Body != nil && (c.Body.Radius < 0 || c.Body.Height < 0 || c.Body.Mass < 0) {
 		return errors.New("spawn: body con valores negativos")
+	}
+	if c.Location != nil {
+		if err := space.Of(w.ECS()).CanPlace(ids.Nil, c.Location.Space); err != nil {
+			return fmt.Errorf("spawn: %w", err)
+		}
 	}
 	s := comp.Of(w.ECS())
 	id := w.ECS().Spawn()
@@ -41,6 +50,9 @@ func (c Spawn) Apply(w *world.World) error {
 	}
 	if c.Body != nil {
 		s.Body.Set(id, *c.Body)
+	}
+	if c.Space != nil {
+		ecs.Get[space.Space](w.ECS()).Set(id, *c.Space)
 	}
 	w.Emit(EntitySpawned{Entity: id, Name: c.Name})
 	return nil
@@ -63,8 +75,9 @@ func (c Despawn) Apply(w *world.World) error {
 	return nil
 }
 
-// SetLocation reubica una entidad (teletransporte de debug/escenario; el
-// movimiento normal lo hacen los sistemas).
+// SetLocation reubica una entidad en coordenadas locales de un Space
+// (teletransporte de debug/escenario; el movimiento normal lo hacen los
+// sistemas).
 type SetLocation struct {
 	Entity   ids.ID        `json:"entity"`
 	Location comp.Location `json:"location"`
@@ -76,7 +89,30 @@ func (c SetLocation) Apply(w *world.World) error {
 	if !w.ECS().Alive(c.Entity) {
 		return fmt.Errorf("set_location %v: %w", c.Entity, ErrNotAlive)
 	}
+	if err := space.Of(w.ECS()).CanPlace(c.Entity, c.Location.Space); err != nil {
+		return fmt.Errorf("set_location %v: %w", c.Entity, err)
+	}
 	comp.Of(w.ECS()).Location.Set(c.Entity, c.Location)
+	return nil
+}
+
+// Reparent mueve una entidad a otro Space conservando su posición en el mundo.
+type Reparent struct {
+	Entity ids.ID `json:"entity"`
+	Space  ids.ID `json:"space"`
+}
+
+func (Reparent) Kind() string { return "reparent" }
+
+func (c Reparent) Apply(w *world.World) error {
+	if !w.ECS().Alive(c.Entity) {
+		return fmt.Errorf("reparent %v: %w", c.Entity, ErrNotAlive)
+	}
+	from, err := space.Of(w.ECS()).Reparent(c.Entity, c.Space)
+	if err != nil {
+		return fmt.Errorf("reparent %v: %w", c.Entity, err)
+	}
+	w.Emit(space.EntityReparented{Entity: c.Entity, From: from, To: c.Space, Cause: "command"})
 	return nil
 }
 
@@ -94,6 +130,7 @@ func Register(w *world.World) error {
 		world.RegisterCommand[Spawn](w),
 		world.RegisterCommand[Despawn](w),
 		world.RegisterCommand[SetLocation](w),
+		world.RegisterCommand[Reparent](w),
 		world.RegisterEvent[EntitySpawned](w),
 	)
 }

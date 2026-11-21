@@ -8,20 +8,28 @@
 package comp
 
 import (
+	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/ecs"
 )
 
-// Location ubica una entidad sobre un Space.
+// Location ubica una entidad dentro de un Space (una entidad con el
+// componente space.Space). Pos está en coordenadas locales de ese Space, en
+// µm; Facing es la orientación respecto del Space.
 //
-// Space es el ID de la entidad que provee la superficie (a partir de M2 los
-// Spaces son entidades con su propio componente). ids.Nil significa "sin
-// superficie" hasta que exista el sistema de Spaces.
-// Pos está en coordenadas locales del Space, en µm.
+// Location es también el mecanismo de jerarquía: un Space con Location está
+// "montado" en otro (la palma en la giantess, la giantess en la habitación),
+// y se mueve con él. Un Space sin Location es una raíz.
 type Location struct {
-	Space ids.ID     `json:"space"`
-	Pos   units.Vec3 `json:"pos"`
+	Space  ids.ID          `json:"space"`
+	Pos    units.Vec3      `json:"pos"`
+	Facing fixedmath.Angle `json:"facing"`
+}
+
+// Transform devuelve la transformación de la entidad respecto de su Space.
+func (l Location) Transform() fixedmath.Transform {
+	return fixedmath.Transform{Pos: l.Pos, Rot: l.Facing}
 }
 
 // Body describe el tamaño físico de una entidad.

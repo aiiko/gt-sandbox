@@ -140,6 +140,10 @@ func (r *Registry) Despawning(id ids.ID) bool {
 // PendingDespawns devuelve cuántas entidades esperan Flush.
 func (r *Registry) PendingDespawns() int { return len(r.pending) }
 
+// PendingAt devuelve la i-ésima entidad marcada, en orden de pedido. Permite
+// recorrer la lista mientras crece (despawns en cascada).
+func (r *Registry) PendingAt(i int) ids.ID { return r.pending[i] }
+
 // Flush destruye las entidades marcadas, en orden de pedido, quitando sus
 // componentes de todos los stores. Devuelve las entidades destruidas.
 func (r *Registry) Flush() []ids.ID {

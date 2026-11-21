@@ -12,6 +12,7 @@ import (
 
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -24,6 +25,9 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	w := world.New(cfg)
 	if _, err := comp.Register(w.ECS()); err != nil {
 		return nil, fmt.Errorf("engine: componentes: %w", err)
+	}
+	if err := space.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: spaces: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

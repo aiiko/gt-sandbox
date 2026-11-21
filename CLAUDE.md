@@ -27,6 +27,9 @@ Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propues
 - Componentes: structs de datos puros con campos exportados y tags JSON; el hash y los snapshots salen de su JSON. Nombre de store estable (`ecs.Register[T](r, "nombre")`).
 - Comandos y eventos: tipo con `Kind()` estable, registrados con `world.RegisterCommand[T]` / `world.RegisterEvent[T]`. Un `Apply` que falla no debe haber modificado nada.
 - Sistemas con estado propio implementan `world.Stateful`.
+- Jerarquía espacial: un Space es una entidad con `space.Space`; todo cuelga por `comp.Location` (ver `docs/specs/space.md`). Posiciones de mundo siempre vía `space.Of(reg)` (`Frame`, `WorldPose`, `Reparent`), nunca sumando offsets a mano.
+- Ángulos con `fixedmath.Angle`; nunca `math.Sin`/`math.Cos` en la simulación. La tabla se regenera con `go generate ./internal/core/fixedmath`.
+- Cada subsistema registra sus invariantes con `world.AddInvariant`.
 - Cambiar qué se hashea → incrementar `world.HashVersion`. Cambio incompatible en snapshots → incrementar `world.SnapshotSchema`.
 - `simrun`: `go run ./cmd/simrun -seed 7 -ticks 300 -spawn 50 -save s.json` y `-load s.json`.
 

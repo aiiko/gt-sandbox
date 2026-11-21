@@ -241,6 +241,13 @@ Cada hito termina con: tests verdes, escenarios nuevos que pasan, y la spec del 
 - Giantess cambia de habitación → sus spaces siguen siendo hijos y las posiciones mundiales de sus ocupantes son consistentes.
 - `Reparent` preserva la posición mundial con error 0 µm (enteros).
 
+**Estado: completado.** Spec en `docs/specs/space.md`. Cambios respecto del plan original:
+- Los Spaces no tienen campo `Parent`: la jerarquía usa la misma `Location` que cualquier entidad (un Space con Location está montado en otro). La giantess es un Space `body`; la palma, un Space montado en ella.
+- Transformaciones bajo demanda, sin caché (O(profundidad); se agrega si el profiling lo pide).
+- Reparent es exacto con ángulos de 90° y tiene error de pocos µm con ángulos arbitrarios (no "0 µm").
+- Ángulos de 1/4096 de vuelta con tabla de senos generada (`core/fixedmath`).
+- Al destruir un Space, sus ocupantes pasan al ancestro vivo más cercano (sistema `space.orphans`).
+
 ### M3 — Movimiento y navegación local
 - `nav.Grid` por Space, A* local, componente `Mover`, sistema de movimiento con intención → paso por tick.
 - `spatial`: índice por Space (grid hash) para consultas de vecinos.

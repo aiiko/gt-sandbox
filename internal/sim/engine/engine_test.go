@@ -11,6 +11,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
 
@@ -33,21 +34,36 @@ func withWander(w *world.World) error {
 	return w.Register(world.SystemSpec{Phase: clock.PhaseMove}, &wander{})
 }
 
-// randomCommand simula un jugador; incluye comandos inválidos a propósito.
+// randomCommand simula un jugador que arma y desarma jerarquías de Spaces;
+// incluye comandos inválidos (ciclos, entidades muertas) a propósito.
 func randomCommand(r *rand.Rand, w *world.World) world.Command {
-	var live []ids.ID
-	w.ECS().Each(func(id ids.ID) { live = append(live, id) })
-	if len(live) == 0 || r.IntN(2) == 0 {
-		return cmds.Spawn{Location: &comp.Location{Pos: units.V3(units.Length(r.IntN(1e6)), 0, 0)}}
+	var live, spaces []ids.ID
+	g := space.Of(w.ECS())
+	w.ECS().Each(func(id ids.ID) {
+		live = append(live, id)
+		if g.IsSpace(id) {
+			spaces = append(spaces, id)
+		}
+	})
+	if len(spaces) == 0 {
+		return cmds.Spawn{Space: &space.Space{}} // raíz
 	}
-	id := live[r.IntN(len(live))]
-	switch r.IntN(3) {
-	case 0:
-		return cmds.Despawn{Entity: id}
-	case 1:
-		return cmds.SetLocation{Entity: id}
-	default:
+	pick := func(xs []ids.ID) ids.ID { return xs[r.IntN(len(xs))] }
+	loc := &comp.Location{Space: pick(spaces), Pos: units.V3(units.Length(r.IntN(1e6)), 0, 0)}
+	switch r.IntN(6) {
+	case 0, 1:
+		return cmds.Spawn{Location: loc}
+	case 2:
+		return cmds.Spawn{Location: loc, Space: &space.Space{Kind: space.Rigid}}
+	case 3:
+		return cmds.Reparent{Entity: pick(live), Space: pick(spaces)}
+	case 4:
+		if r.IntN(4) == 0 {
+			return cmds.Despawn{Entity: pick(live)}
+		}
 		return cmds.Despawn{Entity: ids.Make(999, 1)}
+	default:
+		return cmds.SetLocation{Entity: pick(live), Location: *loc}
 	}
 }
 
@@ -110,7 +126,7 @@ func mustSave(t *testing.T, w *world.World) *world.Snapshot {
 
 func TestCommandValidation(t *testing.T) {
 	w := MustNew(world.Config{})
-	w.Enqueue(cmds.Spawn{Name: "a"})
+	w.Enqueue(cmds.Spawn{Name: "a"}) // sin Location: válido
 	w.Step()
 	id := w.Events()[0].Event.(cmds.EntitySpawned).Entity
 
@@ -131,5 +147,30 @@ func TestCommandValidation(t *testing.T) {
 	}
 	if rejected != 3 || w.ECS().Len() != 0 {
 		t.Fatalf("rechazados=%d vivas=%d", rejected, w.ECS().Len())
+	}
+}
+
+func TestAcceptanceIsNotTrivial(t *testing.T) {
+	// Guardia: si los comandos aleatorios se rechazaran todos, el test de
+	// aceptación pasaría sin probar nada.
+	w := MustNew(world.Config{Seed: 3})
+	r := rand.New(rand.NewPCG(1, 1))
+	reparented, spaces := 0, 0
+	for range 200 {
+		w.Enqueue(randomCommand(r, w))
+		w.Step()
+		for _, e := range w.Events() {
+			if _, ok := e.Event.(space.EntityReparented); ok {
+				reparented++
+			}
+		}
+	}
+	w.ECS().Each(func(id ids.ID) {
+		if space.Of(w.ECS()).IsSpace(id) {
+			spaces++
+		}
+	})
+	if reparented < 10 || spaces < 3 || w.ECS().Len() < 20 {
+		t.Fatalf("escenario trivial: reparents=%d spaces=%d entidades=%d", reparented, spaces, w.ECS().Len())
 	}
 }

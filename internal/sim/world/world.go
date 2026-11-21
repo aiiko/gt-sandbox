@@ -83,6 +83,13 @@ type World struct {
 
 	recording bool
 	cmdLog    []CommandRecord
+
+	invariants []invariant
+}
+
+type invariant struct {
+	name  string
+	check func(*World) error
 }
 
 // New crea un mundo vacío con los eventos del núcleo registrados.
@@ -194,9 +201,25 @@ func (w *World) Systems() []string {
 	return out
 }
 
-// CheckInvariants verifica la consistencia interna del mundo.
+// AddInvariant registra un chequeo de consistencia que CheckInvariants
+// ejecutará (en orden de registro). Pensado para que cada subsistema declare
+// sus propias invariantes.
+func (w *World) AddInvariant(name string, check func(*World) error) {
+	w.invariants = append(w.invariants, invariant{name, check})
+}
+
+// CheckInvariants verifica la consistencia interna del mundo. Es costoso:
+// para tests y builds de debug.
 func (w *World) CheckInvariants() error {
-	return w.ecs.CheckInvariants()
+	if err := w.ecs.CheckInvariants(); err != nil {
+		return err
+	}
+	for _, inv := range w.invariants {
+		if err := inv.check(w); err != nil {
+			return fmt.Errorf("invariante %s: %w", inv.name, err)
+		}
+	}
+	return nil
 }
 
 // Hash devuelve un hash del estado lógico completo. Dos mundos con la misma
