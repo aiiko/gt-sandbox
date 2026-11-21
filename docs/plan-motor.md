@@ -4,15 +4,6 @@ La próxima entrega es **Una mañana en la casa en pixel art top-down**. La [pro
 
 ## Hitos pendientes
 
-### M18 — Experiencia de partida
-
-- Preservar un modo de debug e integrar una interfaz de partida con reloj, pausa, velocidad, cambio de escala, selección, seguimiento e inspector resumido, con el estilo de interfaz de la propuesta.
-- Presentar el panel de historia con el retrato de la giantess y permitir enfocar desde una entrada al actor o la superficie disponibles. Exponer las órdenes de destino existentes donde correspondan.
-- Dibujar los [símbolos de expresión](propuesta.md#expresiones-y-señales) a partir de eventos y estado, y cambiar la expresión del retrato según necesidades y acción.
-- Hacer legibles los estados con texto o forma además del color, mostrar los controles en la interfaz y usar el rótulo jerárquico de ubicación («Dormitorio › Escritorio»).
-
-**Aceptación.** Se abre la escena en la interfaz de partida y se puede observar la secuencia completa, cambiar de escala, pausar, seguir a un tiny y volver al encuadre general. El descubrimiento de las migajas, el ascenso a la palma y el descanso se ven con su símbolo. El modo de debug sigue permitiendo inspeccionar rutas, portales y contactos.
-
 ### M19 — Cierre de la entrega visual
 
 - Conservar capturas de referencia de la casa, las migajas y la taza en el escritorio, la mano apoyada, el viaje y la llegada al living. Registrar semilla, vista, encuadre y tick para reproducir cada captura.

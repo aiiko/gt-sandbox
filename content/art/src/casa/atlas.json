@@ -1098,6 +1098,157 @@
           }
         }
       }
+    },
+    "portrait": {
+      "macro": {
+        "pivot": [
+          0,
+          0
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_neutral.png"
+            ]
+          },
+          "neutral": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_neutral.png"
+            ]
+          },
+          "happy": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_happy.png"
+            ]
+          },
+          "hungry": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_hungry.png"
+            ]
+          },
+          "surprised": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_surprised.png"
+            ]
+          },
+          "sleepy": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_sleepy.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
+    "emote": {
+      "macro": {
+        "pivot": [
+          5,
+          10
+        ],
+        "clips": {
+          "discover": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_discover.png"
+            ]
+          },
+          "explore": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_explore.png"
+            ]
+          },
+          "sweat": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_sweat.png"
+            ]
+          },
+          "sleep": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_sleep.png"
+            ]
+          },
+          "note": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_note.png"
+            ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_vein.png"
+            ]
+          },
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_discover.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          5,
+          10
+        ],
+        "clips": {
+          "discover": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_discover.png"
+            ]
+          },
+          "explore": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_explore.png"
+            ]
+          },
+          "sweat": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_sweat.png"
+            ]
+          },
+          "sleep": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_sleep.png"
+            ]
+          },
+          "note": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_note.png"
+            ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_vein.png"
+            ]
+          },
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_discover.png"
+            ]
+          }
+        }
+      }
     }
   }
 }

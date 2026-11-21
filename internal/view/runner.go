@@ -44,6 +44,7 @@ type Runner struct {
 	Story     []StoryEntry // últimos LogSize resúmenes, en orden de publicación
 	Err       error        // primer error de step; detiene el Runner
 	falls     []Fall       // caídas recientes, para animarlas
+	cues      []Cue        // señales recientes, para las expresiones
 
 	hashed   bool
 	hashTick clock.Tick
@@ -101,20 +102,27 @@ func (r *Runner) steps(n int) {
 	}
 	if n > 0 {
 		r.Cur = r.cap.Capture(r.World)
-		r.attachFalls(r.Cur)
+		r.attachRecent(r.Cur)
 		if n > 1 {
-			r.attachFalls(r.Prev)
+			r.attachRecent(r.Prev)
 		}
 	}
 }
 
-// attachFalls copia al frame las caídas que siguen animándose en su tick.
-func (r *Runner) attachFalls(f *Frame) {
+// attachRecent copia al frame las caídas y señales que siguen vigentes en
+// su tick.
+func (r *Runner) attachRecent(f *Frame) {
 	r.falls = slices.DeleteFunc(r.falls, func(fl Fall) bool { return r.Cur.Tick-fl.Tick >= FallTicks })
-	f.Falls = nil
+	r.cues = slices.DeleteFunc(r.cues, func(c Cue) bool { return r.Cur.Tick-c.Tick >= CueTicks })
+	f.Falls, f.Cues = nil, nil
 	for _, fl := range r.falls {
 		if fl.Tick <= f.Tick && f.Tick-fl.Tick < FallTicks {
 			f.Falls = append(f.Falls, fl)
+		}
+	}
+	for _, c := range r.cues {
+		if c.Tick <= f.Tick && f.Tick-c.Tick < CueTicks {
+			f.Cues = append(f.Cues, c)
 		}
 	}
 }
@@ -126,13 +134,18 @@ func (r *Runner) record() {
 			// cuenta desde el primer frame que ya la muestra resuelta
 			r.falls = append(r.falls, Fall{Entity: fell.Entity, From: fell.From, To: fell.To, Height: fell.Height, Tick: r.World.Tick()})
 		}
+		for _, c := range cuesOf(r.World.ECS(), e.Event) {
+			c.Tick = r.World.Tick()
+			r.cues = append(r.cues, c)
+		}
 		data, err := json.Marshal(e.Event)
 		if err != nil {
 			data = []byte(err.Error())
 		}
 		r.Log = append(r.Log, Logged{Tick: e.Tick, Kind: e.Event.Kind(), Data: string(data)})
 		if summary := storyText(r.World.ECS(), e.Event); summary != "" {
-			entry := StoryEntry{Tick: e.Tick, Text: summary}
+			actor, place := storySubjects(e.Event)
+			entry := StoryEntry{Tick: e.Tick, Text: summary, Actor: actor, Place: place}
 			if !slices.Contains(r.Story[first:], entry) {
 				r.Story = append(r.Story, entry)
 			}

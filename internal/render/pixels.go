@@ -473,11 +473,46 @@ func (s ArtScene) Pick(p image.Point) ids.ID {
 	return ids.Nil
 }
 
+// Bounds devuelve el rectángulo de pantalla del sprite principal de una
+// entidad (sin sombras, señales ni primer plano).
+func (s ArtScene) Bounds(id ids.ID) (image.Rectangle, bool) {
+	var r image.Rectangle
+	for _, sp := range s.sprites {
+		if sp.id == id && !sp.ghost && sp.layer != layerForeground {
+			r = r.Union(sp.dest)
+		}
+	}
+	return r, !r.Empty()
+}
+
+func (a *Atlas) tex() *ebiten.Image {
+	if a.texture == nil {
+		a.texture = ebiten.NewImageFromImage(a.pixels)
+	}
+	return a.texture
+}
+
+// DrawClip dibuja el primer cuadro de un clip de un visual con su pivote en
+// at. Sirve a la interfaz (retrato, símbolos). Devuelve false si no existe.
+func (a *Atlas) DrawClip(dst *ebiten.Image, visual string, scale Scale, clip string, at image.Point) bool {
+	v, ok := a.sprites[visual][scale]
+	if !ok || v.Hidden {
+		return false
+	}
+	c, ok := v.Clips[clip]
+	if !ok {
+		return false
+	}
+	src := frameRect(c.Frames[0])
+	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+	op.GeoM.Translate(float64(at.X-v.Pivot[0]), float64(at.Y-v.Pivot[1]))
+	dst.DrawImage(a.tex().SubImage(src).(*ebiten.Image), op)
+	return true
+}
+
 func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 	dst.Fill(color.NRGBA{R: 35, G: 41, B: 50, A: 255})
-	if s.atlas.texture == nil {
-		s.atlas.texture = ebiten.NewImageFromImage(s.atlas.pixels)
-	}
+	s.atlas.tex()
 	var selection image.Rectangle
 	for _, sp := range s.sprites {
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}

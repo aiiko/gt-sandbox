@@ -112,6 +112,47 @@ go run ./cmd/game -art -scenario tests/scenarios/tiny_cae_de_la_palma.json -foll
 
 ![Tiny 01 recién bajado a la mesa, visto a través de la mano, y un tiny cayendo sobre el escritorio](img/m17-paso-caida.png)
 
+## Interfaz de partida
+
+Con un escenario que declara `atlas` (la casa), `-art` abre la interfaz de partida. El juego arma un `ui.HUD` a partir del `Frame` (`g.partida`), y `HUD.Draw` lo dibuja sobre el lienzo de 480 × 270 con paneles marfil de esquinas redondeadas, borde ciruela y la fuente pixel de 12 px de `bitmapfont`, que trae tildes y eñes.
+
+- **Barra superior.** Muestra el reloj de la casa: la mañana empieza a las 7:00 y cada segundo simulado es un minuto. La velocidad se lee por forma (dos barras en pausa, uno a tres triángulos) y por texto. El centro lleva el rótulo jerárquico de ubicación: en micro, el Space que contiene a la superficie y la superficie («Dormitorio › Escritorio», «Giantess › Palma»); en macro, la casa y la habitación de lo seguido o elegido. A la derecha aparece «Siguiendo a …» cuando hay seguimiento.
+- **Barra inferior.** Muestra los controles como teclas con su rótulo: `Espacio` pausa, `1-3` velocidad, `Tab` escala, `T` seguir, `F` encuadre general, `H` historia y `F3` debug.
+- **Historia.** Presenta el retrato de la giantess junto a un globo con las entradas recientes. Cada `view.StoryEntry` trae su actor y su lugar, y la flecha turquesa marca las que se pueden enfocar. Un clic sigue al actor en la vista micro de su superficie (a la giantess, en macro) o, si el actor ya no está, abre la vista micro del lugar.
+- **Inspector resumido.** Al elegir una entidad muestra su nombre con su símbolo, su ubicación, la actividad en castellano («Va a desayunar», «Acarrea una migaja», «Descansa en la taza»), las necesidades y la orden disponible («Clic der.: ir allí», que manda `move_to`). Cada necesidad tiene barra y rótulo, y una necesidad baja lleva además «!» y la barra rayada, para leerse sin color.
+- **Símbolos de expresión.** `Frame.Emote(id)` los calcula. Los que salen de eventos duran `view.CueTicks` (2 s) y el `Runner` los guarda en `Frame.Cues`: «!» cuando un tiny nota comida, la gota al subir a la mano y la vena si le interrumpen una oferta en uso. Los que salen del estado son la gota al caer o viajar en la mano levantada, «?» al explorar, «zzz» al descansar o dormir y la nota al mirar la TV. En micro se dibujan sobre cada tiny; en macro, sobre la giantess y lo elegido o seguido.
+- **Retrato.** `Frame.Expression(id)` elige la expresión según este orden:
+  1. sorprendida si algo acaba de subir a su mano;
+  2. contenta mientras come o mira la TV;
+  3. somnolienta o hambrienta si esa necesidad está por debajo de 300;
+  4. neutral en cualquier otro caso.
+
+  El `Frame` publica las necesidades de cada agente (`needs`).
+- **Debug.** `F3` (o `-debug` al arrancar) superpone al arte las rutas, los portales y los contactos (`render.DrawOverlays`, con las capas `G P C R L`) y una línea con tick, hash y FPS. El visor de debug completo sigue siendo `go run ./cmd/game` sin `-art`.
+
+El retrato y los símbolos salen de `tools/art/ui.py`. El retrato es un busto de 48 × 48 px con cinco expresiones que comparten cabeza, pelo y ropa. Los símbolos son plantillas de 11 × 11 px con formas distintas.
+
+Las pruebas son las siguientes:
+
+- `TestPartidaShowsMorningCues` recorre la mañana. Verifica que el descubrimiento de las migajas, el ascenso a la palma, la exploración, el descanso en la taza y la TV se vean con su símbolo, y que el retrato pase por hambrienta, contenta, sorprendida y neutral.
+- `TestPartidaLocationAndCard` cubre el rótulo y el inspector.
+- `TestPartidaStoryFocus` cubre el enfoque desde la historia.
+- `TestPartidaSessionKeepsHash` cubre una sesión completa: cambia de escala, da un paso en pausa, sigue a un tiny, vuelve al encuadre general y activa el debug, y termina con el mismo hash que la ejecución headless.
+
+```sh
+go run ./cmd/game -art                      # la mañana en la interfaz de partida
+go run ./cmd/game -art -follow "Tiny 01"    # siguiendo a un tiny desde el arranque
+go run ./cmd/game -art -debug               # con rutas, portales y contactos
+```
+
+![La mañana en macro: la giantess mira la TV con su nota, retrato contento e historia](img/m18-partida.png)
+
+![Siguiendo a Tiny 01 sobre la palma: ubicación jerárquica, símbolos e inspector resumido](img/m18-seguir.png)
+
+![Modo de debug sobre el escritorio con el descubrimiento de las migajas, y un tiny que descansa junto a la taza](img/m18-debug-descanso.png)
+
+![Retrato de la giantess (neutral, contenta, hambrienta, sorprendida, somnolienta) y símbolos de expresión](img/m18-retrato.png)
+
 ## Superficies y colonia en micro
 
 `Tab` enfoca la superficie de la entidad seguida o seleccionada. Con la selección vacía enfoca el escritorio. Una segunda pulsación recupera el encuadre macro previo o mantiene la cámara sobre la entidad seguida. La selección conserva el mismo ID generacional. El cambio aplica un fundido de 180 ms incluso en pausa. `-reduced-motion` usa un corte directo.

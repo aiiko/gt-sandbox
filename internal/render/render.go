@@ -70,6 +70,19 @@ func Draw(dst *ebiten.Image, s Scene) {
 	for _, sp := range f.Spaces {
 		drawSpace(dst, p, sp, s.Layers.Grids, sp.ID == s.Selected)
 	}
+	DrawOverlays(dst, s)
+	for _, t := range f.Things {
+		drawThing(dst, p, t, t.ID == s.Selected)
+	}
+	if s.Layers.Labels {
+		drawLabels(dst, s)
+	}
+}
+
+// DrawOverlays dibuja solo los overlays técnicos (contactos, portales y
+// rutas) según Layers, sin fondo: el modo de debug los pone encima del arte.
+func DrawOverlays(dst *ebiten.Image, s Scene) {
+	f, p := s.Frame, s.Proj
 	if s.Layers.Contacts {
 		for _, c := range f.Contacts {
 			a, okA := f.SpaceByID(c.A)
@@ -101,26 +114,25 @@ func Draw(dst *ebiten.Image, s Scene) {
 			polyline(dst, p, t.Mover.Route, 1.5, routeLine)
 		}
 	}
-	for _, t := range f.Things {
-		drawThing(dst, p, t, t.ID == s.Selected)
-	}
-	if s.Layers.Labels {
-		for _, sp := range f.Spaces {
-			if sp.Name != "" {
-				x, y := p.ToScreen(labelPoint(sp))
-				ebitenutil.DebugPrintAt(dst, sp.Name, int(x)+3, int(y)-16)
-			}
+}
+
+func drawLabels(dst *ebiten.Image, s Scene) {
+	f, p := s.Frame, s.Proj
+	for _, sp := range f.Spaces {
+		if sp.Name != "" {
+			x, y := p.ToScreen(labelPoint(sp))
+			ebitenutil.DebugPrintAt(dst, sp.Name, int(x)+3, int(y)-16)
 		}
-		crowded := len(f.Things) > MaxThingLabels
-		for _, t := range f.Things {
-			if t.Name != "" && (t.ID == s.Selected || !crowded && (!s.HideMoverLabels || t.Mover == nil)) {
-				x, y := p.ToScreen(t.Pose.Pos)
-				label := t.Name
-				if t.Activity != "" {
-					label += " [" + t.Activity + "]"
-				}
-				ebitenutil.DebugPrintAt(dst, label, int(x)+6, int(y)+2)
+	}
+	crowded := len(f.Things) > MaxThingLabels
+	for _, t := range f.Things {
+		if t.Name != "" && (t.ID == s.Selected || !crowded && (!s.HideMoverLabels || t.Mover == nil)) {
+			x, y := p.ToScreen(t.Pose.Pos)
+			label := t.Name
+			if t.Activity != "" {
+				label += " [" + t.Activity + "]"
 			}
+			ebitenutil.DebugPrintAt(dst, label, int(x)+6, int(y)+2)
 		}
 	}
 }

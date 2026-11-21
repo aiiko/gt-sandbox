@@ -57,6 +57,7 @@ func main() {
 	art := flag.Bool("art", false, "dibujar el escenario en pixel art (por defecto, la muestra)")
 	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para -art")
 	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en -art")
+	debugArt := flag.Bool("debug", false, "en -art, arrancar con los overlays técnicos (F3)")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
 	flag.Parse()
 
@@ -89,7 +90,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "game:", err)
 			os.Exit(1)
 		}
-		g.art.cut = *reducedMotion
+		g.art.cut, g.art.debug = *reducedMotion, *debugArt
 		app = pixelGame{g}
 		width, height = render.CanvasWidth*2, render.CanvasHeight*2
 		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
@@ -379,6 +380,8 @@ func (g *game) keys() {
 		g.toggleMicro()
 	case k(ebiten.KeyT):
 		g.toggleFollow()
+	case k(ebiten.KeyF3) && g.art != nil:
+		g.art.debug = !g.art.debug
 	case k(ebiten.KeyH):
 		g.story, g.logBack = !g.story, 0
 	case g.story && k(ebiten.KeyPageUp):

@@ -19,6 +19,7 @@ sys.path.insert(0, HERE)
 import micro  # noqa: E402
 import rooms  # noqa: E402
 import sprites  # noqa: E402
+import ui  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(HERE))
 SRC = os.path.join(ROOT, 'content', 'art', 'src', 'casa')
@@ -29,6 +30,7 @@ def build(out):
     rooms.main(out, BASE)
     micro.main(out, BASE)
     sprites.main(out, BASE)
+    ui.main(sprites.save)
 
 
 def pixels(path):

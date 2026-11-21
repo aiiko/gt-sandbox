@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"maps"
 	"os"
 	"path/filepath"
 	"slices"
 	"time"
-	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -21,6 +21,7 @@ import (
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/render"
 	"gtsandbox/internal/sim/space"
+	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
 
@@ -48,6 +49,8 @@ type artMode struct {
 	pendingFade      bool
 	presented        *ebiten.Image
 	fadeFrom         *ebiten.Image
+	layout           ui.Layout // zonas de la interfaz de partida del último frame
+	debug            bool      // F3: overlays técnicos sobre el arte
 }
 
 func (g *game) enableArt(path string) error {
@@ -216,10 +219,22 @@ func (g *game) artMouse() {
 	}
 	x, y := a.defaultTransform.Apply(ebiten.CursorPositionF())
 	pixel, ok := a.viewport.Point(x, y)
-	if !ok || pixel.Y < artHeader || pixel.Y >= render.CanvasHeight-artFooter {
+	top, foot := artHeader, render.CanvasHeight-artFooter
+	if g.artAtlas != "" {
+		top, foot = a.layout.Top, a.layout.Foot
+	}
+	if !ok || pixel.Y < top || pixel.Y >= foot {
 		return
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		for i, r := range a.layout.Story {
+			if pixel.In(r) {
+				if entries := g.storyEntries(); i < len(entries) {
+					g.focusStory(entries[i])
+				}
+				return
+			}
+		}
 		g.sel = a.last.Pick(pixel)
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
@@ -240,42 +255,32 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 	a.last, a.proj = a.atlas.Arrange(f, proj, g.visuals, scale, focus, g.sel, g.follow), proj
 	a.last.Draw(dst, g.sel)
 
-	house := g.artAtlas != ""
-	if house && focus.IsNil() {
-		for _, room := range f.Spaces {
-			if room.Kind != space.Static || g.visuals[room.ID] == "" || room.Name == "" {
-				continue
+	if house := g.artAtlas != ""; house {
+		if focus.IsNil() {
+			for _, room := range f.Spaces {
+				if room.Kind != space.Static || g.visuals[room.ID] == "" || room.Name == "" {
+					continue
+				}
+				c := view.Corners(room)
+				south := c[0].Add(c[1].Sub(c[0]).MulDiv(1, 2))
+				x, y := proj.ToScreen(south)
+				label := capital(room.Name)
+				w := ui.TextWidth(label)
+				r := image.Rect(int(x)-w/2-4, int(y)+8, int(x)+w/2+4, int(y)+23)
+				ui.Box(dst, r, ui.Ivory)
+				ui.DrawText(dst, label, r.Min.X+4, r.Min.Y+1, ui.Plum)
 			}
-			c := view.Corners(room)
-			south := c[0].Add(c[1].Sub(c[0]).MulDiv(1, 2))
-			x, y := proj.ToScreen(south)
-			ebitenutil.DebugPrintAt(dst, room.Name, int(x)-3*utf8.RuneCountInString(room.Name), int(y)+10)
 		}
+		g.drawEmotes(dst, f, scale)
+		a.layout = g.partida(f, focus).Draw(dst, a.atlas)
+		if a.debug {
+			g.drawDebug(dst, f, proj, a.layout.Top+1)
+		}
+		return
 	}
 	ink := color.NRGBA{R: 25, G: 30, B: 38, A: 255}
 	vector.FillRect(dst, 0, 0, render.CanvasWidth, artHeader, ink, false)
 	vector.FillRect(dst, 0, render.CanvasHeight-artFooter, render.CanvasWidth, artFooter, ink, false)
-	if house {
-		title := g.title
-		if !focus.IsNil() {
-			title = "Micro / " + g.name(focus)
-		}
-		ebitenutil.DebugPrintAt(dst, title, 10, 4)
-		if !g.sel.IsNil() && g.sel != focus {
-			label := g.name(g.sel)
-			if sp, ok := f.SpaceByID(g.sel); ok && sp.Mover != nil && !sp.Parent.IsNil() {
-				label += " / " + g.name(sp.Parent)
-			}
-			ebitenutil.DebugPrintAt(dst, label, 190, 4)
-		}
-		speed := fmt.Sprintf("x%d", g.run.Speed)
-		if g.run.Paused {
-			speed = "Pausa"
-		}
-		ebitenutil.DebugPrintAt(dst, speed, 428, 4)
-		ebitenutil.DebugPrintAt(dst, "Tab Escala   Flechas Mover   T Seguir   F Centrar   Espacio Pausa", 10, render.CanvasHeight-19)
-		return
-	}
 	ebitenutil.DebugPrintAt(dst, "PRUEBA DE ARTE / "+string(scale), 10, 4)
 	if name := g.name(g.sel); !g.sel.IsNil() {
 		ebitenutil.DebugPrintAt(dst, name, 250, 4)

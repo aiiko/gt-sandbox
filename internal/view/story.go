@@ -16,10 +16,37 @@ import (
 	"gtsandbox/internal/sim/world"
 )
 
-// StoryEntry resume un evento publicado en el tick indicado.
+// StoryEntry resume un evento publicado en el tick indicado. Actor es quien
+// lo protagoniza y Place la superficie o habitación donde ocurre (pueden
+// faltar); la interfaz los usa para enfocar desde la entrada.
 type StoryEntry struct {
-	Tick clock.Tick
-	Text string
+	Tick  clock.Tick
+	Text  string
+	Actor ids.ID
+	Place ids.ID
+}
+
+// storySubjects devuelve el actor y el lugar de un evento de la historia.
+func storySubjects(event world.Event) (actor, place ids.ID) {
+	switch ev := event.(type) {
+	case ai.ActionStarted:
+		return ev.Entity, ids.Nil
+	case ai.ActionDone:
+		return ev.Entity, ids.Nil
+	case ai.ItemDropped:
+		return ev.Entity, ev.On
+	case jobs.JobAssigned:
+		return ev.By, ids.Nil
+	case colony.Stored:
+		return ids.Nil, ev.Colony
+	case attach.PoseChanged:
+		return ev.Entity, ids.Nil
+	case space.EntityReparented:
+		return ev.Entity, ev.To
+	case ai.Explored:
+		return ev.Entity, ev.Space
+	}
+	return ids.Nil, ids.Nil
 }
 
 func storyText(r *ecs.Registry, event world.Event) string {

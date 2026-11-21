@@ -20,6 +20,7 @@ import (
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/needs"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
@@ -58,6 +59,13 @@ type Space struct {
 	// Activity y Step describen lo que hace un agente que es un Space (la giantess).
 	Activity string `json:"activity,omitempty"`
 	Step     string `json:"step,omitempty"`
+	Needs    []Need `json:"needs,omitempty"`
+}
+
+// Need es el valor de una necesidad de un agente, en [0, needs.Max].
+type Need struct {
+	Name  string `json:"name"`
+	Value int32  `json:"value"`
 }
 
 // Thing es una entidad ubicada que no es un Space (un tiny, un objeto).
@@ -74,7 +82,8 @@ type Thing struct {
 	// Activity resume lo que hace un agente ("use:eat", "work", "work (suspendida)").
 	Activity string `json:"activity,omitempty"`
 	// Step es el paso en curso de una oferta de varios pasos ("goto", "pose", "use").
-	Step string `json:"step,omitempty"`
+	Step  string `json:"step,omitempty"`
+	Needs []Need `json:"needs,omitempty"`
 }
 
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
@@ -127,6 +136,7 @@ type Frame struct {
 	Portals  []Portal   `json:"portals"`
 	Contacts []Contact  `json:"contacts"`
 	Falls    []Fall     `json:"falls,omitempty"`
+	Cues     []Cue      `json:"cues,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -206,6 +216,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if a, ok := agents.Get(id); ok {
 			s.Activity, s.Step = activity(r, a)
 		}
+		s.Needs = needsOf(r, id)
 		for e := s.Parent; !e.IsNil() && s.Depth < space.MaxDepth; e = g.Parent(e) {
 			s.Depth++
 		}
@@ -245,6 +256,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if a, ok := agents.Get(id); ok {
 			t.Activity, t.Step = activity(r, a)
 		}
+		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)
 	})
 
@@ -285,6 +297,28 @@ func (c *Capturer) grid(id ids.ID, g *nav.Grid) *Grid {
 
 // activity resume la acción de un agente y, si la oferta tiene pasos, el
 // paso en curso. Una acción suspendida no tiene paso.
+func needsOf(r *ecs.Registry, id ids.ID) []Need {
+	n, ok := ecs.Get[needs.Needs](r).Get(id)
+	if !ok {
+		return nil
+	}
+	out := make([]Need, len(n))
+	for i, x := range n {
+		out[i] = Need{Name: x.Name, Value: x.Value}
+	}
+	return out
+}
+
+// NeedOf devuelve el valor de una necesidad de la lista.
+func NeedOf(list []Need, name string) (int32, bool) {
+	for _, n := range list {
+		if n.Name == name {
+			return n.Value, true
+		}
+	}
+	return 0, false
+}
+
 func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 	d, suffix := a.Doing, ""
 	if d == nil && a.Suspended != nil {
