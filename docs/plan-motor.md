@@ -298,7 +298,7 @@ Cada uno de estos debería poder agregarse como **un sistema nuevo registrado en
 ## 6. Prácticas de trabajo
 
 - **Spec antes que código:** `docs/specs/<sistema>.md` de una página — responsabilidades, API, invariantes, casos límite, escenarios de aceptación.
-- **Un hito = una rama = PRs chicos.** Cada PR con tests.
+- **Todo se trabaja en `master`**, con commits chicos y cada uno con sus tests.
 - **Invariantes en debug:** `world.CheckInvariants()` corre cada tick en tests y en builds de debug.
 - **Benchmarks desde M3:** `cmd/simbench` con 20/100/500/1000 entidades; guardar resultados para comparar regresiones.
 - **CLAUDE.md** en la raíz con las reglas D1–D9 y la regla de dependencias, para que cualquier agente las respete sin volver a explicarlas.
