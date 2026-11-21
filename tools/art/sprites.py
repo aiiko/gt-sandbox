@@ -3,6 +3,7 @@ palma elevada y taza en mano."""
 import os
 from PIL import Image, ImageOps
 from px import Canvas, load, hexc
+import hand
 
 SRC = BASE = None  # los fija main
 INK = '#3F365C'
@@ -280,45 +281,38 @@ def giantess():
 
 # ------------------------------------------------------------ palma y taza
 
-PALM_SIZE = 320  # cuadro cuadrado: el pivote queda en el centro en las cuatro orientaciones
+PALM_SIZE = 480  # cuadro cuadrado: el pivote queda en el centro en las cuatro orientaciones
 # Rotación de la imagen original (dibujada mirando al norte) para cada orientación.
 PALM_TURNS = {'north': 0, 'east': -90, 'south': 180, 'west': 90}
 
 
 def palm_shadowless():
-    src = load(os.path.join(BASE, 'palm/micro_idle.png'))
-    shadow_cols = {(0x98, 0x5E, 0x76), (0xB0, 0x79, 0x82)}
-    hand = src.copy()
-    # la sombra horneada son los píxeles de esos dos tonos con transparencia encima o debajo
-    for y in range(src.height):
-        for x in range(src.width):
-            p = src.getpixel((x, y))
-            if p[3] and p[:3] in shadow_cols:
-                above = [src.getpixel((x, y - k)) for k in (1, 2, 3) if y - k >= 0]
-                if any(q[3] == 0 for q in above) or y + 1 >= src.height or src.getpixel((x, y + 1))[3] == 0                         or src.getpixel((x, min(y + 2, src.height - 1)))[3] == 0:
-                    hand.putpixel((x, y), (0, 0, 0, 0))
-    return hand
+    return hand.draw()
 
 
-def palm_frame(hand, offset, alpha):
-    """Centra la mano en un cuadro cuadrado y le agrega la sombra desplazada."""
-    out = Image.new('RGBA', (PALM_SIZE, PALM_SIZE), (0, 0, 0, 0))
-    at = ((PALM_SIZE - hand.width) // 2, (PALM_SIZE - hand.height) // 2)
-    mask = hand.split()[3].point(lambda a: alpha if a else 0)
-    sh = Image.new('RGBA', hand.size, hexc(INK))
+def palm_square(turn):
+    """Mano con antebrazo, con el centro de la palma en el centro del cuadro."""
+    sq = Image.new('RGBA', (PALM_SIZE, PALM_SIZE), (0, 0, 0, 0))
+    sq.alpha_composite(palm_shadowless(), (PALM_SIZE // 2 - hand.W // 2, PALM_SIZE // 2 - hand.H // 2))
+    return sq.rotate(turn) if turn else sq
+
+
+def with_shadow(img, offset, alpha):
+    out = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    mask = img.split()[3].point(lambda a: alpha if a else 0)
+    sh = Image.new('RGBA', img.size, hexc(INK))
     sh.putalpha(mask)
-    out.alpha_composite(sh, (at[0] + offset[0], at[1] + offset[1]))
-    out.alpha_composite(hand, at)
+    out.alpha_composite(sh, offset)
+    out.alpha_composite(img, (0, 0))
     return out
 
 
 def palm():
-    hand = palm_shadowless()
     for facing, turn in PALM_TURNS.items():
-        h = hand.rotate(turn, expand=True) if turn else hand
+        sq = palm_square(turn)
         # La luz viene siempre de arriba a la izquierda: la sombra no gira con la mano.
-        save(palm_frame(h, (2, 4), 120), f'palm/micro_rested_{facing}.png')
-        save(palm_frame(h, (10, 16), 80), f'palm/micro_raised_{facing}.png')
+        save(with_shadow(sq, (2, 4), 120), f'palm/micro_rested_{facing}.png')
+        save(with_shadow(sq, (10, 16), 80), f'palm/micro_raised_{facing}.png')
 
 
 def cup():

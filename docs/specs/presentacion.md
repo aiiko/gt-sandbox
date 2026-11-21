@@ -21,7 +21,7 @@ go run ./cmd/artpack -check         # solo verifica
 
 La muestra de M12 (`content/art/muestra.*`) queda congelada como referencia y no tiene fuentes.
 
-Parte de las fuentes se dibuja por código con los scripts de `tools/art/` (Python con Pillow): `rooms.py` para habitaciones, futón, puertas y heladera; `micro.py` para la etiqueta del nido y el posavasos; y `sprites.py` para el tiny, las poses de la giantess, la palma elevada y la taza en mano. `px.py` reúne las primitivas de dibujo. Los scripts parten de las piezas originales de M14 guardadas en `tools/art/base/`. Una pieza generada se ajusta en su script, no en el PNG, porque la próxima ejecución la sobrescribe. Para retocar una pieza a mano en un editor, hay que quitarla antes de su script. `-check` regenera en una carpeta temporal y compara píxeles con las fuentes versionadas.
+Parte de las fuentes se dibuja por código con los scripts de `tools/art/` (Python con Pillow): `rooms.py` para habitaciones, futón, puertas y heladera; `micro.py` para la etiqueta del nido y el posavasos; `hand.py` para la mano; y `sprites.py` para el tiny, las poses de la giantess, la palma en sus cuatro orientaciones y la taza en mano. `px.py` reúne las primitivas de dibujo. Los scripts parten de las piezas originales de M14 guardadas en `tools/art/base/`. Una pieza generada se ajusta en su script, no en el PNG, porque la próxima ejecución la sobrescribe. Para retocar una pieza a mano en un editor, hay que quitarla antes de su script. `-check` regenera en una carpeta temporal y compara píxeles con las fuentes versionadas.
 
 ```sh
 python tools/art/build.py -check    # las fuentes coinciden con los scripts
@@ -79,7 +79,9 @@ Las poses sentadas bajan el torso siete píxeles para que el escritorio o la mes
 
 ![La giantess desayuna en el dormitorio y mira la TV sentada en el living](img/m16-poses.png)
 
-La grilla de la palma en el escenario sigue la silueta de la mano dibujada, así que los tinies que viajan quedan sobre la mano en las cuatro orientaciones.
+La mano es la derecha, con la palma hacia arriba, los dedos juntos y el pulgar abierto. Cada parte es una forma con distancia con signo, y de esa distancia salen el contorno malva, las costuras entre dedos, los pliegues de las falanges y el sombreado de celda con luz desde arriba a la izquierda. El antebrazo con el puño acanalado sigue más allá de la palma, así que con la palma centrada el corte de la manga queda fuera de pantalla. Los cuadros miden 480 × 480 px con el pivote en el centro.
+
+La grilla de la palma en el escenario sale de `hand.grid_rows()`: una celda de 1 cm por cada 16 px del dibujo, transitable si la mano o la manga cubren al menos la mitad. Así, los tinies que viajan quedan sobre la mano en las cuatro orientaciones. Si cambia el dibujo de la mano, hay que regenerar también esa grilla.
 
 ![Tinies sobre la palma elevada durante el viaje al living, tick 520](img/m16-palma.png)
 
