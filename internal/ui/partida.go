@@ -198,10 +198,24 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 	lx := max(left, (W-TextWidth(loc))/2)
 	DrawText(dst, loc, lx, 4, Plum)
 
-	// Barra inferior: controles como teclas con su rótulo.
+	drawControls(dst, h.Controls)
+
+	// Panel de historia con el retrato de la giantess.
+	if h.Face != "" {
+		lay.Story = h.drawStory(dst, atlas, H-footH-4)
+	}
+	if h.Card != nil {
+		h.Card.draw(dst, atlas, W-4, H-footH-4)
+	}
+	return lay
+}
+
+// drawControls dibuja la barra inferior: controles como teclas con su rótulo.
+func drawControls(dst *ebiten.Image, controls []Control) {
+	W, H := dst.Bounds().Dx(), dst.Bounds().Dy()
 	vector.FillRect(dst, 0, float32(H-footH), float32(W), float32(footH), Plum, false)
 	x := 4
-	for _, c := range h.Controls {
+	for _, c := range controls {
 		kw := TextWidth(c.Key) + 6
 		lw := TextWidth(c.Label)
 		if x+kw+3+lw > W-4 {
@@ -212,15 +226,6 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 		DrawText(dst, c.Label, x+kw+3, H-footH+3, Ivory)
 		x += kw + 3 + lw + 8
 	}
-
-	// Panel de historia con el retrato de la giantess.
-	if h.Face != "" {
-		lay.Story = h.drawStory(dst, atlas, H-footH-4)
-	}
-	if h.Card != nil {
-		h.Card.draw(dst, atlas, W-4, H-footH-4)
-	}
-	return lay
 }
 
 func (h HUD) drawStory(dst *ebiten.Image, atlas *render.Atlas, bottom int) []image.Rectangle {
