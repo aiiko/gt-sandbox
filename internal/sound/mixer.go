@@ -1,5 +1,10 @@
 package sound
 
+import (
+	"maps"
+	"slices"
+)
+
 // FPS es la cadencia de Advance: el juego llama una vez por Update.
 const FPS = 60
 
@@ -81,6 +86,23 @@ func (m *Mixer) Loop(id string, level float64) {
 	if m.Out != nil {
 		m.Out.Loop(id, v)
 	}
+}
+
+// Hush corta lo que suena y apaga los bucles de ambiente, por ejemplo al
+// dejar una partida para volver al menú. El silencio no cambia.
+func (m *Mixer) Hush() {
+	for _, id := range slices.Sorted(maps.Keys(m.loops)) {
+		if m.loops[id] != 0 {
+			m.loops[id] = 0
+			if m.Out != nil {
+				m.Out.Loop(id, 0)
+			}
+		}
+	}
+	if m.Out != nil {
+		m.Out.StopAll()
+	}
+	clear(m.voices)
 }
 
 // LoopVolume es el volumen final de un bucle.

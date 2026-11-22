@@ -107,11 +107,17 @@ func abs(v int) int { return max(v, -v) }
 type recorder struct {
 	played  []string
 	stopped int
+	loops   map[string]float64
 }
 
 func (r *recorder) Play(id string, _, _ float64) { r.played = append(r.played, id) }
 func (r *recorder) StopAll()                     { r.stopped++ }
-func (r *recorder) Loop(string, float64)         {}
+func (r *recorder) Loop(id string, v float64) {
+	if r.loops == nil {
+		r.loops = map[string]float64{}
+	}
+	r.loops[id] = v
+}
 
 func testLibrary() *Library {
 	lib := &Library{byID: map[string]Def{}}
@@ -202,5 +208,25 @@ func TestUISounds(t *testing.T) {
 	i.Observe(m, UIState{})
 	if !slices.Equal(r.played, []string{UIResume}) {
 		t.Errorf("sonó %v", r.played)
+	}
+}
+
+// Hush apaga los bucles y corta lo que suena sin silenciar el mezclador.
+func TestMixerHush(t *testing.T) {
+	r := &recorder{}
+	m := NewMixer(testLibrary(), r)
+	m.Loop("a", 1)
+	m.Play("a", 1, 0)
+	m.Play("a", 1, 0)
+	m.Hush()
+	if r.loops["a"] != 0 || m.LoopVolume("a") != 0 || r.stopped != 1 || m.Muted() {
+		t.Fatalf("bucles %v, cortes %d, silencio %v", r.loops, r.stopped, m.Muted())
+	}
+	if !m.Play("a", 1, 0) {
+		t.Fatal("después de Hush las voces quedan libres")
+	}
+	m.Loop("a", 1)
+	if r.loops["a"] == 0 {
+		t.Fatal("el bucle vuelve a sonar al pedirlo")
 	}
 }
