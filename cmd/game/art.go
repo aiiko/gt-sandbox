@@ -49,8 +49,9 @@ type artMode struct {
 	pendingFade      bool
 	presented        *ebiten.Image
 	fadeFrom         *ebiten.Image
-	layout           ui.Layout // zonas de la interfaz de partida del último frame
-	debug            bool      // F3: overlays técnicos sobre el arte
+	layout           ui.Layout   // zonas de la interfaz de partida del último frame
+	debug            bool        // F3: overlays técnicos sobre el arte
+	badges           []tinyGroup // globos de tinies del último frame macro
 }
 
 func (g *game) enableArt(path string) error {
@@ -254,6 +255,9 @@ func (g *game) artMouse() {
 				return
 			}
 		}
+		if g.clickTinyBadge(pixel) {
+			return
+		}
 		g.sel = a.last.Pick(pixel)
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
@@ -289,6 +293,10 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 				ui.Box(dst, r, ui.Ivory)
 				ui.DrawText(dst, label, r.Min.X+4, r.Min.Y+1, ui.Plum)
 			}
+			a.badges = tinyGroups(f, proj)
+			g.drawTinyBadges(dst, a.badges)
+		} else {
+			a.badges = nil
 		}
 		g.drawEmotes(dst, f, scale)
 		a.layout = g.partida(f, focus).Draw(dst, a.atlas)

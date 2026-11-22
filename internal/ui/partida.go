@@ -3,6 +3,7 @@ package ui
 import (
 	"image"
 	"image/color"
+	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/bitmapfont/v4"
@@ -425,4 +426,42 @@ func drawEye(dst *ebiten.Image, x, y int) {
 	vector.FillRect(dst, fx+2, fy+1, 7, 4, Ivory, false)
 	vector.FillRect(dst, fx+4, fy+1, 3, 4, Lilac, false)
 	vector.FillRect(dst, fx+5, fy+2, 1, 2, Plum, false)
+}
+
+// TinyBadge es el indicador de los tinies de una superficie en la vista
+// macro, donde no se dibujan: el marcador del tiny y cuántos hay, con un
+// palito (TinyStem) que baja hasta ellos. En coral si alguno está alarmado.
+type TinyBadge struct {
+	Count   int
+	Alarmed bool
+}
+
+const (
+	tinyBadgeH   = 13
+	tinyBadgeGap = 6 // del borde inferior del globo hasta los tinies
+)
+
+// Rect es el globo para tinies centrados en at; lift lo sube más (para no
+// pisar otro globo).
+func (b TinyBadge) Rect(at image.Point, lift int) image.Rectangle {
+	w := 4 + 5 + 3 + TextWidth(strconv.Itoa(b.Count)) + 4
+	bottom := at.Y - tinyBadgeGap - lift
+	return image.Rect(at.X-w/2, bottom-tinyBadgeH, at.X-w/2+w, bottom)
+}
+
+// TinyStem dibuja el palito que baja del globo r hasta los tinies en at. Se
+// dibujan todos antes que los globos, para que un palito no cruce otro globo.
+func TinyStem(dst *ebiten.Image, r image.Rectangle, at image.Point) {
+	vector.FillRect(dst, float32(at.X), float32(r.Max.Y), 1, float32(at.Y-2-r.Max.Y), Plum, false)
+}
+
+// Draw dibuja el globo r.
+func (b TinyBadge) Draw(dst *ebiten.Image, atlas *render.Atlas, r image.Rectangle) {
+	fill := Ivory
+	if b.Alarmed {
+		fill = Coral
+	}
+	Box(dst, r, fill)
+	atlas.DrawClip(dst, "tiny", render.Macro, "idle", image.Pt(r.Min.X+6, r.Min.Y+6))
+	DrawText(dst, strconv.Itoa(b.Count), r.Min.X+12, r.Min.Y, Plum)
 }
