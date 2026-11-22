@@ -87,6 +87,13 @@ type (
 		Item   ids.ID `json:"item"`
 		On     ids.ID `json:"on"` // Space donde quedó
 	}
+	// ItemsLeft se emite al crear cosas con un paso spawn: qué dejó y por
+	// qué (Motive, la oferta: desayuno, merienda, compartir).
+	ItemsLeft struct {
+		Entity ids.ID   `json:"entity"`
+		Items  []ids.ID `json:"items"`
+		Motive string   `json:"motive"`
+	}
 	Consumed struct {
 		Entity ids.ID `json:"entity"`
 		Target ids.ID `json:"target"`
@@ -96,6 +103,7 @@ type (
 
 func (ItemDropped) Kind() string { return "item_dropped" }
 func (Consumed) Kind() string    { return "consumed" }
+func (ItemsLeft) Kind() string   { return "items_left" }
 
 // plan devuelve los pasos de la oferta.
 func (o Offer) plan() []Step {
@@ -323,6 +331,14 @@ func (use) Step(c *Ctx, d *Doing) Result {
 	if !d.Item.IsNil() && !jobs.Reserve(c.W, d.Item, c.Actor) {
 		return Failed
 	}
+	return RunSteps(c, d, o, loc)
+}
+
+// RunSteps avanza los pasos de o desde d.Stage, como "use": los
+// instantáneos se encadenan en el mismo tick. loc es la ubicación del objeto
+// (el punto de uso es loc + o.Approach). Lo usan otras acciones que hacen
+// pasos de oferta sin un smart object (p. ej. dejar migajas).
+func RunSteps(c *Ctx, d *Doing, o Offer, loc comp.Location) Result {
 	steps := o.plan()
 	for d.Stage < len(steps) {
 		switch doStep(c, d, o, loc, steps[d.Stage]) {
@@ -402,6 +418,7 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 	case StepSpawn:
 		n := max(s.Count, 1)
 		_, facing, _ := space.Of(w.ECS()).WorldPose(c.Actor)
+		var left []ids.ID
 		for i := range n {
 			off := s.Offset
 			if s.Spread > 0 {
@@ -412,10 +429,14 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 			if !ok {
 				return stepFail
 			}
-			if _, ok := place(c, *s.Item, at); !ok {
+			id, ok := place(c, *s.Item, at)
+			if !ok {
 				return stepFail
 			}
+			left = append(left, id)
 		}
+		d.Items = append(d.Items, left...)
+		w.Emit(ItemsLeft{Entity: c.Actor, Items: left, Motive: o.Action})
 	case StepConsume:
 		amount := max(s.Amount, 1)
 		left := int32(0)
@@ -487,9 +508,16 @@ func putDown(c *Ctx, d *Doing, off units.Vec2, hand bool) bool {
 	return true
 }
 
-// Stop deshace lo que quedó a medias: detiene el movimiento, deja lo
-// cargado a los pies del actor y vuelve a la pose de reposo.
+// Stop deshace lo que quedó a medias (ver UndoSteps) y libera el objeto.
 func (use) Stop(c *Ctx, d *Doing, _ bool) {
+	UndoSteps(c, d)
+	jobs.Release(c.W, d.Target, c.Actor)
+}
+
+// UndoSteps deshace lo que dejaron a medias los pasos: detiene el
+// movimiento, deja lo cargado a los pies del actor y vuelve a la pose de
+// reposo.
+func UndoSteps(c *Ctx, d *Doing) {
 	if d.Moving {
 		nav.Halt(c.W, c.Actor)
 	}
@@ -500,7 +528,6 @@ func (use) Stop(c *Ctx, d *Doing, _ bool) {
 		_ = (attach.SetPose{Entity: c.Actor, Pose: c.Agent.IdlePose}).Apply(c.W)
 		d.Posed = false
 	}
-	jobs.Release(c.W, d.Target, c.Actor)
 }
 
 func (use) Valid(c *Ctx, d *Doing) bool {
@@ -530,7 +557,7 @@ func registerUse(w *world.World) error {
 			return err
 		}
 	}
-	return errors.Join(world.RegisterEvent[ItemDropped](w), world.RegisterEvent[Consumed](w))
+	return errors.Join(world.RegisterEvent[ItemDropped](w), world.RegisterEvent[Consumed](w), world.RegisterEvent[ItemsLeft](w))
 }
 
 func storeErr[T any](_ *ecs.Store[T], err error) error { return err }

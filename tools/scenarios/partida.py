@@ -17,6 +17,9 @@ Parte de «Un descuido en el escritorio» (un_descuido_en_el_escritorio.json):
   tinies (componente "encounter") y olvida un avistamiento viejo.
 - tests/scenarios/giantess_observes_desk.json: sin necesidades que atender,
   se detiene a mirar el escritorio y no vuelve a mirarlo enseguida.
+- tests/scenarios/giantess_shares_crumbs.json: deja migajas donde los tinies
+  buscan comida y no hay; giantess_skips_sharing.json: si al llegar ya hay
+  migajas a la vista, no comparte.
 
 Los escenarios de referencia (la mañana y el descuido) no cambian.
 """
@@ -47,7 +50,16 @@ SNACK_LIVING = {
 }
 
 # Encuentros de la giantess en la partida libre (utilidades de cada acción).
-ENCOUNTER = {'observe': 0.12}
+OBJECTS = os.path.join(ROOT, 'content', 'objects')
+
+
+def crumb():
+    """La migaja que deja al compartir (definición completa: la simulación no
+    conoce la biblioteca de objetos)."""
+    return json.load(open(os.path.join(OBJECTS, 'crumb.json'), encoding='utf-8'))
+
+
+ENCOUNTER = {'observe': 0.12, 'share': 0.2}
 
 
 def satisfied(d):
@@ -103,7 +115,7 @@ def main():
     d['expect'] = []
     with_living_snack(d)
     d['random'] = {'agent': '$giantess', 'starts': copy.deepcopy(STARTS)}
-    entity(d, 'giantess')['spawn']['components']['encounter'] = copy.deepcopy(ENCOUNTER)
+    entity(d, 'giantess')['spawn']['components']['encounter'] = dict(copy.deepcopy(ENCOUNTER), portion=crumb())
     write(os.path.join(ROOT, 'content', 'partidas', 'casa.json'), d)
 
     d = copy.deepcopy(base)
@@ -155,6 +167,45 @@ def main():
         {'no_event': 'command_rejected'},
     ]
     write(os.path.join(SCENARIOS, 'giantess_observes_desk.json'), d)
+
+    # Sin galletas en el escritorio, los tinies salen a buscar comida.
+    hungry = copy.deepcopy(base)
+    del hungry['atlas']
+    hungry['entities'] = [e for e in hungry['entities'] if not e['ref'].startswith('cookie')]
+    satisfied(hungry)
+    entity(hungry, 'giantess')['spawn']['components']['encounter'] = {'share': 0.3, 'portion': crumb()}
+
+    d = copy.deepcopy(hungry)
+    d['name'] = 'giantess_shares_crumbs'
+    d['notes'] = ('En el escritorio no hay comida y los tinies salen a buscar: la giantess se acerca, suspende la '
+                  'mano y deja dos migajas, que la colonia acarrea al nido.')
+    d['ticks'] = 3000
+    d['expect'] = [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'share', 'target': '$desk1'}},
+        {'event': 'items_left', 'match': {'entity': '$giantess', 'motive': 'share'}},
+        {'event': 'shared', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+        {'event': 'stored'},
+        {'no_event': 'crushed'},
+        {'no_event': 'command_rejected'},
+    ]
+    write(os.path.join(SCENARIOS, 'giantess_shares_crumbs.json'), d)
+
+    d = copy.deepcopy(hungry)
+    d['name'] = 'giantess_skips_sharing'
+    d['notes'] = ('Los tinies buscan comida y la giantess va a compartir, pero mientras camina caen migajas en el '
+                  'escritorio: al llegar ve que hay suficientes y no deja nada (encounter_skipped).')
+    d['ticks'] = 1200
+    for i, (x, y) in enumerate([(150000, 200000), (200000, 120000), (520000, 100000)]):
+        spawn = dict(crumb(), location={'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}})
+        d['commands'].append({'tick': 15, 'kind': 'spawn', 'data': spawn})
+    d['expect'] = [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'share'}, 'count': 1},
+        {'event': 'encounter_skipped', 'match': {'entity': '$giantess', 'action': 'share', 'reason': 'enough'}},
+        {'no_event': 'items_left', 'match': {'motive': 'share'}},
+        {'no_event': 'shared'},
+        {'no_event': 'command_rejected'},
+    ]
+    write(os.path.join(SCENARIOS, 'giantess_skips_sharing.json'), d)
 
 
 if __name__ == '__main__':

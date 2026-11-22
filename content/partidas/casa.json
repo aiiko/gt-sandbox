@@ -666,7 +666,47 @@
             "force": 600
           },
           "encounter": {
-            "observe": 0.12
+            "observe": 0.12,
+            "share": 0.2,
+            "portion": {
+              "name": "crumb",
+              "visual": "crumb",
+              "body": {
+                "radius": 1500,
+                "height": 1000,
+                "mass": 0
+              },
+              "components": {
+                "portions": {
+                  "left": 3
+                },
+                "food": {},
+                "offers": [
+                  {
+                    "action": "nibble",
+                    "scale": "tiny",
+                    "effects": [
+                      {
+                        "need": "hunger",
+                        "amount": 150
+                      }
+                    ],
+                    "steps": [
+                      {
+                        "do": "goto"
+                      },
+                      {
+                        "do": "use",
+                        "ticks": 60
+                      },
+                      {
+                        "do": "consume"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
           }
         }
       }

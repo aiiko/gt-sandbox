@@ -111,3 +111,35 @@ En la partida libre `encounter.observe` vale 0,12. Le gana a quedarse sin hacer 
 Que un tiny se aleje o se esconda porque lo miran queda fuera de esta entrega (ver el [plan](../plan-motor.md#m30-observar)).
 
 Prueba: `giantess_observes_desk`. Sin necesidades que atender, la giantess va a mirar el escritorio, emite `observed`, no asusta a nadie y no vuelve a mirarlo en 75 s.
+
+## Compartir migajas (M31)
+
+`share` queda disponible cuando hay un avistamiento reciente con tinies buscando comida (`foraging > 0`) y menos de `ShareBelow` (2) porciones de comida a la vista en esa superficie. Comida a la vista es lo que tiene `food` y no va cargado; una migaja reservada para acarrear sigue sobre la mesa.
+
+La acción reutiliza los pasos de oferta de `ai`:
+
+- `ai.RunSteps(c, d, offer, loc)` avanza los pasos de una oferta sintética desde `d.Stage`, igual que `use`.
+- `ai.UndoSteps(c, d)` deshace lo que quedó a medias (movimiento, lo cargado, la pose). `use.Stop` también los usa.
+
+La oferta de `share` tiene estos pasos:
+
+1. ir al lugar de la superficie (lo hace la acción, para comprobar al llegar);
+2. `pose` con `encounter.drop_pose` (`set_table` si falta: la mano suspendida sobre la mesa);
+3. `spawn` de `ShareCount` (2) copias de `encounter.portion`, a 10 cm delante de la mano en un anillo de 5 cm;
+4. `wait` de 12 ticks.
+
+`Stop` vuelve a la pose de reposo. Una migaja que cae no aplasta. La mano suspendida sí es una sombra, así que los tinies que estén justo debajo se apartan y vuelven después.
+
+- **Al llegar.** Si ya no hay tinies buscando comida, emite `encounter_skipped` con `reason: "gone"`. Si ya hay comida suficiente a la vista, con `reason: "enough"`.
+- **Enfriamiento.** Por superficie, `ShareCooldown` (4 minutos).
+- **`encounter.portion`.** Es la definición completa del objeto: la simulación no conoce la biblioteca. `partida.py` copia `content/objects/crumb.json`.
+
+### Motivo de lo que se deja
+
+Todo paso `spawn` emite `items_left {entity, items, motive}`, donde `motive` es la oferta que lo produjo: `breakfast`, `snack_living` o `share`. Los IDs quedan además en `doing.items`. Al terminar, `share` emite `shared {entity, surface, items}`. Así la historia distingue las migajas de una comida de un gesto deliberado, y una prueba sigue cada porción hasta el depósito. `doing.items` entra en el hash (`HashVersion` 7).
+
+### Pruebas
+
+- `giantess_shares_crumbs` y `TestSharedCrumbsAreTraceable`: sin comida en el escritorio, los tinies salen a buscar y la giantess deja dos migajas. Cada una se sigue por `shared` → `noticed` → `job_posted` (`haul`) → `stored`.
+- `giantess_skips_sharing`: caen migajas mientras ella camina, y al llegar emite `encounter_skipped` (`enough`) sin dejar nada.
+- `TestNoSharingWithCrumbsInSight`: con migajas desde el principio, compartir no es opción.

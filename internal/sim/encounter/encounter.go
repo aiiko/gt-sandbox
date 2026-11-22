@@ -17,6 +17,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
@@ -39,6 +40,10 @@ type Encounter struct {
 	Observe float64 `json:"observe,omitempty"`
 	Share   float64 `json:"share,omitempty"`
 	Offer   float64 `json:"offer,omitempty"`
+	// Portion es lo que deja al compartir (una migaja); DropPose, la pose
+	// desde la que la deja (vacía = DefaultDropPose).
+	Portion  *cmds.Spawn `json:"portion,omitempty"`
+	DropPose string      `json:"drop_pose,omitempty"`
 	// Sightings y Cooldowns están ordenados por superficie (y acción).
 	Sightings []Sighting `json:"sightings,omitempty"`
 	Cooldowns []Cooldown `json:"cooldowns,omitempty"`
@@ -196,7 +201,7 @@ func check(w *world.World) error {
 }
 
 // Actions son las acciones de encuentro, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{Observe{}} }
+func Actions() []ai.Action { return []ai.Action{Observe{}, Share{}} }
 
 // Install registra el componente, los eventos y el sistema de avistamientos.
 // Las acciones se instalan con ai.Install(w, encounter.Actions()...).
@@ -208,6 +213,7 @@ func Install(w *world.World) error {
 	return errors.Join(
 		world.RegisterEvent[Skipped](w),
 		world.RegisterEvent[Observed](w),
+		world.RegisterEvent[Shared](w),
 		// Después de ai.look (Order -50) y antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -45}, look{}),
 	)

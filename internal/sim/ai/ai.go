@@ -59,8 +59,9 @@ type Doing struct {
 	Place    ids.ID     `json:"place,omitempty"`
 	Item     ids.ID     `json:"item,omitempty"`
 	Posed    bool       `json:"posed,omitempty"`
-	Wary     bool       `json:"wary,omitempty"` // vio tinies debajo de la mano (pose con Care)
-	Goal     units.Vec2 `json:"goal,omitempty"` // destino de acciones sin objetivo (forage)
+	Wary     bool       `json:"wary,omitempty"`  // vio tinies debajo de la mano (pose con Care)
+	Goal     units.Vec2 `json:"goal,omitempty"`  // destino de acciones sin objetivo (forage)
+	Items    []ids.ID   `json:"items,omitempty"` // lo que dejaron los pasos spawn
 	Since    clock.Tick `json:"since"`
 }
 
