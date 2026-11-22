@@ -194,7 +194,7 @@ func TestTabNamesItsDestination(t *testing.T) {
 	}
 	for _, c := range []struct {
 		sel, follow, want string
-		target       ids.ID
+		target            ids.ID
 	}{
 		{"", "", "Escritorio", g.artDesk},
 		{"bedroom", "", "Dormitorio", refOf(t, morningScenario, "bedroom")},
