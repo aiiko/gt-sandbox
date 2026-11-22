@@ -131,17 +131,18 @@ Con un escenario que declara `atlas` (la casa) se abre la interfaz de partida. E
 - **Historia.** Presenta el retrato de la giantess junto a un globo con las entradas recientes. Cada `view.StoryEntry` trae su actor y su lugar, y la flecha turquesa marca las que se pueden enfocar. Un clic sigue al actor en la vista micro de su superficie (a la giantess, en macro) o, si el actor ya no está, abre la vista micro del lugar.
 - **Inspector resumido.** Al elegir una entidad muestra su nombre con su símbolo, su ubicación, la actividad en castellano («Va a desayunar», «Acarrea una migaja», «Descansa en la taza»), las necesidades y la orden disponible («Clic der.: ir allí», que manda `move_to`). Cada necesidad tiene barra y rótulo, y una necesidad baja lleva además «!» y la barra rayada, para leerse sin color.
 - **Tinies en macro.** El tiny no se dibuja en macro (salvo el marcador del elegido o seguido), así que cada tiny vivo lleva un punto turquesa y cada superficie con tinies, un globo con el marcador del tiny y cuántos hay (`ui.TinyBadge`, armado en `cmd/game/tinies.go`). El globo se pone coral si alguno está alarmado y sube si pisaría otro. Un clic en el globo abre la vista micro de esa superficie o, si no tiene, elige al primer tiny del grupo.
-- **Símbolos de expresión.** `Frame.Emote(id)` los calcula. Los que salen de eventos duran `view.CueTicks` (2 s) y el `Runner` los guarda en `Frame.Cues`: «!» cuando un tiny nota comida, la gota al subir a la mano y la vena si le interrumpen una oferta en uso. Los que salen del estado son la gota al caer o viajar en la mano levantada, «?» al explorar, «zzz» al descansar o dormir y la nota al mirar la TV. En micro se dibujan sobre cada tiny; en macro, sobre la giantess y lo elegido o seguido.
+- **Símbolos de expresión.** `Frame.Emote(id)` los calcula. Los que salen de eventos duran `view.CueTicks` (2 s) y el `Runner` los guarda en `Frame.Cues`: «!» cuando un tiny nota comida, la gota al subir a la mano y la vena si le interrumpen una oferta en uso. Los que salen del estado son la gota al caer o viajar en la mano levantada, «?» al explorar, «zzz» al descansar o dormir, la nota al mirar la TV y el ojo cuando la giantess observa a los tinies (ver [encuentros](encuentros.md#presentación-m33)). En micro se dibujan sobre cada tiny; en macro, sobre la giantess y lo elegido o seguido.
 - **Retrato.** `Frame.Expression(id)` elige la expresión según este orden:
   1. sorprendida si algo acaba de subir a su mano;
   2. contenta mientras come o mira la TV;
-  3. somnolienta o hambrienta si esa necesidad está por debajo de 300;
-  4. neutral en cualquier otro caso.
+  3. curiosa mientras observa, comparte migajas u ofrece la palma (no en el camino);
+  4. somnolienta o hambrienta si esa necesidad está por debajo de 300;
+  5. neutral en cualquier otro caso.
 
   El `Frame` publica las necesidades de cada agente (`needs`).
 - **Debug.** `F3` (o `-debug` al arrancar) superpone al arte las rutas, los portales y los contactos (`render.DrawOverlays`, con las capas `G P C R L`) y una línea con tick, hash y FPS. El visor de debug completo sigue siendo `go run ./cmd/game` sin `-art`.
 
-El retrato y los símbolos salen de `tools/art/ui.py`. El retrato es un busto de 48 × 48 px con cinco expresiones que comparten cabeza, pelo y ropa. Los símbolos son plantillas de 11 × 11 px con formas distintas.
+El retrato y los símbolos salen de `tools/art/ui.py`. El retrato es un busto de 48 × 48 px con seis expresiones que comparten cabeza, pelo y ropa. Los símbolos son plantillas de 11 × 11 px con formas distintas.
 
 Las pruebas son las siguientes:
 

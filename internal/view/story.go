@@ -7,11 +7,11 @@ import (
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
-	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/encounter"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
@@ -54,6 +54,18 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ids.Nil
 	case ai.Hesitated:
 		return ev.Entity, ev.Surface
+	case ai.ItemsLeft:
+		return ev.Entity, ids.Nil
+	case encounter.Observed:
+		return ev.Entity, ev.Surface
+	case encounter.Shared:
+		return ev.Entity, ev.Surface
+	case encounter.PalmOffered:
+		return ev.Entity, ev.Surface
+	case encounter.PalmWithdrawn:
+		return ev.Entity, ev.Surface
+	case encounter.Skipped:
+		return ev.Entity, ev.Surface
 	}
 	return ids.Nil, ids.Nil
 }
@@ -92,6 +104,8 @@ func storyText(r *ecs.Registry, event world.Event) string {
 			return fmt.Sprintf("%s se dispone a dormir.", name(ev.Entity))
 		case "snack_living":
 			return fmt.Sprintf("%s decide merendar en el living.", name(ev.Entity))
+		case "observe":
+			return fmt.Sprintf("%s se acerca a mirar a los tinies de %s.", name(ev.Entity), name(ev.Target))
 		}
 	case ai.ActionDone:
 		switch ev.What {
@@ -102,9 +116,37 @@ func storyText(r *ecs.Registry, event world.Event) string {
 		}
 	case ai.ItemDropped:
 		return fmt.Sprintf("%s deja %s en %s.", name(ev.Entity), name(ev.Item), name(ev.On))
-	case cmds.EntitySpawned:
-		if ev.Name == "crumb" {
-			return "Aparecen migajas."
+	case ai.ItemsLeft:
+		// las migajas de una comida; compartir lo cuenta encounter.Shared
+		switch ev.Motive {
+		case "breakfast":
+			return "Caen migajas del desayuno."
+		case "snack_living", "snack":
+			return "Caen migajas de la merienda."
+		}
+	case encounter.Observed:
+		if ev.Seen == 1 {
+			return fmt.Sprintf("%s se queda mirando a un tiny en %s.", name(ev.Entity), name(ev.Surface))
+		}
+		return fmt.Sprintf("%s se queda mirando a %d tinies en %s.", name(ev.Entity), ev.Seen, name(ev.Surface))
+	case encounter.Shared:
+		return fmt.Sprintf("%s deja unas migajas para los tinies de %s.", name(ev.Entity), name(ev.Surface))
+	case encounter.PalmOffered:
+		return fmt.Sprintf("%s ofrece la palma abierta a los tinies de %s.", name(ev.Entity), name(ev.Surface))
+	case encounter.PalmWithdrawn:
+		switch len(ev.Boarded) {
+		case 0:
+			return fmt.Sprintf("Nadie sube a la palma; %s la retira.", name(ev.Entity))
+		case 1:
+			return fmt.Sprintf("%s subió a la palma; %s la retira.", name(ev.Boarded[0]), name(ev.Entity))
+		}
+		return fmt.Sprintf("Subieron %d tinies a la palma; %s la retira.", len(ev.Boarded), name(ev.Entity))
+	case encounter.Skipped:
+		switch ev.Reason {
+		case "occupied":
+			return fmt.Sprintf("%s ve un tiny donde iba a apoyar la mano y no la apoya.", name(ev.Entity))
+		case "enough":
+			return fmt.Sprintf("%s ve que ya hay migajas en %s.", name(ev.Entity), name(ev.Surface))
 		}
 	case jobs.JobAssigned:
 		if j := ecs.Get[jobs.Job](r).Ptr(ev.Job); j != nil && j.Type == "haul" {

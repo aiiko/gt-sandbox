@@ -23,6 +23,7 @@ const (
 	EmoteNote     = "note"     // nota musical: se divierte
 	EmoteVein     = "vein"     // vena: le interrumpen una acción
 	EmoteSpirit   = "spirit"   // espíritu que sube: un tiny murió aplastado (sobre sus restos)
+	EmoteLook     = "look"     // ojo: la giantess se queda mirando a los tinies
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -33,6 +34,7 @@ const (
 	FaceHungry    = "hungry"
 	FaceSurprised = "surprised"
 	FaceSleepy    = "sleepy"
+	FaceCurious   = "curious"
 )
 
 // CueTicks es cuánto dura en pantalla una señal que sale de un evento.
@@ -150,13 +152,16 @@ func (f *Frame) Emote(id ids.ID) string {
 		return EmoteSleep
 	case activity == "use:watch" && using:
 		return EmoteNote
+	case activity == "observe" && step != "goto":
+		return EmoteLook
 	}
 	return ""
 }
 
 // Expression devuelve la cara del retrato de un agente: sorprendida si algo
-// acaba de subir a su mano, contenta mientras come o se divierte, somnolienta
-// o hambrienta según sus necesidades, y neutral si no.
+// acaba de subir a su mano, contenta mientras come o se divierte, curiosa en
+// un encuentro con los tinies, somnolienta o hambrienta según sus
+// necesidades, y neutral si no.
 func (f *Frame) Expression(id ids.ID) string {
 	s, ok := f.SpaceByID(id)
 	if !ok {
@@ -167,9 +172,13 @@ func (f *Frame) Expression(id ids.ID) string {
 	}
 	using := s.Step == "" || s.Step == "use"
 	switch s.Activity {
-	case "use:breakfast", "use:snack", "use:eat", "use:watch":
+	case "use:breakfast", "use:snack", "use:snack_living", "use:eat", "use:watch":
 		if using {
 			return FaceHappy
+		}
+	case "observe", "share", "offer_palm":
+		if s.Step != "goto" {
+			return FaceCurious
 		}
 	}
 	if v, ok := NeedOf(s.Needs, "energy"); ok && v < LowNeed {

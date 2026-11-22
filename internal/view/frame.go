@@ -19,6 +19,7 @@ import (
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/encounter"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/needs"
@@ -386,6 +387,9 @@ func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 		return "", ""
 	}
 	name, step := d.Action, ""
+	if encounter.IsAction(d.Action) && d.Stage == 0 && suffix == "" {
+		step = "goto" // va hacia la superficie
+	}
 	if os, ok := ecs.Get[ai.Offers](r).Get(d.Target); ok && d.Action == "use" && d.Offer < len(os) {
 		o := os[d.Offer]
 		name += ":" + o.Action

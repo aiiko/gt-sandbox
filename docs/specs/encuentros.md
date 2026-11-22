@@ -1,6 +1,6 @@
 # Spec: Rutinas y encuentros (M28–M33)
 
-Diseño y alcance del slice en la [propuesta](../propuesta.md#15-rutinas-y-encuentros-en-la-casa); hitos y justificación en el [plan](../plan-motor.md#hitos-pendientes).
+Diseño y alcance del slice en la [propuesta](../propuesta.md#15-rutinas-y-encuentros-en-la-casa); hitos y justificación en el [plan](../plan-motor.md#hitos-de-rutinas-y-encuentros-cerrados).
 
 ## Rutina variable (M28)
 
@@ -174,3 +174,35 @@ En la partida libre los tinies tienen `revisit` de 90 s, así que pueden volver 
 - `TestCuriosityRecovers`: la curiosidad por un Space visitado vuelve pasado `revisit`.
 
 Todas guardan y cargan cada 113 ticks.
+
+## Presentación (M33)
+
+- **Actividades.** La interfaz muestra «Mira a los tinies», «Comparte migajas» y «Ofrece la palma». Mientras va hacia la superficie, cada una se muestra con «Va a …»: `view` marca `goto` en el primer tramo de las acciones de encuentro, según `encounter.IsAction`.
+- **Símbolo.** Mientras observa, la giantess muestra el ojo (`view.EmoteLook`, `ui/emote_look.png`), con su sonido `emote_look`, que es menor: se omite a x4 y x16.
+- **Retrato.** Pasa a curioso (`view.FaceCurious`, `ui/portrait_curious.png`) mientras observa, comparte u ofrece la palma, salvo en el camino. La merienda en el living lo pone contento, como el desayuno.
+- **Historia.** Cuenta qué pasó, no qué podría pasar:
+
+| Evento | Texto |
+| --- | --- |
+| `action_started` `observe` | «Giantess se acerca a mirar a los tinies de escritorio.» |
+| `observed` | «… se queda mirando a N tinies en …» |
+| `items_left` (`breakfast`, `snack_living`) | «Caen migajas del desayuno.» o «… de la merienda.» Reemplaza a «Aparecen migajas.» |
+| `shared` | «… deja unas migajas para los tinies de …» |
+| `palm_offered` | «… ofrece la palma abierta a los tinies de …» |
+| `palm_withdrawn` | «Nadie sube a la palma; … la retira.», «Tiny 03 subió a la palma; …» o «Subieron N tinies a la palma; …» |
+| `encounter_skipped` `occupied` / `enough` | «… ve un tiny donde iba a apoyar la mano y no la apoya.» / «… ve que ya hay migajas en …» |
+
+- **Menú.** La nota de «Nueva partida» dice que la giantess cambia de rutina y que, si ve tinies, se detiene a mirarlos, les deja migajas o les ofrece la palma.
+- **Referencias.** Las capturas de referencia quedan idénticas. Su resumen cambia porque el atlas se reempaquetó y la historia de la mañana tiene menos entradas (una de migajas en vez de una por migaja). La mezcla de referencia no cambia.
+
+## Aceptación
+
+| Criterio de [15.3](../propuesta.md#153-criterios-de-aceptación) | Prueba |
+| --- | --- |
+| Semillas distintas, al menos dos órdenes de actividad; con snapshot, las mismas decisiones | `TestPartidaRoutineVaries`, `TestPartidaSnapshotContinuation` |
+| Se detiene a observar y no repite en la misma superficie hasta que vence el enfriamiento | `giantess_observes_desk`, `TestEncountersAcceptance` |
+| Comparte migajas rastreables hasta `stored`; con suficientes, no es opción | `TestSharedCrumbsAreTraceable`, `giantess_skips_sharing`, `TestNoSharingWithCrumbsInSight` |
+| Palma ofrecida: alguien sube, nadie sube, se cancela con la huella ocupada | `TestTinyBoardsOfferedPalm`, `TestNobodyBoardsOfferedPalm`, `TestOfferCanceledWhenOccupied` |
+| La historia distingue merienda de compartir y cuenta los desenlaces que ocurrieron | `TestEncounterStory` (en `view`) |
+
+`TestEncountersAcceptance` corre diez minutos de partida libre con cada semilla de referencia (1, 7, 21, 42 y 99). En cada partida verifica dos cosas: que ningún encuentro se repita en la misma superficie antes de su enfriamiento, y que ningún aplastamiento ocurra durante una palma ofrecida. Entre todas las semillas deben aparecer todos los desenlaces: mirar, compartir con alguna porción guardada, alguien que sube y una oferta sin pasajeros o cancelada.

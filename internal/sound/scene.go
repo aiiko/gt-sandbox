@@ -59,6 +59,7 @@ var minor = map[string]bool{
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
+	Emote + view.EmoteLook: true,
 }
 
 // floors da el sonido de los pasos de la giantess según la habitación.

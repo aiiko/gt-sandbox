@@ -127,6 +127,9 @@ var activities = map[string][2]string{
 	"explore":          {"Explora", "explorar"},
 	"flee":             {"Huye", "huir"},
 	"use:write":        {"Escribe", "escribir"},
+	"observe":          {"Mira a los tinies", "mirar a los tinies"},
+	"share":            {"Comparte migajas", "compartir migajas"},
+	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
 }
 
 // remainsCause dice qué aplastó a quien dejó unos restos.

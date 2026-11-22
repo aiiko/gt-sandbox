@@ -204,6 +204,11 @@ func check(w *world.World) error {
 	return err
 }
 
+// IsAction indica si name es una acción de encuentro.
+func IsAction(name string) bool {
+	return name == "observe" || name == "share" || name == "offer_palm"
+}
+
 // Actions son las acciones de encuentro, para ai.Install.
 func Actions() []ai.Action { return []ai.Action{Observe{}, Share{}, OfferPalm{}} }
 

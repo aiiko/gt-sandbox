@@ -339,6 +339,15 @@
         {"wave": "saw", "f0": 140, "dur": 0.22, "f1": 110, "attack": 0.005, "decay": 0.08, "gain": 0.16, "lp": 1200, "vibrato": [25, 1.5]}
       ]
     },
+    "emote_look": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "sine", "f0": 520, "f1": 560, "dur": 0.09, "attack": 0.004, "decay": 0.04, "gain": 0.2},
+        {"wave": "sine", "f0": 620, "f1": 660, "dur": 0.12, "delay": 0.11, "attack": 0.004, "decay": 0.05, "gain": 0.18}
+      ]
+    },
     "emote_spirit": {
       "category": "efectos",
       "voices": 2,

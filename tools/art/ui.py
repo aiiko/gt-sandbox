@@ -1,7 +1,7 @@
 """Piezas de la interfaz de partida: retrato de la giantess y símbolos de expresión.
 
-El retrato es un busto de 48 × 48 px con cinco expresiones (neutral, contenta,
-hambrienta, sorprendida, somnolienta) que comparten cabeza, pelo y ropa; solo
+El retrato es un busto de 48 × 48 px con seis expresiones (neutral, contenta,
+hambrienta, sorprendida, somnolienta, curiosa) que comparten cabeza, pelo y ropa; solo
 cambian cejas, ojos, boca y rubor. Los símbolos son plantillas de texto de
 11 × 11 px con contorno ciruela, uno por señal, de formas distintas para que se
 lean sin color.
@@ -217,6 +217,18 @@ def face(p, expr):
             p.put(x, y, MOUTH)
         p.put(23, 31, TONGUE)
         p.put(24, 31, TONGUE)
+    elif expr == 'curious':
+        # mira hacia un costado con una ceja alzada y media sonrisa
+        brows(p, 'normal')
+        for k in range(-2, 2):
+            if p.get(29 + k, 16)[:3] != HAIR:
+                p.put(29 + k, 16, HAIR_SH)
+            p.put(29 + k, 17, SKIN)
+        eye_open(p, 19, look=-1)
+        eye_open(p, 29, look=-1)
+        blush(p)
+        for x, y in ((22, 30), (23, 31), (24, 31), (25, 31), (26, 30)):
+            p.put(x, y, MOUTH)
     elif expr == 'sleepy':
         brows(p, 'normal')
         eye_sleepy(p, 19)
@@ -307,6 +319,18 @@ EMOTES = {
 .XooooXX...
 ..XXXX.....
 ...........''', CORAL, (0xFF, 0xC8, 0xD2), CORAL_SH),
+    'look': ('''
+...........
+...........
+...XXXXX...
+.XXhooooXX.
+XhooXXXoosX
+XooXXhXXosX
+XhooXXXoosX
+.XXoooossX.
+...XXXXX...
+...........
+...........''', IVORY, (0xFF, 0xFF, 0xFF), (0xD8, 0xC8, 0xB0)),
     'vein': ('''
 ...........
 .XXX...XXX.
@@ -334,7 +358,7 @@ def emote(name):
     return p.im
 
 
-EXPRESSIONS = ['neutral', 'happy', 'hungry', 'surprised', 'sleepy']
+EXPRESSIONS = ['neutral', 'happy', 'hungry', 'surprised', 'sleepy', 'curious']
 
 
 def main(save):

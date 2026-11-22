@@ -2,9 +2,11 @@
 
 **Una mañana en la casa** está cerrada en imagen y sonido. El [cierre visual](specs/presentacion.md#cierre-de-la-entrega-visual) reúne las capturas de referencia, la prueba de continuidad y las mediciones de rendimiento. La [spec de sonido](specs/sonido.md) cubre el sonido sintetizado y sin música (M20 a M22): la base de audio, los sonidos de la mañana con perspectiva por escala, el ambiente por habitación y la mezcla de referencia. El [escenario de referencia](specs/manana-en-la-casa.md) fija el recorrido con el que se integró cada hito.
 
+**Rutinas y encuentros en la casa** (M28 a M33) está cerrado: la [spec de encuentros](specs/encuentros.md) cubre la rutina variable de la partida libre, los avistamientos y las acciones de observar, compartir migajas y ofrecer la palma, con su [aceptación](specs/encuentros.md#aceptación). El análisis y la justificación de cada hito siguen abajo.
+
 **Un descuido en el escritorio** (M23 a M27) también está cerrado: la [spec de aplastamiento](specs/crush.md) cubre la muerte bajo la palma, la pisada o un objeto, la huida y el cuidado de la giantess. La partida libre del menú (`scenario.Randomize`) parte de ese escenario, con la colonia y el cuidado de la giantess sorteados.
 
-## Hitos pendientes
+## Hitos de Rutinas y encuentros (cerrados)
 
 El slice **Rutinas y encuentros en la casa** hace que la giantess varíe su rutina entre partidas y que lo que hacen los tinies le abra acciones nuevas: observar, compartir migajas y ofrecer la palma. El diseño está en la [propuesta](propuesta.md#15-rutinas-y-encuentros-en-la-casa). Cada hito abre o amplía una spec nueva, `docs/specs/encuentros.md`, y actualiza la [spec de IA](specs/ai.md) cuando cambia un contrato.
 
@@ -15,7 +17,7 @@ El slice **Rutinas y encuentros en la casa** hace que la giantess varíe su ruti
 | M30 Observar (hecho, [spec](specs/encuentros.md#observar-m30)) | Acción `observe`: ir a un punto de observación, esperar y seguir registrando. Enfriamiento por superficie | `giantess_observes_desk` (se detiene a mirar y no repite en el mismo lugar hasta que vence el enfriamiento) |
 | M31 Compartir migajas (hecho, [spec](specs/encuentros.md#compartir-migajas-m31)) | Acción `share` sobre la maquinaria de pasos de `use`: dejar una porción donde hay tinies buscando comida y pocas migajas a la vista. Evento con motivo para distinguir compartir de merendar | `giantess_shares_crumbs` (porción rastreable hasta `stored`), `giantess_skips_sharing` (con migajas suficientes no es opción) |
 | M32 Ofrecer la palma (hecho, [spec](specs/encuentros.md#ofrecer-la-palma-m32)) | Acción `offer_palm`: anuncio con la sombra, apoyo que se cancela si la huella sigue ocupada, espera con el portal de contacto abierto y retiro. Curiosidad que se recupera para volver a subir | `tiny_boards_offered_palm`, `nobody_boards_offered_palm`, `offer_canceled_when_occupied` |
-| M33 Presentación y cierre | Actividades, símbolos y retrato de los encuentros. Historia con motivo y desenlace. Sonidos y nota del menú. Aceptación de la propuesta sobre las semillas de referencia | Prueba de aceptación de [15.3](propuesta.md#153-criterios-de-aceptación). Capturas y mezcla de referencia sin cambios o actualizadas a propósito |
+| M33 Presentación y cierre (hecho, [spec](specs/encuentros.md#presentación-m33)) | Actividades, símbolos y retrato de los encuentros. Historia con motivo y desenlace. Sonidos y nota del menú. Aceptación de la propuesta sobre las semillas de referencia | Prueba de aceptación de [15.3](propuesta.md#153-criterios-de-aceptación). Capturas y mezcla de referencia sin cambios o actualizadas a propósito |
 
 ### Punto de partida: qué hay y qué falta
 

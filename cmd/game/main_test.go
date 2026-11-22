@@ -262,7 +262,7 @@ func TestMorningViewer(t *testing.T) {
 	}
 
 	pending := []string{
-		"preparar el desayuno", "deja la taza en escritorio", "Aparecen migajas",
+		"preparar el desayuno", "deja la taza en escritorio", "Caen migajas del desayuno",
 		"asigna un acarreo", "sube a la mano", "levanta la mano", "entra en living",
 		"baja de la mano", "explora mesa del living",
 	}

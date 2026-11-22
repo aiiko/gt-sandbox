@@ -147,7 +147,7 @@ func (m *menu) choose() menuAction {
 }
 
 var mainNotes = [...]string{
-	itemNewGame:   "Una colonia sorteada y frágil: la mano y los pies de la giantess pueden aplastar a los tinies. Ella puede ser distraída o cuidadosa, y arranca con hambre, cansada o aburrida.",
+	itemNewGame:   "Una colonia sorteada y frágil que la giantess puede aplastar. Ella cambia de rutina cada partida y, si ve tinies, se detiene a mirarlos, les deja migajas o les ofrece la palma.",
 	itemScenarios: "Historias armadas para ver momentos puntuales de la casa.",
 	itemDebug:     "Muestra los datos técnicos sobre el arte: grillas, rutas y estado de la simulación. En la partida, F3 los alterna.",
 	itemQuit:      "Cerrar el juego.",

@@ -1180,6 +1180,12 @@
             "frames": [
               "ui/portrait_sleepy.png"
             ]
+          },
+          "curious": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/portrait_curious.png"
+            ]
           }
         }
       },
@@ -1241,6 +1247,12 @@
             "frames": [
               "ui/emote_spirit.png"
             ]
+          },
+          "look": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_look.png"
+            ]
           }
         }
       },
@@ -1296,6 +1308,12 @@
             "frame_ticks": 1,
             "frames": [
               "ui/emote_spirit.png"
+            ]
+          },
+          "look": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_look.png"
             ]
           }
         }
