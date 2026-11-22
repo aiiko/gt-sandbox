@@ -1,5 +1,5 @@
 // Package crush implementa el aplastamiento: lo que baja sobre una superficie
-// (una palma, un objeto que cae) mata a los tinies frágiles que quedan debajo,
+// (una palma, un pie, un objeto que cae) mata a los tinies frágiles que quedan debajo,
 // salvo que estén a cubierto en un refugio que resista la fuerza.
 //
 // El aplastamiento ocurre en un instante: cuando un aplastador se apoya. No
@@ -106,7 +106,8 @@ func Install(w *world.World) error {
 	_, err2 := ecs.Register[Fragile](r, "fragile")
 	_, err3 := ecs.Register[Shelter](r, "shelter")
 	_, err4 := ecs.Register[Remains](r, "remains")
-	if err := errors.Join(err1, err2, err3, err4); err != nil {
+	_, err5 := ecs.Register[Stride](r, "stride")
+	if err := errors.Join(err1, err2, err3, err4, err5); err != nil {
 		return err
 	}
 	w.AddInvariant("crush", check)
@@ -114,6 +115,9 @@ func Install(w *world.World) error {
 		world.RegisterEvent[Crushed](w),
 		world.RegisterEvent[Sheltered](w),
 		world.RegisterEvent[Pressed](w),
+		world.RegisterEvent[Footstep](w),
+		// Después de nav.move: la pisada usa la posición ya avanzada.
+		w.Register(world.SystemSpec{Phase: clock.PhaseMove, Order: 1 << 19}, steps{}),
 		// Antes de space.falls y jobs.upkeep: lo que muere acá libera sus
 		// reservas y trabajos en el mismo tick.
 		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences, Order: -1}, resolve{}),

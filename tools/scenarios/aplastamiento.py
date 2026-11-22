@@ -1,4 +1,4 @@
-"""Genera los escenarios de aplastamiento de M23 en tests/scenarios/.
+"""Genera los escenarios de aplastamiento (M23 y M24) en tests/scenarios/.
 
 Parte de contact_opens_and_closes_route.json: dormitorio, escritorio a 75 cm,
 giantess y palma. La palma aplasta (crusher "hand", 2 cm de grosor) y los
@@ -190,6 +190,73 @@ def haul_requeued_after_death():
     return d
 
 
+STRIDE = {'length': 350000, 'side': 100000, 'foot_length': 240000, 'foot_width': 90000, 'force': 600}
+
+
+def walking(name, ticks, notes):
+    """La giantess camina 1 m hacia el este por el dormitorio, de (1 m, 1,5 m)
+    a (2 m, 1,5 m). Pisa cada 35 cm alternando pies a 10 cm del centro:
+    izquierdo en (1,35 m, 1,6 m) y derecho en (1,7 m, 1,4 m)."""
+    d = base(name, ticks, notes)
+    for e in d['entities']:
+        if e['ref'] == 'giantess':
+            e['spawn']['location']['pos'] = {'x': 1000000, 'y': 1500000, 'z': 0}
+            e['spawn']['components']['stride'] = dict(STRIDE)
+    d['commands'] += [{'tick': 1, 'kind': 'move_to',
+                       'data': {'entity': '$giantess', 'space': '$roomA', 'goal': {'x': 2000000, 'y': 1500000}}}]
+    return d
+
+
+def foot(ref, after, by):
+    return crushed(ref, after, by, source='foot', crusher='$giantess')
+
+
+def step_crushes_tiny_on_floor():
+    d = walking('step_crushes_tiny_on_floor', 80,
+                'La giantess cruza el dormitorio y pisa dos veces. Muere el tiny que está bajo el pie '
+                'izquierdo y también el que está en un nido en el suelo bajo el pie derecho: la caja de '
+                'fósforos resiste una mano (fuerza 10), no un pie (600). Sobrevive el que quedó en la línea '
+                'del pie derecho donde ese pie no se apoyó, y el que está a un costado de la marcha.')
+    d['entities'] += [
+        tiny('left_step', 'roomA', 1350000, 1600000),
+        {'ref': 'nest', 'object': 'nest', 'spawn': {
+            'name': 'nido', 'location': {'space': '$roomA', 'pos': {'x': 1700000, 'y': 1400000, 'z': 0}}}},
+        tiny('in_nest', 'roomA', 1705000, 1400000),
+        tiny('between', 'roomA', 1350000, 1400000),
+        tiny('aside', 'roomA', 1500000, 1800000),
+    ]
+    d['expect'] = [
+        {'event': 'footstep', 'match': {'entity': '$giantess', 'space': '$roomA'}, 'count': 2},
+        {'event': 'footstep', 'match': {'right': False, 'pos': {'x': 1350000, 'y': 1600000}}, 'count': 1},
+        {'event': 'footstep', 'match': {'right': True, 'pos': {'x': 1700000, 'y': 1400000}}, 'count': 1},
+        foot('left_step', 1, 20),
+        foot('in_nest', 1, 20),
+        {'no_event': 'sheltered'},
+        spared('between'), spared('aside'),
+        {'event': 'crushed', 'count': 2},
+    ] + COMMON
+    return d
+
+
+def step_spares_tiny_on_desk():
+    d = walking('step_spares_tiny_on_desk', 80,
+                'El escritorio está sobre la marcha de la giantess. Un tiny sobre el escritorio, justo '
+                'encima del pie izquierdo, no muere: la pisada solo alcanza el suelo. Otro en el suelo, '
+                'debajo del escritorio y del mismo pie, sí.')
+    # escritorio en (1,5 m, 1,0 m) con 60 × 40 cm: (1,35 m, 1,6 m) queda fuera. Se lo corre.
+    for e in d['entities']:
+        if e['ref'] == 'desk1':
+            e['spawn']['location']['pos'] = {'x': 1200000, 'y': 1400000, 'z': 750000}
+    d['entities'] += [tiny('on_desk', 'desk1', 150000, 200000), tiny('on_floor', 'roomA', 1350000, 1600000)]
+    d['expect'] = [
+        {'event': 'footstep', 'count': 2},
+        spared('on_desk'),
+        foot('on_floor', 1, 20),
+        {'at': '$on_desk', 'space': '$desk1', 'pos': {'x': 150000, 'y': 200000}, 'tol': 0},
+    ] + COMMON
+    return d
+
+
 # Tick en que el primer tiny está levantando la migaja (entre job_assigned y
 # el fin del paso de levantar, 1 s). Medido con simrun -events.
 PICKUP_TICK = 60
@@ -197,7 +264,8 @@ PICKUP_TICK = 60
 
 def main():
     for make in (palm_crushes_tiny, tiny_on_palm_is_safe, tiny_between_fingers_survives,
-                 nest_shelters_from_palm, cup_lands_on_tiny, haul_requeued_after_death):
+                 nest_shelters_from_palm, cup_lands_on_tiny, haul_requeued_after_death,
+                 step_crushes_tiny_on_floor, step_spares_tiny_on_desk):
         d = make()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as f:
             f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')

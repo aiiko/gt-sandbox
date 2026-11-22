@@ -14,7 +14,7 @@ import (
 
 // SnapshotSchema es la versión del formato de Snapshot. Incrementarlo ante
 // cambios incompatibles y agregar una migración en ReadSnapshot.
-const SnapshotSchema = 7
+const SnapshotSchema = 8
 
 // Snapshot es el estado completo y serializable de un mundo entre ticks.
 //

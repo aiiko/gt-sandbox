@@ -1020,7 +1020,7 @@ Tres reglas de diseño:
 | Pie | En cada pisada mientras la giantess camina por el suelo | Pisadas discretas derivadas del `mover` (componente `stride`) |
 | Objeto | Al aterrizar sobre una superficie | Aterrizaje en `space.falls` o `space.Land` (taza, migajas, objetos soltados) |
 
-Las pisadas son discretas. El sistema avanza un acumulador de distancia y, cada `stride.length`, estampa la huella del pie alternando izquierda y derecha, orientada según la dirección de la giantess. No se calcula un volumen barrido continuo. Una pisada solo afecta a lo que está en el suelo de la habitación: los tinies sobre el escritorio están en otro Space, a otra altura.
+Las pisadas son discretas. El sistema avanza un acumulador de distancia y, cada `stride.length`, estampa la huella del pie alternando izquierda y derecha, orientada según la dirección de la marcha. No se calcula un volumen barrido continuo. Una pisada solo afecta a lo que está en el suelo de la habitación: los tinies sobre el escritorio están en otro Space, a otra altura.
 
 **Víctimas.** El aplastamiento afecta a las entidades con `fragile {}` cuyo punto de apoyo cae dentro de la huella, en la misma superficie que la recibe. Lo que viaja sobre el aplastador queda excluido, porque está montado sobre él: el tiny que va en la palma no muere cuando ella la apoya.
 
@@ -1098,10 +1098,10 @@ Cada señal sale de un evento o del `Frame` y no modifica el mundo, igual que lo
 | Hito | Contenido | Cierre |
 | --- | --- | --- |
 | M23 Aplastamiento | `crusher`, `fragile`, `shelter` y `remains`. Palma y objetos que caen. Muerte con restos y propagación a trabajos y reservas | Escenarios `palm_crushes_tiny`, `tiny_on_palm_is_safe`, `tiny_between_fingers_survives`, `nest_shelters_from_palm`, `cup_lands_on_tiny` y `haul_requeued_after_death` |
-| M24 Pisadas | `stride` y pisadas discretas. Portal por la pata del escritorio en la casa, como en `floor_to_desk_by_leg`. Migajas que caen al tatami | `step_crushes_tiny_on_floor` y `step_spares_tiny_on_desk` |
+| M24 Pisadas | `stride` y pisadas discretas | `step_crushes_tiny_on_floor` y `step_spares_tiny_on_desk` |
 | M25 Amenaza y huida | Zonas de amenaza, sombra y vibración, `reflex`, `flee`, `near_miss` y `trapped` | `tiny_flees_shadow` (se salva desde el borde y muere en el centro), `tiny_drops_crumb_to_flee` y `tiny_flees_footsteps` |
 | M26 Cuidado y consecuencias | `care`, demora y atención de la giantess. `member_lost` y zonas `danger` | `careful_giantess_waits` (con `care` alto nadie muere y con 0 sí), `colony_avoids_danger` y `danger_expires` |
-| M27 Presentación | Sprites, sombras, historia, sonidos, capturas de referencia y escenario de cierre | Capturas en `docs/capturas/` y mezcla de referencia actualizada |
+| M27 Presentación | Sprites, sombras, historia, sonidos, capturas de referencia y escenario de cierre. La casa suma pisadas, el portal por la pata del escritorio al tatami, como en `floor_to_desk_by_leg`, y migajas que caen al piso | Capturas en `docs/capturas/` y mezcla de referencia actualizada |
 
 **Escenario de cierre: Un descuido en el escritorio.** Parte de la mañana y le suma `fragile` a los tinies, la pata del escritorio hacia el tatami y migajas que caen al piso. Se juega con dos variantes de la misma giantess: distraída (`care` 0) y cuidadosa (`care` 0,9). La aceptación pide, para las semillas de referencia:
 
