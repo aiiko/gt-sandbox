@@ -7,6 +7,7 @@ import (
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/view"
@@ -36,6 +37,9 @@ const (
 	TinyHop     = "tiny_hop"
 	TinyFall    = "tiny_fall"
 	TinyLand    = "tiny_land"
+	CrushPlaf   = "crush_plaf" // micro: la palma o un objeto aplasta a un tiny
+	CrushTum    = "crush_tum"  // micro: una pisada aplasta a un tiny
+	CrushFar    = "crush_far"  // macro: un golpe sordo donde murió un tiny
 	PassOpen    = "pass_open"
 	PassClose   = "pass_close"
 	Emote       = "emote_" // + el símbolo (view.Emote*)
@@ -308,6 +312,19 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 			c.add(TinyFall, p, 1)
 		case v.Visual(ev.Entity) == "crumb":
 			c.add(CrumbTick, p, 0.7)
+		}
+	case crush.Crushed:
+		at, ok := pos(ev.Remains, cur)
+		if !ok {
+			return
+		}
+		switch {
+		case !v.Micro:
+			c.add(CrushFar, at, 0.8)
+		case ev.Source == crush.SourceFoot:
+			c.addNear(CrushTum, at, 1)
+		default:
+			c.add(CrushPlaf, at, 1)
 		}
 	case colony.Stored:
 		if p, ok := pos(ev.Colony, cur); ok && v.Micro {

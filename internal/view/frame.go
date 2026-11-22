@@ -17,6 +17,7 @@ import (
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
@@ -84,6 +85,24 @@ type Thing struct {
 	// Step es el paso en curso de una oferta de varios pasos ("goto", "pose", "use").
 	Step  string `json:"step,omitempty"`
 	Needs []Need `json:"needs,omitempty"`
+	// Remains es la causa ("hand", "foot", "object") si son los restos de un
+	// aplastado. Alarmed: un agente percibió una amenaza y todavía no huye o
+	// huye; Trapped: no encontró salida.
+	Remains string `json:"remains,omitempty"`
+	Alarmed bool   `json:"alarmed,omitempty"`
+	Trapped bool   `json:"trapped,omitempty"`
+}
+
+// Footprint es la próxima pisada prevista de quien camina: centro en el
+// mundo, dirección de la marcha (en el mundo, sin normalizar) y tamaño del
+// pie. La presentación dibuja su sombra antes de que baje.
+type Footprint struct {
+	Walker ids.ID       `json:"walker"`
+	Space  ids.ID       `json:"space"`
+	Pos    units.Vec3   `json:"pos"`
+	Dir    units.Vec2   `json:"dir"`
+	Length units.Length `json:"length"`
+	Width  units.Length `json:"width"`
 }
 
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
@@ -137,6 +156,8 @@ type Frame struct {
 	Contacts []Contact  `json:"contacts"`
 	Falls    []Fall     `json:"falls,omitempty"`
 	Cues     []Cue      `json:"cues,omitempty"`
+	// Footprints son las pisadas previstas (sombra del pie).
+	Footprints []Footprint `json:"footprints,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -237,6 +258,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 
 	carried := ecs.Get[jobs.Carried](r)
 	spaces := ecs.Get[space.Space](r)
+	remains := ecs.Get[crush.Remains](r)
 	cs.Location.Each(func(id ids.ID, l *comp.Location) {
 		if spaces.Has(id) {
 			return
@@ -255,10 +277,23 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		if a, ok := agents.Get(id); ok {
 			t.Activity, t.Step = activity(r, a)
+			t.Alarmed = a.Reflex > 0 && a.Alarm > 0
+			t.Trapped = a.Trapped
+		}
+		if m, ok := remains.Get(id); ok {
+			t.Remains = m.Source
 		}
 		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)
 	})
+	for _, st := range crush.NextSteps(w) {
+		at, err1 := g.ToWorld(st.Space, units.V3(st.Center.X, st.Center.Y, 0))
+		ahead, err2 := g.ToWorld(st.Space, units.V3(st.Center.X+st.Dir.X, st.Center.Y+st.Dir.Y, 0))
+		if err1 == nil && err2 == nil {
+			f.Footprints = append(f.Footprints, Footprint{Walker: st.Entity, Space: st.Space, Pos: at,
+				Dir: ahead.Sub(at).XY(), Length: st.Length, Width: st.Width})
+		}
+	}
 
 	contacts := ecs.Get[attach.Contact](r)
 	ecs.Get[nav.Portal](r).Each(func(id ids.ID, p *nav.Portal) {

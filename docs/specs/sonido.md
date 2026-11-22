@@ -103,6 +103,7 @@ Compara el frame con el anterior que observó y devuelve los pedidos. La primera
 | Cae | `entity_fell` de un tiny | — | silbido que baja |
 | Aterriza | al terminar la animación de caída (`FallTicks`) | — | «puf» |
 | El nido guarda | `stored` | — | campanita |
+| Un tiny muere aplastado | `crushed` | golpe sordo lejano | «plaf» (palma u objeto) o «tum» (pisada, aunque quede fuera de cuadro) |
 | Aparece un símbolo | `Frame.Emote` cambia, si se dibuja | sí (giantess, elegido, seguido) | sí (todos los tinies) |
 
 **Fuera de cuadro.** Lo que no se ve no suena (`Locate` deja un margen del 10 %). La mano es enorme, así que sus sonidos, la señal de paso, el saltito y la taza se oyen cuando tocan la superficie enfocada aunque el punto quede fuera de cuadro. El panorama abre hasta 0,7 hacia cada lado.
@@ -139,10 +140,10 @@ En un bucle, lo que una capa deja pasado el final vuelve al principio, y las cap
 
 ## Mezcla de referencia
 
-[`docs/sonido/mezcla.json`](../sonido/mezcla.json) registra un recorrido de cámara por la mañana completa, con el escenario, la semilla, el tamaño y los ticks:
+[`docs/sonido/mezcla.json`](../sonido/mezcla.json) registra un recorrido de cámara por el escenario de cierre, «Un descuido en el escritorio» (la mañana con tinies frágiles), con el escenario, la semilla, el tamaño y los ticks:
 
 1. macro;
-2. micro del escritorio;
+2. siguiendo a Tiny 16, que muere bajo la palma (el seguimiento pasa a sus restos);
 3. siguiendo a Tiny 01 en el ascenso y el viaje;
 4. macro mientras la giantess va al living y enciende la TV;
 5. siguiendo a Tiny 01 al bajar en el living;
@@ -158,7 +159,7 @@ go run ./cmd/game -mix manana.wav    # renderiza los 80 s a un WAV estéreo
 
 - **Resumen:** cada pedido (frame, sonido, volumen, panorama) y los niveles del ambiente por segundo coinciden con el resumen y los conteos registrados. El resumen no depende de cómo suena cada WAV, solo de qué suena y cuándo. Si cambia a propósito, `go test ./cmd/game -run TestReferenceMix -update` lo reescribe.
 - **Continuidad:** el ambiente nunca queda en silencio después del primer fundido, y ningún bucle salta más de un paso de fundido entre dos frames.
-- **Momentos clave:** la mezcla incluye la mano, el ascenso, el descubrimiento, la puerta del living y la TV.
+- **Momentos clave:** la mezcla incluye la mano, el ascenso, el descubrimiento, la puerta del living y la TV, y además el «plaf», el espíritu y los sustos.
 
 ## Controles
 

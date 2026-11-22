@@ -1,4 +1,4 @@
-# Spec: Aplastamiento (M23–M26)
+# Spec: Aplastamiento (M23–M27)
 
 Paquete: `sim/crush`. Diseño y alcance del slice en la [propuesta](../propuesta.md#14-próximo-slice-un-descuido-en-el-escritorio).
 
@@ -93,6 +93,28 @@ Con los números de los escenarios (tiny a 1 mm por tick, `reflex` de 4 ticks), 
 
 La colonia se entera en el acto, como de lo que ven sus miembros. Mientras la zona está vigente, los agentes de su escala no eligen opciones cuyo objetivo (o el de su trabajo) esté adentro, `ai.WanderPoint` (forage y la vuelta de explore) no elige puntos adentro y `explore` no cruza portales que terminan adentro. Al vencer, `colony.mourn` la borra con `danger_expired {danger, space}`.
 
+## Presentación (M27)
+
+Todo sale del `Frame` y de los eventos; nada cambia el hash.
+
+- `view.Thing` suma `remains` (la causa: `hand`, `foot`, `object`), `alarmed` y `trapped`. `Frame.Footprints` trae la próxima pisada de cada uno que camina (`crush.NextSteps`): centro de mundo, dirección y tamaño del pie.
+- Señales: `alarmed` y `trapped` dan la gota, que además manda sobre cualquier otra mientras el tiny huye o está atrapado; `near_miss` da «!»; `hesitated` da «?» sobre la giantess; `crushed` deja el espíritu (`spirit`) sobre los restos durante `CueTicks` (`Frame.Fresh`). La giantess se sorprende en el retrato al notar unos restos. Huir no enoja: la acción interrumpida por `flee` no da la vena.
+- Historia: «Tiny 16 quedó bajo la palma en escritorio.» (o «bajo un pie», o el objeto), con los restos como actor, así que la entrada enfoca los restos; «se salvó por poco», «quedó atrapado sin salida» y «ve tinies bajo su mano y espera».
+- Arte: visual `remains` (silueta gris aplanada con la bufanda menta; en macro solo si está elegida) y `footprint` (óvalo de la próxima pisada en macro, tenue, mientras la giantess camina), emote `spirit`. El escenario asigna `remains` a los restos al publicarse `crushed`.
+- Seguir a un tiny que muere pasa el seguimiento (y la selección) a sus restos.
+- Sonido: `crush_plaf` (palma u objeto, micro), `crush_tum` (pisada, micro, se oye aunque quede fuera de cuadro), `crush_far` (macro), `emote_spirit`.
+
+## Escenario de cierre (M27)
+
+`python tools/scenarios/descuido.py` genera `un_descuido_en_el_escritorio` (giantess distraída, `care` 0) y `un_descuido_cuidadosa` (`care` 0,9) a partir de «Una mañana en la casa»:
+
+- los tinies son `fragile` y tienen `reflex` 4; la palma es `crusher` y la giantess tiene `stride`;
+- la pata del escritorio baja al tatami del dormitorio (portales `leg1_bottom` y `leg1_top`, como en `floor_to_desk_by_leg`);
+- las migajas del desayuno se desparraman en un anillo de 18 cm: una cae detrás del escritorio, al piso, y otra a la palma;
+- donde la giantess apoya la mano para desayunar quedaron tres galletas (no son `food`, así que la colonia no las acarrea) y tres tinies con hambre las mordisquean: dos bajo el medio de la palma y uno junto al borde.
+
+`TestUnDescuidoEnElEscritorio` corre las dos variantes con las semillas 1, 7, 21, 42 y 99, guardando y cargando cada 113 ticks, y verifica: invariantes en cada tick; ninguna palma aplasta a quien va sobre ella; cada muerte de un miembro da `member_lost`; ningún tiny elige como destino algo dentro de una zona de peligro vigente; al final nadie muerto tiene trabajos, reservas ni cargas. Con la distraída hay en cada semilla al menos un aplastado y al menos uno que se salva (por poco o huyendo) y ningún titubeo; con la cuidadosa hay al menos un titubeo y, en el total, menos muertes (hoy 12 contra 2).
+
 ## Invariantes
 
 - `crusher.pressing` está ordenado.
@@ -125,5 +147,6 @@ Generados por `python tools/scenarios/aplastamiento.py` a partir de `contact_ope
 - Cuidado: la giantess no corre la mano a otro lugar ni recuerda dónde aplastó; los restos no cambian su plan.
 - Zonas de peligro: se evita el destino, no el camino (una ruta puede cruzar una zona).
 - Huida: sin pánico colectivo ni aviso entre tinies; la salida no considera amenazas que todavía no existen.
-- Pisadas: sin volumen barrido, sin ritmo propio (dependen solo de la distancia) y sin pisar cuando la giantess gira en el lugar. La casa todavía no tiene `stride` ni ruta al suelo: llega con el escenario de cierre (M27).
+- Pisadas: sin volumen barrido, sin ritmo propio (dependen solo de la distancia) y sin pisar cuando la giantess gira en el lugar. La mañana original no tiene `stride`; solo el escenario de cierre.
+- Presentación: el tiny aplastado no tiene un cuadro propio (los restos aparecen con el espíritu); en macro no hay marca sobre el nido con los miembros perdidos; la sombra del pie solo se dibuja en macro, porque el suelo no tiene vista micro.
 - Fuerza de los objetos por masa y altura de caída: hoy es un valor fijo por objeto.

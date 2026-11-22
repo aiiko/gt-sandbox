@@ -10,6 +10,7 @@ import (
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/space"
@@ -45,6 +46,14 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.To
 	case ai.Explored:
 		return ev.Entity, ev.Space
+	case crush.Crushed:
+		return ev.Remains, ev.Space
+	case crush.NearMiss:
+		return ev.Entity, ids.Nil
+	case ai.Trapped:
+		return ev.Entity, ids.Nil
+	case ai.Hesitated:
+		return ev.Entity, ev.Surface
 	}
 	return ids.Nil, ids.Nil
 }
@@ -120,6 +129,22 @@ func storyText(r *ecs.Registry, event world.Event) string {
 		if !isHand(ev.Space) {
 			return fmt.Sprintf("%s explora %s.", name(ev.Entity), name(ev.Space))
 		}
+	case crush.Crushed:
+		by := map[string]string{"hand": "la palma", "foot": "un pie"}[ev.Source]
+		if by == "" {
+			by = name(ev.By)
+		}
+		return fmt.Sprintf("%s quedó bajo %s en %s.", name(ev.Remains), by, name(ev.Space))
+	case crush.NearMiss:
+		if ecs.Get[ai.Agent](r).Has(ev.Entity) {
+			return fmt.Sprintf("%s se salvó por poco.", name(ev.Entity))
+		}
+	case ai.Trapped:
+		return fmt.Sprintf("%s quedó atrapado sin salida.", name(ev.Entity))
+	case ai.Hesitated:
+		return fmt.Sprintf("%s ve tinies bajo su mano y espera.", name(ev.Entity))
+	case colony.MemberLost:
+		return ""
 	}
 	return ""
 }

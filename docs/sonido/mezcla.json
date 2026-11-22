@@ -1,5 +1,5 @@
 {
-  "scenario": "tests/scenarios/una_manana_en_la_casa.json",
+  "scenario": "tests/scenarios/un_descuido_en_el_escritorio.json",
   "seed": 42,
   "size": "960x540",
   "ticks": 1600,
@@ -10,7 +10,7 @@
     },
     {
       "tick": 170,
-      "micro": "escritorio"
+      "follow": "Tiny 16"
     },
     {
       "tick": 280,
@@ -30,19 +30,22 @@
     }
   ],
   "frames": 4801,
-  "digest": "9202294e9b13b3d9",
+  "digest": "a3a317108474634e",
   "counts": {
     "crumb_tick": 1,
+    "crush_plaf": 1,
     "cup_clink": 1,
     "door_fusuma": 1,
     "door_noren": 2,
-    "emote_discover": 1,
-    "emote_explore": 3,
+    "emote_discover": 2,
+    "emote_explore": 4,
     "emote_note": 1,
-    "emote_sweat": 4,
+    "emote_spirit": 1,
+    "emote_sweat": 7,
+    "emote_vein": 1,
     "fridge_close": 1,
     "fridge_open": 1,
-    "giantess_step_tatami": 7,
+    "giantess_step_tatami": 6,
     "giantess_step_tile": 7,
     "giantess_step_wood": 4,
     "hand_land": 1,
@@ -52,12 +55,11 @@
     "pass_close": 2,
     "pass_open": 1,
     "tiny_hop": 6,
-    "tiny_step_1": 142,
-    "tiny_step_2": 114,
-    "tiny_step_3": 131,
+    "tiny_step_1": 83,
+    "tiny_step_2": 75,
+    "tiny_step_3": 103,
     "tv_on": 1,
-    "ui_follow": 2,
-    "ui_select": 1,
+    "ui_follow": 4,
     "ui_zoom_in": 2,
     "ui_zoom_out": 2,
     "zabuton": 1

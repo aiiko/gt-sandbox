@@ -416,9 +416,40 @@ def pass_sign():
         save(c.im, f'pass/micro_{name}.png')
 
 
+def remains():
+    """Restos de un aplastado: silueta gris aplanada, con la bufanda menta."""
+    c = Canvas(18, 8)
+    c.ellipse(9, 5, 8, 2, hexc(INK, 70))
+    grey, grey_hi, grey_sh = '#A9A3BC', '#C9C4D8', '#7D7794'
+    c.ellipse(9, 4, 7, 2, INK)
+    c.ellipse(9, 4, 6, 1, grey)
+    c.hline(4, 3, 7, grey_hi)
+    c.ellipse(4, 4, 2, 2, INK)  # cabeza aplastada
+    c.ellipse(4, 4, 1, 1, grey)
+    c.px(3, 3, grey_hi)
+    c.hline(6, 5, 2, '#9CE0D6')  # bufanda
+    c.px(8, 6, '#9CE0D6')
+    c.px(13, 5, grey_sh)
+    c.px(15, 4, grey_sh)
+    save(c.im, 'remains/micro_idle.png')
+    m = Canvas(4, 2)
+    m.hline(0, 0, 4, INK)
+    m.hline(1, 1, 2, grey)
+    save(m.im, 'remains/macro_idle.png')
+
+
+def footprint():
+    """Sombra de la próxima pisada (macro): un óvalo; la presentación la aclara."""
+    c = Canvas(7, 4)
+    c.ellipse(3, 2, 3, 1, INK)
+    save(c.im, 'footprint/macro_idle.png')
+
+
 def main(src, base):
     global SRC, BASE
     SRC, BASE = src, base
+    remains()
+    footprint()
     tinies()
     tiny_shadow()
     giantess()

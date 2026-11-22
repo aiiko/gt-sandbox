@@ -36,9 +36,14 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/engine"
 	"gtsandbox/internal/sim/world"
 )
+
+// RemainsVisual es el identificador visual de los restos de un aplastado
+// (no salen de un spawn, así que no traen visual propio).
+const RemainsVisual = "remains"
 
 type Spec struct {
 	Name     string        `json:"name"`
@@ -289,6 +294,8 @@ func (in *Instance) recordVisual(event world.Event) {
 		}
 	case world.EntityDespawned:
 		delete(in.Visuals, e.Entity)
+	case crush.Crushed:
+		in.Visuals[e.Remains] = RemainsVisual
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
@@ -21,6 +22,7 @@ const (
 	EmoteSleep    = "sleep"    // «zzz»: descansa
 	EmoteNote     = "note"     // nota musical: se divierte
 	EmoteVein     = "vein"     // vena: le interrumpen una acción
+	EmoteSpirit   = "spirit"   // espíritu que sube: un tiny murió aplastado (sobre sus restos)
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -71,11 +73,34 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 			}
 		}
 	case ai.ActionInterrupted:
-		if ev.Action == "use" {
+		// huir no enoja: la gota de la alarma queda
+		if a, ok := agents.Get(ev.Entity); ev.Action == "use" && !(ok && a.Doing != nil && a.Doing.Action == ai.FleeAction) {
 			return []Cue{{Entity: ev.Entity, Kind: EmoteVein}}
+		}
+	case ai.Alarmed:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteSweat}}
+	case ai.Trapped:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteSweat}}
+	case crush.NearMiss:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteDiscover}}
+	case ai.Hesitated:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteExplore}}
+	case crush.Crushed:
+		return []Cue{{Entity: ev.Remains, Kind: EmoteSpirit}}
+	}
+	if n, ok := event.(ai.Noticed); ok && ecs.Get[crush.Remains](r).Has(n.Target) {
+		if a, ok := agents.Get(n.Entity); ok && a.Scale == "giantess" {
+			return []Cue{{Entity: n.Entity, Kind: cueSurprise}}
 		}
 	}
 	return nil
+}
+
+// Fresh indica si los restos de id son recientes: el espíritu todavía sube
+// y el tiny se dibuja aplanado, con sus colores.
+func (f *Frame) Fresh(id ids.ID) bool {
+	_, ok := f.cue(id, func(k string) bool { return k == EmoteSpirit })
+	return ok
 }
 
 // cue devuelve la señal más reciente de una entidad, si sigue vigente.
@@ -90,11 +115,15 @@ func (f *Frame) cue(id ids.ID, keep func(string) bool) (Cue, bool) {
 	return best, found
 }
 
-// Emote devuelve el símbolo que se dibuja sobre una entidad, o "". Una señal
-// reciente de un evento tiene prioridad; si no hay, sale del estado: caer o
-// viajar en una mano levantada (gota), explorar («?»), descansar («zzz»),
-// divertirse (nota).
+// Emote devuelve el símbolo que se dibuja sobre una entidad, o "". Huir o
+// estar atrapado da la gota antes que nada; si no, una señal reciente de un
+// evento tiene prioridad; si no hay, sale del estado: caer o viajar en una
+// mano levantada (gota), explorar («?»), descansar («zzz»), divertirse (nota).
 func (f *Frame) Emote(id ids.ID) string {
+	// el susto manda: mientras huye o está atrapado, la gota
+	if t, ok := f.ThingByID(id); ok && (t.Trapped || t.Activity == ai.FleeAction) {
+		return EmoteSweat
+	}
 	if c, ok := f.cue(id, func(k string) bool { return k != cueSurprise }); ok {
 		return c.Kind
 	}

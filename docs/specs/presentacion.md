@@ -112,6 +112,10 @@ go run ./cmd/game -art -scenario tests/scenarios/tiny_cae_de_la_palma.json -foll
 
 ![Tiny 01 recién bajado a la mesa, visto a través de la mano, y un tiny cayendo sobre el escritorio](img/m17-paso-caida.png)
 
+## Aplastamiento
+
+Ver `docs/specs/crush.md#presentación-m27`. Los restos usan el visual `remains`, la próxima pisada el `footprint` (en macro) y el espíritu el emote `spirit`. Si lo seguido muere, el seguimiento pasa a sus restos. La tarjeta muestra «Huye» y, para los restos, la causa («Aplastado por la palma»). Capturas `sombra-de-la-mano` y `aplastado` en `docs/capturas/`.
+
 ## Interfaz de partida
 
 Con un escenario que declara `atlas` (la casa), `-art` abre la interfaz de partida. El juego arma un `ui.HUD` a partir del `Frame` (`g.partida`), y `HUD.Draw` lo dibuja sobre el lienzo de 480 × 270 con paneles marfil de esquinas redondeadas, borde ciruela y la fuente pixel de 12 px de `bitmapfont`, que trae tildes y eñes.

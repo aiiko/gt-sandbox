@@ -140,3 +140,33 @@ type NearMiss struct {
 }
 
 func (NearMiss) Kind() string { return "near_miss" }
+
+// StepPreview es la próxima pisada prevista de quien camina, para la
+// presentación: centro y dirección de la marcha en su Space, y el tamaño del
+// pie.
+type StepPreview struct {
+	Entity ids.ID
+	Space  ids.ID
+	Center units.Vec2
+	Dir    units.Vec2
+	Length units.Length
+	Width  units.Length
+	Right  bool
+}
+
+// NextSteps devuelve las pisadas previstas de todos los que caminan.
+func NextSteps(w *world.World) []StepPreview {
+	r := w.ECS()
+	locs := comp.Of(r).Location
+	var out []StepPreview
+	ecs.Get[Stride](r).Each(func(e ids.ID, st *Stride) {
+		l, ok := locs.Get(e)
+		if !ok || r.Despawning(e) || st.Length <= 0 || st.Space != l.Space || st.Dir == (units.Vec2{}) {
+			return
+		}
+		f := next(e, *st, l.Space, l.Pos.XY())
+		out = append(out, StepPreview{Entity: e, Space: l.Space, Center: f.center, Dir: f.dir,
+			Length: st.FootLength, Width: st.FootWidth, Right: st.Right})
+	})
+	return out
+}

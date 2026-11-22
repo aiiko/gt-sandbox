@@ -89,6 +89,8 @@ type look struct {
 const (
 	// PassVisual es el visual de la señal de un paso entre superficies en contacto.
 	PassVisual = "pass"
+	// FootprintVisual es el visual de la sombra de la próxima pisada.
+	FootprintVisual = "footprint"
 	// ShadowReach es la altura a la que la sombra anticipada de una mano deja de verse.
 	ShadowReach = units.Meter
 	// fallLift limita cuántos píxeles cae un sprite en la animación de caída.
@@ -243,6 +245,16 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, names, true, image.Point{}, look{})
 	}
 	if scale == Macro {
+		// Sombra de la próxima pisada de quien camina: más oscura cuanto más
+		// cerca está de bajar.
+		for _, fp := range f.Footprints {
+			w, ok := f.SpaceByID(fp.Walker)
+			if !ok || w.Mover == nil || w.Mover.Status != "moving" || !inFocus(fp.Space) {
+				continue
+			}
+			add(fp.Walker, fp.Space, ids.Nil, fp.Pos, []string{"idle"}, false, image.Point{},
+				look{visual: FootprintVisual, ghost: true, layer: layerGround, alpha: 0.35})
+		}
 		for _, pt := range f.Portals {
 			if !pt.Dynamic && !pt.Disabled {
 				mid := units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z)

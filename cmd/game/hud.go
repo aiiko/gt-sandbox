@@ -123,7 +123,13 @@ var activities = map[string][2]string{
 	"forage":        {"Busca comida", "buscar comida"},
 	"work":          {"Trabaja para la colonia", "trabajar"},
 	"explore":       {"Explora", "explorar"},
+	"flee":          {"Huye", "huir"},
+	"use:write":     {"Escribe", "escribir"},
 }
+
+// remainsCause dice qué aplastó a quien dejó unos restos.
+var remainsCause = map[string]string{"hand": "Aplastado por la palma", "foot": "Aplastado por un pie",
+	"object": "Aplastado por un objeto"}
 
 // activityText resume en castellano lo que hace un agente.
 func activityText(activity, step string, carrying string) string {
@@ -152,11 +158,12 @@ var needLabels = map[string]string{"hunger": "Hambre", "energy": "Energía", "fu
 
 // card arma el inspector resumido de la entidad elegida.
 func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
-	var activity, step string
+	var activity, step, cause string
 	var needs []view.Need
 	hasMover := false
 	if t, ok := f.ThingByID(id); ok {
 		activity, step, needs, hasMover = t.Activity, t.Step, t.Needs, t.Mover != nil
+		cause = t.Remains
 	} else if s, ok := f.SpaceByID(id); ok {
 		activity, step, needs = s.Activity, s.Step, s.Needs
 	} else {
@@ -175,6 +182,9 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 		}
 	}
 	c.Activity = activityText(activity, step, carrying)
+	if cause != "" {
+		c.Activity = remainsCause[cause]
+	}
 	if carrying != "" && !strings.HasPrefix(c.Activity, "Acarrea") {
 		c.Carrying = "Lleva " + carrying
 	}

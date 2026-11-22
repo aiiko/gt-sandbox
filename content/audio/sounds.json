@@ -63,6 +63,30 @@
       "cooldown_ms": 30
     },
     {
+      "id": "crush_far",
+      "file": "crush_far.wav",
+      "category": "efectos",
+      "ms": 180,
+      "voices": 1,
+      "cooldown_ms": 300
+    },
+    {
+      "id": "crush_plaf",
+      "file": "crush_plaf.wav",
+      "category": "efectos",
+      "ms": 250,
+      "voices": 2,
+      "cooldown_ms": 150
+    },
+    {
+      "id": "crush_tum",
+      "file": "crush_tum.wav",
+      "category": "efectos",
+      "ms": 600,
+      "voices": 2,
+      "cooldown_ms": 150
+    },
+    {
       "id": "cup_clink",
       "file": "cup_clink.wav",
       "category": "efectos",
@@ -117,6 +141,14 @@
       "ms": 500,
       "voices": 1,
       "cooldown_ms": 400
+    },
+    {
+      "id": "emote_spirit",
+      "file": "emote_spirit.wav",
+      "category": "efectos",
+      "ms": 900,
+      "voices": 2,
+      "cooldown_ms": 200
     },
     {
       "id": "emote_sweat",

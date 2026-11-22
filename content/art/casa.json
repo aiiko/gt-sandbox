@@ -50,7 +50,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1969, 2887, 12, 8]
+              [2000, 2887, 12, 8]
             ]
           }
         }
@@ -63,13 +63,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [1982, 2887, 8, 5]
+              [2013, 2887, 8, 5]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1991, 2887, 8, 5]
+              [2022, 2887, 8, 5]
             ]
           }
         }
@@ -187,16 +187,22 @@
               [1923, 2887, 11, 11]
             ]
           },
-          "sweat": {
+          "spirit": {
             "frame_ticks": 1,
             "frames": [
               [1935, 2887, 11, 11]
             ]
           },
-          "vein": {
+          "sweat": {
             "frame_ticks": 1,
             "frames": [
               [1947, 2887, 11, 11]
+            ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              [1959, 2887, 11, 11]
             ]
           }
         }
@@ -234,19 +240,42 @@
               [1923, 2887, 11, 11]
             ]
           },
-          "sweat": {
+          "spirit": {
             "frame_ticks": 1,
             "frames": [
               [1935, 2887, 11, 11]
             ]
           },
-          "vein": {
+          "sweat": {
             "frame_ticks": 1,
             "frames": [
               [1947, 2887, 11, 11]
             ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              [1959, 2887, 11, 11]
+            ]
           }
         }
+      }
+    },
+    "footprint": {
+      "macro": {
+        "pivot": [3, 2],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [2031, 2887, 7, 4]
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
       }
     },
     "fridge": {
@@ -462,7 +491,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1959, 2887, 9, 10]
+              [1971, 2887, 9, 10]
             ]
           }
         }
@@ -656,6 +685,32 @@
         "hidden": true
       }
     },
+    "remains": {
+      "macro": {
+        "pivot": [2, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [12, 2926, 4, 2]
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [9, 5],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [1981, 2887, 18, 8]
+            ]
+          }
+        }
+      }
+    },
     "table": {
       "macro": {
         "pivot": [3, 17],
@@ -692,7 +747,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [2000, 2887, 5, 4]
+              [2039, 2887, 5, 4]
             ]
           }
         }
@@ -837,7 +892,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [2006, 2887, 5, 4]
+              [0, 2926, 5, 4]
             ]
           }
         }
@@ -982,7 +1037,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [2012, 2887, 5, 4]
+              [6, 2926, 5, 4]
             ]
           }
         }

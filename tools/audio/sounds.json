@@ -339,6 +339,45 @@
         {"wave": "saw", "f0": 140, "dur": 0.22, "f1": 110, "attack": 0.005, "decay": 0.08, "gain": 0.16, "lp": 1200, "vibrato": [25, 1.5]}
       ]
     },
+    "emote_spirit": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 200,
+      "layers": [
+        {"wave": "sine", "f0": 660, "dur": 0.9, "f1": 1320, "attack": 0.08, "decay": 0.3, "gain": 0.22, "vibrato": [5, 0.3]},
+        {"wave": "sine", "f0": 990, "dur": 0.7, "f1": 1980, "delay": 0.15, "attack": 0.08, "decay": 0.25, "gain": 0.12}
+      ]
+    },
+    "crush_plaf": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 150,
+      "volume": 0.9,
+      "layers": [
+        {"wave": "noise", "f0": 2400, "dur": 0.22, "f1": 300, "attack": 0.002, "decay": 0.06, "gain": 0.45, "lp": 1800},
+        {"wave": "sine", "f0": 220, "dur": 0.25, "f1": 70, "attack": 0.002, "decay": 0.07, "gain": 0.4},
+        {"wave": "triangle", "f0": 520, "dur": 0.08, "f1": 180, "delay": 0.01, "attack": 0.001, "decay": 0.02, "gain": 0.18}
+      ]
+    },
+    "crush_tum": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 150,
+      "volume": 0.95,
+      "layers": [
+        {"wave": "sine", "f0": 75, "dur": 0.6, "f1": 38, "attack": 0.003, "decay": 0.2, "gain": 0.65},
+        {"wave": "noise", "f0": 600, "dur": 0.35, "f1": 120, "attack": 0.003, "decay": 0.09, "gain": 0.35, "lp": 350}
+      ]
+    },
+    "crush_far": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 300,
+      "layers": [
+        {"wave": "sine", "f0": 150, "dur": 0.18, "f1": 90, "attack": 0.002, "decay": 0.05, "gain": 0.3},
+        {"wave": "noise", "f0": 900, "dur": 0.08, "attack": 0.001, "decay": 0.02, "gain": 0.12, "lp": 700}
+      ]
+    },
     "pass_open": {
       "category": "efectos",
       "voices": 1,

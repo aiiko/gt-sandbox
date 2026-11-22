@@ -82,6 +82,13 @@ func playMorningWithSnapshots(t *testing.T, in *scenario.Instance) {
 // el mundo restaurado debe dar el mismo log y el mismo hash.
 func playWithSnapshots(t *testing.T, in *scenario.Instance, every int) {
 	t.Helper()
+	playChecked(t, in, every, nil)
+}
+
+// playChecked es playWithSnapshots con un chequeo after al final de cada
+// tick del mundo original.
+func playChecked(t *testing.T, in *scenario.Instance, every int, after func()) {
+	t.Helper()
 	p, err := in.Player()
 	if err != nil {
 		t.Fatal(err)
@@ -92,6 +99,9 @@ func playWithSnapshots(t *testing.T, in *scenario.Instance, every int) {
 	for !p.Done() {
 		if err := p.Step(); err != nil {
 			t.Fatal(err)
+		}
+		if after != nil {
+			after()
 		}
 		log := in.World.CommandLog()
 		if restored != nil {

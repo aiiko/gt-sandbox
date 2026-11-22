@@ -128,6 +128,7 @@ func TestActivityText(t *testing.T) {
 		{"work", "", "una migaja", "Acarrea una migaja"},
 		{"work (suspendida)", "", "", "Trabaja para la colonia (en pausa)"},
 		{"explore", "", "", "Explora"},
+		{"flee", "", "", "Huye"},
 		{"dance", "", "", "dance"},
 	} {
 		if got := activityText(c.activity, c.step, c.carrying); got != c.want {

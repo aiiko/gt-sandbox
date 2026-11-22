@@ -8,7 +8,7 @@
       "seed": 42,
       "tick": 30,
       "view": "macro",
-      "digest": "349b228140a2450d"
+      "digest": "06eec3fdd1fe2887"
     },
     {
       "name": "escritorio",
@@ -22,7 +22,7 @@
         200,
         -90
       ],
-      "digest": "b7f33aae2579ac03"
+      "digest": "393d69b9e8b80a8b"
     },
     {
       "name": "mano-apoyada",
@@ -41,7 +41,7 @@
       "seed": 42,
       "tick": 530,
       "view": "macro",
-      "digest": "b5a159b52e55494a"
+      "digest": "41e2c4b6ab7db872"
     },
     {
       "name": "viaje",
@@ -72,6 +72,26 @@
       "view": "micro",
       "follow": "Tiny 01",
       "digest": "db6596a799adbb5b"
+    },
+    {
+      "name": "sombra-de-la-mano",
+      "description": "Un descuido en el escritorio: la mano baja sobre los que mordisquean galletas; huyen con la gota.",
+      "scenario": "tests/scenarios/un_descuido_en_el_escritorio.json",
+      "seed": 42,
+      "tick": 188,
+      "view": "micro",
+      "follow": "Tiny 16",
+      "digest": "8924b66ade6b3e37"
+    },
+    {
+      "name": "aplastado",
+      "description": "La mano ya apoyada: el seguimiento pasa a los restos de Tiny 16 y los espíritus suben.",
+      "scenario": "tests/scenarios/un_descuido_en_el_escritorio.json",
+      "seed": 42,
+      "tick": 200,
+      "view": "micro",
+      "follow": "Tiny 16",
+      "digest": "db707bdb372b3478"
     }
   ]
 }

@@ -36,6 +36,7 @@ import (
 	"gtsandbox/internal/render"
 	"gtsandbox/internal/scenario"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/engine"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sound"
@@ -252,10 +253,30 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 
 func (g *game) Layout(w, h int) (int, int) { return w, h }
 
+// remainsOf devuelve los restos de una entidad que murió aplastada, si el
+// evento sigue en el registro reciente.
+func remainsOf(events []view.Published, id ids.ID) ids.ID {
+	for i := len(events) - 1; i >= 0; i-- {
+		if c, ok := events[i].Event.(crush.Crushed); ok && c.Entity == id {
+			return c.Remains
+		}
+	}
+	return ids.Nil
+}
+
 // anchor usa la pose interpolada de la entidad seguida o del Space micro.
 // El seguimiento acompaña la traslación sin rotar con cada giro del actor.
 func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 	if !g.follow.IsNil() {
+		if _, ok := entityPose(f, g.follow); !ok {
+			// Si murió aplastado, el seguimiento pasa a sus restos.
+			if r := remainsOf(g.run.Events, g.follow); !r.IsNil() {
+				if g.sel == g.follow {
+					g.sel = r
+				}
+				g.follow = r
+			}
+		}
 		if p, ok := entityPose(f, g.follow); !ok {
 			g.stopFollowing()
 		} else if g.followsInView(f) {

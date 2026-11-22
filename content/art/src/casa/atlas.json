@@ -1196,6 +1196,12 @@
             "frames": [
               "ui/emote_discover.png"
             ]
+          },
+          "spirit": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_spirit.png"
+            ]
           }
         }
       },
@@ -1246,8 +1252,66 @@
             "frames": [
               "ui/emote_discover.png"
             ]
+          },
+          "spirit": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_spirit.png"
+            ]
           }
         }
+      }
+    },
+    "remains": {
+      "macro": {
+        "pivot": [
+          2,
+          1
+        ],
+        "selected_only": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "remains/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          9,
+          5
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "remains/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "footprint": {
+      "macro": {
+        "pivot": [
+          3,
+          2
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "footprint/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
       }
     }
   }

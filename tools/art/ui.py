@@ -235,6 +235,18 @@ def face(p, expr):
 
 # Símbolos: 'X' tinta, 'o' color principal, 'h' brillo, 's' sombra.
 EMOTES = {
+    'spirit': ('''
+...XXXXX...
+..XhooooX..
+.XhoXoXooX.
+.XooooooosX
+.XooXXXoosX
+.XoooooossX
+..XoooossX.
+..XooossX..
+...XossX...
+....XsX....
+.....X.....''', (0xF4, 0xF1, 0xFF), (0xFF, 0xFF, 0xFF), (0xC8, 0xB9, 0xF5)),
     'discover': ('''
 ....XXX....
 ....XoX....
