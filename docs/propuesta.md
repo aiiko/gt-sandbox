@@ -1016,7 +1016,7 @@ Tres reglas de diseño:
 
 | Fuente | Cuándo aplasta | Cómo se detecta |
 | --- | --- | --- |
-| Palma | Al apoyarse sobre un mueble | Contacto nuevo de `attach` (`contact.since` igual al tick actual) |
+| Palma | Al apoyarse sobre un mueble | Su cara de abajo queda a ras del mueble y no lo estaba en el tick anterior |
 | Pie | En cada pisada mientras la giantess camina por el suelo | Pisadas discretas derivadas del `mover` (componente `stride`) |
 | Objeto | Al aterrizar sobre una superficie | Aterrizaje en `space.falls` o `space.Land` (taza, migajas, objetos soltados) |
 
@@ -1067,9 +1067,9 @@ Así se cumple lo que pide la sección 5.1: la personalidad cambia con qué frec
 
 | Paquete | Cambio |
 | --- | --- |
-| `sim/crush` (nuevo) | Componentes `crusher`, `fragile`, `shelter`, `remains` y `stride`. Sistemas `crush.steps` (Move, después del `mover`), `crush.threats` (Topology, después de `attach.contacts`) y `crush.resolve` (Consequences, antes de `space.falls`). Eventos `crushed`, `near_miss` y `footstep`. Invariantes: ningún `fragile` queda dentro de una huella apoyada y los restos tienen nombre y causa |
-| `sim/space` | Exponer los aterrizajes del tick para que `crush.resolve` los lea. Hoy `land` solo emite el evento |
-| `sim/attach` | Sin cambios de contrato: `contact.since` alcanza para detectar el apoyo |
+| `sim/crush` (nuevo) | Componentes `crusher`, `fragile`, `shelter`, `remains` y `stride`. Sistemas `crush.steps` (Move, después del `mover`), `crush.threats` (Topology, después de `attach.contacts`) y `crush.resolve` (Consequences, antes de `space.falls`). Eventos `crushed`, `sheltered`, `pressed`, `near_miss` y `footstep`. Invariantes: el apoyo en curso está ordenado y los restos tienen nombre y causa |
+| `sim/space` | Sin cambios: `crush.resolve` lee los `entity_fell` del tick anterior |
+| `sim/attach` | Sin cambios: el apoyo de la palma se detecta por su altura, no por el contacto (cuya tolerancia es de 3 cm) |
 | `sim/nav` | `nav.NearestFree(space, from, avoid)` para elegir la celda de huida, sin cruzar portales |
 | `sim/ai` | Canales de sombra y vibración en `ai.look`. Reevaluación inmediata con `reflex`. Acción `flee`. Rasgo `care`, demora del paso `pose` y tirada de atención |
 | `sim/colony` | `member_lost`, zonas `danger` y filtro en `forage` y `WanderPoint` |

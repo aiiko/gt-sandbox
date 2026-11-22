@@ -15,6 +15,7 @@ import (
 	"gtsandbox/internal/sim/cmds"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/needs"
@@ -44,6 +45,9 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	}
 	if err := attach.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: attach: %w", err)
+	}
+	if err := crush.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: crush: %w", err)
 	}
 	if err := needs.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: needs: %w", err)

@@ -3,6 +3,7 @@
   "components": {
     "colony": {"radius": 30000},
     "portions": {"left": 0},
+    "shelter": {"strength": 50, "radius": 20000},
     "offers": [
       {"action": "eat", "scale": "tiny", "effects": [{"need": "hunger", "amount": 300}],
        "steps": [{"do": "goto"}, {"do": "use", "ticks": 60}, {"do": "consume", "keep": true}]},
