@@ -117,20 +117,22 @@ func panned(pcm []byte, pan float64) []byte {
 	return out
 }
 
-// enableSound carga los sonidos y abre el dispositivo de audio.
-func (g *game) enableSound(manifest string, volume float64, muted bool) error {
+// loadSound carga los sonidos y abre el dispositivo de audio. Se llama una
+// sola vez por proceso: Ebitengine admite un único contexto de audio, y el
+// mezclador se comparte entre el menú y las partidas.
+func loadSound(manifest string, volume float64, muted bool) (*sound.Mixer, error) {
 	lib, err := sound.Load(manifest)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	out, err := newEbitenAudio(lib)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	g.sound = sound.NewMixer(lib, out)
-	g.sound.Master = max(0, min(1, volume))
-	g.sound.SetMuted(muted)
-	return nil
+	m := sound.NewMixer(lib, out)
+	m.Master = max(0, min(1, volume))
+	m.SetMuted(muted)
+	return m, nil
 }
 
 // uiState resume lo que muestra la interfaz para los sonidos de interfaz.

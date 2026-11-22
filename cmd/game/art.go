@@ -295,6 +295,9 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		if a.debug {
 			g.drawDebug(dst, f, proj, a.layout.Top+1)
 		}
+		if g.confirmExit {
+			drawExitPrompt(dst)
+		}
 		return
 	}
 	ink := color.NRGBA{R: 25, G: 30, B: 38, A: 255}
@@ -305,4 +308,14 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		ebitenutil.DebugPrintAt(dst, name, 250, 4)
 	}
 	ebitenutil.DebugPrintAt(dst, "Tab  Escala     Clic  Elegir     T  Seguir     F  Centrar", 10, render.CanvasHeight-19)
+}
+
+// drawExitPrompt pregunta, sobre la partida en pausa, si volver al menú.
+func drawExitPrompt(dst *ebiten.Image) {
+	const title, keys = "¿Volver al menú principal?", "Enter  Volver      Esc  Seguir jugando"
+	w := max(ui.TextWidth(title), ui.TextWidth(keys)) + 20
+	x, y := (render.CanvasWidth-w)/2, render.CanvasHeight/2-20
+	ui.Box(dst, image.Rect(x, y, x+w, y+40), ui.Ivory)
+	ui.DrawText(dst, title, (render.CanvasWidth-ui.TextWidth(title))/2, y+5, ui.Plum)
+	ui.DrawText(dst, keys, (render.CanvasWidth-ui.TextWidth(keys))/2, y+21, ui.PlumSoft)
 }

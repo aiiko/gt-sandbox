@@ -1,6 +1,6 @@
 # Base de presentación
 
-`go run ./cmd/game -art` abre «Una mañana en la casa» en la interfaz de partida. La prueba de arte del escritorio de M12 se abre con `-scenario tests/scenarios/muestra_pixel_art.json`. Ambas usan el mismo runner, simulación y cámara del visor. El escenario asigna un `visual` por entidad. El código de presentación vincula ese identificador al ID generacional que resolvió el escenario. El vínculo queda fuera del estado de simulación, el hash y los snapshots.
+`go run ./cmd/game` abre el menú principal (ver [visor](visor.md#menú-principal-y-modos)); con `-scenario tests/scenarios/una_manana_en_la_casa.json` (o con solo `-follow`, `-micro` o `-shot`) abre «Una mañana en la casa» directo en la interfaz de partida. La prueba de arte del escritorio de M12 se abre con `-scenario tests/scenarios/muestra_pixel_art.json`. Ambas usan el mismo runner, simulación y cámara del visor. El escenario asigna un `visual` por entidad. El código de presentación vincula ese identificador al ID generacional que resolvió el escenario. El vínculo queda fuera del estado de simulación, el hash y los snapshots.
 
 La presentación dibuja en un lienzo de 480 × 270 píxeles. Usa el mayor múltiplo entero disponible en la pantalla final y centra el lienzo con bandas. El cursor usa la transformación inversa de ese mismo rectángulo. Las bandas quedan fuera de la escena.
 
@@ -42,7 +42,7 @@ Los sprites que ofrecen clips `idle_north` o `walk_north` y sus variantes para l
 La casa se abre con este comando. Hacé clic en la giantess para elegirla y pulsá `T` para seguirla. `F` recupera el encuadre completo. `Espacio` pausa y `1/2/3` elige la velocidad.
 
 ```sh
-go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json
+go run ./cmd/game -scenario tests/scenarios/una_manana_en_la_casa.json
 ```
 
 La casa sigue la [ambientación japonesa](../propuesta.md#ambientación): dormitorio de tatami con futón, cocina con arrocera y pava, living de madera con zabuton y alfombra de seigaiha. El paso entre cocina y dormitorio usa el visual `door_noren` y el del living, `door` (fusuma). En micro, el labio del nido lleva la etiqueta de la caja de fósforos y la mesa del living, un posavasos de bambú.
@@ -106,8 +106,8 @@ La grilla de la palma en el escenario sale de `hand.grid_rows()`: una celda de 1
 `TestFallIsAnimatedAndFollowed` cubre la caída en su escenario.
 
 ```sh
-go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json -follow "Tiny 01"
-go run ./cmd/game -art -scenario tests/scenarios/tiny_cae_de_la_palma.json -follow "Tiny 01"
+go run ./cmd/game -scenario tests/scenarios/una_manana_en_la_casa.json -follow "Tiny 01"
+go run ./cmd/game -scenario tests/scenarios/tiny_cae_de_la_palma.json -follow "Tiny 01"
 ```
 
 ![Sombra de la mano suspendida sobre la mesa del living antes de apoyarse](img/m17-sombra.png)
@@ -150,9 +150,9 @@ Las pruebas son las siguientes:
 - `TestPresentationMatchesHeadless` (ver [Cierre](#cierre-de-la-entrega-visual)) cubre una sesión completa: sigue a un tiny, enfoca desde la historia, activa el debug y vuelve al encuadre general sin cambiar el hash.
 
 ```sh
-go run ./cmd/game -art                      # la mañana en la interfaz de partida
-go run ./cmd/game -art -follow "Tiny 01"    # siguiendo a un tiny desde el arranque
-go run ./cmd/game -art -debug               # con rutas, portales y contactos
+go run ./cmd/game -new-game -seed 7         # una partida al azar, sin pasar por el menú
+go run ./cmd/game -follow "Tiny 01"         # la mañana, siguiendo a un tiny desde el arranque
+go run ./cmd/game -debug                    # el menú con el modo debug encendido
 ```
 
 ![La mañana en macro: la giantess mira la TV con su nota, retrato contento e historia](img/m18-partida.png)
@@ -232,7 +232,7 @@ El atlas puede declarar una variante `hidden: true` o limitar un marcador a las 
 El escenario registra el identificador `visual` de `entity_spawned` y lo asocia al ID publicado. La taza y las migajas lo declaran en sus definiciones de contenido, así que conservan su apariencia al pasar de la mano a una superficie o durante un acarreo. Al destruirse se elimina la asociación. La prueba verifica que la taza del desayuno se selecciona en ambas vistas con el mismo ID y que cambiar de escala conserva el seguimiento y el hash.
 
 ```sh
-go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json -micro escritorio
+go run ./cmd/game -scenario tests/scenarios/una_manana_en_la_casa.json -micro escritorio
 ```
 
 | Escritorio | Mesa del living |

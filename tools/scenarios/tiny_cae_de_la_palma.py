@@ -21,7 +21,7 @@ NAMES = {'roomA': 'dormitorio', 'roomB': 'living', 'desk1': 'escritorio', 'desk2
 
 def main():
     d = json.load(open(SRC, encoding='utf-8'))
-    d['name'] = 'tiny_cae_de_la_palma'
+    d['name'] = 'Un tiny cae de la palma'
     d['ticks'] = 40
     d['atlas'] = '../../content/art/casa.json'
     d['notes'] = ('El tiny está en la palma levantada sobre el escritorio y un comando lo deja fuera del borde: '

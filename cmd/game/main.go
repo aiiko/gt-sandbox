@@ -1,18 +1,25 @@
-// game es el visor de debug (M6): corre la simulación a 20 TPS, la dibuja a
-// 60 FPS interpolando, y permite inspeccionar y mandar comandos.
+// game es el juego: sin flags abre el menú principal (nueva partida al azar
+// o un escenario de la casa) y todo se dibuja en pixel art. Con -scenario,
+// -load, -crowd o -new-game abre eso directamente: en pixel art si el mundo
+// tiene visuales; si no (o con -debug-view), en el visor de debug, que corre
+// la simulación a 20 TPS, la dibuja a 60 FPS interpolando y permite
+// inspeccionar y mandar comandos.
 //
-//	go run ./cmd/game                                   # Una mañana en la casa
-//	go run ./cmd/game -art                              # prueba de pixel art
-//	go run ./cmd/game -art -scenario tests/scenarios/una_manana_en_la_casa.json
+//	go run ./cmd/game                                   # menú principal
+//	go run ./cmd/game -new-game -seed 7                 # partida al azar
+//	go run ./cmd/game -scenario tests/scenarios/una_manana_en_la_casa.json
+//	go run ./cmd/game -debug-view                       # la casa en el visor de debug
 //	go run ./cmd/game -scenario tests/scenarios/floor_to_desk_by_leg.json
 //	go run ./cmd/game -crowd 200 -seed 7
 //	go run ./cmd/game -load s.json
 //
-// Controles: Espacio pausa | N paso | 1/2/3 velocidad x1/x4/x16 | Tab vista
-// micro del Space elegido / macro | F encuadrar | rueda zoom | arrastrar o
-// flechas para mover | click elegir | click derecho mover lo elegido ·
-// T seguir | H historia/eventos | RePág/AvPág recorrer la historia |
-// G/P/C/R/L overlays (grillas, portales, contactos, rutas, nombres) | Esc soltar.
+// Controles del visor de debug: Espacio pausa | N paso | 1/2/3 velocidad
+// x1/x4/x16 | Tab vista micro del Space elegido / macro | F encuadrar | rueda
+// zoom | arrastrar o flechas para mover | click elegir | click derecho mover
+// lo elegido · T seguir | H historia/eventos | RePág/AvPág recorrer la
+// historia | G/P/C/R/L overlays (grillas, portales, contactos, rutas,
+// nombres) | Esc soltar. En pixel art, F3 superpone los overlays técnicos y,
+// en una partida del menú, Esc sin nada elegido pregunta si volver al menú.
 package main
 
 import (
@@ -48,18 +55,20 @@ const morningScenario = "tests/scenarios/una_manana_en_la_casa.json"
 
 func main() {
 	scen := flag.String("scenario", "", "escenario JSON a reproducir")
+	newRandom := flag.Bool("new-game", false, "empezar una partida al azar (con -seed, repetible)")
 	crowd := flag.Int("crowd", 0, "en vez de un escenario, n tinies caminando por un escritorio")
-	seed := flag.Uint64("seed", 1, "semilla para -crowd")
+	seed := flag.Uint64("seed", 0, "semilla para -crowd (por defecto 1) y -new-game (por defecto, al azar)")
 	load := flag.String("load", "", "en vez de un escenario, continuar un snapshot JSON")
 	shot := flag.String("shot", "", "guardar una captura PNG al llegar a -shot-tick y salir")
 	micro := flag.String("micro", "", "empezar en la vista micro del Space con este nombre")
-	follow := flag.String("follow", "", "empezar siguiendo a la entidad con este nombre (en -art, en su vista micro)")
+	follow := flag.String("follow", "", "empezar siguiendo a la entidad con este nombre (en pixel art, en su vista micro)")
 	shotTick := flag.Int("shot-tick", 0, "tick del escenario (o del mundo) para -shot; corre a x16")
 	story := flag.Bool("story", false, "iniciar en modo historia")
-	art := flag.Bool("art", false, "dibujar el escenario en pixel art (por defecto, la muestra)")
-	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para -art")
-	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en -art")
-	debugArt := flag.Bool("debug", false, "en -art, arrancar con los overlays técnicos (F3)")
+	flag.Bool("art", true, "obsoleto: el pixel art es el modo por defecto (ver -debug-view)")
+	debugView := flag.Bool("debug-view", false, "usar el visor de debug en vez del pixel art")
+	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para el pixel art")
+	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en pixel art")
+	debugArt := flag.Bool("debug", false, "arrancar con los overlays técnicos (F3) sobre el pixel art")
 	pan := flag.String("pan", "", "desplazar el encuadre inicial dx,dy píxeles del lienzo (capturas)")
 	bench := flag.Duration("bench", 0, "medir simulación y dibujo durante esta duración (a x4, sin vsync) y salir")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
@@ -68,21 +77,59 @@ func main() {
 	mix := flag.String("mix", "", "renderizar la mezcla de referencia ("+mixManifest+") a este WAV y salir")
 	flag.Parse()
 
+	fail := func(err error) {
+		fmt.Fprintln(os.Stderr, "game:", err)
+		os.Exit(1)
+	}
 	if *mix != "" {
 		if err := renderMix(*mix); err != nil {
-			fmt.Fprintln(os.Stderr, "game:", err)
-			os.Exit(1)
+			fail(err)
 		}
+		return
+	}
+	width, height := render.CanvasWidth*2, render.CanvasHeight*2
+	if *size != "" {
+		widthText, heightText, _ := strings.Cut(*size, "x")
+		w, widthErr := strconv.Atoi(widthText)
+		h, heightErr := strconv.Atoi(heightText)
+		if widthErr != nil || heightErr != nil || w < 1 || h < 1 {
+			fail(fmt.Errorf("-size debe ser un tamaño positivo como 960x540"))
+		}
+		width, height = w, h
+	}
+	direct := *scen != "" || *load != "" || *crowd > 0 || *newRandom || *debugView ||
+		*shot != "" || *bench > 0 || *micro != "" || *follow != "" || *pan != ""
+
+	if !direct {
+		a, err := newApp(*debugArt, *reducedMotion)
+		if err != nil {
+			fail(err)
+		}
+		mixer, err := loadSound(audioManifest, *volume, *mute)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "game: sin sonido:", err)
+		}
+		a.sound = mixer
+		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
+		run(a, appTitle, width, height, fail)
 		return
 	}
 
 	if *scen == "" {
 		*scen = morningScenario
 	}
-	g, err := newGame(*scen, *crowd, *seed, *load)
+	var g *game
+	var err error
+	if *newRandom {
+		if *seed == 0 {
+			*seed = randomSeed()
+		}
+		g, err = newRandomGame(*seed)
+	} else {
+		g, err = newGame(*scen, *crowd, max(*seed, 1), *load)
+	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "game:", err)
-		os.Exit(1)
+		fail(err)
 	}
 	g.micro, g.followName = *micro, *follow
 	if *pan != "" {
@@ -90,12 +137,11 @@ func main() {
 		x, errX := strconv.ParseFloat(dx, 64)
 		y, errY := strconv.ParseFloat(dy, 64)
 		if errX != nil || errY != nil {
-			fmt.Fprintln(os.Stderr, "game: -pan debe ser dx,dy, por ejemplo 200,-90")
-			os.Exit(1)
+			fail(fmt.Errorf("-pan debe ser dx,dy, por ejemplo 200,-90"))
 		}
 		g.pan = [2]float64{x, y}
 	}
-	g.story = *scen == morningScenario && *load == "" && *crowd <= 0
+	g.story = (*scen == morningScenario || *newRandom) && *load == "" && *crowd <= 0
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "story" {
 			g.story = *story
@@ -111,38 +157,33 @@ func main() {
 		g.run.Speed = view.Speeds[len(view.Speeds)-1]
 	}
 	var app ebiten.Game = g
-	width, height := 1280, 800
-	if *art {
+	if !*debugView && len(g.visuals) > 0 {
 		if err := g.enableArt(*atlas); err != nil {
-			fmt.Fprintln(os.Stderr, "game:", err)
-			os.Exit(1)
+			fail(err)
 		}
 		g.art.cut, g.art.debug = *reducedMotion, *debugArt
 		app = pixelGame{g}
-		width, height = render.CanvasWidth*2, render.CanvasHeight*2
 		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
-	}
-	if *size != "" {
-		widthText, heightText, _ := strings.Cut(*size, "x")
-		w, widthErr := strconv.Atoi(widthText)
-		h, heightErr := strconv.Atoi(heightText)
-		if widthErr != nil || heightErr != nil || w < 1 || h < 1 {
-			fmt.Fprintln(os.Stderr, "game: -size debe ser un tamaño positivo como 960x540")
-			os.Exit(1)
-		}
-		width, height = w, h
+	} else if *size == "" {
+		width, height = 1280, 800
 	}
 	if *shot == "" && *bench == 0 {
-		if err := g.enableSound(audioManifest, *volume, *mute); err != nil {
+		mixer, err := loadSound(audioManifest, *volume, *mute)
+		if err != nil {
 			fmt.Fprintln(os.Stderr, "game: sin sonido:", err)
 		}
+		g.sound = mixer
 	}
-	ebiten.SetWindowTitle("gt-sandbox | " + g.title)
+	run(app, appTitle+" | "+g.title, width, height, fail)
+}
+
+// run abre la ventana y corre el juego hasta que termina.
+func run(app ebiten.Game, title string, width, height int, fail func(error)) {
+	ebiten.SetWindowTitle(title)
 	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	if err := ebiten.RunGame(app); err != nil {
-		fmt.Fprintln(os.Stderr, "game:", err)
-		os.Exit(1)
+		fail(err)
 	}
 }
 
@@ -180,6 +221,11 @@ type game struct {
 	shotTick   clock.Tick
 	shotDone   bool
 	shotErr    error
+
+	fromMenu    bool // abierta desde el menú: Esc ofrece volver
+	confirmExit bool // preguntando si volver al menú
+	wasPaused   bool // pausa de antes de preguntar
+	toMenu      bool // el jugador eligió volver al menú
 }
 
 func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
@@ -211,42 +257,50 @@ func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
 		if err != nil {
 			return nil, err
 		}
-		in, err := scenario.Build(spec)
-		if err != nil {
-			return nil, err
+		return newScenarioGame(spec, scen)
+	}
+	return g, nil
+}
+
+// newScenarioGame arma el visor de un escenario ya leído; path es su archivo,
+// contra el que se resuelve el atlas.
+func newScenarioGame(spec *scenario.Spec, path string) (*game, error) {
+	g := &game{layers: render.AllLayers, cam: camera.Camera{Zoom: 1e-3}}
+	in, err := scenario.Build(spec)
+	if err != nil {
+		return nil, err
+	}
+	p, err := in.Player()
+	if err != nil {
+		return nil, err
+	}
+	g.title = spec.Name
+	g.visuals = in.Visuals
+	g.artDesk = in.Refs["desk"]
+	if g.artDesk.IsNil() {
+		g.artDesk = in.Refs["desk1"]
+	}
+	if spec.Atlas != "" {
+		g.artAtlas = filepath.Join(filepath.Dir(path), spec.Atlas)
+	}
+	g.run = view.NewRunner(in.World, p.Step)
+	var verdict string
+	g.status = func() string {
+		if !p.Done() {
+			return fmt.Sprintf("escenario %d/%d", p.Tick(), spec.Ticks)
 		}
-		p, err := in.Player()
-		if err != nil {
-			return nil, err
-		}
-		g.title = spec.Name
-		g.visuals = in.Visuals
-		g.artDesk = in.Refs["desk"]
-		if g.artDesk.IsNil() {
-			g.artDesk = in.Refs["desk1"]
-		}
-		if spec.Atlas != "" {
-			g.artAtlas = filepath.Join(filepath.Dir(scen), spec.Atlas)
-		}
-		g.run = view.NewRunner(in.World, p.Step)
-		var verdict string
-		g.status = func() string {
-			if !p.Done() {
-				return fmt.Sprintf("escenario %d/%d", p.Tick(), spec.Ticks)
+		if verdict == "" {
+			fails, err := in.Check()
+			switch {
+			case err != nil:
+				verdict = "error: " + err.Error()
+			case len(fails) > 0:
+				verdict = fmt.Sprintf("%d expectativas FALLAN: %s", len(fails), fails[0])
+			default:
+				verdict = fmt.Sprintf("%d expectativas OK", len(spec.Expect))
 			}
-			if verdict == "" {
-				fails, err := in.Check()
-				switch {
-				case err != nil:
-					verdict = "error: " + err.Error()
-				case len(fails) > 0:
-					verdict = fmt.Sprintf("%d expectativas FALLAN: %s", len(fails), fails[0])
-				default:
-					verdict = fmt.Sprintf("%d expectativas OK", len(spec.Expect))
-				}
-			}
-			return fmt.Sprintf("escenario %d/%d terminado | %s", p.Tick(), spec.Ticks, verdict)
 		}
+		return fmt.Sprintf("escenario %d/%d terminado | %s", p.Tick(), spec.Ticks, verdict)
 	}
 	return g, nil
 }
@@ -397,6 +451,11 @@ func (g *game) Update() error {
 	if a := g.art; a != nil && !a.pendingFade {
 		a.fade = max(0, a.fade-dt)
 	}
+	if g.confirmExit {
+		g.exitPrompt()
+		g.observeSound()
+		return nil
+	}
 	f := g.frame()
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	g.keys()
@@ -475,6 +534,10 @@ func (g *game) keys() {
 		}
 		g.fit()
 	case k(ebiten.KeyEscape):
+		if g.fromMenu && g.sel.IsNil() && g.follow.IsNil() {
+			g.confirmExit, g.wasPaused, r.Paused = true, r.Paused, true
+			return
+		}
 		g.sel = ids.Nil
 		g.stopFollowing()
 	case k(ebiten.KeyG):
@@ -496,6 +559,18 @@ func (g *game) keys() {
 		if ebiten.IsKeyPressed(a.key) {
 			g.cam.Pan(a.dx, a.dy)
 		}
+	}
+}
+
+// exitPrompt atiende la pregunta de volver al menú: Enter vuelve, Esc sigue
+// jugando como estaba.
+func (g *game) exitPrompt() {
+	k := inpututil.IsKeyJustPressed
+	switch {
+	case k(ebiten.KeyEnter), k(ebiten.KeyNumpadEnter):
+		g.toMenu = true
+	case k(ebiten.KeyEscape):
+		g.confirmExit, g.run.Paused = false, g.wasPaused
 	}
 }
 

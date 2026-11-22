@@ -61,7 +61,7 @@ func (l MenuLayout) Hit(p image.Point) int {
 
 // Medidas del menú en el lienzo de 480 × 270.
 const (
-	menuWidth = 260
+	menuWidth = 300
 	menuRow   = 16
 	menuTop   = 64
 	menuRows  = 7 // opciones visibles a la vez

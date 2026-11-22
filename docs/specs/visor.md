@@ -34,13 +34,25 @@ Spaces como polígonos por kind (los marcos sin extensión, como el cuerpo de la
 
 Con `T`, el visor centra la cámara en la entidad seleccionada y usa su posición de mundo interpolada como origen. La vista mantiene su orientación aunque la entidad cambie de Space. Si la entidad desaparece, se conserva el último centro de la cámara.
 
+## Menú principal y modos
+
+Sin flags, `go run ./cmd/game` abre el menú principal (`cmd/game/menu.go`, dibujado con `ui.Menu`) en el lienzo de pixel art:
+
+- **Nueva partida**: la mañana en la casa con la colonia sorteada por `scenario.Randomize` (de 8 a 20 tinies en celdas libres del escritorio cerca del nido, con color, necesidades y carácter al azar; sin expectativas). La semilla queda en el título de la ventana; `-new-game -seed N` repite esa partida sin pasar por el menú.
+- **Escenarios**: los de `tests/scenarios` que declaran `atlas` (los que se juegan con la interfaz de partida). Los demás son pruebas del motor y solo se abren con `-scenario`.
+- **Modo debug**: arranca las partidas con los overlays técnicos (`F3`) sobre el arte. `-debug` lo deja encendido al abrir el menú.
+
+En una partida abierta desde el menú, `Esc` sin nada elegido ni seguido pausa y pregunta si volver (`Enter` vuelve, `Esc` sigue jugando). El mezclador de sonido es uno solo por proceso: al volver, `Mixer.Hush` apaga el ambiente.
+
+El pixel art es el modo por defecto también con `-scenario`, `-load`, `-crowd` y `-new-game`. Si el mundo no tiene visuales (los escenarios sin arte, `-crowd`, `-load`), o con `-debug-view`, se abre el visor de debug vectorial que describe esta spec. `-art` se acepta por compatibilidad y no hace nada.
+
 ## Controles
 
 Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido (o del Space de la entidad elegida) / macro · F encuadrar · rueda zoom · arrastrar o flechas para mover · click elegir · click derecho `move_to` de la entidad elegida a la superficie más alta bajo el cursor · G/P/C/R/L overlays · Esc soltar.
 
-`T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. El escenario por defecto, «Una mañana en la casa», arranca en modo historia. `-story` lo activa al iniciar con otros escenarios.
+`T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. «Una mañana en la casa», la partida al azar y lo que se abre desde el menú arrancan en modo historia. `-story` lo activa al iniciar con otros escenarios.
 
-`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space y con `-follow <nombre>` siguiendo a esa entidad; `-pan dx,dy` desplaza el encuadre inicial. `-bench 20s` mide la presentación sin vsync y sale. `M` silencia el sonido; `-mute` arranca en silencio y `-volume` fija el volumen general; `-mix out.wav` renderiza la mezcla de referencia sin pantalla (ver [sonido](sonido.md)). En `-art`, `F3` o `-debug` superponen al arte rutas, portales y contactos.
+`-shot out.png -shot-tick N` corre a x16 hasta el tick N del escenario, guarda la pantalla y sale; con `-micro <nombre>` arranca en la vista micro de ese Space y con `-follow <nombre>` siguiendo a esa entidad; `-pan dx,dy` desplaza el encuadre inicial. `-bench 20s` mide la presentación sin vsync y sale. `M` silencia el sonido; `-mute` arranca en silencio y `-volume` fija el volumen general; `-mix out.wav` renderiza la mezcla de referencia sin pantalla (ver [sonido](sonido.md)). En pixel art, `F3` o `-debug` superponen al arte rutas, portales y contactos.
 
 ## Pendiente
 
