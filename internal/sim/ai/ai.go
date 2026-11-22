@@ -20,6 +20,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/needs"
@@ -86,6 +87,13 @@ type Agent struct {
 	// Watch es el radio (en el mundo) en el que nota a otros agentes.
 	Watch units.Length `json:"watch,omitempty"`
 
+	// Reflex son los ticks que tarda en reaccionar a una amenaza
+	// (crush.Threats); 0 = no huye. Alarm es el tick en que reacciona (0 =
+	// sin alarma) y Trapped, que ya no encontró salida.
+	Reflex  clock.Tick `json:"reflex,omitempty"`
+	Alarm   clock.Tick `json:"alarm,omitempty"`
+	Trapped bool       `json:"trapped,omitempty"`
+
 	Doing        *Doing     `json:"doing,omitempty"`
 	Suspended    *Doing     `json:"suspended,omitempty"`
 	RecoverUntil clock.Tick `json:"recover_until,omitempty"`
@@ -114,6 +122,8 @@ type Ctx struct {
 	Actor ids.ID
 	Agent *Agent
 	Needs needs.Needs // nil si no tiene
+	// Threats son las amenazas del tick (solo para agentes con Reflex).
+	Threats []crush.Threat
 }
 
 // Option es una acción posible con su utilidad.
@@ -228,9 +238,12 @@ func (s *actions) what(c *Ctx, d *Doing) string {
 }
 
 // interrupting devuelve, para el evento e, la entidad que debe suspender lo
-// que hace (o Nil). Por ahora: caer.
+// que hace (o Nil): caer o salvarse por poco de un aplastamiento.
 func interrupting(e world.Event) ids.ID {
-	if f, ok := e.(space.EntityFell); ok {
+	switch f := e.(type) {
+	case space.EntityFell:
+		return f.Entity
+	case crush.NearMiss:
 		return f.Entity
 	}
 	return ids.Nil
@@ -271,6 +284,8 @@ func (s decide) Run(w *world.World) {
 			}
 		}
 	}
+	var threats []crush.Threat
+	threatened := false
 	s.it.each(w, func(c *Ctx) {
 		a := c.Agent
 		if cause, ok := hit[c.Actor]; ok {
@@ -281,6 +296,19 @@ func (s decide) Run(w *world.World) {
 				d.Moving = false
 				a.Suspended, a.Doing = d, nil
 				w.Emit(ActionSuspended{Entity: c.Actor, Action: d.Action, What: s.acts.what(c, d), Target: d.Target, Cause: cause})
+			}
+		}
+		if a.Reflex > 0 {
+			if !threatened {
+				threats, threatened = crush.Threats(w), true
+			}
+			c.Threats = threats
+			if t, ok := threatOn(c, threats); ok {
+				if s.react(c, t, threats) {
+					return
+				}
+			} else {
+				a.Alarm, a.Trapped = 0, false
 			}
 		}
 		if w.Tick() < a.RecoverUntil {
@@ -345,7 +373,7 @@ func (s decide) best(c *Ctx) (Option, bool) {
 	for _, act := range s.acts.list {
 		for _, o := range act.Options(c) {
 			o.Action = act.Name()
-			if !o.Target.IsNil() && c.Agent.avoids(o.Target, c.W.Tick()) {
+			if !o.Target.IsNil() && (c.Agent.avoids(o.Target, c.W.Tick()) || underThreat(c, o.Target)) {
 				continue
 			}
 			if !found || o.Utility > best.Utility || o.Utility == best.Utility && cmp.Or(
@@ -428,7 +456,10 @@ func Install(w *world.World, extra ...Action) error {
 	if err := registerUse(w); err != nil {
 		return err
 	}
-	acts := &actions{list: append([]Action{use{}, work{}, explore{}}, extra...)}
+	if err := registerFlee(w); err != nil {
+		return err
+	}
+	acts := &actions{list: append([]Action{use{}, work{}, explore{}, flee{}}, extra...)}
 	it := agentIter{agents: agents, needs: ecs.Get[needs.Needs](r)}
 	w.AddInvariant("ai", check)
 	return errors.Join(

@@ -116,6 +116,7 @@ func Install(w *world.World) error {
 		world.RegisterEvent[Sheltered](w),
 		world.RegisterEvent[Pressed](w),
 		world.RegisterEvent[Footstep](w),
+		world.RegisterEvent[NearMiss](w),
 		// Después de nav.move: la pisada usa la posición ya avanzada.
 		w.Register(world.SystemSpec{Phase: clock.PhaseMove, Order: 1 << 19}, steps{}),
 		// Antes de space.falls y jobs.upkeep: lo que muere acá libera sus

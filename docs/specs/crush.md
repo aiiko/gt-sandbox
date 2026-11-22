@@ -1,4 +1,4 @@
-# Spec: Aplastamiento (M23–M24)
+# Spec: Aplastamiento (M23–M25)
 
 Paquete: `sim/crush`. Diseño y alcance del slice en la [propuesta](../propuesta.md#14-próximo-slice-un-descuido-en-el-escritorio).
 
@@ -48,6 +48,32 @@ Una pisada no tiene hueco: alcanza a cualquier altura. Un refugio la salva si es
 
 Al morir, la víctima se destruye con un despawn normal y se crean restos: una entidad nueva en el mismo lugar con `location`, `body` (el radio de la víctima, 1 mm de alto), `name` y `remains`. Se emite `crushed {entity, by, source, space, pos, remains}`. El resto sale de los sistemas existentes en el mismo tick: `jobs.upkeep` libera las reservas (`holder_gone`), devuelve el trabajo a la cola (`job_unassigned`, `assignee_gone`) y lo que cargaba queda suelto.
 
+## Sustos
+
+Después de cada apoyo o pisada, los frágiles vivos de esa superficie que quedaron dentro de la huella (a cubierto) o a menos de `NearMissRange` (2 cm) reciben `near_miss {entity, by, source}`. Para `ai` es un evento que interrumpe, como una caída: suspende la acción en curso y el agente se recupera `RecoverTicks`.
+
+## Amenazas (M25)
+
+`crush.Threats(w)` devuelve lo que está por aplastar, calculado del estado en el momento (sin caché: no hay nada que guardar ni reconstruir al cargar):
+
+- **Sombra:** un Space aplastador con su cara de abajo entre `PressAbove` y `ThreatHeight` (20 cm) sobre una superficie. La mano suspendida a 88 cm sobre el escritorio de 75 cm es una amenaza; la levantada a 140 cm, no.
+- **Vibración:** la próxima pisada de quien camina, prevista con la dirección del último tick (`stride.dir`) y lo que falta recorrer hasta el paso.
+
+`Threat.Covers(p, margin)` prueba un punto del mundo y ocho a `margin` alrededor.
+
+## Huida (M25, en `sim/ai`)
+
+Un agente con `agent.reflex > 0` reacciona a una amenaza que lo cubre en su propio Space. `ai.decide` lo revisa en cada tick, fuera del período de decisión:
+
+1. Al quedar bajo la amenaza, emite `alarmed {entity, by, source, channel}` y fija `agent.alarm` en `tick + reflex`. Mientras espera, sigue con lo suyo.
+2. Al llegar `alarm`, interrumpe lo que hace (`action_interrupted` con `by: "flee"`; un trabajo se suelta con lo que cargaba) y empieza `flee` hacia la salida más cercana. La salida se busca en 16 direcciones, en pasos de 2 mm hasta `FleeRange` (30 cm): un punto de su Space alcanzable por la grilla desde donde está (4 vecinos), fuera de todas las amenazas de ese Space con un margen de su radio más 1 mm. Un refugio que resista la amenaza gana si queda más cerca.
+3. Si no hay salida, emite `trapped {entity, by}`, suelta lo que hace y se queda quieto. Si la huida falla en el camino, también queda atrapado (sin evento).
+4. Al salir de toda amenaza se borran `alarm` y `trapped`.
+
+`flee` no se interrumpe, está comprometida y no se retoma después de una suspensión. Un agente con `reflex` no elige opciones cuyo objetivo (o el objetivo de su trabajo) esté bajo una amenaza, así que no vuelve a meterse debajo de la mano que lo espantó.
+
+Con los números de los escenarios (tiny a 1 mm por tick, `reflex` de 4 ticks), un tiny tiene que estar a pocos milímetros del borde para salvarse de una mano que espera 20 ticks. De una pisada a 1 m/s no se salva casi nadie: el aviso dura 7 ticks.
+
 ## Invariantes
 
 - `crusher.pressing` está ordenado.
@@ -66,12 +92,17 @@ Generados por `python tools/scenarios/aplastamiento.py` a partir de `contact_ope
 - `step_crushes_tiny_on_floor` (M24): la giantess cruza el dormitorio y pisa dos veces. Muere el tiny bajo el pie izquierdo y el que está en un nido en el suelo (la caja resiste una mano, fuerza 10, y no un pie, 600). Sobreviven el que quedó donde ese pie no se apoyó y el que está a un costado.
 - `step_spares_tiny_on_desk` (M24): el tiny sobre el escritorio, encima del pie, no muere; el del suelo debajo, sí.
 - `TestStrideSurvivesSave` (M24): guardar entre dos pisadas y continuar da la misma pisada y el mismo hash.
+- `tiny_flees_shadow` (M25): la mano espera 20 ticks antes de apoyarse. El tiny a 5 mm del borde huye y se salva con un susto, el del centro no llega, el encerrado entre celdas bloqueadas queda atrapado y el lejano no se entera.
+- `tiny_drops_crumb_to_flee` (M25): el tiny que levanta la migaja la suelta, deja el trabajo y huye. Nadie vuelve a buscarla mientras la sombra sigue ahí. Al apoyarse la mano, el que volvía se asusta, suspende el trabajo y lo termina después.
+- `tiny_flees_footsteps` (M25): con la giantess a 0,5 m/s, la vibración anuncia la segunda pisada. El tiny a 0,5 mm del borde se salva por poco y el del centro no.
+- `TestCrushScenariosSnapshots` (M25): los escenarios de aplastamiento dan el mismo log y hash guardando y cargando cada 3 ticks.
 - `TestCrushOnlyOnNewPress`: un tiny camina debajo de la palma apoyada y no muere, tampoco después de guardar y cargar. El mundo restaurado tiene el mismo hash.
 
 ## Pendiente
 
 - Debajo de una mano apoyada se puede caminar: la grilla del escritorio no sabe que la mano ocupa ese lugar.
 - Los restos no saben a qué colonia pertenecía la víctima. Llega en M26 con `member_lost`.
-- Amenaza y huida (M25), cuidado de la giantess (M26).
+- Cuidado de la giantess (M26).
+- Huida: sin pánico colectivo ni aviso entre tinies; la salida no considera amenazas que todavía no existen.
 - Pisadas: sin volumen barrido, sin ritmo propio (dependen solo de la distancia) y sin pisar cuando la giantess gira en el lugar. La casa todavía no tiene `stride` ni ruta al suelo: llega con el escenario de cierre (M27).
 - Fuerza de los objetos por masa y altura de caída: hoy es un valor fijo por objeto.

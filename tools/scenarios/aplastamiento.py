@@ -1,4 +1,4 @@
-"""Genera los escenarios de aplastamiento (M23 y M24) en tests/scenarios/.
+"""Genera los escenarios de aplastamiento (M23 a M25) en tests/scenarios/.
 
 Parte de contact_opens_and_closes_route.json: dormitorio, escritorio a 75 cm,
 giantess y palma. La palma aplasta (crusher "hand", 2 cm de grosor) y los
@@ -257,6 +257,109 @@ def step_spares_tiny_on_desk():
     return d
 
 
+SCARED = {'scale': 'tiny', 'reflex': 4}
+
+
+def desk_rows(blocked):
+    """Grilla del escritorio (30 × 20 celdas de 2 cm) con celdas bloqueadas."""
+    rows = [['.'] * 30 for _ in range(20)]
+    for x, y in blocked:
+        rows[y][x] = '#'
+    return [''.join(r) for r in rows]
+
+
+def alarmed(ref, after, by, crusher='$palm', channel='shadow'):
+    return {'event': 'alarmed', 'match': {'entity': '$' + ref, 'by': crusher, 'channel': channel},
+            'after': after, 'by': by}
+
+
+def fled(ref, after, by):
+    return {'event': 'action_started', 'match': {'entity': '$' + ref, 'action': 'flee'}, 'after': after, 'by': by}
+
+
+def tiny_flees_shadow():
+    d = base('tiny_flees_shadow', 80,
+             'La mano se sostiene sobre el escritorio 20 ticks antes de apoyarse. Los tinies bajo su sombra '
+             'se alarman y, 4 ticks después, buscan salida. El que estaba a 5 mm del borde llega afuera y se '
+             'lleva un susto (near_miss); el del centro no llega y muere; el que está encerrado entre celdas '
+             'bloqueadas queda atrapado y muere. El que estaba lejos ni se entera.')
+    # bolsillo: la celda (8, 6) (centro en 17 cm, 13 cm) rodeada de celdas bloqueadas
+    pocket = [(8 + dx, 6 + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx, dy) != (0, 0)]
+    for e in d['entities']:
+        if e['ref'] == 'desk1':
+            e['spawn']['components']['nav_grid']['rows'] = desk_rows(pocket)
+    d['entities'] += [
+        tiny('edge', 'desk1', 245000, 200000, agent=dict(SCARED)),
+        tiny('center', 'desk1', 200000, 200000, agent=dict(SCARED)),
+        tiny('pocket', 'desk1', 170000, 130000, agent=dict(SCARED)),
+        tiny('far', 'desk1', 500000, 300000, agent=dict(SCARED)),
+    ]
+    d['commands'] += [pose(10, 'hover'), pose(30, 'rest')]
+    d['expect'] = [
+        alarmed('edge', 10, 11), alarmed('center', 10, 11), alarmed('pocket', 10, 11),
+        {'no_event': 'alarmed', 'match': {'entity': '$far'}},
+        fled('edge', 14, 15), fled('center', 14, 15),
+        {'event': 'action_done', 'match': {'entity': '$edge', 'action': 'flee'}, 'by': 30},
+        {'event': 'trapped', 'match': {'entity': '$pocket', 'by': '$palm'}, 'after': 14, 'by': 15},
+        spared('edge'), crushed('center', 30, 31), crushed('pocket', 30, 31),
+        {'event': 'near_miss', 'match': {'entity': '$edge', 'by': '$palm'}, 'after': 30, 'by': 31},
+        {'no_event': 'action_failed'},
+    ] + COMMON
+    return d
+
+
+def tiny_drops_crumb_to_flee():
+    work = {'scale': 'tiny', 'work': 1, 'distance_cost': 1, 'reflex': 4}
+    d = haul_requeued_after_death()
+    d['name'] = 'tiny_drops_crumb_to_flee'
+    d['ticks'] = 1200
+    d['notes'] = ('Como haul_requeued_after_death, pero los tinies tienen reflejos. La mano aparece sobre el '
+                  'tiny mientras levanta la migaja: suelta la migaja, deja el trabajo y huye. Mientras la mano '
+                  'sigue arriba nadie vuelve a buscar la migaja bajo su sombra. La mano se apoya sin víctimas '
+                  'y el tiny, que volvía a buscar la migaja, se asusta (near_miss) y suspende el trabajo; lo '
+                  'retoma y la migaja termina en su destino.')
+    for e in d['entities']:
+        if e['ref'] in ('first', 'second'):
+            e['spawn']['components']['agent'] = dict(work)
+    d['commands'] = d['commands'][:2] + [pose(55, 'hover'), pose(130, 'rest'), pose(170, 'raised')]
+    d['expect'] = [
+        alarmed('first', 55, 56),
+        {'event': 'action_interrupted', 'match': {'entity': '$first', 'action': 'work', 'by': 'flee'},
+         'after': 59, 'by': 60},
+        {'event': 'job_unassigned', 'match': {'by': '$first', 'reason': 'stopped'}, 'after': 59, 'by': 60},
+        {'no_event': 'job_assigned', 'after': 60, 'by': 130},
+        {'event': 'near_miss', 'match': {'entity': '$first'}, 'after': 130, 'by': 131},
+        {'event': 'action_suspended', 'match': {'entity': '$first', 'cause': 'near_miss'}, 'after': 131, 'by': 132},
+        {'no_event': 'crushed'},
+        {'event': 'job_done'},
+        {'at': '$crumb', 'space': '$desk1', 'pos': {'x': 500000, 'y': 100000}, 'tol': 1000},
+    ] + COMMON
+    return d
+
+
+def tiny_flees_footsteps():
+    d = walking('tiny_flees_footsteps', 60,
+                'La giantess camina despacio (0,5 m/s, una pisada cada 14 ticks). Después de la primera '
+                'pisada, la vibración anuncia la segunda: el tiny que está a 0,5 mm del borde del pie derecho '
+                'huye y se salva por poco; el que está en el centro no alcanza a salir.')
+    for e in d['entities']:
+        if e['ref'] == 'giantess':
+            e['spawn']['components']['mover'] = {'speed': 500000}
+    scared = {'scale': 'tiny', 'reflex': 2}
+    d['entities'] += [
+        tiny('edge', 'roomA', 1700000, 1444500, agent=dict(scared)),
+        tiny('center', 'roomA', 1700000, 1400000, agent=dict(scared)),
+    ]
+    d['expect'] = [
+        {'event': 'footstep', 'match': {'right': True, 'pos': {'x': 1700000, 'y': 1400000}}, 'after': 28, 'by': 29},
+        alarmed('edge', 15, 16, crusher='$giantess', channel='vibration'),
+        {'event': 'action_done', 'match': {'entity': '$edge', 'action': 'flee'}, 'by': 28},
+        spared('edge'), foot('center', 28, 29),
+        {'event': 'near_miss', 'match': {'entity': '$edge', 'source': 'foot'}, 'after': 28, 'by': 29},
+    ] + COMMON
+    return d
+
+
 # Tick en que el primer tiny está levantando la migaja (entre job_assigned y
 # el fin del paso de levantar, 1 s). Medido con simrun -events.
 PICKUP_TICK = 60
@@ -265,7 +368,8 @@ PICKUP_TICK = 60
 def main():
     for make in (palm_crushes_tiny, tiny_on_palm_is_safe, tiny_between_fingers_survives,
                  nest_shelters_from_palm, cup_lands_on_tiny, haul_requeued_after_death,
-                 step_crushes_tiny_on_floor, step_spares_tiny_on_desk):
+                 step_crushes_tiny_on_floor, step_spares_tiny_on_desk,
+                 tiny_flees_shadow, tiny_drops_crumb_to_flee, tiny_flees_footsteps):
         d = make()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as f:
             f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')

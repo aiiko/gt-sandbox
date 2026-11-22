@@ -15,7 +15,7 @@ import (
 // FootLength × FootWidth orientado según la dirección del desplazamiento
 // (no según facing: el mover no la orienta).
 //
-// Travel, Left, Space y Last son estado.
+// Travel, Right, Space, Last y Dir son estado.
 type Stride struct {
 	Length     units.Length `json:"length"`
 	Side       units.Length `json:"side"`
@@ -27,6 +27,7 @@ type Stride struct {
 	Right  bool         `json:"right,omitempty"`  // la próxima pisada es del pie derecho
 	Space  ids.ID       `json:"space,omitempty"`  // Space de Last
 	Last   units.Vec2   `json:"last"`             // posición del tick anterior
+	Dir    units.Vec2   `json:"dir"`              // desplazamiento del último tick
 }
 
 // Footstep se emite con cada pisada. Pos es el centro del pie en Space.
@@ -69,11 +70,11 @@ func (steps) Run(w *world.World) {
 		}
 		pos := l.Pos.XY()
 		if st.Space != l.Space { // cambió de Space (una puerta): empieza de nuevo
-			st.Space, st.Last, st.Travel = l.Space, pos, 0
+			st.Space, st.Last, st.Travel, st.Dir = l.Space, pos, 0, units.Vec2{}
 			return
 		}
 		d := pos.Sub(st.Last)
-		st.Last = pos
+		st.Last, st.Dir = pos, d
 		n := d.Len()
 		if n == 0 {
 			return
@@ -81,13 +82,7 @@ func (steps) Run(w *world.World) {
 		st.Travel += n
 		for st.Travel >= st.Length {
 			st.Travel -= st.Length
-			side := st.Side
-			if st.Right {
-				side = -side
-			}
-			// izquierda = la marcha girada 90° antihorario
-			off := units.V2(-d.Y, d.X)
-			center := pos.Add(units.V2(off.X.MulDiv(int64(side), int64(n)), off.Y.MulDiv(int64(side), int64(n))))
+			center := pos.Add(sideOffset(d, int64(n), *st))
 			falls = append(falls, footfall{e: e, s: *st, space: l.Space, center: center, dir: d})
 			st.Right = !st.Right
 		}
@@ -99,6 +94,7 @@ func (steps) Run(w *world.World) {
 		for _, v := range victims(w, g, im) {
 			kill(w, g, v, im)
 		}
+		nearMisses(w, g, im)
 	}
 }
 

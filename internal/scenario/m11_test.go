@@ -75,22 +75,43 @@ func TestUnaMananaEnLaCasa(t *testing.T) {
 // periódicamente, además del hash en cada recarga y al terminar.
 func playMorningWithSnapshots(t *testing.T, in *scenario.Instance) {
 	t.Helper()
+	playWithSnapshots(t, in, 113)
+}
+
+// playWithSnapshots corre el escenario guardando y cargando cada every ticks;
+// el mundo restaurado debe dar el mismo log y el mismo hash.
+func playWithSnapshots(t *testing.T, in *scenario.Instance, every int) {
+	t.Helper()
 	p, err := in.Player()
 	if err != nil {
 		t.Fatal(err)
 	}
 	var restored *world.World
+	in.World.SetRecording(true)
+	logged := len(in.World.CommandLog())
 	for !p.Done() {
 		if err := p.Step(); err != nil {
 			t.Fatal(err)
 		}
+		log := in.World.CommandLog()
 		if restored != nil {
+			// los comandos programados del tick también le llegan al restaurado
+			for _, rec := range log[logged:] {
+				c, err := restored.DecodeCommand(rec.Encoded)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if _, err := restored.Enqueue(c); err != nil {
+					t.Fatal(err)
+				}
+			}
 			restored.Step()
 			if !reflect.DeepEqual(restored.Events(), in.World.Events()) {
 				t.Fatalf("el log restaurado divergió en el tick %d", p.Tick())
 			}
 		}
-		if (p.Tick()-1)%113 != 0 && !p.Done() {
+		logged = len(log)
+		if (p.Tick()-1)%every != 0 && !p.Done() {
 			continue
 		}
 		if restored != nil && restored.Hash() != in.World.Hash() {

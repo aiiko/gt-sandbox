@@ -161,3 +161,32 @@ func (g *Grid) UnmarshalJSON(b []byte) error {
 	*g = *n
 	return nil
 }
+
+// Region devuelve una prueba de alcanzabilidad: si un punto cae en una celda
+// a la que se llega desde from por celdas transitables vecinas (4 vecinos),
+// sin alejarse más de radius en cada eje. Fuera de la grilla, nada.
+func (g *Grid) Region(from units.Vec2, radius units.Length) func(units.Vec2) bool {
+	fx, fy := g.CellOf(from)
+	r := int(radius/g.Cell) + 1
+	seen := map[[2]int]bool{}
+	if g.At(fx, fy) != Blocked {
+		seen[[2]int{fx, fy}] = true
+		queue := [][2]int{{fx, fy}}
+		for len(queue) > 0 {
+			c := queue[0]
+			queue = queue[1:]
+			for _, d := range [4][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+				n := [2]int{c[0] + d[0], c[1] + d[1]}
+				if seen[n] || n[0]-fx > r || fx-n[0] > r || n[1]-fy > r || fy-n[1] > r || g.At(n[0], n[1]) == Blocked {
+					continue
+				}
+				seen[n] = true
+				queue = append(queue, n)
+			}
+		}
+	}
+	return func(p units.Vec2) bool {
+		x, y := g.CellOf(p)
+		return seen[[2]int{x, y}]
+	}
+}

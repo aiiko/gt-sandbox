@@ -95,12 +95,19 @@ func (resolve) Run(w *world.World) {
 		for _, v := range victims(w, g, im) {
 			kill(w, g, v, im)
 		}
+		nearMisses(w, g, im)
 	}
 }
 
 // pressing devuelve los apoyos actuales del Space aplastador e, ordenados
 // por superficie.
 func pressing(r *ecs.Registry, g space.Graph, e ids.ID, c Crusher) []impact {
+	return over(r, g, e, c, -PressBelow, PressAbove)
+}
+
+// over devuelve las superficies sobre las que está el Space aplastador e,
+// con su cara de abajo entre lo y hi por encima de ellas, ordenadas.
+func over(r *ecs.Registry, g space.Graph, e ids.ID, c Crusher, lo, hi units.Length) []impact {
 	spaces := ecs.Get[space.Space](r)
 	sp, ok := spaces.Get(e)
 	if !ok || sp.Extent.Empty() {
@@ -131,7 +138,7 @@ func pressing(r *ecs.Registry, g space.Graph, e ids.ID, c Crusher) []impact {
 			return
 		}
 		gap := bottom - st.Pos.Z
-		if gap < -PressBelow || gap > PressAbove || !bounds.Overlaps(worldBounds(st.Apply, ssp.Extent)) {
+		if gap < lo || gap > hi || !bounds.Overlaps(worldBounds(st.Apply, ssp.Extent)) {
 			return
 		}
 		out = append(out, impact{by: e, c: c, surface: s, gap: max(gap, 0), inside: inside})

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 // Kinded es cualquier valor polimórfico serializable (comandos, eventos).
@@ -68,6 +69,12 @@ func (r *kindRegistry[T]) decode(e Encoded) (T, error) {
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
 		return zero, fmt.Errorf("world: %s %q: %w", r.what, e.Kind, err)
+	}
+	// Se devuelve el valor, no el puntero: así un evento restaurado de un
+	// snapshot es del mismo tipo que el emitido (los sistemas los distinguen
+	// con type switches sobre valores).
+	if x, ok := reflect.ValueOf(v).Elem().Interface().(T); ok {
+		return x, nil
 	}
 	return v, nil
 }

@@ -74,6 +74,10 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
 - Si la mano se levanta con el tiny encima, el tiny sigue en la palma: es su Space, ya visitado, y espera a que aparezca un portal hacia un lugar nuevo.
 - `ai.WanderPoint` (punto transitable al azar cercano) lo comparten `explore` y `forage`.
 
+## Huida
+
+Ver `docs/specs/crush.md#huida-m25-en-simai`. Un agente con `reflex` se alarma bajo una amenaza de `crush.Threats` (`alarmed`), huye fuera de la huella (`flee`) o queda atrapado (`trapped`). `near_miss` interrumpe como una caída. Estado: `agent.reflex`, `alarm` y `trapped`.
+
 ## Reintentos
 
 Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 s): `agent.avoid`. Vale para cualquier acción; un trabajo inalcanzable vuelve a la cola y el que falló no lo retoma enseguida.
@@ -91,7 +95,7 @@ Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 
 
 ## Suspensión y reanudación
 
-Hay eventos que interrumpen: por ahora `entity_fell`. Cuando le pasa a un agente, el selector lo lee en el tick siguiente, detiene su movimiento y suspende la acción (`action_suspended {cause}`). El agente se recupera durante `RecoverTicks` (2 s) y después la retoma (`action_resumed`) si sigue siendo válida. La etapa del trabajo vive en el trabajo, así que continúa donde quedó, y la reserva se mantiene porque dura más que la recuperación.
+Hay eventos que interrumpen: `entity_fell` y `near_miss`. Cuando le pasa a un agente, el selector lo lee en el tick siguiente, detiene su movimiento y suspende la acción (`action_suspended {cause}`). El agente se recupera durante `RecoverTicks` (2 s) y después la retoma (`action_resumed`) si sigue siendo válida. La etapa del trabajo vive en el trabajo, así que continúa donde quedó, y la reserva se mantiene porque dura más que la recuperación.
 
 ## Reservas y trabajos (`jobs`)
 

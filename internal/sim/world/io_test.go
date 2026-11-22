@@ -144,3 +144,26 @@ func TestSnapshotRoundTrip(t *testing.T) {
 		t.Error("campo desconocido debe fallar")
 	}
 }
+
+// Un evento publicado que viaja en el snapshot vuelve con su tipo de valor,
+// igual que el emitido: los sistemas del tick siguiente lo reconocen.
+func TestRestoredEventsKeepValueType(t *testing.T) {
+	a, _ := newTestWorld(t, 3)
+	enqueue(t, a, spawnCounter{V: 1})
+	a.Step()
+	snap, err := a.Save()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := newTestWorld(t, 0)
+	if err := b.Restore(snap); err != nil {
+		t.Fatal(err)
+	}
+	evs := b.Events()
+	if len(evs) != 1 {
+		t.Fatalf("eventos restaurados: %v", evs)
+	}
+	if _, ok := evs[0].Event.(counterSpawned); !ok {
+		t.Fatalf("evento restaurado de tipo %T", evs[0].Event)
+	}
+}
