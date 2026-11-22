@@ -13,6 +13,8 @@ Parte de «Un descuido en el escritorio» (un_descuido_en_el_escritorio.json):
 - tests/scenarios/giantess_snacks_in_living.json verifica la merienda: con
   algo de hambre, la giantess lleva un plato a la mesa del living, deja
   migajas y come ahí.
+- tests/scenarios/giantess_logs_sightings.json: la giantess registra dónde ve
+  tinies (componente "encounter") y olvida un avistamiento viejo.
 
 Los escenarios de referencia (la mañana y el descuido) no cambian.
 """
@@ -41,6 +43,9 @@ SNACK_LIVING = {
         {'do': 'use', 'ticks': 250},
     ],
 }
+
+# Encuentros de la giantess en la partida libre (utilidades de cada acción).
+ENCOUNTER = {}
 
 # Perfiles de arranque. Hambre y diversión bajan 2 por segundo (de llenas a
 # vacías en unos 8 minutos) y la energía 1, así la rutina vuelve a decidir.
@@ -88,6 +93,7 @@ def main():
     d['expect'] = []
     with_living_snack(d)
     d['random'] = {'agent': '$giantess', 'starts': copy.deepcopy(STARTS)}
+    entity(d, 'giantess')['spawn']['components']['encounter'] = copy.deepcopy(ENCOUNTER)
     write(os.path.join(ROOT, 'content', 'partidas', 'casa.json'), d)
 
     d = copy.deepcopy(base)
@@ -110,6 +116,17 @@ def main():
         {'no_event': 'command_rejected'},
     ]
     write(os.path.join(SCENARIOS, 'giantess_snacks_in_living.json'), d)
+
+    d = copy.deepcopy(base)
+    d['name'] = 'giantess_logs_sightings'
+    d['notes'] = ('La giantess registra en qué superficie ve tinies y cuántos buscan comida; un avistamiento '
+                  'viejo (la cocina, en el tick 0) se olvida pasados dos minutos sin volver a ver a nadie ahí.')
+    d['ticks'] = 2600
+    del d['atlas']
+    entity(d, 'giantess')['spawn']['components']['encounter'] = {
+        'sightings': [{'surface': '$kitchen', 'last': 0, 'seen': 5}]}
+    d['expect'] = [{'no_event': 'command_rejected'}]
+    write(os.path.join(SCENARIOS, 'giantess_logs_sightings.json'), d)
 
 
 if __name__ == '__main__':

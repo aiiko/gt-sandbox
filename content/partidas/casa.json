@@ -664,7 +664,8 @@
             "foot_length": 240000,
             "foot_width": 90000,
             "force": 600
-          }
+          },
+          "encounter": {}
         }
       }
     },

@@ -50,3 +50,39 @@ Las migajas sobre la mesa del living son un segundo lugar de recolección: los t
 - `TestPartidaProfiles`: cada perfil aparece y se aplica tal cual; la base no cambia.
 - `TestPartidaRoutineVaries`: sobre las semillas de referencia (1, 7, 21, 42 y 99), cinco minutos de partida dan al menos dos órdenes de actividades de la giantess, con al menos tres actividades cada uno.
 - `TestPartidaSnapshotContinuation`: la partida y su continuación desde snapshots cada 113 ticks dan los mismos eventos y el mismo hash.
+
+## Avistamientos (M29)
+
+Paquete `sim/encounter`. Se activa por contenido: solo quien tiene el componente `encounter` (la giantess de la partida libre) registra avistamientos y tiene acciones de encuentro. Los escenarios de referencia no lo usan y no cambian.
+
+### Componente `encounter`
+
+```json
+"encounter": {"observe": 0.12, "share": 0.2, "offer": 0.16,
+  "sightings": [{"surface": "$desk1", "last": 340, "seen": 6, "foraging": 2}],
+  "cooldowns": [{"surface": "$desk1", "action": "observe", "until": 2740}]}
+```
+
+- `observe`, `share` y `offer` son las utilidades de cada acción. Con 0 no la hace.
+- `sightings`, por superficie (ordenados por ID), guarda lo último que vio: el tick (`last`), cuántos tinies (`seen`) y cuántos buscaban comida (`foraging`: los que estaban en `forage` o en un trabajo, que en la colonia es acarrear).
+- `cooldowns`, ordenados por superficie y acción, indica hasta qué tick no repite una acción en una superficie.
+
+El registro es estado que cambia decisiones, así que va en un componente: entra en el hash y en el snapshot (`HashVersion` 6, `SnapshotSchema` 10).
+
+### Sistema `encounter.look`
+
+Corre en Decide después de `ai.look` (Order −45), cada `ai.LookPeriod` ticks repartidos por agente. Para cada agente con `encounter` y `watch`:
+
+1. cuenta, por superficie, los agentes de otra escala a menos de `watch` en el mundo, salvo los que van en su propia mano;
+2. actualiza `last`, `seen` y `foraging` de esas superficies;
+3. olvida los avistamientos sin novedad hace más de `SightingTTL` (2 minutos) y los enfriamientos vencidos.
+
+A diferencia de `agent.known`, que solo dice si notó a un agente alguna vez, el registro responde dónde hay actividad reciente y qué hacen los tinies. Una acción de encuentro se abre con avistamientos de menos de `Recent` (20 s).
+
+### Encuentro descartado
+
+`encounter_skipped {entity, action, surface, reason}`: una acción de encuentro llegó y su condición ya no se cumple. Termina sin efecto y sin marcar la superficie como fallida, porque `ai` evita durante un rato los objetivos fallidos y el escritorio también es objetivo de `write`.
+
+### Pruebas
+
+`giantess_logs_sightings` (`TestGiantessLogsSightings`): la giantess registra a los tinies del escritorio, mantiene el orden y olvida a tiempo un avistamiento viejo de la cocina, guardando y cargando cada 113 ticks.
