@@ -95,7 +95,9 @@ func TestTabFramesTinies(t *testing.T) {
 			t.Fatalf("seed %d: Tab lleva a %v, no a la superficie con tinies %v", seed, g.art.focus, target)
 		}
 		proj := g.cam.Project(g.anchor(f), g.w, g.h)
-		inView := 0
+		// El grupo cabe en la media ventana alrededor de su centro: todo lo
+		// que cae ahí (al menos los n del grupo) tiene que verse.
+		inBox, inView := 0, 0
 		for _, th := range f.Things {
 			if !isTiny(th) || th.Space != target {
 				continue
@@ -104,13 +106,14 @@ func TestTabFramesTinies(t *testing.T) {
 			if max(d.X, -d.X) > clusterHalfW || max(d.Y, -d.Y) > clusterHalfH {
 				continue
 			}
+			inBox++
 			x, y := proj.ToScreen(th.Pose.Pos)
 			if x >= 0 && x < float32(g.w) && y >= artHeader && y < float32(g.h-artFooter) {
 				inView++
 			}
 		}
-		if inView != n {
-			t.Fatalf("seed %d: %d de %d tinies del grupo en pantalla", seed, inView, n)
+		if inBox < n || inView != inBox {
+			t.Fatalf("seed %d: grupo de %d, %d alrededor del centro, %d en pantalla", seed, n, inBox, inView)
 		}
 	}
 }

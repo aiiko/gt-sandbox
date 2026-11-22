@@ -38,7 +38,7 @@ Con `T`, el visor centra la cámara en la entidad seleccionada y usa su posició
 
 Sin flags, `go run ./cmd/game` abre el menú principal (`cmd/game/menu.go`, dibujado con `ui.Menu`) en el lienzo de pixel art:
 
-- **Nueva partida**: la mañana en la casa con la colonia sorteada por `scenario.Randomize` (de 8 a 20 tinies en celdas libres del escritorio cerca del nido, con color, necesidades y carácter al azar; sin expectativas). La semilla queda en el título de la ventana; `-new-game -seed N` repite esa partida sin pasar por el menú.
+- **Nueva partida**: «Un descuido en el escritorio» (la mañana peligrosa: tinies `fragile` con `reflex`, palma `crusher`, pisadas `stride`, la pata del escritorio al tatami; ver [aplastamiento](crush.md)) con la colonia sorteada por `scenario.Randomize`: de 8 a 20 tinies en celdas libres del escritorio cerca del nido, con color, necesidades y carácter al azar, y sin expectativas. La semilla queda en el título de la ventana; `-new-game -seed N` repite esa partida sin pasar por el menú.
 - **Escenarios**: los de `tests/scenarios` que declaran `atlas` (los que se juegan con la interfaz de partida). Los demás son pruebas del motor y solo se abren con `-scenario`.
 - **Modo debug**: arranca las partidas con los overlays técnicos (`F3`) sobre el arte. `-debug` lo deja encendido al abrir el menú.
 

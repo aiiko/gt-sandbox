@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
 )
@@ -95,5 +96,47 @@ func TestRandomizeKeepsBase(t *testing.T) {
 	}
 	if !reflect.DeepEqual(base, before) {
 		t.Fatal("Randomize modificó el escenario base")
+	}
+}
+
+// La partida al azar del juego sale de la mañana peligrosa: los tinies
+// sorteados heredan fragile y reflex, y la mañana entera corre sin romper
+// invariantes, con aplastados o no según la semilla.
+func TestRandomizeDangerousMorning(t *testing.T) {
+	base, err := ReadFile("../../tests/scenarios/un_descuido_en_el_escritorio.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, seed := range []uint64{1, 2, 3} {
+		s, err := Randomize(base, seed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		in, err := Build(s)
+		if err != nil {
+			t.Fatalf("seed %d: %v", seed, err)
+		}
+		fragile := ecs.Get[crush.Fragile](in.World.ECS())
+		for ref, id := range in.Refs {
+			if len(ref) == 6 && ref[:4] == "tiny" && !fragile.Has(id) {
+				t.Fatalf("seed %d: %s no es frágil", seed, ref)
+			}
+		}
+		p, err := in.Player()
+		if err != nil {
+			t.Fatal(err)
+		}
+		crushed := 0
+		for !p.Done() {
+			if err := p.Step(); err != nil {
+				t.Fatalf("seed %d: %v", seed, err)
+			}
+		}
+		for _, e := range in.Events {
+			if e.Event.Kind() == "crushed" {
+				crushed++
+			}
+		}
+		t.Logf("seed %d: %d aplastados", seed, crushed)
 	}
 }
