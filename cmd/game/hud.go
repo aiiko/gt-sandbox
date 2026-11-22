@@ -226,8 +226,9 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 		Paused:   g.run.Paused,
 		Speed:    max(0, slices.Index(view.Speeds, g.run.Speed)),
 		Location: g.location(f, focus),
-		Controls: ui.Controls("Espacio", "Pausa", "1-3", "Vel.", "Tab", "Escala", "T", "Seguir",
-			"F", "General", "H", "Historia", "F3", "Debug"),
+		// Tab nombra su destino; F3 (overlays técnicos) no entra en la barra.
+		Controls: ui.Controls("Espacio", "Pausa", "1-3", "Vel.", "Tab", g.scaleLabel(f), "T", "Seguir",
+			"F", "General", "H", "Historia"),
 	}
 	if !g.follow.IsNil() {
 		h.Following = capital(g.display(g.follow))

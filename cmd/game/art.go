@@ -164,14 +164,7 @@ func (g *game) toggleArtMicro() {
 		return
 	}
 	f := g.run.Cur
-	target := g.microSurface(f, g.follow)
-	if target.IsNil() {
-		target = g.microSurface(f, g.sel)
-	}
-	if target.IsNil() {
-		target = g.microSurface(f, g.artDesk)
-	}
-	if s, ok := f.SpaceByID(target); ok {
+	if s, ok := f.SpaceByID(g.microTarget(f)); ok {
 		a.macro, a.focus = g.cam, s.ID
 		if !g.follow.IsNil() {
 			a.macro.Follow(ids.Nil, fixedmath.Identity, g.proj)
@@ -183,6 +176,32 @@ func (g *game) toggleArtMicro() {
 		}
 		g.startArtFade()
 	}
+}
+
+// microTarget es la superficie a la que lleva Tab desde la vista general: la
+// de lo seguido, si no la de lo elegido (una superficie es la suya), y si no
+// el escritorio. Nil si ninguna tiene vista de cerca.
+func (g *game) microTarget(f *view.Frame) ids.ID {
+	for _, id := range []ids.ID{g.follow, g.sel, g.artDesk} {
+		if s := g.microSurface(f, id); !s.IsNil() {
+			return s
+		}
+	}
+	return ids.Nil
+}
+
+// scaleLabel nombra a dónde lleva Tab: la superficie de cerca o la casa.
+func (g *game) scaleLabel(f *view.Frame) string {
+	if g.art == nil || !g.art.atlas.Supports(render.Micro) {
+		return "Escala"
+	}
+	if !g.art.focus.IsNil() {
+		return "Casa"
+	}
+	if t := g.microTarget(f); !t.IsNil() {
+		return capital(g.display(t))
+	}
+	return "Escala"
 }
 
 func (g *game) startArtFade() {

@@ -177,3 +177,45 @@ func TestPartidaStoryFocus(t *testing.T) {
 		t.Error("ninguna entrada se puede enfocar")
 	}
 }
+
+// Tab nombra su destino, que es el mismo al que lleva: el escritorio por
+// defecto, la superficie elegida (una habitación es su piso), la de lo
+// seguido, y de cerca, la casa.
+func TestTabNamesItsDestination(t *testing.T) {
+	g := artGame(t, morningScenario)
+	f := stepTo(t, g, 1)
+	tab := func() string {
+		for _, c := range g.partida(f, g.art.focus).Controls {
+			if c.Key == "Tab" {
+				return c.Label
+			}
+		}
+		return ""
+	}
+	for _, c := range []struct {
+		sel, follow, want string
+		target       ids.ID
+	}{
+		{"", "", "Escritorio", g.artDesk},
+		{"bedroom", "", "Dormitorio", refOf(t, morningScenario, "bedroom")},
+		{"giantess", "", "Escritorio", g.artDesk},
+		{"bedroom", "tiny01", "Escritorio", g.artDesk},
+		{"desk2", "", "Mesa del living", refOf(t, morningScenario, "desk2")},
+	} {
+		g.sel, g.follow = ids.Nil, ids.Nil
+		if c.sel != "" {
+			g.sel = refOf(t, morningScenario, c.sel)
+		}
+		if c.follow != "" {
+			g.follow = refOf(t, morningScenario, c.follow)
+		}
+		if got := tab(); got != c.want || g.microTarget(f) != c.target {
+			t.Errorf("elegido %q, seguido %q: Tab dice %q y lleva a %v; se esperaba %q", c.sel, c.follow, got, g.microTarget(f), c.want)
+		}
+	}
+	g.sel, g.follow = refOf(t, morningScenario, "bedroom"), ids.Nil
+	g.toggleArtMicro()
+	if g.art.focus != refOf(t, morningScenario, "bedroom") || tab() != "Casa" {
+		t.Fatalf("de cerca: foco %v, Tab dice %q", g.art.focus, tab())
+	}
+}
