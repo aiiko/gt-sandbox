@@ -986,9 +986,128 @@ El sonido es presentación, como los símbolos de expresión. Sale de los evento
 | Arte sin fuente editable        | Cada sprite nuevo o corrección obliga a rehacer el atlas            | Fuentes por pieza y exportación reproducible del atlas    |
 | Bugs emergentes                 | Situaciones difíciles de reproducir                                 | Replay determinista y escenarios de prueba                |
 | Demasiadas interacciones únicas | Alto costo de mantenimiento                                         | Smart Objects y acciones reutilizables                    |
+| Muerte injusta o arbitraria     | El jugador no entiende por qué murió un tiny                        | Aviso previo con sombra o vibración, y causa en la historia |
+| Muerte en cascada               | La colonia se vacía en pocos minutos y la partida pierde interés    | Reacción de huida, refugios y una giantess que puede tener cuidado |
+| IDs colgados tras una muerte    | Trabajos, reservas o seguimiento apuntan a un tiny que ya no existe | Muerte como despawn normal y restos como entidad nueva (D3) |
 
 ## 13. Alcance posterior
 
 El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-La expansión posterior puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El [sonido](#sonido) se suma a la escena cerrada sin música; una banda sonora queda para una etapa posterior.
+El próximo slice vertical es [Un descuido en el escritorio](#14-próximo-slice-un-descuido-en-el-escritorio): los tinies pueden morir aplastados. Después, la expansión puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El [sonido](#sonido) se suma a la escena cerrada sin música; una banda sonora queda para una etapa posterior.
+
+## 14. Próximo slice: Un descuido en el escritorio
+
+La mañana ya muestra que una acción cotidiana de la giantess cambia las posibilidades de la colonia. Este slice agrega la otra cara: **la misma acción puede costarle la vida a un tiny**. Apoyar la mano para desayunar, pisar el tatami o dejar la taza son gestos triviales en macro y catástrofes en micro.
+
+La muerte tiene que salir de la simulación, igual que todo lo demás. Ningún evento escrito dice "acá muere un tiny". Muere porque estaba debajo de una superficie que bajó, no huyó a tiempo y no tenía refugio. Y la giantess no lo hizo a propósito: no lo vio o no tuvo cuidado.
+
+Tres reglas de diseño:
+
+1. **Toda muerte se anuncia.** Antes de cada aplastamiento hay una señal que el tiny puede percibir y el jugador puede ver: la sombra de la mano que baja o la vibración de los pasos. Si un tiny muere, la historia dice qué lo aplastó.
+2. **Escapar depende de la situación.** El tiempo de aviso, la velocidad del tiny, la distancia al borde y los refugios cercanos deciden quién se salva. Con los números actuales (tiny a 2 cm/s, palma de 10 × 18 cm, 12 ticks de mano suspendida) solo se salvan los que están cerca del borde. Una giantess cuidadosa sostiene la mano más tiempo, y eso amplía el margen.
+3. **La muerte deja consecuencias.** Quedan restos en el lugar, la colonia pierde un miembro y sus trabajos, y la zona queda marcada como peligrosa durante un tiempo.
+
+### 14.1. Cómo funciona
+
+**Aplastadores.** Un aplastador es algo que puede bajar sobre una superficie: la palma, el pie de la giantess, un objeto que cae. Se define con el componente `crusher {force, footprint}`. La huella sale de la grilla de navegación del Space cuando existe. La palma ya tiene una grilla que sigue la silueta de la mano, así que un tiny que queda entre dos dedos sobrevive. Los pies y los objetos usan una huella rectangular o elíptica.
+
+**Momento del impacto.** El aplastamiento ocurre en un instante preciso, cuando la huella toca la superficie:
+
+| Fuente | Cuándo aplasta | Cómo se detecta |
+| --- | --- | --- |
+| Palma | Al apoyarse sobre un mueble | Contacto nuevo de `attach` (`contact.since` igual al tick actual) |
+| Pie | En cada pisada mientras la giantess camina por el suelo | Pisadas discretas derivadas del `mover` (componente `stride`) |
+| Objeto | Al aterrizar sobre una superficie | Aterrizaje en `space.falls` o `space.Land` (taza, migajas, objetos soltados) |
+
+Las pisadas son discretas. El sistema avanza un acumulador de distancia y, cada `stride.length`, estampa la huella del pie alternando izquierda y derecha, orientada según la dirección de la giantess. No se calcula un volumen barrido continuo. Una pisada solo afecta a lo que está en el suelo de la habitación: los tinies sobre el escritorio están en otro Space, a otra altura.
+
+**Víctimas.** El aplastamiento afecta a las entidades con `fragile {}` cuyo punto de apoyo cae dentro de la huella, en la misma superficie que la recibe. Lo que viaja sobre el aplastador queda excluido, porque está montado sobre él: el tiny que va en la palma no muere cuando ella la apoya.
+
+**Refugios.** Un objeto con `shelter {strength, extent}` protege a quien está dentro de su extensión si `strength ≥ force`. La caja de fósforos del nido resiste una mano que se apoya, pero no un pie. Por eso el nido es un lugar seguro en el escritorio y en el suelo no lo sería.
+
+**Resultado.** Cada víctima produce el evento `crushed {entity, by, source, space, pos}`. El tiny se destruye con un despawn normal y en su lugar aparecen restos: una entidad nueva con `remains {name, cause, colony, tick}` y el nombre del tiny. Usar una entidad nueva evita IDs colgados (D3). Los sistemas existentes ya resuelven lo demás: `jobs.upkeep` libera las reservas con `holder_gone`, el trabajo vuelve a la cola con `job_unassigned` y lo que el tiny cargaba queda suelto en el lugar.
+
+**Caídas.** Las caídas siguen sin matar. Un tiny de 8 mm cae como un insecto: su velocidad terminal es baja. Es una decisión de escala, coherente con apoyarse en analogías del mundo real, y evita que viajar en la palma sea una trampa.
+
+### 14.2. Amenaza, percepción y huida
+
+**Zonas de amenaza.** Cada tick se calcula la proyección de los aplastadores que están por bajar:
+
+- La mano suspendida sobre un mueble proyecta su huella sobre él mientras está a menos de `ThreatHeight` de la superficie. Es la misma sombra violeta que ya dibuja la vista micro.
+- La próxima pisada se conoce por la ruta del `mover` y su huella se publica unos ticks antes de bajar.
+
+Las zonas se derivan del estado, así que viven en un recurso (`world.SetResource`): no se guardan ni entran en el hash.
+
+**Percepción.** `ai.look` suma dos canales. La sombra la percibe cualquier tiny que esté debajo, sin depender de `sight`. La vibración la percibe un tiny en el suelo a menos de `vibration` de una pisada. Es el canal de vibración que describe la sección 5.4.
+
+**Reacción inmediata.** Hoy un agente decide cada 10 ticks, demasiado lento para huir. Cuando un tiny entra en una zona de amenaza, `ai.decide` lo reevalúa después de `agent.reflex` ticks de reacción. Es un rasgo y no un valor fijo, para que la personalidad influya.
+
+**Acción `flee`.** Es la capa de emergencia de la sección 5.3. Su utilidad supera `UrgentUtility`, así que interrumpe incluso las acciones comprometidas. Al interrumpirse, el tiny suelta lo que carga y la migaja queda sobre el escritorio. El destino es la celda transitable más cercana fuera de la huella más un margen, o un refugio si queda más cerca. Si no hay salida, el tiny queda atrapado (`trapped`) y lo muestra la gota de sudor.
+
+**Sustos.** Un tiny que estaba en la zona y salió con vida, o que quedó cerca de la huella, recibe `near_miss`: se suspende como después de una caída y muestra «!».
+
+### 14.3. La giantess y el cuidado
+
+La giantess conoce todos los objetos, pero no ve todos los tinies. Este slice le da un rasgo nuevo, `agent.care` en [0, 1]:
+
+- **Más aviso.** El paso `pose` que apoya la mano se demora `care · HoverExtra` ticks además de su `wait`. Una giantess cuidadosa da más tiempo para huir.
+- **Atención.** Antes de apoyar, hace una tirada de atención con el RNG `ai.attention` por los tinies que nota con `watch` dentro de la huella. La probabilidad crece con `care` y con la cantidad de tinies en movimiento. Si los ve, espera hasta `CareWaitMax` a que se aparten, con el símbolo «?». Si se cumple el plazo, apoya igual.
+- **Después.** Si nota restos, emite `noticed` y cambia su expresión a sorprendida. Su plan no cambia en este slice. La culpa, la evitación duradera y la relación con la colonia quedan para el sistema de relaciones.
+
+Así se cumple lo que pide la sección 5.1: la personalidad cambia con qué frecuencia la giantess revisa la superficie, no solo el diálogo.
+
+### 14.4. Consecuencias en la colonia
+
+- `colony.share` aprende los restos como cualquier otra cosa notada y publica `member_lost {colony, entity, cause}`.
+- La colonia marca una zona de peligro `danger {space, center, radius, until}` alrededor de los restos. `forage`, `explore` y `ai.WanderPoint` evitan los puntos dentro de una zona activa, y las ofertas que quedan dentro pierden utilidad. La zona expira, para que la colonia vuelva a recolectar sobre el escritorio.
+- La colonia no reemplaza miembros en este slice. Si mueren todos, el nido queda vacío con su depósito.
+
+### 14.5. Qué sistemas hay que adaptar
+
+| Paquete | Cambio |
+| --- | --- |
+| `sim/crush` (nuevo) | Componentes `crusher`, `fragile`, `shelter`, `remains` y `stride`. Sistemas `crush.steps` (Move, después del `mover`), `crush.threats` (Topology, después de `attach.contacts`) y `crush.resolve` (Consequences, antes de `space.falls`). Eventos `crushed`, `near_miss` y `footstep`. Invariantes: ningún `fragile` queda dentro de una huella apoyada y los restos tienen nombre y causa |
+| `sim/space` | Exponer los aterrizajes del tick para que `crush.resolve` los lea. Hoy `land` solo emite el evento |
+| `sim/attach` | Sin cambios de contrato: `contact.since` alcanza para detectar el apoyo |
+| `sim/nav` | `nav.NearestFree(space, from, avoid)` para elegir la celda de huida, sin cruzar portales |
+| `sim/ai` | Canales de sombra y vibración en `ai.look`. Reevaluación inmediata con `reflex`. Acción `flee`. Rasgo `care`, demora del paso `pose` y tirada de atención |
+| `sim/colony` | `member_lost`, zonas `danger` y filtro en `forage` y `WanderPoint` |
+| `sim/jobs` | Sin cambios de contrato. Un test nuevo cubre la muerte del asignado durante un acarreo |
+| `engine` | Instalar `crush` después de `attach` y antes de `ai`. Incrementar `world.HashVersion` y `world.SnapshotSchema` |
+| `content` | `crusher` en palma, pies y taza. `fragile` en los tinies. `shelter` en el nido |
+| `view` | El `Frame` suma zonas de amenaza, pisadas, restos y los estados de huida y atrapado. El seguimiento de un tiny que muere pasa a sus restos |
+| `render` y `ui` | Sprites de tiny aplastado y restos, sombra de pisada y entrada de historia con causa y lugar |
+| `sound` | «Plaf» de la palma y «tum» de la pisada en micro, golpe sordo en macro y blip de susto, sintetizados desde `tools/audio/sounds.json` |
+
+La mañana en la casa no cambia. Sus entidades no llevan `fragile`, así que `TestUnaMananaEnLaCasa` y sus capturas se mantienen; solo se regeneran los hashes por el incremento de versión. El aplastamiento se activa por contenido.
+
+### 14.6. Presentación
+
+El tono sigue siendo el del anime cotidiano: la muerte se cuenta sin gore y se entiende sin texto.
+
+- **Aviso.** La sombra de la mano ya existe. La pisada suma una sombra ovalada que crece sobre el tatami. Los tinies en zona de amenaza muestran la gota de sudor.
+- **Impacto.** Un cuadro con el tiny aplanado como en una caricatura y un pequeño espíritu que sube, al estilo manga, durante un tiempo fijo de presentación.
+- **Restos.** Una silueta gris y plana con la bufanda menta del tiny, legible en micro. En macro, una marca sobre el nido indica cuántos miembros perdió la colonia.
+- **Historia.** «Tiny 07 quedó bajo la palma en el escritorio», con la opción de localizar los restos. Las huidas exitosas también entran en la historia, para que se vea quién se salvó y no solo quién murió.
+
+Cada señal sale de un evento o del `Frame` y no modifica el mundo, igual que los símbolos y el sonido.
+
+### 14.7. Alcance y hitos
+
+| Hito | Contenido | Cierre |
+| --- | --- | --- |
+| M23 Aplastamiento | `crusher`, `fragile`, `shelter` y `remains`. Palma y objetos que caen. Muerte con restos y propagación a trabajos y reservas | Escenarios `palm_crushes_tiny`, `tiny_on_palm_is_safe`, `tiny_between_fingers_survives`, `nest_shelters_from_palm`, `cup_lands_on_tiny` y `haul_requeued_after_death` |
+| M24 Pisadas | `stride` y pisadas discretas. Portal por la pata del escritorio en la casa, como en `floor_to_desk_by_leg`. Migajas que caen al tatami | `step_crushes_tiny_on_floor` y `step_spares_tiny_on_desk` |
+| M25 Amenaza y huida | Zonas de amenaza, sombra y vibración, `reflex`, `flee`, `near_miss` y `trapped` | `tiny_flees_shadow` (se salva desde el borde y muere en el centro), `tiny_drops_crumb_to_flee` y `tiny_flees_footsteps` |
+| M26 Cuidado y consecuencias | `care`, demora y atención de la giantess. `member_lost` y zonas `danger` | `careful_giantess_waits` (con `care` alto nadie muere y con 0 sí), `colony_avoids_danger` y `danger_expires` |
+| M27 Presentación | Sprites, sombras, historia, sonidos, capturas de referencia y escenario de cierre | Capturas en `docs/capturas/` y mezcla de referencia actualizada |
+
+**Escenario de cierre: Un descuido en el escritorio.** Parte de la mañana y le suma `fragile` a los tinies, la pata del escritorio hacia el tatami y migajas que caen al piso. Se juega con dos variantes de la misma giantess: distraída (`care` 0) y cuidadosa (`care` 0,9). La aceptación pide, para las semillas de referencia:
+
+- con la distraída, al menos un tiny aplastado por la palma o por una pisada, al menos una huida exitosa con `near_miss` y la colonia evitando la zona hasta que expira;
+- con la cuidadosa, menos muertes que con la distraída en el total de semillas y al menos una espera;
+- en ambas, invariantes en cada tick, ninguna reserva ni trabajo a nombre de un tiny muerto, y el mismo log y hash al continuar desde snapshots;
+- un tiny que viaja en la palma nunca muere por el apoyo de esa misma palma.
+
+**Fuera de alcance.** Heridas y daño parcial, caídas letales, sentarse o acostarse sobre tinies, pasos con volumen barrido continuo, objetos que ruedan o se arrastran, alarmas entre tinies, duelo, nacimientos o reemplazo de miembros, relaciones entre la giantess y la colonia y una variante de aturdimiento sin muerte. Esa variante es la candidata natural para un hito posterior, porque reutiliza la suspensión de las caídas.
