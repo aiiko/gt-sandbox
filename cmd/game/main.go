@@ -516,6 +516,9 @@ func (g *game) keys() {
 		}
 	case k(ebiten.KeyTab):
 		g.toggleMicro()
+		if g.art != nil {
+			g.focusTinies()
+		}
 	case k(ebiten.KeyT):
 		g.toggleFollow()
 	case k(ebiten.KeyM):

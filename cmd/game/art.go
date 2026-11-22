@@ -180,10 +180,11 @@ func (g *game) toggleArtMicro() {
 }
 
 // microTarget es la superficie a la que lleva Tab desde la vista general: la
-// de lo seguido, si no la de lo elegido (una superficie es la suya), y si no
-// el escritorio. Nil si ninguna tiene vista de cerca.
+// de lo seguido, si no la de lo elegido (una superficie es la suya), si no
+// la que tiene más tinies y si no el escritorio. Nil si ninguna tiene vista
+// de cerca.
 func (g *game) microTarget(f *view.Frame) ids.ID {
-	for _, id := range []ids.ID{g.follow, g.sel, g.artDesk} {
+	for _, id := range []ids.ID{g.follow, g.sel, g.busiestSurface(f), g.artDesk} {
 		if s := g.microSurface(f, id); !s.IsNil() {
 			return s
 		}

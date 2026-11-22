@@ -2,6 +2,10 @@ package main
 
 import (
 	"testing"
+
+	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/view"
 )
 
 // En macro, cada tiny vivo cuenta en el globo de su superficie, los globos no
@@ -57,5 +61,76 @@ func TestTinyBadges(t *testing.T) {
 	}
 	if g.clickTinyBadge(deskBadge.badge.Max.Add(deskBadge.badge.Size())) {
 		t.Fatal("un clic fuera del globo no lo toca")
+	}
+}
+
+// tab hace lo que la tecla Tab en el arte.
+func tab(g *game) {
+	g.toggleMicro()
+	g.focusTinies()
+}
+
+// Tab sin nada elegido lleva a la superficie con más tinies y encuadra su
+// grupo más numeroso: todos sus tinies quedan en pantalla, entre las barras.
+func TestTabFramesTinies(t *testing.T) {
+	t.Chdir("../..")
+	for _, seed := range []uint64{1, 5, 9} {
+		g, err := newRandomGame(seed)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := g.enableArt(""); err != nil {
+			t.Fatal(err)
+		}
+		g.w, g.h = (pixelGame{g}).Layout(960, 540)
+		g.fit()
+		f := stepTo(t, g, 20)
+		target := g.busiestSurface(f)
+		center, n := tinyCluster(f, target)
+		if n == 0 {
+			t.Fatalf("seed %d: sin tinies", seed)
+		}
+		tab(g)
+		if g.art.focus != target {
+			t.Fatalf("seed %d: Tab lleva a %v, no a la superficie con tinies %v", seed, g.art.focus, target)
+		}
+		proj := g.cam.Project(g.anchor(f), g.w, g.h)
+		inView := 0
+		for _, th := range f.Things {
+			if !isTiny(th) || th.Space != target {
+				continue
+			}
+			d := th.Pose.Pos.XY().Sub(center)
+			if max(d.X, -d.X) > clusterHalfW || max(d.Y, -d.Y) > clusterHalfH {
+				continue
+			}
+			x, y := proj.ToScreen(th.Pose.Pos)
+			if x >= 0 && x < float32(g.w) && y >= artHeader && y < float32(g.h-artFooter) {
+				inView++
+			}
+		}
+		if inView != n {
+			t.Fatalf("seed %d: %d de %d tinies del grupo en pantalla", seed, inView, n)
+		}
+	}
+}
+
+// El grupo más numeroso gana aunque haya tinies sueltos lejos.
+func TestTinyClusterPicksDensest(t *testing.T) {
+	desk := ids.ID(7)
+	tiny := func(x, y units.Length) view.Thing {
+		return view.Thing{Space: desk, Needs: []view.Need{{}}, Pose: view.Pose{Pos: units.V3(x, y, 0)}}
+	}
+	f := &view.Frame{Things: []view.Thing{
+		tiny(0, 0),
+		tiny(50*units.Centimeter, 0), tiny(52*units.Centimeter, units.Centimeter), tiny(54*units.Centimeter, 0),
+		{Space: desk, Pose: view.Pose{Pos: units.V3(0, 0, 0)}}, // una migaja no cuenta
+	}}
+	c, n := tinyCluster(f, desk)
+	if n != 3 || c.X != 52*units.Centimeter {
+		t.Fatalf("centro %v con %d", c, n)
+	}
+	if _, n := tinyCluster(f, ids.ID(8)); n != 0 {
+		t.Fatal("otra superficie no tiene tinies")
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	"image"
+	"maps"
 	"math"
 	"slices"
 
@@ -11,6 +12,7 @@ import (
 
 	"gtsandbox/internal/camera"
 	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -102,10 +104,93 @@ func (g *game) clickTinyBadge(p image.Point) bool {
 			g.stopFollowing()
 			g.sel = s
 			g.toggleArtMicro()
+			g.focusTinies()
 		} else {
 			g.sel = gr.tinies[0]
 		}
 		return true
 	}
 	return false
+}
+
+// Media ventana de la vista micro (16 px por cm en un lienzo de 480 × 270,
+// sin las barras): el grupo de tinies que entra en ella es el que se encuadra.
+const (
+	clusterHalfW = 12 * units.Centimeter
+	clusterHalfH = 6 * units.Centimeter
+)
+
+// tinyCluster busca, entre los tinies de la superficie s, el grupo más
+// numeroso que entra en una vista micro y devuelve el centro de su extensión y
+// cuántos tiene (0 si no hay tinies). A igual cantidad gana el primero en el
+// orden del Frame.
+func tinyCluster(f *view.Frame, s ids.ID) (units.Vec2, int) {
+	var pts []units.Vec2
+	for _, t := range f.Things {
+		if isTiny(t) && t.Space == s {
+			pts = append(pts, t.Pose.Pos.XY())
+		}
+	}
+	var best units.Vec2
+	most := 0
+	for _, p := range pts {
+		lo, hi := p, p
+		n := 0
+		for _, q := range pts {
+			d := q.Sub(p)
+			if max(d.X, -d.X) <= clusterHalfW && max(d.Y, -d.Y) <= clusterHalfH {
+				lo = units.Vec2{X: min(lo.X, q.X), Y: min(lo.Y, q.Y)}
+				hi = units.Vec2{X: max(hi.X, q.X), Y: max(hi.Y, q.Y)}
+				n++
+			}
+		}
+		if n > most {
+			// El centro de la extensión: el grupo mide a lo sumo el doble de
+			// la media ventana, así que entra entero.
+			most, best = n, units.Vec2{X: (lo.X + hi.X) / 2, Y: (lo.Y + hi.Y) / 2}
+		}
+	}
+	return best, most
+}
+
+// busiestSurface es la superficie con vista de cerca donde hay más tinies
+// (a igual cantidad, la de menor ID); Nil si no hay tinies.
+func (g *game) busiestSurface(f *view.Frame) ids.ID {
+	count := map[ids.ID]int{}
+	for _, t := range f.Things {
+		if isTiny(t) {
+			if s := g.microSurface(f, t.ID); !s.IsNil() {
+				count[s]++
+			}
+		}
+	}
+	best := ids.Nil
+	for _, s := range slices.Sorted(maps.Keys(count)) {
+		if best.IsNil() || count[s] > count[best] {
+			best = s
+		}
+	}
+	return best
+}
+
+// focusTinies, recién entrados a la vista de cerca con Tab, encuadra el grupo
+// más numeroso de tinies de la superficie en vez de una parte vacía. No
+// cambia nada si se sigue a alguien o si lo elegido es un tiny de esa
+// superficie (ya quedó encuadrado).
+func (g *game) focusTinies() {
+	a, f := g.art, g.run.Cur
+	if a.focus.IsNil() || !g.follow.IsNil() {
+		return
+	}
+	if t, ok := f.ThingByID(g.sel); ok && t.Space == a.focus {
+		return
+	}
+	s, ok := f.SpaceByID(a.focus)
+	if !ok {
+		return
+	}
+	if c, n := tinyCluster(f, s.ID); n > 0 {
+		g.cam.X = float64(c.X - s.Pose.Pos.X)
+		g.cam.Y = float64(c.Y - s.Pose.Pos.Y)
+	}
 }
