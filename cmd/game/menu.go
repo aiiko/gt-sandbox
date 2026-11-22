@@ -147,7 +147,7 @@ func (m *menu) choose() menuAction {
 }
 
 var mainNotes = [...]string{
-	itemNewGame:   "Una mañana con una colonia sorteada y frágil: la mano y los pies de la giantess pueden aplastar a los tinies. Ella puede ser distraída o cuidadosa.",
+	itemNewGame:   "Una colonia sorteada y frágil: la mano y los pies de la giantess pueden aplastar a los tinies. Ella puede ser distraída o cuidadosa, y arranca con hambre, cansada o aburrida.",
 	itemScenarios: "Historias armadas para ver momentos puntuales de la casa.",
 	itemDebug:     "Muestra los datos técnicos sobre el arte: grillas, rutas y estado de la simulación. En la partida, F3 los alterna.",
 	itemQuit:      "Cerrar el juego.",
@@ -319,10 +319,11 @@ func (a *app) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Image, d
 	a.viewport.Blit(screen, canvas)
 }
 
-// randomBase es el escenario del que sale cada partida al azar: la mañana
-// peligrosa, con tinies frágiles que se asustan, la palma que aplasta, las
-// pisadas de la giantess y la pata del escritorio que baja al tatami.
-const randomBase = "tests/scenarios/un_descuido_en_el_escritorio.json"
+// randomBase es el escenario del que sale cada partida al azar
+// (tools/scenarios/partida.py): la mañana peligrosa, con tinies frágiles que
+// se asustan, la palma que aplasta y las pisadas de la giantess, más los
+// perfiles de arranque de la giantess y la merienda en el living.
+const randomBase = "content/partidas/casa.json"
 
 // newRandomGame arma una partida al azar a partir de randomBase.
 func newRandomGame(seed uint64) (*game, error) {
@@ -334,7 +335,7 @@ func newRandomGame(seed uint64) (*game, error) {
 	if err != nil {
 		return nil, err
 	}
-	spec.Name = fmt.Sprintf("Partida al azar (semilla %d)", seed)
+	spec.Name = fmt.Sprintf("Partida al azar (semilla %d, giantess %s)", seed, spec.Profile)
 	spec.Notes = ""
 	return newScenarioGame(spec, randomBase)
 }

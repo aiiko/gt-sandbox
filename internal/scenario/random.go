@@ -11,6 +11,7 @@ import (
 	"gtsandbox/internal/core/rng"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/needs"
 )
 
 // Límites de una partida al azar.
@@ -151,7 +152,70 @@ func Randomize(base *Spec, seed uint64) (*Spec, error) {
 		return nil, err
 	}
 	out.Commands = commands
+	if base.Random != nil && len(base.Random.Starts) > 0 {
+		start := base.Random.Starts[rnd.IntN(len(base.Random.Starts))]
+		if err := applyStart(out.Entities, strings.TrimPrefix(base.Random.Agent, "$"), start); err != nil {
+			return nil, err
+		}
+		out.Profile = start.Name
+	}
+	out.Random = nil
 	return &out, nil
+}
+
+// RandomSpec son los perfiles de arranque de un agente (la giantess) entre
+// los que Randomize elige uno: cada perfil reemplaza valor y decaimiento de
+// sus necesidades. Así la rutina cambia entre partidas.
+type RandomSpec struct {
+	Agent  string        `json:"agent"` // "$ref" del agente
+	Starts []RandomStart `json:"starts"`
+}
+
+// RandomStart es un perfil de arranque: con hambre, cansada…
+type RandomStart struct {
+	Name  string       `json:"name"`
+	Needs []needs.Need `json:"needs"`
+}
+
+// applyStart reemplaza en la entidad ref las necesidades del perfil (las que
+// no tenía se agregan al final).
+func applyStart(entities []EntitySpec, ref string, start RandomStart) error {
+	for i, e := range entities {
+		if e.Ref != ref {
+			continue
+		}
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return fmt.Errorf("scenario: entidad %q: %w", ref, err)
+		}
+		comps, _ := spawn["components"].(map[string]any)
+		if comps == nil {
+			comps = map[string]any{}
+			spawn["components"] = comps
+		}
+		var list []needs.Need
+		if raw, ok := comps["needs"]; ok {
+			b, _ := json.Marshal(raw)
+			if err := json.Unmarshal(b, &list); err != nil {
+				return fmt.Errorf("scenario: entidad %q: needs: %w", ref, err)
+			}
+		}
+		for _, n := range start.Needs {
+			if j := slices.IndexFunc(list, func(m needs.Need) bool { return m.Name == n.Name }); j >= 0 {
+				list[j] = n
+			} else {
+				list = append(list, n)
+			}
+		}
+		comps["needs"] = list
+		raw, err := json.Marshal(spawn)
+		if err != nil {
+			return err
+		}
+		entities[i].Spawn = raw
+		return nil
+	}
+	return fmt.Errorf("scenario: el perfil de arranque es de %q, que no existe", ref)
 }
 
 // RandomMaxCare es el cuidado máximo que se sortea para la giantess.

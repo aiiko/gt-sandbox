@@ -12,7 +12,7 @@ func TestDefaultAndMerge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Join(lib.Names(), ","); got != "bed,crumb,cup,desk,fridge,nest,tv" {
+	if got := strings.Join(lib.Names(), ","); got != "bed,crumb,cup,desk,fridge,nest,plate,tv" {
 		t.Fatalf("objetos: %s", got)
 	}
 	raw, err := lib.Spawn("crumb", json.RawMessage(`{"name":"c1","components":{"mover":{"speed":1}}}`))

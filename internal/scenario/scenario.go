@@ -54,6 +54,10 @@ type Spec struct {
 	Expect   []Expectation `json:"expect"`
 	Notes    string        `json:"notes,omitempty"` // libre, para humanos
 	Atlas    string        `json:"atlas,omitempty"` // presentación, relativo al archivo
+	// Random es lo que sortea Randomize además de la colonia (ver random.go);
+	// Build lo ignora. Profile es el perfil que eligió Randomize.
+	Random  *RandomSpec `json:"random,omitempty"`
+	Profile string      `json:"profile,omitempty"`
 }
 
 // EntitySpec es una entidad a crear. Con Object, Spawn se combina con esa

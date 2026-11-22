@@ -38,6 +38,7 @@ var displayNames = map[string]string{
 	"house":    "Casa",
 	"giantess": "Giantess",
 	"cup":      "la taza",
+	"plate":    "el plato",
 	"crumb":    "una migaja",
 }
 
@@ -113,18 +114,19 @@ func (g *game) location(f *view.Frame, focus ids.ID) []string {
 
 // activities da el presente y el infinitivo de cada actividad publicada.
 var activities = map[string][2]string{
-	"use:breakfast": {"Desayuna", "desayunar"},
-	"use:snack":     {"Merienda", "merendar"},
-	"use:watch":     {"Mira televisión", "mirar televisión"},
-	"use:eat":       {"Come en el nido", "comer en el nido"},
-	"use:nibble":    {"Mordisquea una migaja", "mordisquear una migaja"},
-	"use:shelter":   {"Descansa en la taza", "descansar en la taza"},
-	"use:sleep":     {"Duerme", "dormir"},
-	"forage":        {"Busca comida", "buscar comida"},
-	"work":          {"Trabaja para la colonia", "trabajar"},
-	"explore":       {"Explora", "explorar"},
-	"flee":          {"Huye", "huir"},
-	"use:write":     {"Escribe", "escribir"},
+	"use:breakfast":    {"Desayuna", "desayunar"},
+	"use:snack":        {"Merienda", "merendar"},
+	"use:snack_living": {"Merienda en el living", "merendar en el living"},
+	"use:watch":        {"Mira televisión", "mirar televisión"},
+	"use:eat":          {"Come en el nido", "comer en el nido"},
+	"use:nibble":       {"Mordisquea una migaja", "mordisquear una migaja"},
+	"use:shelter":      {"Descansa en la taza", "descansar en la taza"},
+	"use:sleep":        {"Duerme", "dormir"},
+	"forage":           {"Busca comida", "buscar comida"},
+	"work":             {"Trabaja para la colonia", "trabajar"},
+	"explore":          {"Explora", "explorar"},
+	"flee":             {"Huye", "huir"},
+	"use:write":        {"Escribe", "escribir"},
 }
 
 // remainsCause dice qué aplastó a quien dejó unos restos.

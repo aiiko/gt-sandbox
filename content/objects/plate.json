@@ -1,0 +1,8 @@
+{
+  "name": "plate",
+  "visual": "plate",
+  "body": {"radius": 30000, "height": 15000, "mass": 0},
+  "components": {
+    "crusher": {"source": "object", "force": 3}
+  }
+}

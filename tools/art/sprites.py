@@ -335,6 +335,46 @@ def cup():
     save(c.im, 'cup/macro_held.png')
 
 
+def plate_micro(c, cx, cy, shadow):
+    """Plato de postre visto desde arriba con una galleta y migas."""
+    if shadow:
+        c.ellipse(cx + 3, cy + 5, 45, 27, '#BD897F')
+    c.ellipse(cx, cy, 45, 27, INK)
+    c.ellipse(cx, cy, 44, 26, '#E8DCCB')
+    c.ellipse(cx, cy - 1, 43, 25, '#FFF6EA')
+    c.ellipse(cx, cy + 1, 32, 18, '#F2E6D6')
+    c.ellipse(cx, cy, 31, 17, '#FFF9F0')
+    # galleta
+    c.ellipse(cx - 6, cy - 2, 12, 8, INK)
+    c.ellipse(cx - 6, cy - 2, 11, 7, '#D9A066')
+    c.ellipse(cx - 7, cy - 3, 9, 5, '#E8B77D')
+    for dx, dy in ((-10, -4), (-4, -6), (-2, 0), (-9, 1)):
+        c.px(cx + dx, cy + dy, '#8F5A3C')
+    for dx, dy in ((10, 4), (14, -3), (8, 8), (18, 2)):
+        c.px(cx + dx, cy + dy, '#D9A066')
+
+
+def plate():
+    c = Canvas(98, 64)
+    plate_micro(c, 47, 29, True)
+    save(c.im, 'plate/micro_idle.png')
+    c = Canvas(98, 64)
+    plate_micro(c, 47, 29, False)
+    save(c.im, 'plate/micro_held.png')
+    c = Canvas(6, 4)
+    c.rect(1, 0, 4, 1, INK)
+    c.rect(0, 1, 6, 2, INK)
+    c.rect(1, 3, 4, 1, INK)
+    c.rect(1, 1, 4, 2, '#FFF6EA')
+    c.px(2, 1, '#D9A066')
+    save(c.im, 'plate/macro_idle.png')
+    c2 = Canvas(7, 4)
+    c2.paste(c.im, 0, 0)
+    c2.px(5, 1, '#FFD8B9')
+    c2.px(6, 2, '#FFD8B9')
+    save(c2.im, 'plate/macro_held.png')
+
+
 def tiny_shadow():
     """Sombra sola del tiny, opaca: la presentación le da la transparencia."""
     c = Canvas(16, 18)
@@ -457,3 +497,4 @@ def main(src, base):
     palm_shadows()
     pass_sign()
     cup()
+    plate()

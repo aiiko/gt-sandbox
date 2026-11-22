@@ -62,8 +62,11 @@ func storyText(r *ecs.Registry, event world.Event) string {
 	names := comp.Of(r).Name
 	name := func(id ids.ID) string {
 		if n, ok := names.Get(id); ok && n != "" {
-			if n == "cup" {
+			switch n {
+			case "cup":
 				return "la taza"
+			case "plate":
+				return "el plato"
 			}
 			return string(n)
 		}
@@ -87,10 +90,15 @@ func storyText(r *ecs.Registry, event world.Event) string {
 			return fmt.Sprintf("%s decide mirar televisión.", name(ev.Entity))
 		case "sleep":
 			return fmt.Sprintf("%s se dispone a dormir.", name(ev.Entity))
+		case "snack_living":
+			return fmt.Sprintf("%s decide merendar en el living.", name(ev.Entity))
 		}
 	case ai.ActionDone:
-		if ev.What == "breakfast" {
+		switch ev.What {
+		case "breakfast":
 			return fmt.Sprintf("%s termina de desayunar.", name(ev.Entity))
+		case "snack_living":
+			return fmt.Sprintf("%s termina de merendar.", name(ev.Entity))
 		}
 	case ai.ItemDropped:
 		return fmt.Sprintf("%s deja %s en %s.", name(ev.Entity), name(ev.Item), name(ev.On))

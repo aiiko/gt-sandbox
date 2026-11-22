@@ -1420,6 +1420,48 @@
           }
         }
       }
+    },
+    "plate": {
+      "macro": {
+        "pivot": [
+          3,
+          2
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "plate/macro_idle.png"
+            ]
+          },
+          "held": {
+            "frame_ticks": 1,
+            "frames": [
+              "plate/macro_held.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          47,
+          29
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "plate/micro_idle.png"
+            ]
+          },
+          "held": {
+            "frame_ticks": 1,
+            "frames": [
+              "plate/micro_held.png"
+            ]
+          }
+        }
+      }
     }
   }
 }
