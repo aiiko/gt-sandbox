@@ -1,12 +1,12 @@
-# \*\*Proyecto: Giantess Life Simulator\*\*
+# Proyecto: Giantess Life Simulator
 
 Análisis de diseño, simulación y arquitectura técnica
 
-Tu idea tiene una combinación bastante particular: tomar las situaciones y diferencias de tamaño de los juegos Giantess clásicos, pero reemplazar su estructura de RPG por un \*\*sandbox de simulación emergente\*\*, donde los personajes tienen necesidades, relaciones, rutinas y comportamientos autónomos.
+Tu idea tiene una combinación bastante particular: tomar las situaciones y diferencias de tamaño de los juegos Giantess clásicos, pero reemplazar su estructura de RPG por un **sandbox de simulación emergente**, donde los personajes tienen necesidades, relaciones, rutinas y comportamientos autónomos.
 
 La diferencia fundamental sería esta:
 
-\*\*En un RPG tradicional, la giantess hace algo porque un evento programado lo indica. En tu juego, lo hace porque la simulación la llevó a tomar esa decisión.\*\*
+**En un RPG tradicional, la giantess hace algo porque un evento programado lo indica. En tu juego, lo hace porque la simulación la llevó a tomar esa decisión.**
 
 Por ejemplo, imaginemos una casa habitada por una giantess y una pequeña civilización de tinies que vive debajo de su escritorio.
 
@@ -18,89 +18,46 @@ Ninguna de esas situaciones necesitaría una misión escrita a mano.
 
 El juego produciría historias mediante la interacción de sus sistemas.
 
-LA COMBINACIÓN QUE PROPONGO
+## La combinación que propongo
 
-\*\*RimWorld\*\*
+- **RimWorld** — Colonias, tareas, supervivencia y consecuencias
+- **The Sims** — Necesidades, autonomía, personalidad y relaciones
+- **Dwarf Fortress** — Mundo persistente, causalidad y profundidad de simulación
+- **Giantess RPGs** — Perspectiva, exploración, interacciones entre escalas y situaciones especiales
 
-Colonias, tareas, supervivencia y consecuencias
-
-\*\*The Sims\*\*
-
-Necesidades, autonomía, personalidad y relaciones
-
-\*\*Dwarf Fortress\*\*
-
-Mundo persistente, causalidad y profundidad de simulación
-
-\*\*Giantess RPGs\*\*
-
-Perspectiva, exploración, interacciones entre escalas y situaciones especiales
-
-Mi propuesta es diseñarlo como \*\*un simulador de ecosistemas a distintas escalas\*\*, no como un RPG con más NPC ni como un clon completo de RimWorld.
+Mi propuesta es diseñarlo como **un simulador de ecosistemas a distintas escalas**, no como un RPG con más NPC ni como un clon completo de RimWorld.
 
 Esto importa porque las mecánicas más interesantes de tu juego aparecen precisamente donde se cruzan ambos mundos: la misma acción cotidiana puede ser trivial para una giantess y un acontecimiento enorme para los tinies.
 
-## \*\*1. Qué podemos extraer de los juegos de referencia\*\*
+## 1. Qué podemos extraer de los juegos de referencia
 
-### \*\*1.1. Los juegos Giantess: conservar la temática, cambiar la estructura\*\*
+### 1.1. Los juegos Giantess: conservar la temática, cambiar la estructura
 
-\[X\](https://images.openai.com/static-rsc-4/pCrNRjhE4TrfVIklpLLSluxOmSgwlL4g3fxqojxT8R4jRu89ZNe6Zb9heTB5\_2D\_CQiQ7uwWGF1XY4i\_t4ZwHNthuQVzq4XjYV-iO5o3Ax1UTsjM\_82f60MM9pZFvXTfz6TGYEyZzUIm6Ae5J7xV4cl0x-pOGX8iu4UJqty1BqA?purpose=inline)
+#### Size Matters — Uru
 
-\*\*Size Matters — Uru\*\*
+Sus mapas de tamaños diferentes, zonas como ciudades diminutas y situaciones de interacción entre personajes de distintas escalas son referencias útiles. La documentación comunitaria de sus versiones muestra una gran cantidad de áreas y eventos particulares. [aryion.com](https://aryion.com) · [Imagen de Size Matters](https://images.openai.com/static-rsc-4/pCrNRjhE4TrfVIklpLLSluxOmSgwlL4g3fxqojxT8R4jRu89ZNe6Zb9heTB5_2D_CQiQ7uwWGF1XY4i_t4ZwHNthuQVzq4XjYV-iO5o3Ax1UTsjM_82f60MM9pZFvXTfz6TGYEyZzUIm6Ae5J7xV4cl0x-pOGX8iu4UJqty1BqA?purpose=inline)
 
-Sus mapas de tamaños diferentes, zonas como ciudades diminutas y situaciones de interacción entre personajes de distintas escalas son referencias útiles. La documentación comunitaria de sus versiones muestra una gran cantidad de áreas y eventos particulares.&amp;#x20;
+**Adoptaría** la exploración ambiental y la variedad de situaciones que surgen de las diferencias de tamaño. Cambiaría la dependencia de mapas y eventos independientes para representar cada interacción.
 
-\[image\](https://www.google.com/s2/favicons?domain=https://aryion.com\\&sz=32)
+#### Shrink High / 縮小学園
 
-aryion.com+2
+Destaca por la vulnerabilidad de los personajes diminutos, la exploración y el peligro asociado a encuentros con personajes enormes. Un equipo que desarrolló *Astra's Plaything* en 2026 también identificó esa sensación de desventaja como uno de los grandes atractivos del género. [furaffinity.net](https://www.furaffinity.net) · [Shrink High Download Game - excellentlasopa](https://images.openai.com/static-rsc-4/rPA2KOeqozjjHMyVdXmymVfc9OPY7YlAq1vwDfqNvyZ-6VHIvti60wpDovm8CzX059eOEykcXGo1q8j9PY2R6Houf_xRSFaiK9FwcilgB9BtuqCTh7IvAB9WrAyqdm7YGeqYSXdUhYhTe3mzeHbwpA7BnuqsvLYhJ5GOw6enGsU?purpose=inline)
 
+**Adoptaría** que el tamaño afecte realmente la exploración, el desplazamiento, la percepción y la supervivencia.
 
+#### Terada Ochiko — obras y juegos asociados
 
-\*\*Lo que adoptaría:\*\* la exploración ambiental y la variedad de situaciones que surgen de las diferencias de tamaño. Lo que cambiaría: depender de mapas y eventos independientes para representar cada interacción.
+Las referencias relacionadas con Ochiko aportan situaciones de escala extrema y exploración de espacios asociados a personajes gigantes. Hay juegos comunitarios atribuidos a su trabajo, como *President Matsudo's Ambition*. También figura como artista colaborador en *Shrink High Gaiden*, no como su único desarrollador. [aryion.com](https://aryion.com) · [PULSE - ゲームを記録・管理できる究極のゲームライブラリ](https://images.openai.com/static-rsc-4/WB2SyeNoBmdBQrNN8_-K1ab0rZol2HlSyYqlOSNOzKZ-oTwem5oiD8T6CC4iOAWTgHdNOugBCeHsny4tuJWl2HKCXwyCIsnlrhT4iQy3emPwsf1HNY2DlK0AN0RmVs2yRCIobHUh8y-cfDW7hsg1Zg7YzwuH54ghzuDSlKSf3UM?purpose=inline)
 
-\[Shrink High Download Game - excellentlasopa\](https://images.openai.com/static-rsc-4/rPA2KOeqozjjHMyVdXmymVfc9OPY7YlAq1vwDfqNvyZ-6VHIvti60wpDovm8CzX059eOEykcXGo1q8j9PY2R6Houf\_xRSFaiK9FwcilgB9BtuqCTh7IvAB9WrAyqdm7YGeqYSXdUhYhTe3mzeHbwpA7BnuqsvLYhJ5GOw6enGsU?purpose=inline)
+**Adoptaría** el cuerpo de una giantess como entorno explorable, con sus propios obstáculos, lugares y eventos, pero convertido en un sistema reutilizable.
 
-\*\*Shrink High / 縮小学園\*\*
+#### SAEKO: Giantess Dating Sim — referencia adicional
 
-Destaca por la vulnerabilidad de los personajes diminutos, la exploración y el peligro asociado a encuentros con personajes enormes. Un equipo que desarrolló \*Astra's Plaything\* en 2026 también identificó esa sensación de desventaja como uno de los grandes atractivos del género.&amp;#x20;
+Es especialmente relevante porque utiliza dos estilos de pixel art y distintos sistemas de juego para representar la vida de humanos diminutos bajo el control de una gigante. Sin embargo, su experiencia sigue estando organizada alrededor de una historia y decisiones narrativas. [SAEKO: Giantess Dating Sim](https://saekogame.com) · [小人となって死を潜り抜ける会話型アドベンチャー『SAEKO: Giantess Dating Sim』。家主の巨大少女の機嫌を損ねると…？【電撃インディー#670】 - 電撃オンライン](https://images.openai.com/static-rsc-4/I4lkcyrEwXi9GeZB7QzGR_f3mOBEanIBklVj2bZf3aArRcafciPk24h2yJDHB-yJ9i46tZrXV2lx06f4lhJ8V12DJ201rADtewoE0OQc00bWDfCShOGgmkcSRx0DwRO2u4n9brao9lrNGFqdfUOowjc5JsabOIUQXp039F4itsc?purpose=inline)
 
-\[image\](https://www.google.com/s2/favicons?domain=https://www.furaffinity.net\\&sz=32)
+**Adoptaría** distintas representaciones visuales del mismo universo según la perspectiva y la distancia.
 
-furaffinity.net+1
-
-
-
-\*\*Lo que adoptaría:\*\* que el tamaño afecte realmente la exploración, el desplazamiento, la percepción y la supervivencia.
-
-\[PULSE - ゲームを記録・管理できる究極のゲームライブラリ\](https://images.openai.com/static-rsc-4/WB2SyeNoBmdBQrNN8\_-K1ab0rZol2HlSyYqlOSNOzKZ-oTwem5oiD8T6CC4iOAWTgHdNOugBCeHsny4tuJWl2HKCXwyCIsnlrhT4iQy3emPwsf1HNY2DlK0AN0RmVs2yRCIobHUh8y-cfDW7hsg1Zg7YzwuH54ghzuDSlKSf3UM?purpose=inline)
-
-\*\*Terada Ochiko — obras y juegos asociados\*\*
-
-Las referencias relacionadas con Ochiko aportan situaciones de escala extrema y exploración de espacios asociados a personajes gigantes. Hay juegos comunitarios atribuidos a su trabajo, como \*President Matsudo's Ambition\*. También figura como artista colaborador en \*Shrink High Gaiden\*, no como su único desarrollador.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://aryion.com\\&sz=32)
-
-aryion.com+2
-
-
-
-\*\*Lo que adoptaría:\*\* el cuerpo de una giantess como entorno explorable, con sus propios obstáculos, lugares y eventos, pero convertido en un sistema reutilizable.
-
-\[小人となって死を潜り抜ける会話型アドベンチャー『SAEKO: Giantess Dating Sim』。家主の巨大少女の機嫌を損ねると…？【電撃インディー#670】 - 電撃オンライン\](https://images.openai.com/static-rsc-4/I4lkcyrEwXi9GeZB7QzGR\_f3mOBEanIBklVj2bZf3aArRcafciPk24h2yJDHB-yJ9i46tZrXV2lx06f4lhJ8V12DJ201rADtewoE0OQc00bWDfCShOGgmkcSRx0DwRO2u4n9brao9lrNGFqdfUOowjc5JsabOIUQXp039F4itsc?purpose=inline)
-
-\*\*SAEKO: Giantess Dating Sim — referencia adicional\*\*
-
-Es especialmente relevante porque utiliza dos estilos de pixel art y distintos sistemas de juego para representar la vida de humanos diminutos bajo el control de una gigante. Sin embargo, su experiencia sigue estando organizada alrededor de una historia y decisiones narrativas.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://saekogame.com\\&sz=32)
-
-SAEKO: Giantess Dating Sim+1
-
-
-
-\*\*Lo que adoptaría:\*\* distintas representaciones visuales del mismo universo según la perspectiva y la distancia.
-
-La oportunidad está en convertir lo que estos juegos presentan mediante escenas diseñadas individualmente en \*\*reglas generales que producen muchas situaciones distintas\*\*.
+La oportunidad está en convertir lo que estos juegos presentan mediante escenas diseñadas individualmente en **reglas generales que producen muchas situaciones distintas**.
 
 Por ejemplo:
 
@@ -112,7 +69,7 @@ Por ejemplo:
 | Una giantess descubre tinies | Diálogo predefinido      | Reacción según percepción, personalidad y relación    |
 | Una casa cambia              | Evento argumental        | Consecuencia de actividades e interacción con objetos |
 
-### \*\*1.2. Los simuladores: qué sistema tomar de cada uno\*\*
+### 1.2. Los simuladores: qué sistema tomar de cada uno
 
 | Juego               | Sistema más valioso                                         | Cómo se adapta                                                |
 | ------------------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
@@ -124,25 +81,13 @@ Por ejemplo:
 
 Hay dos referencias técnicas especialmente interesantes.
 
-\*\*RimWorld:\*\* su arquitectura distingue la selección de trabajos de su ejecución y distribuye evaluaciones de IA entre distintos ticks. Esa separación evita tener que reconsiderar todas las decisiones de todos los personajes en cada frame.&amp;#x20;
+**RimWorld:** su arquitectura distingue la selección de trabajos de su ejecución y distribuye evaluaciones de IA entre distintos ticks. Esa separación evita tener que reconsiderar todas las decisiones de todos los personajes en cada frame. [GitHub](https://github.com)
 
-\[image\](https://www.google.com/s2/favicons?domain=https://github.com\\&sz=32)
-
-GitHub+1
-
-
-
-\*\*The Sims:\*\* Robert Zubek, que trabajó en ese ámbito, describió un sistema de inteligencia artificial basado en necesidades y objetos que ofrecen comportamientos. En vez de programar cada actividad completa dentro del personaje, parte de la información sobre qué puede hacerse está en los propios objetos del mundo.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://robert.zubek.net\\&sz=32)
-
-robert.zubek.net+1
-
-
+**The Sims:** Robert Zubek, que trabajó en ese ámbito, describió un sistema de inteligencia artificial basado en necesidades y objetos que ofrecen comportamientos. En vez de programar cada actividad completa dentro del personaje, parte de la información sobre qué puede hacerse está en los propios objetos del mundo. [robert.zubek.net](https://robert.zubek.net)
 
 Esto último encaja particularmente bien en una casa llena de objetos.
 
-## \*\*2. Qué tipo de juego debería ser\*\*
+## 2. Qué tipo de juego debería ser
 
 Veo tres direcciones posibles.
 
@@ -152,33 +97,25 @@ Veo tres direcciones posibles.
 | Life Sim                  | Controlás o influís en una giantess que vive su rutina          | Media-alta  |
 | Sandbox emergente híbrido | Alternás perspectivas e intervenís sobre un ecosistema autónomo | Muy alta    |
 
-\*\*Elegiría el tercero como objetivo final, pero desarrollaría primero el núcleo de un Colony Sim.\*\*
+**Elegiría el tercero como objetivo final, pero desarrollaría primero el núcleo de un Colony Sim.**
 
 Esto no significa descartar jugar como giantess. Significa construir primero una simulación capaz de funcionar aunque no controles directamente a nadie.
 
 La estructura podría tener tres perspectivas:
 
-\*\*Vista de la casa\*\*
-
-Observás las habitaciones, rutinas y desplazamientos de las giantesses. Similar a The Sims.
-
-\*\*Vista de los tinies\*\*
-
-Gestionás colonias, exploración, recursos, peligros y trabajos. Similar a RimWorld.
-
-\*\*Vista del cuerpo\*\*
-
-Explorás superficies asociadas a una giantess, como manos, brazos, ropa o cabello, mientras ella sigue moviéndose y actuando.
+- **Vista de la casa.** Observás las habitaciones, rutinas y desplazamientos de las giantesses. Similar a The Sims.
+- **Vista de los tinies.** Gestionás colonias, exploración, recursos, peligros y trabajos. Similar a RimWorld.
+- **Vista del cuerpo.** Explorás superficies asociadas a una giantess, como manos, brazos, ropa o cabello, mientras ella sigue moviéndose y actuando.
 
 La tercera perspectiva es lo que más diferenciaría tu proyecto.
 
-Pero también introduce el problema técnico más importante de todo el diseño: \*\*un personaje que simultáneamente es un agente autónomo, un objeto físico y un mundo que otros personajes pueden explorar\*\*.
+Pero también introduce el problema técnico más importante de todo el diseño: **un personaje que simultáneamente es un agente autónomo, un objeto físico y un mundo que otros personajes pueden explorar**.
 
-## \*\*3. El sistema central: un mundo con varias escalas\*\*
+## 3. El sistema central: un mundo con varias escalas
 
 No construiría tres mundos aislados. Construiría un único estado de simulación con múltiples espacios conectados.
 
-### \*\*3.1. La casa es una jerarquía de espacios\*\*
+### 3.1. La casa es una jerarquía de espacios
 
 Arquitectura conceptual: los espacios tienen posiciones, conexiones y relaciones de pertenencia. Los cuerpos son espacios móviles dentro del mismo mundo.
 
@@ -200,44 +137,28 @@ Una giantess de 170 cm mide unas 212 veces lo que un tiny de 8 mm. La vista macr
 
 Las dos vistas representan las mismas entidades, poses y estados. Cada superficie tiene su grilla de navegación y su arte puede usar una densidad de píxeles distinta. La cámara cambia el encuadre y la representación visual mientras el mundo conserva sus coordenadas físicas. Las reglas de proyección, densidad y transición se detallan en [Dirección visual](#11-dirección-visual).
 
-## \*\*4. La giantess como mapa móvil\*\*
+## 4. La giantess como mapa móvil
 
 Este es el sistema que diseñaría primero en un prototipo técnico, incluso antes de construir una IA compleja.
 
 La idea es asignarle a cada giantess un conjunto de espacios explorables, cada uno asociado a una parte de su cuerpo o a un objeto que lleva puesto.
 
-Ejemplo de superficies explorables
+**Ejemplo de superficies explorables**
 
-Cabeza
-
-Cabello, rostro
-
-Brazos
-
-Antebrazos, codos
-
-Manos
-
-Palmas, dedos
-
-Torso
-
-Ropa, hombros
-
-Piernas
-
-Rodillas, ropa
-
-Pies
-
-Calzado, superficies
+| Parte | Superficies |
+| --- | --- |
+| Cabeza | Cabello, rostro |
+| Brazos | Antebrazos, codos |
+| Manos | Palmas, dedos |
+| Torso | Ropa, hombros |
+| Piernas | Rodillas, ropa |
+| Pies | Calzado, superficies |
 
 Cada superficie tendría su propio mapa, puntos de conexión y reglas físicas.
 
 Por ejemplo:
 
-\`\`\`
-
+```text
 Mano izquierda
   ├── Palma
   │    ├── Dedo índice
@@ -248,18 +169,17 @@ Mano izquierda
             └── Brazo
                  └── Hombro
                       └── Torso
-
-\`\`\`
+```
 
 Un tiny podría desplazarse entre estas regiones, siempre que sean accesibles según la pose actual.
 
-### \*\*4.1. Cómo sería el movimiento\*\*
+### 4.1. Cómo sería el movimiento
 
 Imaginemos que un tiny está sobre el antebrazo.
 
 La giantess levanta la mano para tomar una taza. Técnicamente ocurren varios cambios:
 
-1. Su IA decide ejecutar la acción \`TakeCup\`.
+1. Su IA decide ejecutar la acción `TakeCup`.
 2. El sistema de acciones cambia la pose del brazo.
 3. El espacio asociado al antebrazo actualiza su transformación.
 4. El tiny conserva su posición local respecto al antebrazo, si sigue sujeto a él.
@@ -268,13 +188,15 @@ La giantess levanta la mano para tomar una taza. Técnicamente ocurren varios ca
 
 La posición del tiny sería relativa a su superficie:
 
-\\\\\[ P\\\_{\\text{mundo}} = T\\\_{\\text{giantess}}\\cdot T\\\_{\\text{parte}}\\cdot P\\\_{\\text{local}} \\\\\]
+$$
+P_{\text{mundo}} = T_{\text{giantess}} \cdot T_{\text{parte}} \cdot P_{\text{local}}
+$$
 
 En este modelo, las transformaciones convierten la posición local del tiny a una posición global. En una simulación top-down con altura discreta, se puede implementar con transformaciones 2D y un componente adicional de elevación.
 
-El detalle importante es que \*\*la giantess puede continuar ejecutando su rutina mientras los tinies exploran su cuerpo\*\*.
+El detalle importante es que **la giantess puede continuar ejecutando su rutina mientras los tinies exploran su cuerpo**.
 
-### \*\*4.2. El problema de las poses\*\*
+### 4.2. El problema de las poses
 
 No alcanza con dibujar el cuerpo como un mapa fijo.
 
@@ -288,16 +210,15 @@ Una giantess parada, sentada, acostada o caminando tiene distintas superficies a
 | Caminando             | Los espacios corporales se desplazan y algunas rutas se vuelven inestables |
 | Sosteniendo un objeto | El objeto puede convertirse en una ruta de transporte                      |
 
-No empezaría con un esqueleto físico articulado completo. Para pixel art top-down, sería mucho más económico definir \*\*poses discretas, puntos de anclaje y transiciones controladas\*\*.
+No empezaría con un esqueleto físico articulado completo. Para pixel art top-down, sería mucho más económico definir **poses discretas, puntos de anclaje y transiciones controladas**.
 
 Eso ofrece buena parte de la experiencia sin implementar una simulación anatómica continua.
 
-### \*\*4.3. Dos sistemas de navegación conectados\*\*
+### 4.3. Dos sistemas de navegación conectados
 
 El recorrido de un tiny podría ser:
 
-\`\`\`
-
+```text
 Suelo de habitación
     ↓ Escalar
 Pata de escritorio
@@ -309,26 +230,19 @@ Palma de la giantess
 Muñeca
     ↓
 Antebrazo
-
-\`\`\`
+```
 
 El motor primero calcularía una ruta general por los espacios conectados y después rutas locales dentro de cada mapa.
 
-Se parece al principio de pathfinding jerárquico HPA\\\*, que reduce el problema de navegación mediante clusters y conexiones de nivel superior.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://theory.stanford.edu\\&sz=32)
-
-theory.stanford.edu+1
-
-
+Se parece al principio de pathfinding jerárquico `HPA*`, que reduce el problema de navegación mediante clusters y conexiones de nivel superior. [theory.stanford.edu](https://theory.stanford.edu)
 
 La parte nueva sería que algunas conexiones aparecen, desaparecen o cambian de posición según lo que hace la giantess.
 
 Por ejemplo, cuando coloca su mano sobre el escritorio, se habilita temporalmente un camino entre ambos espacios.
 
-\*\*Esto es muchísimo más flexible que teletransportar al tiny a un mapa especial mediante un evento.\*\*
+**Esto es muchísimo más flexible que teletransportar al tiny a un mapa especial mediante un evento.**
 
-## \*\*5. Sistemas de simulación: cuáles combinaría y cómo\*\*
+## 5. Sistemas de simulación: cuáles combinaría y cómo
 
 La clave es que los sistemas puedan interactuar entre sí sin que cada uno necesite conocer todos los detalles de los demás.
 
@@ -339,7 +253,7 @@ Mi selección sería la siguiente:
 | Mundo multi-escala               | Diseño propio             | Crítica           | Muy alta   |
 | Necesidades y rutinas            | The Sims                  | Crítica           | Media      |
 | Trabajos y prioridades           | RimWorld                  | Alta              | Media      |
-| Navegación entre superficies     | RimWorld / HPA\\\*          | Crítica           | Muy alta   |
+| Navegación entre superficies     | RimWorld / `HPA*`         | Crítica           | Muy alta   |
 | Percepción y conocimiento        | The Sims / IA de agentes  | Alta              | Alta       |
 | Relaciones y personalidad        | The Sims                  | Media             | Media      |
 | Interacciones físicas            | Simulaciones emergentes   | Alta              | Alta       |
@@ -348,69 +262,49 @@ Mi selección sería la siguiente:
 | Historia emergente               | Dwarf Fortress            | Alta              | Media      |
 | Simulación de fluidos y ambiente | Oxygen Not Included       | Baja inicialmente | Muy alta   |
 
-### \*\*5.1. IA de las giantesses: Utility AI + acciones\*\*
+### 5.1. IA de las giantesses: Utility AI + acciones
 
 En lugar de escribir una secuencia rígida como:
 
-\`Despertar → Ir al baño → Desayunar → Mirar televisión\`
+`Despertar → Ir al baño → Desayunar → Mirar televisión`
 
-utilizaría una IA basada en necesidades y puntuaciones de utilidad (\*Utility AI\*).
+utilizaría una IA basada en necesidades y puntuaciones de utilidad (*Utility AI*).
 
 Por ejemplo, una giantess podría tener estos valores:
 
-\*\*Estado de una giantess\*\*
+**Estado de una giantess**
 
-Ejemplo
-
-Hambre
-
-25%
-
-Energía
-
-75%
-
-Higiene
-
-50%
-
-Diversión
-
-40%
-
-Social
-
-65%
+| Necesidad | Ejemplo |
+| --- | --- |
+| Hambre | 25% |
+| Energía | 75% |
+| Higiene | 50% |
+| Diversión | 40% |
+| Social | 65% |
 
 La IA evalúa cuáles de sus acciones disponibles mejoran estas necesidades y considera distancia, disponibilidad, personalidad y riesgos.
 
 Una versión simple de la puntuación sería:
 
-\\\\\[ U(a)=\\sum\_i w\_i\\cdot \\Delta N\_i(a)-C(a)-R(a) \\\\\]
+$$
+U(a) = \sum_i w_i \cdot \Delta N_i(a) - C(a) - R(a)
+$$
 
-Donde:
+- $U(a)$ es la utilidad de la acción.
+- $w_i$ representa la importancia de cada necesidad para el personaje.
+- $\Delta N_i(a)$ es el beneficio esperado para esa necesidad.
+- $C(a)$ representa el costo de tiempo, esfuerzo y desplazamiento.
+- $R(a)$ es la penalización por riesgo.
 
-- \\\\(U(a)\\\\): utilidad de la acción.
-- \\\\(w\_i\\\\): importancia de cada necesidad para el personaje.
-- \\\\(\\Delta N\_i(a)\\\\): beneficio esperado para esa necesidad.
-- \\\\(C(a)\\\\): costo de tiempo, esfuerzo y desplazamiento.
-- \\\\(R(a)\\\\): penalización por riesgo.
+La fórmula es una propuesta simplificada; en un sistema más avanzado utilizaríamos curvas de utilidad no lineales y un mecanismo que impida cambiar de decisión continuamente. La literatura sobre *Needs-Based AI* describe precisamente estas estrategias de selección y arbitraje. [robert.zubek.net](https://robert.zubek.net)
 
-La fórmula es una propuesta simplificada; en un sistema más avanzado utilizaríamos curvas de utilidad no lineales y un mecanismo que impida cambiar de decisión continuamente. La literatura sobre \*Needs-Based AI\* describe precisamente estas estrategias de selección y arbitraje.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://robert.zubek.net\\&sz=32)
-
-robert.zubek.net+1
-
-
-
-Pero agregaría otra dimensión fundamental: \*\*la personalidad\*\*.
+Pero agregaría otra dimensión fundamental: **la personalidad**.
 
 Dos giantesses podrían tener exactamente la misma hambre y, aun así, elegir actividades distintas.
 
 Una puede ser ordenada, cuidadosa y observadora. Otra, distraída, impulsiva y despreocupada. Esas diferencias no deberían limitarse al diálogo: modificarían la frecuencia con que revisan el suelo, mueven objetos, investigan ruidos o reaccionan ante los tinies.
 
-### \*\*5.2. Smart Objects: los objetos ofrecen comportamientos\*\*
+### 5.2. Smart Objects: los objetos ofrecen comportamientos
 
 Este patrón de The Sims resulta particularmente apropiado para tu juego.
 
@@ -429,7 +323,7 @@ El sistema de selección consulta las acciones que ofrecen los objetos accesible
 
 Así, al agregar un objeto nuevo, podemos introducir comportamientos sin modificar cada agente individualmente.
 
-### \*\*5.3. IA de tinies: Jobs + Utility AI\*\*
+### 5.3. IA de tinies: Jobs + Utility AI
 
 Los tinies necesitan un sistema adicional: trabajo colectivo.
 
@@ -437,8 +331,7 @@ Un tiny hambriento puede querer buscar comida. Pero también podría tener asign
 
 Propongo esta jerarquía de decisiones:
 
-\`\`\`
-
+```text
 Tiny Agent
   |
   +-- Emergency Response
@@ -461,20 +354,19 @@ Tiny Agent
        +-- Interact
        +-- Wander
        +-- Relax
-
-\`\`\`
+```
 
 Cada trabajo podría tener una secuencia de pasos, similar al enfoque de jobs y ejecutores de RimWorld.
 
-Por ejemplo, un trabajo \`CollectCrumb\`:
+Por ejemplo, un trabajo `CollectCrumb`:
 
-\`Buscar recurso → Reservarlo → Calcular ruta → Llegar → Recoger → Transportar → Depositar\`
+`Buscar recurso → Reservarlo → Calcular ruta → Llegar → Recoger → Transportar → Depositar`
 
 La reserva es importante: evita que diez tinies decidan recoger exactamente la misma migaja.
 
 También permite interrumpir trabajos cuando ocurre una emergencia y retomarlos después.
 
-### \*\*5.4. Percepción: los tinies no deberían ser omniscientes\*\*
+### 5.4. Percepción: los tinies no deberían ser omniscientes
 
 Este es un sistema fácil de subestimar y uno de los que más mejoraría la simulación.
 
@@ -492,11 +384,11 @@ Mi diseño incluiría canales de percepción como visión, sonido, vibración y 
 
 Así pueden aparecer situaciones emergentes como una giantess que encuentra rastros de actividad diminuta, investiga y descubre gradualmente la existencia de una colonia.
 
-### \*\*5.5. Física: simular consecuencias, no átomos\*\*
+### 5.5. Física: simular consecuencias, no átomos
 
 No intentaría reproducir físicamente todas las interacciones de una giantess con millones de partículas.
 
-Usaría un enfoque de \*simulación basada en eventos físicos\*.
+Usaría un enfoque de *simulación basada en eventos físicos*.
 
 Por ejemplo, cuando la giantess apoya una taza sobre la mesa, el motor produce un evento de contacto que contiene la posición, superficie y características físicas relevantes.
 
@@ -508,15 +400,15 @@ Para movimientos grandes, como caminar, usaría volúmenes de colisión y trayec
 
 Esto permite tener consecuencias espaciales incluso cuando la cámara está observando otra habitación.
 
-## \*\*6. El gran desafío: que la simulación siga funcionando fuera de cámara\*\*
+## 6. El gran desafío: que la simulación siga funcionando fuera de cámara
 
 Una giantess puede estar en la cocina mientras el jugador observa una colonia debajo de la cama.
 
-\*\*El mundo no debe detenerse ni depender de lo que está dibujado en pantalla.\*\*
+**El mundo no debe detenerse ni depender de lo que está dibujado en pantalla.**
 
 Pero simular cada personaje con el máximo detalle todo el tiempo sería innecesariamente costoso.
 
-Por eso recomiendo \*Simulation Level of Detail\* (LOD de simulación).
+Por eso recomiendo *Simulation Level of Detail* (LOD de simulación).
 
 | Nivel        | Qué se simula                                 | Ejemplo                               |
 | ------------ | --------------------------------------------- | ------------------------------------- |
@@ -525,86 +417,54 @@ Por eso recomiendo \*Simulation Level of Detail\* (LOD de simulación).
 | Agregado     | Recursos, actividad y progreso por intervalos | Colonia distante sin eventos críticos |
 | Event-driven | Actualizaciones cuando sucede algo relevante  | Objetos inactivos y procesos lentos   |
 
-La decisión de qué nivel usar \*\*no debería depender solamente de la cámara\*\*.
+La decisión de qué nivel usar **no debería depender solamente de la cámara**.
 
 Una zona con un acontecimiento importante necesita mantenerse suficientemente detallada aunque el jugador no la esté mirando. Lo mismo sucede si una giantess está trasladando tinies entre habitaciones.
 
 Para evitar contradicciones, mantendría siempre las colisiones y transferencias críticas bajo un sistema lógico autoritativo.
 
-La filosofía general es compatible con una recomendación del propio Tarn Adams: construir modelos comprensibles, evitar complejidad innecesaria y apoyarse en analogías del mundo real.&amp;#x20;
+La filosofía general es compatible con una recomendación del propio Tarn Adams: construir modelos comprensibles, evitar complejidad innecesaria y apoyarse en analogías del mundo real. [gameaipro.com](https://www.gameaipro.com)
 
-\[image\](https://www.google.com/s2/favicons?domain=https://www.gameaipro.com\\&sz=32)
-
-gameaipro.com+1
-
-
-
-# \*\*7. Enfoque técnico: qué tecnología utilizaría\*\*
+## 7. Enfoque técnico: qué tecnología utilizaría
 
 Tomando Go como lenguaje principal, que además conocés por tu trabajo, elegiría una arquitectura donde toda la simulación pueda ejecutarse independientemente del motor visual.
 
-## \*\*7.1. Comparación de motores y frameworks\*\*
+### 7.1. Comparación de motores y frameworks
 
 Evaluaciones relativas para este proyecto, no benchmarks medidos.
 
 | Stack                  | Simulación compleja | Pixel art | Desarrollo con IA             | Riesgo técnico |
 | ---------------------- | ------------------- | --------- | ----------------------------- | -------------- |
-| \*\*Go + Ebitengine\*\*    | Excelente           | Excelente | Excelente para lógica y tests | Bajo-medio     |
+| **Go + Ebitengine**    | Excelente           | Excelente | Excelente para lógica y tests | Bajo-medio     |
 | Go + raylib-go         | Excelente           | Muy bueno | Muy bueno                     | Medio          |
 | Godot + GDScript/C#    | Muy bueno           | Excelente | Muy bueno                     | Medio          |
 | Godot + Go/GDExtension | Muy bueno           | Excelente | Medio                         | Alto           |
 
-\*\*Mi elección: Go + Ebitengine.\*\*
+**Mi elección: Go + Ebitengine.**
 
-\[Ebitengine Tutorial: Boids Flocking in Golang - BioErrorLog Tech Blog\](https://images.openai.com/static-rsc-4/QLn1O7m54PPnYR5OosaJ7pmCy2Ff8W4VXX6cAR038c5gBiAApjHdMyW86uLjYjIGAN9Y-8gPJL2SI4XdNQQUkYuQaEBhFU9sdNzSJuwWINw1t5ActSMe3czk4ICTUyyc2q7LdLA2Jeq6P9Ok5Y4k9ysvxWJBuEU2\_QLDKOVJZms?purpose=inline)
+#### Ebitengine
 
-\*\*Ebitengine\*\*
-
-Está especializado en 2D y ofrece rendering acelerado por GPU, batching automático cuando es posible y una API bastante reducida. Desde la versión 2.10, publicada en septiembre de 2026, soporta builds de escritorio en Go puro sin requerir compilador C.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://ebitengine.org\\&sz=32)
-
-ebitengine.org+1
-
-
+Está especializado en 2D y ofrece rendering acelerado por GPU, batching automático cuando es posible y una API bastante reducida. Desde la versión 2.10, publicada en septiembre de 2026, soporta builds de escritorio en Go puro sin requerir compilador C. [ebitengine.org](https://ebitengine.org) · [Ebitengine Tutorial: Boids Flocking in Golang - BioErrorLog Tech Blog](https://images.openai.com/static-rsc-4/QLn1O7m54PPnYR5OosaJ7pmCy2Ff8W4VXX6cAR038c5gBiAApjHdMyW86uLjYjIGAN9Y-8gPJL2SI4XdNQQUkYuQaEBhFU9sdNzSJuwWINw1t5ActSMe3czk4ICTUyyc2q7LdLA2Jeq6P9Ok5Y4k9ysvxWJBuEU2_QLDKOVJZms?purpose=inline)
 
 Eso es muy conveniente para la asistencia con IA: menos capas de integración, más código Go convencional y una separación clara entre lógica y presentación.
 
 También hay una novedad reciente especialmente útil para tu workflow.
 
-\*\*Ebitengine 2.10: pruebas visuales automatizadas para agentes\*\*
+**Ebitengine 2.10: pruebas visuales automatizadas para agentes**
 
 Ebitengine incorporó un mecanismo experimental de virtualización de aplicaciones. Un programa externo puede controlar los inputs, avanzar ticks y recuperar imágenes renderizadas, permitiendo probar juegos mediante agentes de código.
 
-Los desarrolladores publicaron además un recurso llamado \`run-ebitengine-app-headless\` destinado a estos workflows. Requiere habilitación explícita y un entorno gráfico en el host, pero permite pruebas sin mostrar la ventana normal del juego.&amp;#x20;
+Los desarrolladores publicaron además un recurso llamado `run-ebitengine-app-headless` destinado a estos workflows. Requiere habilitación explícita y un entorno gráfico en el host, pero permite pruebas sin mostrar la ventana normal del juego. [Ebitengine](https://ebitengine.org)
 
-\[image\](https://www.google.com/s2/favicons?domain=https://ebitengine.org\\&sz=32)
+Para un proyecto desarrollado con Opus o Codex, esto representa una ventaja muy interesante: **el agente puede comprobar visualmente si sus cambios funcionaron, además de ejecutar tests Go**.
 
-Ebitengine+1
+Como alternativa, raylib-go también permite desarrollar una simulación independiente y conectar un renderer sencillo. Su principal desventaja en este caso es depender de bindings de raylib y su capa de compilación C. [GitHub](https://github.com)
 
-
-
-Para un proyecto desarrollado con Opus o Codex, esto representa una ventaja muy interesante: \*\*el agente puede comprobar visualmente si sus cambios funcionaron, además de ejecutar tests Go\*\*.
-
-Como alternativa, raylib-go también permite desarrollar una simulación independiente y conectar un renderer sencillo. Su principal desventaja en este caso es depender de bindings de raylib y su capa de compilación C.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://github.com\\&sz=32)
-
-GitHub
-
-
-
-Godot ofrece un editor visual más completo, mejor tooling incorporado y un desarrollo de UI probablemente más rápido. Sin embargo, usar Go dentro de Godot mediante \`godot-go\` agrega una integración experimental. Su propio repositorio advierte que sigue en desarrollo activo y que puede tener problemas de memoria.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://github.com\\&sz=32)
-
-GitHub
-
-
+Godot ofrece un editor visual más completo, mejor tooling incorporado y un desarrollo de UI probablemente más rápido. Sin embargo, usar Go dentro de Godot mediante `godot-go` agrega una integración experimental. Su propio repositorio advierte que sigue en desarrollo activo y que puede tener problemas de memoria. [GitHub](https://github.com)
 
 Si priorizáramos crear rápidamente escenas, animaciones y herramientas visuales por encima de Go puro, Godot sería el competidor más fuerte.
 
-## \*\*7.2. Stack recomendado\*\*
+### 7.2. Stack recomendado
 
 | Capa                      | Tecnología                                                   |
 | ------------------------- | ------------------------------------------------------------ |
@@ -615,15 +475,15 @@ Si priorizáramos crear rápidamente escenas, animaciones y herramientas visuale
 | Mapas diseñados a mano    | JSON del proyecto. LDtk queda como posible importador        |
 | Sprites y animación       | PNG y metadatos JSON. Aseprite es una opción de autoría       |
 | UI                        | Componentes propios sobre Ebitengine                         |
-| Navegación                | A\\\* local + grafo jerárquico                                 |
+| Navegación                | `A*` local + grafo jerárquico                                 |
 | Definiciones de contenido | JSON                                                         |
-| Tests                     | \`go test\`, benchmarks, fuzzing                               |
-| Profiling                 | \`pprof\`                                                      |
+| Tests                     | `go test`, benchmarks, fuzzing                               |
+| Profiling                 | `pprof`                                                      |
 | Guardado                  | Snapshots versionados + registro de eventos relevantes       |
 
 El renderer de la próxima etapa cargará las exportaciones de arte y los datos del proyecto directamente. La elección del editor se puede ajustar durante la producción.
 
-### \*\*¿Usaría ECS?\*\*
+#### ¿Usaría ECS?
 
 No empezaría con un ECS complejo.
 
@@ -631,20 +491,13 @@ En la primera versión utilizaría entidades identificadas por IDs estables, str
 
 Si el profiling muestra que las iteraciones sobre miles de entidades son un cuello de botella, incorporaría un ECS basado en arquetipos.
 
-Hoy consideraría especialmente \[\*\*Ark ECS\*\*\](https://github.com/mlange-42/ark?utm\_source=chatgpt.com), sucesor recomendado por los autores de Arche. Proporciona consultas tipadas, relaciones entre entidades, operaciones por lotes y herramientas de serialización.&amp;#x20;
-
-\[image\](https://www.google.com/s2/favicons?domain=https://github.com\\&sz=32)
-
-GitHub+1
-
-
+Hoy consideraría especialmente [**Ark ECS**](https://github.com/mlange-42/ark?utm_source=chatgpt.com), sucesor recomendado por los autores de Arche. Proporciona consultas tipadas, relaciones entre entidades, operaciones por lotes y herramientas de serialización. [GitHub](https://github.com)
 
 No hay necesidad de resolver una hipotética carga de 100.000 agentes antes de que existan veinte.
 
-## \*\*8. Arquitectura propuesta\*\*
+## 8. Arquitectura propuesta
 
-\`\`\`
-
+```text
 giantess-sim/
 │
 ├── cmd/
@@ -680,13 +533,11 @@ giantess-sim/
 └── tests/
     ├── scenarios/
     └── fixtures/
-
-\`\`\`
+```
 
 La separación más importante es esta:
 
-\`\`\`
-
+```text
              PLAYER INPUT
                   |
                   v
@@ -710,8 +561,7 @@ La separación más importante es esta:
                          |
                          v
                       Screen
-
-\`\`\`
+```
 
 El renderer únicamente interpreta estados producidos por la simulación.
 
@@ -719,12 +569,11 @@ No debería modificar necesidades, decidir trabajos, resolver contactos ni alter
 
 Esto permite ejecutar miles de ticks en un test sin abrir una ventana.
 
-### \*\*8.1. Modelo de ubicación\*\*
+### 8.1. Modelo de ubicación
 
 Lo diseñaría alrededor de una estructura similar a esta:
 
-\`\`\`
-
+```go
 type EntityID uint64
 type SpaceID uint32
 
@@ -753,18 +602,17 @@ type Portal struct {
     Enabled bool
     Cost    float64
 }
+```
 
-\`\`\`
+Para el prototipo, cada `Space` tendría una transformación local hacia su entidad padre o hacia el mundo global. En producción también necesitaríamos IDs versionados, geometrías de portales y reglas de accesibilidad.
 
-Para el prototipo, cada \`Space\` tendría una transformación local hacia su entidad padre o hacia el mundo global. En producción también necesitaríamos IDs versionados, geometrías de portales y reglas de accesibilidad.
-
-La ventaja de este modelo es que un tiny puede encontrarse en \`SpaceID=LeftHand\` mientras la mano se mueve.
+La ventaja de este modelo es que un tiny puede encontrarse en `SpaceID=LeftHand` mientras la mano se mueve.
 
 Su posición local no necesita actualizarse con cada desplazamiento global de la giantess. Solamente cambian las transformaciones de la jerarquía.
 
 Ese diseño reduce trabajo y simplifica muchísimo la lógica de transporte.
 
-### \*\*8.2. Simulación con fixed ticks\*\*
+### 8.2. Simulación con fixed ticks
 
 Recomendaría comenzar con una frecuencia lógica de 20 TPS y renderizar a 60 FPS.
 
@@ -784,55 +632,47 @@ También distribuiría los cálculos caros entre distintos ticks utilizando offs
 
 Es fundamental que el reloj del mundo sea único, independientemente de cuántas cámaras o espacios tengamos abiertos.
 
-### \*\*8.3. Navegación y colisiones\*\*
+### 8.3. Navegación y colisiones
 
 Usaría tres estructuras complementarias:
 
-\*\*1. Índice espacial global:\*\* permite encontrar entidades y objetos próximos sin revisar todas las entidades del juego.
-
-\*\*2. Navegación local:\*\* A\\\* sobre tiles, regiones o celdas de una superficie.
-
-\*\*3. Grafo de espacios:\*\* conecta habitaciones, muebles, superficies elevadas y partes del cuerpo de las giantesses.
+1. **Índice espacial global.** Permite encontrar entidades y objetos próximos sin revisar todas las entidades del juego.
+2. **Navegación local.** Usa `A*` sobre tiles, regiones o celdas de una superficie.
+3. **Grafo de espacios.** Conecta habitaciones, muebles, superficies elevadas y partes del cuerpo de las giantesses.
 
 Una ruta larga primero recorrería el grafo y luego resolvería trayectorias locales.
 
 Cuando una giantess se mueve, el sistema actualiza sus puntos de conexión y solo invalida las rutas afectadas.
 
-El mayor desafío no es ejecutar A\\\*, sino \*\*gestionar los cambios topológicos\*\*: una mano deja de tocar una mesa, un zapato es levantado del suelo o un objeto bloquea una entrada.
+El mayor desafío no es ejecutar `A*`, sino **gestionar los cambios topológicos**: una mano deja de tocar una mesa, un zapato es levantado del suelo o un objeto bloquea una entrada.
 
 Por eso los portales, superficies y contactos deben ser conceptos independientes del renderizado.
 
-# \*\*9. Cómo lo desarrollaría con IA\*\*
+## 9. Cómo lo desarrollaría con IA
 
 No le pediría a Opus que construyera todo el juego de una sola vez.
 
 Haría que implementara sistemas aislados, con interfaces y criterios de aceptación verificables. Así evitamos que una modificación del sistema corporal termine rompiendo las necesidades o el guardado.
 
-## \*\*Workflow\*\*
+### Workflow
 
-1. \*\*Especificaciones pequeñas\*\*
+1. **Especificaciones pequeñas**
 
-   Crear documentos breves para \`WorldSpace\`, \`TinyMovement\`, \`Jobs\`, \`BodySpace\` y otros sistemas. Cada documento define responsabilidades, contratos, invariantes y casos límite.
-2. \*\*Simulación headless primero\*\*
+   Crear documentos breves para `WorldSpace`, `TinyMovement`, `Jobs`, `BodySpace` y otros sistemas. Cada documento define responsabilidades, contratos, invariantes y casos límite.
+2. **Simulación headless primero**
 
-   Antes de dibujar un personaje, probar que pueda cambiar de superficie, recibir una orden y completar un trabajo. El resultado debe poder comprobarse con \`go test\`.
-3. \*\*Escenarios reproducibles\*\*
+   Antes de dibujar un personaje, probar que pueda cambiar de superficie, recibir una orden y completar un trabajo. El resultado debe poder comprobarse con `go test`.
+3. **Escenarios reproducibles**
 
    Un escenario incluiría un estado inicial, una semilla aleatoria, acciones externas y cantidad de ticks. Después compararíamos resultados e invariantes, no solamente imágenes.
-4. \*\*Integración visual y pruebas automáticas\*\*
+4. **Integración visual y pruebas automáticas**
 
    Una vez que la simulación funciona, conectar el renderer Ebitengine. Aprovechar su mecanismo de virtualización para verificar visualmente inputs, cámara, animaciones y UI.
-5. \*\*Benchmarks y profiling\*\*
+5. **Benchmarks y profiling**
 
-   Repetir escenarios con 20, 100, 500 y 1.000 tinies. Medir CPU, memoria, latencia por tick, búsquedas de caminos y allocaciones con las herramientas oficiales de Go.&amp;#x20;
+   Repetir escenarios con 20, 100, 500 y 1.000 tinies. Medir CPU, memoria, latencia por tick, búsquedas de caminos y allocaciones con las herramientas oficiales de Go. [The Go Programming Language](https://go.dev)
 
-   \[image\](https://www.google.com/s2/favicons?domain=https://go.dev\\&sz=32)
-
-   The Go Programming Language+1
-
-
-
-### \*\*Tests que consideraría imprescindibles\*\*
+### Tests que consideraría imprescindibles
 
 | Test                              | Resultado esperado                                                         |
 | --------------------------------- | -------------------------------------------------------------------------- |
@@ -973,7 +813,7 @@ El sonido es presentación, como los símbolos de expresión. Sale de los evento
 
 **Mezcla.** El volumen y el panorama siguen la posición en pantalla, y lo que queda fuera de cuadro no suena, salvo el ambiente. Cada sonido tiene un límite de voces simultáneas, un tiempo mínimo entre repeticiones y una leve variación de tono, para que veinte tinies no saturen. A x4 y x16 se omiten los sonidos menores y quedan los importantes (la mano, las caídas, los descubrimientos). La pausa silencia los efectos y baja el ambiente. Hay volúmenes separados para ambiente, efectos e interfaz, y una tecla para silenciar.
 
-## \*\*12. Riesgos que resolvería temprano\*\*
+## 12. Riesgos que resolvería temprano
 
 | Riesgo                          | Consecuencia                                                        | Estrategia                                                |
 | ------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -994,9 +834,9 @@ El sonido es presentación, como los símbolos de expresión. Sale de los evento
 
 El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-El próximo slice vertical es [Un descuido en el escritorio](#14-próximo-slice-un-descuido-en-el-escritorio): los tinies pueden morir aplastados. Después, la expansión puede sumar más superficies explorables, construcción tiny, relaciones, personalidad y eventos ambientales. Fluidos, simulación anatómica continua y economías más amplias quedan para etapas posteriores. El [sonido](#sonido) se suma a la escena cerrada sin música; una banda sonora queda para una etapa posterior.
+La casa ya cuenta con [sonido](#sonido) y con las consecuencias de [Un descuido en el escritorio](#14-un-descuido-en-el-escritorio). La [próxima entrega](#15-rutinas-y-encuentros-en-la-casa) amplía lo que hace la giantess en esa misma casa y le da motivos para actuar cuando nota a los tinies. Para entregas posteriores quedan más superficies explorables, construcción tiny, relaciones, personalidad, eventos ambientales, fluidos, simulación anatómica continua, economías más amplias y una banda sonora.
 
-## 14. Próximo slice: Un descuido en el escritorio
+## 14. Un descuido en el escritorio
 
 La mañana ya muestra que una acción cotidiana de la giantess cambia las posibilidades de la colonia. Este slice agrega la otra cara: **la misma acción puede costarle la vida a un tiny**. Apoyar la mano para desayunar, pisar el tatami o dejar la taza son gestos triviales en macro y catástrofes en micro.
 
@@ -1111,3 +951,39 @@ Cada señal sale de un evento o del `Frame` y no modifica el mundo, igual que lo
 - un tiny que viaja en la palma nunca muere por el apoyo de esa misma palma.
 
 **Fuera de alcance.** Heridas y daño parcial, caídas letales, sentarse o acostarse sobre tinies, pasos con volumen barrido continuo, objetos que ruedan o se arrastran, alarmas entre tinies, duelo, nacimientos o reemplazo de miembros, relaciones entre la giantess y la colonia y una variante de aturdimiento sin muerte. Esa variante es la candidata natural para un hito posterior, porque reutiliza la suspensión de las caídas.
+
+## 15. Rutinas y encuentros en la casa
+
+La giantess alterna su rutina doméstica con acciones que surgen de lo que hacen los tinies. En la partida libre actual cambian la colonia y el cuidado de la giantess, mientras ella arranca con las mismas necesidades. Hambre y diversión tampoco decaen en el escenario base. La percepción ya registra cuándo nota a un tiny, pero ese encuentro todavía no le abre ninguna acción.
+
+### 15.1. Cómo decide la giantess
+
+- **La rutina depende del estado inicial.** Al crear una partida libre, la semilla elige entre unos pocos puntos de partida, como una giantess con hambre, cansada o con ganas de entretenerse. Hambre y diversión decaen suavemente durante la partida para que vuelvan a generar decisiones. Las actividades domésticas se configuran como ofertas de los muebles y compiten en el selector existente por necesidad, distancia y disponibilidad.
+- **Los encuentros abren opciones locales.** La percepción de otra escala registra actividad reciente por superficie. Un avistamiento puede motivar que se acerque a mirar. Ver a los tinies buscando comida donde quedan pocas migajas puede motivar que comparta. La frecuencia de cada acción se limita por superficie, incluso cuando los tinies se esconden o nadie se acerca. La situación se comprueba de nuevo al llegar, antes de dejar comida o apoyar la mano.
+- **Las necesidades y los encuentros compiten en el mismo selector.** Las opciones de encuentro tienen una utilidad moderada, independiente de que a la giantess le falte diversión. Se mantienen las reglas de compromiso e interrupción del selector. Los tinies eligen su respuesta con sus tareas, exploración y reflejos. El historial distingue qué motivó a la giantess, qué hizo y cómo respondieron los tinies.
+
+### 15.2. Acciones de la próxima entrega
+
+| Acción | Cuándo está disponible | Qué cambia en la escena |
+| --- | --- | --- |
+| **Merendar en el living** | Tiene algo de hambre y la mesa del living está disponible. | Lleva la merienda desde la cocina y deja migajas en la mesa. Si los tinies llegan a esa superficie, pueden descubrir otro lugar donde recolectar. |
+| **Observar a los tinies** | Nota actividad reciente en una superficie donde hace rato que no se detiene a mirar. | Se acerca a un punto de observación y espera brevemente. Los tinies pueden seguir con el acarreo, alejarse o refugiarse. Ella puede notar nueva actividad durante la pausa. |
+| **Compartir migajas** | Ve tinies buscando comida y quedan pocas migajas visibles en esa superficie. | Deja una porción al alcance de los tinies. Cuando la descubren, la colonia puede asignar un acarreo al nido con el sistema existente. |
+| **Ofrecer la palma** | Ve un tiny cerca de un punto de apoyo alcanzable. | Anuncia el apoyo con la sombra y abre un portal de contacto durante una espera breve. Si la huella sigue ocupada, cancela el apoyo. Los tinies deciden si cruzan a la palma. |
+
+Merendar y compartir reutilizan la colocación de comida. Ofrecer la palma reutiliza poses y portales de contacto. La [IA de la casa](specs/ai.md) sigue resolviendo las necesidades, la navegación y los trabajos de recolección.
+
+### 15.3. Criterios de aceptación
+
+- En la misma casa, semillas de referencia distintas producen al menos dos órdenes de actividades de la giantess. Con la misma semilla, la partida y su continuación desde un snapshot reproducen las mismas decisiones y eventos.
+- La giantess puede detener su rutina para observar una superficie donde vio tinies. Una vez terminada la observación, deja pasar un tiempo antes de volver a observar en el mismo lugar.
+- Si la giantess ve a tinies buscando comida en una superficie con pocas migajas visibles, puede compartir allí. Se puede rastrear la porción desde que la deja hasta que la colonia la descubre y almacena. Si ya hay suficientes migajas a la vista, compartir deja de ser una opción.
+- Ofrecer la palma tiene dos desenlaces verificables. En uno, un tiny cruza por el portal por decisión propia. En otro, nadie sube y la giantess retira la mano al acabar la espera.
+- El historial permite distinguir una merienda que deja migajas de un gesto deliberado de compartir. Solo muestra un cruce o un acarreo cuando efectivamente ocurrió.
+
+### 15.4. Acciones posteriores
+
+| Acción | Cuándo surge | Qué agrega |
+| --- | --- | --- |
+| **Ordenar el escritorio** | Terminó de comer y quedó una taza sobre el escritorio. | Recoge esa misma taza y la lleva a la cocina. Requiere mover un objeto que ya existe. |
+| **Llevar a un pasajero** | Un tiny subió a la palma y hay una superficie de desembarco accesible. | Elige la mesa del living o el escritorio como destino y vuelve a ofrecer contacto. El pasajero decide si baja. |

@@ -1,6 +1,6 @@
 # Spec: Aplastamiento (M23–M27)
 
-Paquete: `sim/crush`. Diseño y alcance del slice en la [propuesta](../propuesta.md#14-próximo-slice-un-descuido-en-el-escritorio).
+Paquete: `sim/crush`. Diseño y alcance del slice en la [propuesta](../propuesta.md#14-un-descuido-en-el-escritorio).
 
 Lo que baja sobre una superficie mata a los tinies frágiles que quedan debajo, salvo que estén en un refugio que resista. El aplastamiento es instantáneo: no hay daño parcial y las caídas no matan.
 
