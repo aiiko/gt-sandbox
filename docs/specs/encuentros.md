@@ -86,3 +86,28 @@ A diferencia de `agent.known`, que solo dice si notó a un agente alguna vez, el
 ### Pruebas
 
 `giantess_logs_sightings` (`TestGiantessLogsSightings`): la giantess registra a los tinies del escritorio, mantiene el orden y olvida a tiempo un avistamiento viejo de la cocina, guardando y cargando cada 113 ticks.
+
+## Acciones de encuentro
+
+Las acciones de encuentro son acciones extra de `ai` (`ai.Install(w, encounter.Actions()...)`), así que compiten en el mismo selector que las necesidades. Se mantienen la inercia, el compromiso con la mano apoyada y la interrupción por urgencia.
+
+- **Opciones.** Hay una por superficie con avistamiento reciente (menos de `Recent`), sin enfriamiento de esa acción y con lugar donde pararse. Ese lugar es el `place` del mueble, que es la superficie misma: el escritorio, la mesa del living. Los pisos no tienen `place`, así que no abren encuentros.
+- **Utilidad.** Es la fija de la acción en `encounter` menos `distance_cost` por la distancia. Las utilidades van por debajo de `UrgentUtility`, y la diversión no interviene.
+- **Comprobación al llegar.** Si la condición ya no se cumple, la acción emite `encounter_skipped` y termina.
+- **Enfriamiento.** La superficie se enfría para la acción al empezarla, así que una acción interrumpida no se repite enseguida.
+
+`What` de las acciones de encuentro es su nombre, así que aparecen en `action_started` como cualquier oferta.
+
+## Observar (M30)
+
+`observe` va al lugar de la superficie, se orienta y se queda mirando `ObserveTicks` (10 s) con la mano en la pose de reposo, a 140 cm. La mano no está a menos de `ThreatHeight` de nada, así que no es una amenaza y los tinies siguen con lo suyo. Mientras mira, `encounter.look` sigue registrando.
+
+- Al llegar, si el avistamiento ya no es reciente: `encounter_skipped` con `reason: "gone"`.
+- Al terminar: `observed {entity, surface, seen}`, con cuántos tinies veía al final.
+- Enfriamiento por superficie: `ObserveCooldown` (3 minutos).
+
+En la partida libre `encounter.observe` vale 0,12. Le gana a quedarse sin hacer nada, pero no interrumpe una actividad en curso: la inercia es 0,15.
+
+Que un tiny se aleje o se esconda porque lo miran queda fuera de esta entrega (ver el [plan](../plan-motor.md#m30-observar)).
+
+Prueba: `giantess_observes_desk`. Sin necesidades que atender, la giantess va a mirar el escritorio, emite `observed`, no asusta a nadie y no vuelve a mirarlo en 75 s.

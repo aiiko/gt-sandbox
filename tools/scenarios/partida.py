@@ -15,6 +15,8 @@ Parte de «Un descuido en el escritorio» (un_descuido_en_el_escritorio.json):
   migajas y come ahí.
 - tests/scenarios/giantess_logs_sightings.json: la giantess registra dónde ve
   tinies (componente "encounter") y olvida un avistamiento viejo.
+- tests/scenarios/giantess_observes_desk.json: sin necesidades que atender,
+  se detiene a mirar el escritorio y no vuelve a mirarlo enseguida.
 
 Los escenarios de referencia (la mañana y el descuido) no cambian.
 """
@@ -45,7 +47,15 @@ SNACK_LIVING = {
 }
 
 # Encuentros de la giantess en la partida libre (utilidades de cada acción).
-ENCOUNTER = {}
+ENCOUNTER = {'observe': 0.12}
+
+
+def satisfied(d):
+    """La giantess sin necesidades que atender (para probar un encuentro solo)."""
+    entity(d, 'giantess')['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0}]
 
 # Perfiles de arranque. Hambre y diversión bajan 2 por segundo (de llenas a
 # vacías en unos 8 minutos) y la energía 1, así la rutina vuelve a decidir.
@@ -127,6 +137,24 @@ def main():
         'sightings': [{'surface': '$kitchen', 'last': 0, 'seen': 5}]}
     d['expect'] = [{'no_event': 'command_rejected'}]
     write(os.path.join(SCENARIOS, 'giantess_logs_sightings.json'), d)
+
+    d = copy.deepcopy(base)
+    d['name'] = 'giantess_observes_desk'
+    d['notes'] = ('Sin necesidades que atender, la giantess va a mirar a los tinies del escritorio con la mano '
+                  'en reposo (no se asustan) y, por el enfriamiento, no vuelve a mirarlo enseguida.')
+    d['ticks'] = 1500
+    del d['atlas']
+    satisfied(d)
+    entity(d, 'giantess')['spawn']['components']['encounter'] = {'observe': 0.12}
+    d['expect'] = [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'observe', 'target': '$desk1'}},
+        {'event': 'observed', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'observe'}, 'count': 1},
+        {'no_event': 'alarmed'},
+        {'no_event': 'crushed'},
+        {'no_event': 'command_rejected'},
+    ]
+    write(os.path.join(SCENARIOS, 'giantess_observes_desk.json'), d)
 
 
 if __name__ == '__main__':

@@ -196,7 +196,7 @@ func check(w *world.World) error {
 }
 
 // Actions son las acciones de encuentro, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{} }
+func Actions() []ai.Action { return []ai.Action{Observe{}} }
 
 // Install registra el componente, los eventos y el sistema de avistamientos.
 // Las acciones se instalan con ai.Install(w, encounter.Actions()...).
@@ -207,6 +207,7 @@ func Install(w *world.World) error {
 	w.AddInvariant("encounter", check)
 	return errors.Join(
 		world.RegisterEvent[Skipped](w),
+		world.RegisterEvent[Observed](w),
 		// Después de ai.look (Order -50) y antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -45}, look{}),
 	)

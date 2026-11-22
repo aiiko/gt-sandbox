@@ -665,7 +665,9 @@
             "foot_width": 90000,
             "force": 600
           },
-          "encounter": {}
+          "encounter": {
+            "observe": 0.12
+          }
         }
       }
     },
