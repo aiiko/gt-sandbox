@@ -50,56 +50,70 @@ func endangered(c *Ctx, target ids.ID) bool {
 	return ok && InDanger(c.W, c.Agent.Scale, l.Space, l.Pos.XY())
 }
 
-// Cuidado de la giantess al apoyar la mano.
+// Cuidado de la giantess al apoyar la mano o al sentarse.
 const (
-	// HoverExtra es cuánto más sostiene la mano en el aire, por unidad de
-	// Care, antes de apoyarla.
+	// HoverExtra es cuánto más sostiene el aplastador en el aire, por unidad
+	// de Care, antes de apoyarlo.
 	HoverExtra clock.Tick = 40
 	// CareWaitMax es lo máximo que espera a que se aparten los tinies que vio
 	// debajo; después apoya igual.
 	CareWaitMax clock.Tick = 100
+	// SeatCareScale reduce la atención al sentarse (fuera de la línea de vista
+	// directa): hace falta un Care más alto para notar tinies en el asiento.
+	SeatCareScale = 0.45
 )
 
-// Hesitated se emite cuando la giantess ve tinies debajo de su mano y espera
-// a que se aparten.
+// Hesitated se emite cuando la giantess ve tinies debajo de su mano o en el
+// asiento y espera a que se aparten.
 type Hesitated struct {
 	Entity  ids.ID `json:"entity"`
 	Surface ids.ID `json:"surface"`
+	Source  string `json:"source,omitempty"`
 	Seen    int    `json:"seen"`
 }
 
 func (Hesitated) Kind() string { return "hesitated" }
 
-// careful decide si un paso pose de un agente con Care debe esperar. Solo
-// aplica si su mano está suspendida sobre una superficie (crush.Threats):
-// ese pose es el que la apoya. d.Progress cuenta los ticks de espera y
-// d.Wary indica que vio tinies debajo.
+// careful decide si un paso pose de un agente con Care debe esperar. Aplica
+// cuando su mano o su asiento (SourceSeat montado sobre el actor) están
+// suspendidos sobre una superficie (crush.Threats): ese pose es el que apoya.
+// d.Progress cuenta los ticks de espera y d.Wary indica que vio tinies debajo.
 func careful(c *Ctx, d *Doing) bool {
 	a := c.Agent
-	if a.Care <= 0 || a.Hand.IsNil() {
+	if a.Care <= 0 {
 		return false
 	}
+	g := space.Of(c.W.ECS())
 	var hover *crush.Threat
 	for _, t := range crush.Threats(c.W) {
-		if t.By == a.Hand {
-			hover = &t
+		if !a.Hand.IsNil() && t.By == a.Hand {
+			tt := t
+			hover = &tt
 			break
+		}
+		if hover == nil && t.Source == crush.SourceSeat && g.Parent(t.By) == c.Actor {
+			tt := t
+			hover = &tt
 		}
 	}
 	if hover == nil {
 		return false
 	}
+	care := min(a.Care, 1)
+	if hover.Source == crush.SourceSeat {
+		care = care * care * SeatCareScale
+	}
 	d.Progress++
 	seen := visibleUnder(c, *hover)
 	if d.Progress == 1 && len(seen) > 0 {
 		// tirada de atención: cada tiny visible es una chance de notarlos
-		p := 1 - math.Pow(1-min(a.Care, 1), float64(len(seen)))
+		p := 1 - math.Pow(1-care, float64(len(seen)))
 		if c.W.RNG("ai.attention").Float64() < p {
 			d.Wary = true
-			c.W.Emit(Hesitated{Entity: c.Actor, Surface: hover.Surface, Seen: len(seen)})
+			c.W.Emit(Hesitated{Entity: c.Actor, Surface: hover.Surface, Source: hover.Source, Seen: len(seen)})
 		}
 	}
-	if d.Progress <= clock.Tick(a.Care*float64(HoverExtra)) {
+	if d.Progress <= clock.Tick(care*float64(HoverExtra)) {
 		return true
 	}
 	return d.Wary && d.Progress <= CareWaitMax && len(seen) > 0

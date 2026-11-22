@@ -1,0 +1,1209 @@
+{
+  "name": "chair_sit_crushes_tiny",
+  "notes": "La giantess distraída (care 0) se sienta en la silla: la sombra de sit_hover alarma a los tinies; el del borde huye hacia el frente y se salva por poco, el del centro muere aplastado (source: seat).",
+  "seed": 7,
+  "ticks": 250,
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 3000000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "living",
+      "spawn": {
+        "name": "living",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 6000000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "door",
+      "spawn": {
+        "name": "door",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 2950000,
+                "y": 1500000
+              }
+            },
+            "b": {
+              "space": "$living",
+              "pos": {
+                "x": 50000,
+                "y": 1500000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "desk1",
+      "object": "desk",
+      "spawn": {
+        "name": "escritorio",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1500000,
+            "y": 1000000,
+            "z": 750000
+          }
+        },
+        "components": {
+          "offers": [
+            {
+              "action": "write",
+              "scale": "giantess",
+              "effects": [
+                {
+                  "need": "fun",
+                  "amount": 250
+                }
+              ],
+              "approach": {
+                "x": 300000,
+                "y": -300000
+              },
+              "facing": 1024,
+              "steps": [
+                {
+                  "do": "goto"
+                },
+                {
+                  "do": "pose",
+                  "pose": "sit_hover"
+                },
+                {
+                  "do": "wait",
+                  "ticks": 16
+                },
+                {
+                  "do": "pose",
+                  "pose": "sit"
+                },
+                {
+                  "do": "use",
+                  "ticks": 100
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "desk2",
+      "object": "desk",
+      "spawn": {
+        "name": "mesa del living",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1500000,
+            "y": 1000000,
+            "z": 750000
+          }
+        },
+        "components": {
+          "offers": []
+        }
+      }
+    },
+    {
+      "ref": "chair",
+      "object": "chair",
+      "visual": "chair",
+      "spawn": {
+        "name": "silla",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1600000,
+            "y": 550000,
+            "z": 450000
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_leg",
+      "spawn": {
+        "name": "pata de la silla",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 20000,
+              "y": 450000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1600000,
+            "y": 550000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_leg_bottom",
+      "spawn": {
+        "name": "chair_leg_bottom",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 1575000,
+                "y": 525000
+              }
+            },
+            "b": {
+              "space": "$chair_leg",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_leg_top",
+      "spawn": {
+        "name": "chair_leg_top",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$chair_leg",
+              "pos": {
+                "x": 10000,
+                "y": 440000
+              }
+            },
+            "b": {
+              "space": "$chair",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_bridge",
+      "spawn": {
+        "name": "respaldo de la silla",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 20000,
+              "y": 300000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1650000,
+            "y": 950000,
+            "z": 450000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_bridge_top",
+      "spawn": {
+        "name": "chair_bridge_top",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$desk1",
+              "pos": {
+                "x": 150000,
+                "y": 10000
+              }
+            },
+            "b": {
+              "space": "$chair_bridge",
+              "pos": {
+                "x": 10000,
+                "y": 290000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_bridge_bottom",
+      "spawn": {
+        "name": "chair_bridge_bottom",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$chair_bridge",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "b": {
+              "space": "$chair",
+              "pos": {
+                "x": 50000,
+                "y": 390000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa",
+      "object": "sofa",
+      "visual": "sofa",
+      "spawn": {
+        "name": "sofá",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1200000,
+            "y": 450000,
+            "z": 450000
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_leg",
+      "spawn": {
+        "name": "pata del sofá",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 20000,
+              "y": 450000
+            }
+          }
+        },
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1200000,
+            "y": 450000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_leg_bottom",
+      "spawn": {
+        "name": "sofa_leg_bottom",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$living",
+              "pos": {
+                "x": 1175000,
+                "y": 425000
+              }
+            },
+            "b": {
+              "space": "$sofa_leg",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_leg_top",
+      "spawn": {
+        "name": "sofa_leg_top",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sofa_leg",
+              "pos": {
+                "x": 10000,
+                "y": 440000
+              }
+            },
+            "b": {
+              "space": "$sofa",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_bridge",
+      "spawn": {
+        "name": "borde del sofá",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 20000,
+              "y": 300000
+            }
+          }
+        },
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1550000,
+            "y": 950000,
+            "z": 450000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              ".",
+              "."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_bridge_top",
+      "spawn": {
+        "name": "sofa_bridge_top",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$desk2",
+              "pos": {
+                "x": 50000,
+                "y": 10000
+              }
+            },
+            "b": {
+              "space": "$sofa_bridge",
+              "pos": {
+                "x": 10000,
+                "y": 290000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_bridge_bottom",
+      "spawn": {
+        "name": "sofa_bridge_bottom",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sofa_bridge",
+              "pos": {
+                "x": 10000,
+                "y": 10000
+              }
+            },
+            "b": {
+              "space": "$sofa",
+              "pos": {
+                "x": 350000,
+                "y": 490000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "spawn": {
+        "name": "Giantess",
+        "space": {
+          "kind": "body",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1800000,
+            "y": 700000,
+            "z": 0
+          }
+        },
+        "components": {
+          "mover": {
+            "speed": 1000000
+          },
+          "needs": [
+            {
+              "name": "hunger",
+              "value": 950,
+              "decay": 0
+            },
+            {
+              "name": "energy",
+              "value": 950,
+              "decay": 0
+            },
+            {
+              "name": "fun",
+              "value": 200,
+              "decay": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "palm",
+      "spawn": {
+        "name": "palma",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -90000
+            },
+            "max": {
+              "x": 50000,
+              "y": 90000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 300000,
+            "y": 0,
+            "z": 1400000
+          }
+        },
+        "components": {
+          "contact_surface": {
+            "tolerance": 0,
+            "min_overlap": 0
+          },
+          "crusher": {
+            "source": "hand",
+            "force": 10,
+            "thickness": 20000
+          }
+        }
+      }
+    },
+    {
+      "ref": "seat",
+      "visual": "seat",
+      "spawn": {
+        "name": "asiento",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": -180000,
+              "y": -180000
+            },
+            "max": {
+              "x": 180000,
+              "y": 180000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 950000
+          }
+        },
+        "components": {
+          "crusher": {
+            "source": "seat",
+            "force": 450,
+            "thickness": 20000
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny_center",
+      "spawn": {
+        "name": "Tiny Centro",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 200000,
+            "y": 150000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 20000
+          },
+          "agent": {
+            "scale": "tiny",
+            "reflex": 4
+          },
+          "needs": [
+            {
+              "name": "hunger",
+              "value": 900
+            },
+            {
+              "name": "energy",
+              "value": 900
+            }
+          ],
+          "fragile": {}
+        }
+      }
+    },
+    {
+      "ref": "tiny_edge",
+      "spawn": {
+        "name": "Tiny Borde",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 200000,
+            "y": 326000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 20000
+          },
+          "agent": {
+            "scale": "tiny",
+            "reflex": 4
+          },
+          "needs": [
+            {
+              "name": "hunger",
+              "value": 900
+            },
+            {
+              "name": "energy",
+              "value": 900
+            }
+          ],
+          "fragile": {}
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$giantess",
+        "components": {
+          "poses": {
+            "idle": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 300000,
+                  "y": 0,
+                  "z": 1400000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 950000
+                },
+                "facing": 0
+              }
+            ],
+            "hand_hover": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 880000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 950000
+                },
+                "facing": 0
+              }
+            ],
+            "hand_rest": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 770000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 950000
+                },
+                "facing": 0
+              }
+            ],
+            "set_table": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 900000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 950000
+                },
+                "facing": 0
+              }
+            ],
+            "sit_hover": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 300000,
+                  "y": 0,
+                  "z": 1400000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 600000
+                },
+                "facing": 0
+              }
+            ],
+            "sit": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 300000,
+                  "y": 0,
+                  "z": 1400000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 470000
+                },
+                "facing": 0
+              }
+            ],
+            "sit_set_table": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 900000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 470000
+                },
+                "facing": 0
+              }
+            ],
+            "sit_hand_hover": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 880000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 470000
+                },
+                "facing": 0
+              }
+            ],
+            "sit_hand_rest": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 400000,
+                  "y": 0,
+                  "z": 770000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 470000
+                },
+                "facing": 0
+              }
+            ],
+            "sit_hand_sofa": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 0,
+                  "y": -280000,
+                  "z": 470000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$seat",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 470000
+                },
+                "facing": 0
+              }
+            ]
+          },
+          "agent": {
+            "scale": "giantess",
+            "distance_cost": 0.01,
+            "hand": "$palm",
+            "idle_pose": "idle",
+            "watch": 2000000,
+            "care": 0
+          }
+        }
+      }
+    }
+  ],
+  "expect": [
+    {
+      "event": "alarmed",
+      "match": {
+        "entity": "$tiny_center",
+        "source": "seat",
+        "channel": "shadow"
+      }
+    },
+    {
+      "event": "alarmed",
+      "match": {
+        "entity": "$tiny_edge",
+        "source": "seat",
+        "channel": "shadow"
+      }
+    },
+    {
+      "event": "pressed",
+      "match": {
+        "by": "$seat",
+        "source": "seat",
+        "surface": "$chair"
+      }
+    },
+    {
+      "event": "crushed",
+      "match": {
+        "entity": "$tiny_center",
+        "by": "$seat",
+        "source": "seat",
+        "space": "$chair"
+      }
+    },
+    {
+      "no_event": "crushed",
+      "match": {
+        "entity": "$tiny_edge"
+      }
+    },
+    {
+      "event": "near_miss",
+      "match": {
+        "entity": "$tiny_edge",
+        "by": "$seat",
+        "source": "seat"
+      }
+    },
+    {
+      "no_event": "command_rejected"
+    }
+  ]
+}

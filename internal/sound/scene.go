@@ -25,6 +25,8 @@ const (
 	CupClink    = "cup_clink"
 	Bite        = "giantess_bite"
 	Zabuton     = "zabuton"
+	ChairCreak  = "chair_creak"
+	SofaSit     = "sofa_sit"
 	TVOn        = "tv_on"
 	HandNear    = "hand_near"  // micro: la mano se acerca
 	HandLand    = "hand_land"  // micro: la mano se apoya
@@ -254,6 +256,21 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 				c.addNear(HandNear, p, 0.9)
 			}
 		}
+		if ev.Pose == "sit" {
+			if s, ok := cur.SpaceByID(ev.Entity); ok {
+				if !v.Micro {
+					if v.Visual(s.Parent) == "living" {
+						c.add(SofaSit, s.Pose.Pos, 0.85)
+					} else {
+						c.add(ChairCreak, s.Pose.Pos, 0.8)
+					}
+				} else if v.Visual(v.Focus) == "chair" {
+					c.addNear(ChairCreak, s.Pose.Pos, 0.95)
+				} else if v.Visual(v.Focus) == "sofa" {
+					c.addNear(SofaSit, s.Pose.Pos, 1)
+				}
+			}
+		}
 	case attach.PortalOpened:
 		c.portal(PassOpen, ev.Portal, cur, prev)
 	case attach.PortalClosed:
@@ -322,7 +339,7 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		switch {
 		case !v.Micro:
 			c.add(CrushFar, at, 0.8)
-		case ev.Source == crush.SourceFoot:
+		case ev.Source == crush.SourceFoot || ev.Source == crush.SourceSeat:
 			c.addNear(CrushTum, at, 1)
 		default:
 			c.add(CrushPlaf, at, 1)

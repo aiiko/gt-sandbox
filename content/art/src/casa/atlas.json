@@ -1480,6 +1480,115 @@
           }
         }
       }
+    },
+    "chair": {
+      "macro": {
+        "pivot": [
+          2,
+          18
+        ],
+        "depth_offset": 4,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "chair/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "chair/micro_tile.png"
+            ]
+          }
+        }
+      }
+    },
+    "sofa": {
+      "macro": {
+        "pivot": [
+          4,
+          22
+        ],
+        "depth_offset": 6,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "sofa/macro_idle.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "sofa/micro_tile.png"
+            ]
+          }
+        }
+      }
+    },
+    "seat": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          192,
+          192
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "seat/micro_shadow_north.png"
+            ]
+          },
+          "shadow_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "seat/micro_shadow_north.png"
+            ]
+          },
+          "shadow_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "seat/micro_shadow_east.png"
+            ]
+          },
+          "shadow_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "seat/micro_shadow_south.png"
+            ]
+          },
+          "shadow_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "seat/micro_shadow_west.png"
+            ]
+          }
+        }
+      }
     }
   }
 }

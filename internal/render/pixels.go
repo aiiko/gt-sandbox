@@ -475,11 +475,13 @@ func (a *Atlas) depthGroup(f *view.Frame, p camera.Projector, visuals map[ids.ID
 
 // poseClips relaciona la acción de una oferta en uso con la pose que la dibuja.
 var poseClips = map[string]string{
-	"breakfast": "eat",
-	"snack":     "eat",
-	"eat":       "eat",
-	"nibble":    "eat",
-	"watch":     "sit",
+	"breakfast":    "eat",
+	"snack":        "eat",
+	"snack_living": "eat",
+	"eat":          "eat",
+	"nibble":       "eat",
+	"watch":        "sit",
+	"relax":        "sit",
 }
 
 // actor es el estado de una entidad del que sale su clip.

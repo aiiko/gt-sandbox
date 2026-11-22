@@ -47,6 +47,14 @@
       "loop": true
     },
     {
+      "id": "chair_creak",
+      "file": "chair_creak.wav",
+      "category": "efectos",
+      "ms": 160,
+      "voices": 1,
+      "cooldown_ms": 600
+    },
+    {
       "id": "crumb_pop",
       "file": "crumb_pop.wav",
       "category": "efectos",
@@ -277,6 +285,14 @@
       "ms": 300,
       "voices": 1,
       "cooldown_ms": 200
+    },
+    {
+      "id": "sofa_sit",
+      "file": "sofa_sit.wav",
+      "category": "efectos",
+      "ms": 340,
+      "voices": 1,
+      "cooldown_ms": 600
     },
     {
       "id": "tiny_fall",

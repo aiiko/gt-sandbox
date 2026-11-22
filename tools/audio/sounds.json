@@ -159,6 +159,24 @@
         {"wave": "sine", "f0": 80, "dur": 0.2, "f1": 55, "attack": 0.01, "decay": 0.06, "gain": 0.25}
       ]
     },
+    "chair_creak": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 600,
+      "layers": [
+        {"wave": "saw", "f0": 260, "dur": 0.16, "f1": 185, "attack": 0.01, "decay": 0.06, "gain": 0.18, "lp": 1100, "vibrato": [22, 2.5]},
+        {"wave": "noise", "f0": 1100, "dur": 0.12, "f1": 500, "attack": 0.005, "decay": 0.04, "gain": 0.16, "lp": 900}
+      ]
+    },
+    "sofa_sit": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 600,
+      "layers": [
+        {"wave": "noise", "f0": 550, "dur": 0.34, "f1": 220, "attack": 0.025, "decay": 0.11, "gain": 0.42, "lp": 420},
+        {"wave": "sine", "f0": 68, "dur": 0.24, "f1": 46, "attack": 0.012, "decay": 0.08, "gain": 0.3}
+      ]
+    },
     "tv_on": {
       "category": "efectos",
       "voices": 1,

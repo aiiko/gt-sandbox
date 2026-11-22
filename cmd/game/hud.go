@@ -40,6 +40,9 @@ var displayNames = map[string]string{
 	"cup":      "la taza",
 	"plate":    "el plato",
 	"crumb":    "una migaja",
+	"chair":    "silla",
+	"sofa":     "sofá",
+	"seat":     "asiento",
 }
 
 // display devuelve el nombre de una entidad para la interfaz de partida.
@@ -127,6 +130,7 @@ var activities = map[string][2]string{
 	"explore":          {"Explora", "explorar"},
 	"flee":             {"Huye", "huir"},
 	"use:write":        {"Escribe", "escribir"},
+	"use:relax":        {"Descansa en el sofá", "descansar en el sofá"},
 	"observe":          {"Mira a los tinies", "mirar a los tinies"},
 	"share":            {"Comparte migajas", "compartir migajas"},
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
@@ -134,7 +138,7 @@ var activities = map[string][2]string{
 
 // remainsCause dice qué aplastó a quien dejó unos restos.
 var remainsCause = map[string]string{"hand": "Aplastado por la palma", "foot": "Aplastado por un pie",
-	"object": "Aplastado por un objeto"}
+	"object": "Aplastado por un objeto", "seat": "Aplastado al sentarse"}
 
 // activityText resume en castellano lo que hace un agente.
 func activityText(activity, step string, carrying string) string {

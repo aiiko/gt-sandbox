@@ -92,6 +92,9 @@ type Pressed struct {
 
 func (Pressed) Kind() string { return "pressed" }
 
+// SourceSeat es el source de los aplastamientos al sentarse.
+const SourceSeat = "seat"
+
 // Alturas del apoyo de un Space aplastador: su cara de abajo está apoyada
 // sobre una superficie si queda entre PressBelow por debajo y PressAbove por
 // encima de ella. PressAbove es menor que la altura de un tiny (8 mm).

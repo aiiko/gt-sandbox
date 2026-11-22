@@ -30,6 +30,8 @@ import copy
 import json
 import os
 
+from asientos import SEAT_POSES, chair_entities, seat_entity, sofa_entities
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCENARIOS = os.path.join(ROOT, 'tests', 'scenarios')
 
@@ -51,6 +53,95 @@ SNACK_LIVING = {
         {'do': 'use', 'ticks': 250},
     ],
 }
+
+# Variantes con asientos para la partida libre (content/partidas/casa.json):
+# desayunar/escribir sentada en la silla; merendar/mirar TV sentada en el sofá.
+SNACK_LIVING_SEAT = {
+    'action': 'snack_living', 'scale': 'giantess', 'effects': [{'need': 'hunger', 'amount': 350}],
+    'approach': {'x': 0, 'y': -500000},
+    'steps': [
+        {'do': 'goto'},
+        {'do': 'wait', 'ticks': 30},
+        {'do': 'take', 'item': 'plate'},
+        {'do': 'goto', 'place': 'living_table'},
+        {'do': 'pose', 'pose': 'sit_hover'},
+        {'do': 'wait', 'ticks': 16},
+        {'do': 'pose', 'pose': 'sit'},
+        {'do': 'pose', 'pose': 'sit_set_table'},
+        {'do': 'drop', 'offset': {'x': 40000, 'y': 120000}},
+        {'do': 'spawn', 'item': 'crumb', 'count': 4, 'offset': {'x': 40000, 'y': 0}, 'spread': 200000},
+        {'do': 'wait', 'ticks': 12},
+        {'do': 'pose', 'pose': 'sit_hand_rest'},
+        {'do': 'use', 'ticks': 250},
+    ],
+}
+
+WRITE_SEAT = {
+    'action': 'write', 'scale': 'giantess', 'effects': [{'need': 'fun', 'amount': 250}],
+    'approach': {'x': 300000, 'y': -300000}, 'facing': 1024,
+    'steps': [
+        {'do': 'goto'},
+        {'do': 'pose', 'pose': 'sit_hover'},
+        {'do': 'wait', 'ticks': 16},
+        {'do': 'pose', 'pose': 'sit'},
+        {'do': 'pose', 'pose': 'sit_hand_hover'},
+        {'do': 'wait', 'ticks': 12},
+        {'do': 'pose', 'pose': 'sit_hand_rest'},
+        {'do': 'use', 'ticks': 400},
+    ],
+}
+
+WATCH_SEAT = {
+    'action': 'watch', 'scale': 'giantess', 'effects': [{'need': 'fun', 'amount': 500}],
+    'approach': {'x': 0, 'y': -1500000}, 'facing': 1024,
+    'steps': [
+        {'do': 'goto'},
+        {'do': 'pose', 'pose': 'sit_hover'},
+        {'do': 'wait', 'ticks': 16},
+        {'do': 'pose', 'pose': 'sit'},
+        {'do': 'pose', 'pose': 'sit_hand_hover'},
+        {'do': 'wait', 'ticks': 12},
+        {'do': 'pose', 'pose': 'sit_hand_rest'},
+        {'do': 'use', 'ticks': 300},
+    ],
+}
+
+
+def with_seats(d):
+    """Agrega silla, sofá, sus accesos y las poses/rutinas de sentarse (M34–M38)."""
+    i_palm = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'palm')
+    d['entities'].insert(i_palm + 1, seat_entity())
+    i_leg = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'leg1_top')
+    d['entities'][i_leg + 1:i_leg + 1] = chair_entities()
+    i_desk2 = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'desk2')
+    d['entities'][i_desk2 + 1:i_desk2 + 1] = sofa_entities()
+
+    d['commands'][0]['data']['components']['poses'] = copy.deepcopy(SEAT_POSES)
+
+    # Desayuno y merienda sentadas, con migajas que también caen a la silla y al sofá.
+    fridge = entity(d, 'fridge')
+    offers = fridge['spawn']['components']['offers']
+    for o in offers:
+        if o['action'] == 'breakfast':
+            o['steps'] = [
+                {'do': 'goto'},
+                {'do': 'wait', 'ticks': 40},
+                {'do': 'take', 'item': 'cup'},
+                {'do': 'goto', 'place': 'desk'},
+                {'do': 'pose', 'pose': 'sit_hover'},
+                {'do': 'wait', 'ticks': 16},
+                {'do': 'pose', 'pose': 'sit'},
+                {'do': 'pose', 'pose': 'sit_set_table'},
+                {'do': 'drop', 'offset': {'x': 50000, 'y': 150000}},
+                {'do': 'spawn', 'item': 'crumb', 'count': 4, 'offset': {'x': 60000, 'y': 0}, 'spread': 220000},
+                {'do': 'wait', 'ticks': 12},
+                {'do': 'pose', 'pose': 'sit_hand_rest'},
+                {'do': 'use', 'ticks': 300},
+            ]
+    offers[:] = [copy.deepcopy(SNACK_LIVING_SEAT) if o['action'] == 'snack_living' else o for o in offers]
+
+    entity(d, 'desk1')['spawn'].setdefault('components', {})['offers'] = [copy.deepcopy(WRITE_SEAT)]
+    entity(d, 'tv')['spawn'].setdefault('components', {})['offers'] = [copy.deepcopy(WATCH_SEAT)]
 
 # Encuentros de la giantess en la partida libre (utilidades de cada acción).
 OBJECTS = os.path.join(ROOT, 'content', 'objects')
@@ -121,6 +212,7 @@ def main():
     d['atlas'] = '../art/casa.json'
     d['expect'] = []
     with_living_snack(d)
+    with_seats(d)
     d['random'] = {'agent': '$giantess', 'starts': copy.deepcopy(STARTS)}
     entity(d, 'giantess')['spawn']['components']['encounter'] = dict(copy.deepcopy(ENCOUNTER), portion=crumb())
     for e in d['entities']:

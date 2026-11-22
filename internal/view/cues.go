@@ -172,7 +172,7 @@ func (f *Frame) Expression(id ids.ID) string {
 	}
 	using := s.Step == "" || s.Step == "use"
 	switch s.Activity {
-	case "use:breakfast", "use:snack", "use:snack_living", "use:eat", "use:watch":
+	case "use:breakfast", "use:snack", "use:snack_living", "use:eat", "use:watch", "use:relax":
 		if using {
 			return FaceHappy
 		}

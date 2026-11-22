@@ -104,6 +104,8 @@ func storyText(r *ecs.Registry, event world.Event) string {
 			return fmt.Sprintf("%s se dispone a dormir.", name(ev.Entity))
 		case "snack_living":
 			return fmt.Sprintf("%s decide merendar en el living.", name(ev.Entity))
+		case "relax":
+			return fmt.Sprintf("%s decide descansar en el sofá.", name(ev.Entity))
 		case "observe":
 			return fmt.Sprintf("%s se acerca a mirar a los tinies de %s.", name(ev.Entity), name(ev.Target))
 		}
@@ -113,6 +115,8 @@ func storyText(r *ecs.Registry, event world.Event) string {
 			return fmt.Sprintf("%s termina de desayunar.", name(ev.Entity))
 		case "snack_living":
 			return fmt.Sprintf("%s termina de merendar.", name(ev.Entity))
+		case "relax":
+			return fmt.Sprintf("%s termina de descansar.", name(ev.Entity))
 		}
 	case ai.ItemDropped:
 		return fmt.Sprintf("%s deja %s en %s.", name(ev.Entity), name(ev.Item), name(ev.On))
@@ -157,8 +161,10 @@ func storyText(r *ecs.Registry, event world.Event) string {
 	case attach.PoseChanged:
 		if a := ecs.Get[ai.Agent](r).Ptr(ev.Entity); a != nil && !a.Hand.IsNil() {
 			switch ev.Pose {
-			case "hand_rest":
+			case "hand_rest", "sit_hand_rest":
 				return fmt.Sprintf("%s apoya la mano.", name(ev.Entity))
+			case "sit":
+				return fmt.Sprintf("%s se sienta.", name(ev.Entity))
 			case a.IdlePose:
 				return fmt.Sprintf("%s levanta la mano.", name(ev.Entity))
 			}
@@ -180,7 +186,7 @@ func storyText(r *ecs.Registry, event world.Event) string {
 			return fmt.Sprintf("%s explora %s.", name(ev.Entity), name(ev.Space))
 		}
 	case crush.Crushed:
-		by := map[string]string{"hand": "la palma", "foot": "un pie"}[ev.Source]
+		by := map[string]string{"hand": "la palma", "foot": "un pie", "seat": "la giantess al sentarse"}[ev.Source]
 		if by == "" {
 			by = name(ev.By)
 		}
@@ -192,6 +198,9 @@ func storyText(r *ecs.Registry, event world.Event) string {
 	case ai.Trapped:
 		return fmt.Sprintf("%s quedó atrapado sin salida.", name(ev.Entity))
 	case ai.Hesitated:
+		if ev.Source == crush.SourceSeat {
+			return fmt.Sprintf("%s nota tinies en %s y espera antes de sentarse.", name(ev.Entity), name(ev.Surface))
+		}
 		return fmt.Sprintf("%s ve tinies bajo su mano y espera.", name(ev.Entity))
 	case colony.MemberLost:
 		return ""
