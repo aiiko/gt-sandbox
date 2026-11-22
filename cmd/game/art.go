@@ -179,17 +179,29 @@ func (g *game) toggleArtMicro() {
 	}
 }
 
-// microTarget es la superficie a la que lleva Tab desde la vista general: la
-// de lo seguido, si no la de lo elegido (una superficie es la suya), si no
-// la que tiene más tinies y si no el escritorio. Nil si ninguna tiene vista
-// de cerca.
+// microTarget es la superficie a la que lleva Tab desde la vista general:
+// la de lo seguido; si no, la de lo elegido (una superficie es la suya). Una
+// habitación elegida (en macro, cualquier clic en ella elige su piso) lleva a
+// la superficie con más tinies dentro de ella, para no abrir un piso vacío;
+// -micro sí abre la habitación pedida. Si no, la superficie con más tinies de
+// la casa y, sin tinies, el escritorio. Nil si ninguna tiene vista de cerca.
 func (g *game) microTarget(f *view.Frame) ids.ID {
-	for _, id := range []ids.ID{g.follow, g.sel, g.busiestSurface(f), g.artDesk} {
-		if s := g.microSurface(f, id); !s.IsNil() {
+	if s := g.microSurface(f, g.follow); !s.IsNil() {
+		return s
+	}
+	if s := g.microSurface(f, g.sel); !s.IsNil() {
+		room, _ := f.SpaceByID(s)
+		if s != g.sel || room.Kind != space.Static || g.microExact {
 			return s
 		}
+		if busy := g.busiestSurface(f, s); !busy.IsNil() {
+			return busy
+		}
 	}
-	return ids.Nil
+	if busy := g.busiestSurface(f, ids.Nil); !busy.IsNil() {
+		return busy
+	}
+	return g.microSurface(f, g.artDesk)
 }
 
 // scaleLabel nombra a dónde lleva Tab: la superficie de cerca o la casa.

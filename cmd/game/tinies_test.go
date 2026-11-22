@@ -85,7 +85,7 @@ func TestTabFramesTinies(t *testing.T) {
 		g.w, g.h = (pixelGame{g}).Layout(960, 540)
 		g.fit()
 		f := stepTo(t, g, 20)
-		target := g.busiestSurface(f)
+		target := g.busiestSurface(f, ids.Nil)
 		center, n := tinyCluster(f, target)
 		if n == 0 {
 			t.Fatalf("seed %d: sin tinies", seed)
@@ -132,5 +132,26 @@ func TestTinyClusterPicksDensest(t *testing.T) {
 	}
 	if _, n := tinyCluster(f, ids.ID(8)); n != 0 {
 		t.Fatal("otra superficie no tiene tinies")
+	}
+}
+
+// Una habitación elegida (un clic en su piso en macro) no lleva a un piso
+// vacío: Tab abre donde hay tinies dentro de ella o, si no hay, en la casa, y
+// suelta la habitación para que no quede su ficha abierta.
+func TestTabFromRoomGoesToTinies(t *testing.T) {
+	for _, room := range []string{"bedroom", "kitchen"} {
+		g := artGame(t, morningScenario)
+		f := stepTo(t, g, 1)
+		g.sel = refOf(t, morningScenario, room)
+		tab(g)
+		if g.art.focus != g.artDesk {
+			t.Fatalf("%s: Tab abre %s, no el escritorio", room, g.name(g.art.focus))
+		}
+		if !g.sel.IsNil() {
+			t.Fatalf("%s: la habitación sigue elegida", room)
+		}
+		if _, n := tinyCluster(f, g.art.focus); n == 0 {
+			t.Fatalf("%s: sin tinies en la superficie abierta", room)
+		}
 	}
 }

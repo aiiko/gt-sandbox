@@ -212,6 +212,7 @@ type game struct {
 	micro      string     // -micro
 	followName string     // -follow
 	pan        [2]float64 // -pan
+	microExact bool       // -micro abre exactamente el Space pedido
 	bench      *benchmark // -bench
 	sound      *sound.Mixer
 	uiSounds   sound.UIWatcher
@@ -489,7 +490,9 @@ func (g *game) startView() {
 		if g.micro != "" && sp.Name == g.micro {
 			g.sel = sp.ID
 			g.proj = g.cam.Project(fixedmath.Identity, g.w, g.h)
+			g.microExact = true
 			g.toggleMicro()
+			g.microExact = false
 		}
 	}
 	g.startFollowing(g.followName)
