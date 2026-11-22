@@ -48,7 +48,7 @@ El pixel art es el modo por defecto también con `-scenario`, `-load`, `-crowd` 
 
 ## Controles
 
-Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido (o del Space de la entidad elegida) / macro · F encuadrar · rueda zoom · arrastrar o flechas para mover · click elegir · click derecho `move_to` de la entidad elegida a la superficie más alta bajo el cursor · G/P/C/R/L overlays · Esc soltar.
+Espacio pausa · N paso · 1/2/3 velocidad · Tab vista micro del Space elegido (o del Space de la entidad elegida) / macro · F encuadrar · rueda zoom · arrastrar, flechas o WASD para mover · click elegir · click derecho `move_to` de la entidad elegida a la superficie más alta bajo el cursor · G/P/C/R/L overlays · Esc soltar.
 
 `T` sigue la entidad seleccionada o libera la cámara si ya la sigue. `H` alterna entre el log y la historia. `RePág` y `AvPág` recorren la historia. «Una mañana en la casa», la partida al azar y lo que se abre desde el menú arrancan en modo historia. `-story` lo activa al iniciar con otros escenarios.
 

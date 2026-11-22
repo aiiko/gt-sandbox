@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hajimehoshi/ebiten/v2"
+
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/render"
 	"gtsandbox/internal/scenario"
@@ -271,5 +273,31 @@ func TestMorningViewer(t *testing.T) {
 	}
 	if len(pending) != 0 {
 		t.Fatalf("faltan eventos en la historia: %v", pending)
+	}
+}
+
+// Las flechas y WASD mueven la cámara igual; la flecha y su letra juntas no
+// suman, y direcciones opuestas se anulan.
+func TestPanKeys(t *testing.T) {
+	keys := func(ks ...ebiten.Key) func(ebiten.Key) bool {
+		return func(k ebiten.Key) bool { return slices.Contains(ks, k) }
+	}
+	for _, c := range []struct {
+		keys   []ebiten.Key
+		dx, dy float64
+	}{
+		{nil, 0, 0},
+		{[]ebiten.Key{ebiten.KeyA}, panStep, 0},
+		{[]ebiten.Key{ebiten.KeyArrowLeft}, panStep, 0},
+		{[]ebiten.Key{ebiten.KeyA, ebiten.KeyArrowLeft}, panStep, 0},
+		{[]ebiten.Key{ebiten.KeyD}, -panStep, 0},
+		{[]ebiten.Key{ebiten.KeyW}, 0, panStep},
+		{[]ebiten.Key{ebiten.KeyS}, 0, -panStep},
+		{[]ebiten.Key{ebiten.KeyW, ebiten.KeyD}, -panStep, panStep},
+		{[]ebiten.Key{ebiten.KeyA, ebiten.KeyD}, 0, 0},
+	} {
+		if dx, dy := panKeys(keys(c.keys...)); dx != c.dx || dy != c.dy {
+			t.Errorf("%v: %v,%v; se esperaba %v,%v", c.keys, dx, dy, c.dx, c.dy)
+		}
 	}
 }

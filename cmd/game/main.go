@@ -15,7 +15,7 @@
 //
 // Controles del visor de debug: Espacio pausa | N paso | 1/2/3 velocidad
 // x1/x4/x16 | Tab vista micro del Space elegido / macro | F encuadrar | rueda
-// zoom | arrastrar o flechas para mover | click elegir | click derecho mover
+// zoom | arrastrar, flechas o WASD para mover | click elegir | click derecho mover
 // lo elegido · T seguir | H historia/eventos | RePág/AvPág recorrer la
 // historia | G/P/C/R/L overlays (grillas, portales, contactos, rutas,
 // nombres) | Esc soltar. En pixel art, F3 superpone los overlays técnicos y,
@@ -551,15 +551,31 @@ func (g *game) keys() {
 	case k(ebiten.KeyL):
 		g.layers.Labels = !g.layers.Labels
 	}
-	const step = 8
-	for _, a := range []struct {
-		key    ebiten.Key
-		dx, dy float64
-	}{{ebiten.KeyArrowLeft, step, 0}, {ebiten.KeyArrowRight, -step, 0}, {ebiten.KeyArrowUp, 0, step}, {ebiten.KeyArrowDown, 0, -step}} {
-		if ebiten.IsKeyPressed(a.key) {
-			g.cam.Pan(a.dx, a.dy)
-		}
+	if dx, dy := panKeys(ebiten.IsKeyPressed); dx != 0 || dy != 0 {
+		g.cam.Pan(dx, dy)
 	}
+}
+
+// panStep es cuánto se mueve la cámara por frame con una tecla apretada.
+const panStep = 8
+
+// panKeys devuelve el desplazamiento de la cámara según las flechas o WASD
+// apretadas; la flecha y su letra juntas no suman.
+func panKeys(pressed func(ebiten.Key) bool) (dx, dy float64) {
+	held := func(a, b ebiten.Key) bool { return pressed(a) || pressed(b) }
+	if held(ebiten.KeyArrowLeft, ebiten.KeyA) {
+		dx += panStep
+	}
+	if held(ebiten.KeyArrowRight, ebiten.KeyD) {
+		dx -= panStep
+	}
+	if held(ebiten.KeyArrowUp, ebiten.KeyW) {
+		dy += panStep
+	}
+	if held(ebiten.KeyArrowDown, ebiten.KeyS) {
+		dy -= panStep
+	}
+	return dx, dy
 }
 
 // exitPrompt atiende la pregunta de volver al menú: Enter vuelve, Esc sigue
