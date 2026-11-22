@@ -140,3 +140,45 @@ func TestRandomizeDangerousMorning(t *testing.T) {
 		t.Logf("seed %d: %d aplastados", seed, crushed)
 	}
 }
+
+// El cuidado de la giantess se sortea entre 0 y RandomMaxCare cuando el base
+// lo fija, y cambia entre semillas; el base sin care no gana uno.
+func TestRandomizeCare(t *testing.T) {
+	base, err := ReadFile("../../tests/scenarios/un_descuido_en_el_escritorio.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	care := func(s *Spec) (float64, bool) {
+		var data struct {
+			Components struct {
+				Agent map[string]any `json:"agent"`
+			} `json:"components"`
+		}
+		if err := json.Unmarshal(s.Commands[0].Data, &data); err != nil {
+			t.Fatal(err)
+		}
+		c, ok := data.Components.Agent["care"].(float64)
+		return c, ok
+	}
+	seen := map[float64]bool{}
+	for seed := range uint64(12) {
+		s, err := Randomize(base, seed+1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		c, ok := care(s)
+		if !ok || c < 0 || c > RandomMaxCare {
+			t.Fatalf("seed %d: care %v", seed+1, c)
+		}
+		seen[c] = true
+	}
+	if len(seen) < 6 {
+		t.Fatalf("el cuidado casi no varía: %v", seen)
+	}
+	if c, _ := care(base); c != 0 {
+		t.Fatalf("Randomize cambió el base: care %v", c)
+	}
+	if _, ok := care(randomMorning(t, 3)); ok {
+		t.Fatal("la mañana sin care no debería ganar uno")
+	}
+}

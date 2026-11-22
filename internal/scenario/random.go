@@ -29,8 +29,10 @@ const (
 // con componente "member") y los reemplaza por entre RandomMinTinies y
 // RandomMaxTinies tinies repartidos por celdas libres de la superficie donde
 // estaban, cerca de su nido, con colores, necesidades y carácter sorteados.
-// La semilla del mundo pasa a ser seed y se quitan las expectativas: una
-// partida no tiene veredicto. Con la misma semilla, la misma partida.
+// Si el base le fija a un agente su cuidado (agent.care, la giantess que mira
+// antes de apoyar la mano), también se sortea. La semilla del mundo pasa a ser
+// seed y se quitan las expectativas: una partida no tiene veredicto. Con la
+// misma semilla, la misma partida.
 func Randomize(base *Spec, seed uint64) (*Spec, error) {
 	rnd := rng.NewStream(seed, "partida")
 	var (
@@ -144,7 +146,43 @@ func Randomize(base *Spec, seed uint64) (*Spec, error) {
 		}
 		out.Entities = append(out.Entities, e)
 	}
+	commands, err := randomCare(base.Commands, rnd)
+	if err != nil {
+		return nil, err
+	}
+	out.Commands = commands
 	return &out, nil
+}
+
+// RandomMaxCare es el cuidado máximo que se sortea para la giantess.
+const RandomMaxCare = 0.9
+
+// randomCare sortea, entre 0 y RandomMaxCare, el cuidado (agent.care) que
+// los comandos set_components del base le fijan a un agente: cuánto mira
+// antes de apoyar la mano. Los demás comandos quedan igual.
+func randomCare(commands []CommandSpec, rnd *rng.Stream) ([]CommandSpec, error) {
+	out := slices.Clone(commands)
+	for i, c := range out {
+		if c.Kind != "set_components" {
+			continue
+		}
+		var data map[string]any
+		if err := json.Unmarshal(c.Data, &data); err != nil {
+			return nil, fmt.Errorf("scenario: comando %d: %w", i, err)
+		}
+		comps, _ := data["components"].(map[string]any)
+		agent, _ := comps["agent"].(map[string]any)
+		if _, ok := agent["care"]; !ok {
+			continue
+		}
+		agent["care"] = round2(RandomMaxCare * rnd.Float64())
+		raw, err := json.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
+		out[i].Data = raw
+	}
+	return out, nil
 }
 
 // entityGrid devuelve la grilla de navegación de la entidad ref, propia o de
