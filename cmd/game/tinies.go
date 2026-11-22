@@ -153,14 +153,13 @@ func tinyCluster(f *view.Frame, s ids.ID) (units.Vec2, int) {
 	return best, most
 }
 
-// busiestSurface es la superficie con vista de cerca donde hay más tinies,
-// dentro de within (ella misma o algo que cuelga de ella; Nil: toda la casa).
-// A igual cantidad, la de menor ID; Nil si no hay tinies.
-func (g *game) busiestSurface(f *view.Frame, within ids.ID) ids.ID {
+// busiestSurface es la superficie con vista de cerca donde hay más tinies
+// (a igual cantidad, la de menor ID); Nil si no hay tinies.
+func (g *game) busiestSurface(f *view.Frame) ids.ID {
 	count := map[ids.ID]int{}
 	for _, t := range f.Things {
 		if isTiny(t) {
-			if s := g.microSurface(f, t.ID); !s.IsNil() && (within.IsNil() || inside(f, s, within)) {
+			if s := g.microSurface(f, t.ID); !s.IsNil() {
 				count[s]++
 			}
 		}
@@ -174,32 +173,16 @@ func (g *game) busiestSurface(f *view.Frame, within ids.ID) ids.ID {
 	return best
 }
 
-// inside dice si el Space s es within o cuelga de él.
-func inside(f *view.Frame, s, within ids.ID) bool {
-	for !s.IsNil() {
-		if s == within {
-			return true
-		}
-		sp, ok := f.SpaceByID(s)
-		if !ok {
-			return false
-		}
-		s = sp.Parent
-	}
-	return false
-}
-
-// focusTinies, recién entrados a la vista de cerca con Tab, encuadra el grupo
-// más numeroso de tinies de la superficie en vez de una parte vacía. No
-// cambia nada si se sigue a alguien o si lo elegido es un tiny de esa
-// superficie (ya quedó encuadrado).
+// focusTinies, recién entrados a la vista de cerca con Tab, encuadra lo que
+// importa en vez del encuadre fijo de la superficie: el grupo más numeroso de
+// tinies que hay en ella o, si no hay, el punto donde se hizo clic para
+// elegirla (un clic en una habitación en macro elige su piso). No cambia nada
+// si se sigue a alguien o si lo elegido es un tiny de esa superficie (ya quedó
+// encuadrado).
 func (g *game) focusTinies() {
 	a, f := g.art, g.run.Cur
 	if a.focus.IsNil() || !g.follow.IsNil() {
 		return
-	}
-	if sp, ok := f.SpaceByID(g.sel); ok && sp.ID != a.focus {
-		g.sel = ids.Nil // la habitación elegida quedó atrás: su ficha sobra
 	}
 	if t, ok := f.ThingByID(g.sel); ok && t.Space == a.focus {
 		return
@@ -208,8 +191,13 @@ func (g *game) focusTinies() {
 	if !ok {
 		return
 	}
-	if c, n := tinyCluster(f, s.ID); n > 0 {
-		g.cam.X = float64(c.X - s.Pose.Pos.X)
-		g.cam.Y = float64(c.Y - s.Pose.Pos.Y)
+	c, n := tinyCluster(f, s.ID)
+	if n == 0 {
+		if a.clickOn != s.ID {
+			return
+		}
+		c = a.clickAt
 	}
+	g.cam.X = float64(c.X - s.Pose.Pos.X)
+	g.cam.Y = float64(c.Y - s.Pose.Pos.Y)
 }

@@ -52,6 +52,8 @@ type artMode struct {
 	layout           ui.Layout   // zonas de la interfaz de partida del último frame
 	debug            bool        // F3: overlays técnicos sobre el arte
 	badges           []tinyGroup // globos de tinies del último frame macro
+	clickOn          ids.ID      // lo que eligió el último clic sobre la escena
+	clickAt          units.Vec2  // y dónde, en el mundo
 }
 
 func (g *game) enableArt(path string) error {
@@ -180,28 +182,16 @@ func (g *game) toggleArtMicro() {
 }
 
 // microTarget es la superficie a la que lleva Tab desde la vista general:
-// la de lo seguido; si no, la de lo elegido (una superficie es la suya). Una
-// habitación elegida (en macro, cualquier clic en ella elige su piso) lleva a
-// la superficie con más tinies dentro de ella, para no abrir un piso vacío;
-// -micro sí abre la habitación pedida. Si no, la superficie con más tinies de
-// la casa y, sin tinies, el escritorio. Nil si ninguna tiene vista de cerca.
+// la de lo seguido; si no, la de lo elegido (una superficie, como el piso de
+// una habitación, es la suya); si no, la que tiene más tinies y, sin tinies,
+// el escritorio. Nil si ninguna tiene vista de cerca.
 func (g *game) microTarget(f *view.Frame) ids.ID {
-	if s := g.microSurface(f, g.follow); !s.IsNil() {
-		return s
-	}
-	if s := g.microSurface(f, g.sel); !s.IsNil() {
-		room, _ := f.SpaceByID(s)
-		if s != g.sel || room.Kind != space.Static || g.microExact {
+	for _, id := range []ids.ID{g.follow, g.sel, g.busiestSurface(f), g.artDesk} {
+		if s := g.microSurface(f, id); !s.IsNil() {
 			return s
 		}
-		if busy := g.busiestSurface(f, s); !busy.IsNil() {
-			return busy
-		}
 	}
-	if busy := g.busiestSurface(f, ids.Nil); !busy.IsNil() {
-		return busy
-	}
-	return g.microSurface(f, g.artDesk)
+	return ids.Nil
 }
 
 // scaleLabel nombra a dónde lleva Tab: la superficie de cerca o la casa.
@@ -272,6 +262,7 @@ func (g *game) artMouse() {
 			return
 		}
 		g.sel = a.last.Pick(pixel)
+		a.clickOn, a.clickAt = g.sel, a.proj.ToWorld(float64(pixel.X)+0.5, float64(pixel.Y)+0.5)
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		g.moveSelected(a.proj.ToWorld(float64(pixel.X)+0.5, float64(pixel.Y)+0.5))

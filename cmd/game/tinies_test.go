@@ -85,7 +85,7 @@ func TestTabFramesTinies(t *testing.T) {
 		g.w, g.h = (pixelGame{g}).Layout(960, 540)
 		g.fit()
 		f := stepTo(t, g, 20)
-		target := g.busiestSurface(f, ids.Nil)
+		target := g.busiestSurface(f)
 		center, n := tinyCluster(f, target)
 		if n == 0 {
 			t.Fatalf("seed %d: sin tinies", seed)
@@ -138,23 +138,37 @@ func TestTinyClusterPicksDensest(t *testing.T) {
 	}
 }
 
-// Una habitación elegida (un clic en su piso en macro) no lleva a un piso
-// vacío: Tab abre donde hay tinies dentro de ella o, si no hay, en la casa, y
-// suelta la habitación para que no quede su ficha abierta.
-func TestTabFromRoomGoesToTinies(t *testing.T) {
-	for _, room := range []string{"bedroom", "kitchen"} {
-		g := artGame(t, morningScenario)
-		f := stepTo(t, g, 1)
-		g.sel = refOf(t, morningScenario, room)
-		tab(g)
-		if g.art.focus != g.artDesk {
-			t.Fatalf("%s: Tab abre %s, no el escritorio", room, g.name(g.art.focus))
-		}
-		if !g.sel.IsNil() {
-			t.Fatalf("%s: la habitación sigue elegida", room)
-		}
-		if _, n := tinyCluster(f, g.art.focus); n == 0 {
-			t.Fatalf("%s: sin tinies en la superficie abierta", room)
-		}
+// Con una habitación elegida (un clic en su piso en macro), Tab abre ese
+// piso: encuadra a los tinies que haya en él o, si no hay, el punto donde se
+// hizo clic, no el rincón fijo de la vista de cerca.
+func TestTabFromRoomFramesFloor(t *testing.T) {
+	g := artGame(t, morningScenario)
+	f := stepTo(t, g, 1)
+	kitchen := refOf(t, morningScenario, "kitchen")
+	k, _ := f.SpaceByID(kitchen)
+	click := k.Pose.Pos.XY().Add(units.Vec2{X: 2 * units.Meter, Y: units.Meter / 2})
+	g.sel, g.art.clickOn, g.art.clickAt = kitchen, kitchen, click
+	tab(g)
+	if g.art.focus != kitchen || g.sel != kitchen {
+		t.Fatalf("Tab abre %s con %s elegido, no la cocina", g.name(g.art.focus), g.name(g.sel))
+	}
+	if g.cam.X != float64(click.X-k.Pose.Pos.X) || g.cam.Y != float64(click.Y-k.Pose.Pos.Y) {
+		t.Fatalf("encuadre %v,%v; se esperaba el clic", g.cam.X, g.cam.Y)
+	}
+
+	// En la mañana peligrosa, Tiny 21 empieza en el tatami del dormitorio.
+	const descuido = "tests/scenarios/un_descuido_en_el_escritorio.json"
+	g = artGame(t, descuido)
+	f = stepTo(t, g, 1)
+	bedroom := refOf(t, descuido, "bedroom")
+	b, _ := f.SpaceByID(bedroom)
+	g.sel, g.art.clickOn, g.art.clickAt = bedroom, bedroom, b.Pose.Pos.XY()
+	tab(g)
+	c, n := tinyCluster(f, bedroom)
+	if g.art.focus != bedroom || n == 0 {
+		t.Fatalf("Tab abre %s; %d tinies en el piso", g.name(g.art.focus), n)
+	}
+	if g.cam.X != float64(c.X-b.Pose.Pos.X) || g.cam.Y != float64(c.Y-b.Pose.Pos.Y) {
+		t.Fatal("con tinies en el piso, Tab los encuadra a ellos y no al clic")
 	}
 }

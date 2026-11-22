@@ -179,10 +179,8 @@ func TestPartidaStoryFocus(t *testing.T) {
 }
 
 // Tab nombra su destino, que es el mismo al que lleva: donde hay más tinies
-// (al empezar, el escritorio), la superficie de lo elegido, la de lo
-// seguido, y de cerca, la casa. Una habitación elegida (un clic en su piso)
-// lleva a donde hay tinies dentro de ella y, si no hay, a donde haya en la
-// casa: nunca a un piso vacío.
+// (al empezar, el escritorio), la superficie elegida (una habitación es su
+// piso), la de lo seguido, y de cerca, la casa.
 func TestTabNamesItsDestination(t *testing.T) {
 	g := artGame(t, morningScenario)
 	f := stepTo(t, g, 1)
@@ -199,8 +197,8 @@ func TestTabNamesItsDestination(t *testing.T) {
 		target            ids.ID
 	}{
 		{"", "", "Escritorio", g.artDesk},
-		{"bedroom", "", "Escritorio", g.artDesk},
-		{"kitchen", "", "Escritorio", g.artDesk},
+		{"bedroom", "", "Dormitorio", refOf(t, morningScenario, "bedroom")},
+		{"kitchen", "", "Cocina", refOf(t, morningScenario, "kitchen")},
 		{"giantess", "", "Escritorio", g.artDesk},
 		{"bedroom", "tiny01", "Escritorio", g.artDesk},
 		{"desk2", "", "Mesa del living", refOf(t, morningScenario, "desk2")},
@@ -217,7 +215,6 @@ func TestTabNamesItsDestination(t *testing.T) {
 		}
 	}
 	g.sel, g.follow = refOf(t, morningScenario, "bedroom"), ids.Nil
-	g.microExact = true // como -micro
 	g.toggleArtMicro()
 	if g.art.focus != refOf(t, morningScenario, "bedroom") || tab() != "Casa" {
 		t.Fatalf("de cerca: foco %v, Tab dice %q", g.art.focus, tab())
