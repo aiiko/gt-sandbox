@@ -101,6 +101,7 @@ Todo sale del `Frame` y de los eventos; nada cambia el hash.
 - Señales: `alarmed` y `trapped` dan la gota, que además manda sobre cualquier otra mientras el tiny huye o está atrapado; `near_miss` da «!»; `hesitated` da «?» sobre la giantess; `crushed` deja el espíritu (`spirit`) sobre los restos durante `CueTicks` (`Frame.Fresh`). La giantess se sorprende en el retrato al notar unos restos. Huir no enoja: la acción interrumpida por `flee` no da la vena.
 - Historia: «Tiny 16 quedó bajo la palma en escritorio.» (o «bajo un pie», o el objeto), con los restos como actor, así que la entrada enfoca los restos; «se salvó por poco», «quedó atrapado sin salida» y «ve tinies bajo su mano y espera».
 - Arte: visual `remains` (silueta gris aplanada con la bufanda menta; en macro solo si está elegida) y `footprint` (óvalo de la próxima pisada en macro, tenue, mientras la giantess camina), emote `spirit`. El escenario asigna `remains` a los restos al publicarse `crushed`.
+- El piso de cerca: las habitaciones tienen vista micro en baldosas (tatami, madera, damero; ver `docs/specs/presentacion.md#pisos-de-cerca`). Ahí el visual `foot` muestra la sombra del pie que va a bajar (`shadow_<dir>`, más oscura cuanto menos le falta: `Footprint.Remaining` sobre `Footprint.Stride`) y el pie apoyado (`foot_<dir>`) durante `view.StepTicks` después de cada `footstep` (`Frame.Steps`), por encima de lo que pisa.
 - Seguir a un tiny que muere pasa el seguimiento (y la selección) a sus restos.
 - Sonido: `crush_plaf` (palma u objeto, micro), `crush_tum` (pisada, micro, se oye aunque quede fuera de cuadro), `crush_far` (macro), `emote_spirit`.
 
@@ -111,7 +112,8 @@ Todo sale del `Frame` y de los eventos; nada cambia el hash.
 - los tinies son `fragile` y tienen `reflex` 4; la palma es `crusher` y la giantess tiene `stride`;
 - la pata del escritorio baja al tatami del dormitorio (portales `leg1_bottom` y `leg1_top`, como en `floor_to_desk_by_leg`);
 - las migajas del desayuno se desparraman en un anillo de 18 cm: una cae detrás del escritorio, al piso, y otra a la palma;
-- donde la giantess apoya la mano para desayunar quedaron tres galletas (no son `food`, así que la colonia no las acarrea) y tres tinies con hambre las mordisquean: dos bajo el medio de la palma y uno junto al borde.
+- donde la giantess apoya la mano para desayunar quedaron tres galletas (no son `food`, así que la colonia no las acarrea) y tres tinies con hambre las mordisquean: dos bajo el medio de la palma y uno junto al borde;
+- Tiny 21 empieza en el tatami, en el camino de la giantess cuando vuelve con el desayuno: en la semilla 42 la pisada le pasa al lado.
 
 `TestUnDescuidoEnElEscritorio` corre las dos variantes con las semillas 1, 7, 21, 42 y 99, guardando y cargando cada 113 ticks, y verifica: invariantes en cada tick; ninguna palma aplasta a quien va sobre ella; cada muerte de un miembro da `member_lost`; ningún tiny elige como destino algo dentro de una zona de peligro vigente; al final nadie muerto tiene trabajos, reservas ni cargas. Con la distraída hay en cada semilla al menos un aplastado y al menos uno que se salva (por poco o huyendo) y ningún titubeo; con la cuidadosa hay al menos un titubeo y, en el total, menos muertes (hoy 12 contra 2).
 
@@ -148,5 +150,5 @@ Generados por `python tools/scenarios/aplastamiento.py` a partir de `contact_ope
 - Zonas de peligro: se evita el destino, no el camino (una ruta puede cruzar una zona).
 - Huida: sin pánico colectivo ni aviso entre tinies; la salida no considera amenazas que todavía no existen.
 - Pisadas: sin volumen barrido, sin ritmo propio (dependen solo de la distancia) y sin pisar cuando la giantess gira en el lugar. La mañana original no tiene `stride`; solo el escenario de cierre.
-- Presentación: el tiny aplastado no tiene un cuadro propio (los restos aparecen con el espíritu); en macro no hay marca sobre el nido con los miembros perdidos; la sombra del pie solo se dibuja en macro, porque el suelo no tiene vista micro.
+- Presentación: el tiny aplastado no tiene un cuadro propio (los restos aparecen con el espíritu); en macro no hay marca sobre el nido con los miembros perdidos; la giantess no se dibuja de cerca (solo su pie al pisar y la mano), y los muebles del piso (cama, heladera) tampoco; un tiny que trepa la pata se ve, de cerca, caminando sobre el tatami.
 - Fuerza de los objetos por masa y altura de caída: hoy es un valor fijo por objeto.

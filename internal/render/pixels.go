@@ -89,8 +89,11 @@ type look struct {
 const (
 	// PassVisual es el visual de la señal de un paso entre superficies en contacto.
 	PassVisual = "pass"
-	// FootprintVisual es el visual de la sombra de la próxima pisada.
+	// FootprintVisual es el visual de la sombra de la próxima pisada (macro).
 	FootprintVisual = "footprint"
+	// FootVisual es el pie de la giantess visto de cerca: su sombra antes de
+	// bajar (shadow_<dir>) y el pie apoyado (foot_<dir>).
+	FootVisual = "foot"
 	// ShadowReach es la altura a la que la sombra anticipada de una mano deja de verse.
 	ShadowReach = units.Meter
 	// fallLift limita cuántos píxeles cae un sprite en la animación de caída.
@@ -237,6 +240,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if !inFocus(s.ID) {
 			continue
 		}
+		if v, ok := visible(s.ID); ok && v.Tile {
+			out.tiles(f, p, s, v)
+			continue
+		}
 		names := actor{mover: s.Mover, facing: s.Pose.Rot, activity: s.Activity, step: s.Step,
 			carrying: carrying[s.ID], resting: resting[s.ID]}.clips()
 		if s.Mover == nil && !s.Extent.Empty() {
@@ -264,6 +271,23 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 	}
 	if scale == Micro {
 		// Señal del paso en cada extremo visible de un portal de contacto.
+		// El pie: su sombra antes de bajar, más oscura cuanto más cerca, y el
+		// pie apoyado durante StepTicks, por encima de lo que pisa.
+		for _, fp := range f.Footprints {
+			w, ok := f.SpaceByID(fp.Walker)
+			if !ok || w.Mover == nil || w.Mover.Status != "moving" || !inFocus(fp.Space) || fp.Stride <= 0 {
+				continue
+			}
+			near := 1 - float32(fp.Remaining)/float32(fp.Stride)
+			add(fp.Walker, fp.Space, ids.Nil, fp.Pos, []string{"shadow_" + heading(fp.Dir)}, false, image.Point{},
+				look{visual: FootVisual, ghost: true, layer: layerGround, alpha: 0.15 + 0.45*max(near, 0)})
+		}
+		for _, st := range f.Steps {
+			if inFocus(st.Space) {
+				add(st.Walker, st.Space, ids.Nil, st.Pos, []string{"foot_" + heading(st.Dir)}, false, image.Point{},
+					look{visual: FootVisual, ghost: true, layer: layerForeground})
+			}
+		}
 		for _, pt := range f.Portals {
 			if !pt.Dynamic {
 				continue
@@ -351,6 +375,55 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		return cmp.Or(cmp.Compare(a.layer, b.layer), cmp.Compare(a.y, b.y), cmp.Compare(a.group, b.group))
 	})
 	return out
+}
+
+// tiles cubre la extensión de un Space con su baldosa, desde la esquina
+// mínima, solo donde se ve.
+func (s *ArtScene) tiles(f *view.Frame, p camera.Projector, sp view.Space, v variant) {
+	src := v.frame("idle", uint64(f.Tick))
+	w, h := src.Dx(), src.Dy()
+	perMeter := float64(p.Pixels(units.Meter))
+	if perMeter <= 0 {
+		return
+	}
+	stepX := units.Length(math.Round(float64(w) / perMeter * float64(units.Meter)))
+	stepY := units.Length(math.Round(float64(h) / perMeter * float64(units.Meter)))
+	t := sp.Pose.Transform()
+	canvas := image.Rect(0, 0, CanvasWidth, CanvasHeight)
+	px := func(l units.Length) int { return int(math.Round(float64(l) * perMeter / float64(units.Meter))) }
+	for y := sp.Extent.Min.Y; y < sp.Extent.Max.Y; y += stepY {
+		for x := sp.Extent.Min.X; x < sp.Extent.Max.X; x += stepX {
+			// La esquina mínima de la baldosa queda abajo a la izquierda. La
+			// última fila y la última columna se recortan en el borde.
+			cut := src
+			cut.Max.X = cut.Min.X + min(w, px(sp.Extent.Max.X-x))
+			cut.Min.Y = cut.Max.Y - min(h, px(sp.Extent.Max.Y-y))
+			if cut.Empty() {
+				continue
+			}
+			sx, sy := p.ToScreen(t.Apply(units.V3(x, y, 0)))
+			at := image.Pt(int(math.Round(float64(sx))), int(math.Round(float64(sy)))-cut.Dy())
+			dest := image.Rectangle{Min: at, Max: at.Add(cut.Size())}
+			if dest.Overlaps(canvas) {
+				s.sprites = append(s.sprites, sprite{id: sp.ID, src: cut, dest: dest, layer: layerBackground,
+					y: float32(dest.Max.Y), group: sp.ID, z: sp.Pose.Pos.Z, space: true})
+			}
+		}
+	}
+	s.clips[sp.ID] = "idle"
+}
+
+// heading da el punto cardinal más cercano a una dirección de mundo.
+func heading(d units.Vec2) string {
+	switch {
+	case d.X.Abs() >= d.Y.Abs() && d.X >= 0:
+		return "east"
+	case d.X.Abs() >= d.Y.Abs():
+		return "west"
+	case d.Y > 0:
+		return "north"
+	}
+	return "south"
 }
 
 // handShadow decide si una superficie móvil s (una mano) proyecta su sombra

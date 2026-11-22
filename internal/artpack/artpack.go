@@ -44,6 +44,7 @@ type sourceVariant struct {
 	Carry        []int                 `json:"carry,omitempty"`
 	Hidden       bool                  `json:"hidden,omitempty"`
 	SelectedOnly bool                  `json:"selected_only,omitempty"`
+	Tile         bool                  `json:"tile,omitempty"`
 	Clips        map[string]sourceClip `json:"clips,omitempty"`
 }
 
@@ -87,6 +88,7 @@ type outVariant struct {
 	Carry        []int              `json:"carry,omitempty"`
 	Hidden       bool               `json:"hidden,omitempty"`
 	SelectedOnly bool               `json:"selected_only,omitempty"`
+	Tile         bool               `json:"tile,omitempty"`
 	Clips        map[string]outClip `json:"clips,omitempty"`
 }
 
@@ -238,7 +240,7 @@ func Pack(src fs.FS) (*Result, error) {
 		for scale, v := range variants {
 			o := outVariant{
 				Pivot: v.Pivot, Layer: v.Layer, DepthOffset: v.DepthOffset, Focus: v.Focus,
-				Carry: v.Carry, Hidden: v.Hidden, SelectedOnly: v.SelectedOnly,
+				Carry: v.Carry, Hidden: v.Hidden, SelectedOnly: v.SelectedOnly, Tile: v.Tile,
 			}
 			if len(v.Clips) > 0 {
 				o.Clips = map[string]outClip{}

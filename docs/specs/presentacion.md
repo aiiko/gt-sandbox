@@ -19,9 +19,11 @@ go run ./cmd/artpack                # rearma content/art/casa.{png,json}
 go run ./cmd/artpack -check         # solo verifica
 ```
 
+Una variante con `"tile": true` (en el fondo y con pivote `(0, 0)`) es un piso: `render` repite su cuadro `idle` sobre la extensión del Space desde la esquina mínima y recorta la última fila y columna en el borde.
+
 La muestra de M12 (`content/art/muestra.*`) queda congelada como referencia y no tiene fuentes.
 
-Parte de las fuentes se dibuja por código con los scripts de `tools/art/` (Python con Pillow): `rooms.py` para habitaciones, futón, puertas y heladera; `micro.py` para la etiqueta del nido y el posavasos; `hand.py` para la mano; y `sprites.py` para el tiny, las poses de la giantess, la palma en sus cuatro orientaciones y la taza en mano. `px.py` reúne las primitivas de dibujo. Los scripts parten de las piezas originales de M14 guardadas en `tools/art/base/`. Una pieza generada se ajusta en su script, no en el PNG, porque la próxima ejecución la sobrescribe. Para retocar una pieza a mano en un editor, hay que quitarla antes de su script. `-check` regenera en una carpeta temporal y compara píxeles con las fuentes versionadas.
+Parte de las fuentes se dibuja por código con los scripts de `tools/art/` (Python con Pillow): `rooms.py` para habitaciones, futón, puertas y heladera; `micro.py` para la etiqueta del nido y el posavasos; `floors.py` para los pisos vistos de cerca y el pie de la giantess; `hand.py` para la mano; y `sprites.py` para el tiny, las poses de la giantess, la palma en sus cuatro orientaciones y la taza en mano. `px.py` reúne las primitivas de dibujo. Los scripts parten de las piezas originales de M14 guardadas en `tools/art/base/`. Una pieza generada se ajusta en su script, no en el PNG, porque la próxima ejecución la sobrescribe. Para retocar una pieza a mano en un editor, hay que quitarla antes de su script. `-check` regenera en una carpeta temporal y compara píxeles con las fuentes versionadas.
 
 ```sh
 python tools/art/build.py -check    # las fuentes coinciden con los scripts
@@ -111,6 +113,10 @@ go run ./cmd/game -art -scenario tests/scenarios/tiny_cae_de_la_palma.json -foll
 ![Sombra de la mano suspendida sobre la mesa del living antes de apoyarse](img/m17-sombra.png)
 
 ![Tiny 01 recién bajado a la mesa, visto a través de la mano, y un tiny cayendo sobre el escritorio](img/m17-paso-caida.png)
+
+## Pisos de cerca
+
+Las habitaciones tienen vista micro (1,6 px por mm, como el escritorio) en baldosas: el dormitorio, una esterilla de tatami de 90 cm con su heri; el living, tablas de 60 × 30 cm; la cocina, damero de 7,5 cm. Se entra como a cualquier superficie (`-micro dormitorio`, o siguiendo a un tiny que está en el piso). `TestTiledFloorCoversExtent` verifica la cobertura y el recorte. El atlas creció a 2048 × 5516 px por la esterilla. Captura `pisada`.
 
 ## Aplastamiento
 

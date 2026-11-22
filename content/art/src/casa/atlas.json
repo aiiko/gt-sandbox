@@ -24,7 +24,20 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "kitchen/micro_tile.png"
+            ]
+          }
+        }
       }
     },
     "bedroom": {
@@ -45,7 +58,20 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "bedroom/micro_tile.png"
+            ]
+          }
+        }
       }
     },
     "living": {
@@ -66,7 +92,20 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "living/micro_tile.png"
+            ]
+          }
+        }
       }
     },
     "door": {
@@ -1312,6 +1351,74 @@
       },
       "micro": {
         "hidden": true
+      }
+    },
+    "foot": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          192,
+          192
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_foot_east.png"
+            ]
+          },
+          "foot_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_foot_east.png"
+            ]
+          },
+          "shadow_east": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_shadow_east.png"
+            ]
+          },
+          "foot_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_foot_north.png"
+            ]
+          },
+          "shadow_north": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_shadow_north.png"
+            ]
+          },
+          "foot_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_foot_west.png"
+            ]
+          },
+          "shadow_west": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_shadow_west.png"
+            ]
+          },
+          "foot_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_foot_south.png"
+            ]
+          },
+          "shadow_south": {
+            "frame_ticks": 1,
+            "frames": [
+              "foot/micro_shadow_south.png"
+            ]
+          }
+        }
       }
     }
   }

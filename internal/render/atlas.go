@@ -39,6 +39,9 @@ type variant struct {
 	Carry        []int           `json:"carry,omitempty"`
 	Hidden       bool            `json:"hidden,omitempty"`
 	SelectedOnly bool            `json:"selected_only,omitempty"`
+	// Tile repite el cuadro sobre la extensión del Space, desde su esquina
+	// mínima (un piso visto de cerca). El pivote debe ser (0, 0).
+	Tile bool `json:"tile,omitempty"`
 }
 
 type clip struct {
@@ -125,7 +128,7 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 func validateVariant(v variant, bounds image.Rectangle, context string) error {
 	if v.Hidden {
 		if len(v.Pivot) != 0 || len(v.Clips) != 0 || v.Layer != "" || v.DepthOffset != 0 ||
-			v.Foreground != nil || v.Focus != nil || v.Carry != nil || v.SelectedOnly {
+			v.Foreground != nil || v.Focus != nil || v.Carry != nil || v.SelectedOnly || v.Tile {
 			return fmt.Errorf("%s: la variante oculta tiene datos de dibujo", context)
 		}
 		return nil
@@ -138,6 +141,9 @@ func validateVariant(v variant, bounds image.Rectangle, context string) error {
 	}
 	if v.Layer != "" && v.Layer != "background" && v.Layer != "ground" {
 		return fmt.Errorf("%s: capa desconocida %q", context, v.Layer)
+	}
+	if v.Tile && (v.Pivot[0] != 0 || v.Pivot[1] != 0 || v.Foreground != nil || v.Layer != "background") {
+		return fmt.Errorf("%s: una baldosa va en el fondo, con pivote (0, 0) y sin primer plano", context)
 	}
 	if v.Foreground != nil {
 		if !validFrame(v.Foreground, bounds) || v.Pivot[0] >= v.Foreground[2] || v.Pivot[1] >= v.Foreground[3] {

@@ -5,7 +5,10 @@ import (
 	"slices"
 	"time"
 
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/crush"
+	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
@@ -55,6 +58,7 @@ type Runner struct {
 	seq       uint64
 	Err       error  // primer error de step; detiene el Runner
 	falls     []Fall // caídas recientes, para animarlas
+	footsteps []Step // pisadas recientes, para dibujar el pie
 	cues      []Cue  // señales recientes, para las expresiones
 
 	hashed   bool
@@ -125,7 +129,13 @@ func (r *Runner) steps(n int) {
 func (r *Runner) attachRecent(f *Frame) {
 	r.falls = slices.DeleteFunc(r.falls, func(fl Fall) bool { return r.Cur.Tick-fl.Tick >= FallTicks })
 	r.cues = slices.DeleteFunc(r.cues, func(c Cue) bool { return r.Cur.Tick-c.Tick >= CueTicks })
-	f.Falls, f.Cues = nil, nil
+	r.footsteps = slices.DeleteFunc(r.footsteps, func(s Step) bool { return r.Cur.Tick-s.Tick >= StepTicks })
+	f.Falls, f.Cues, f.Steps = nil, nil, nil
+	for _, s := range r.footsteps {
+		if s.Tick <= f.Tick && f.Tick-s.Tick < StepTicks {
+			f.Steps = append(f.Steps, s)
+		}
+	}
 	for _, fl := range r.falls {
 		if fl.Tick <= f.Tick && f.Tick-fl.Tick < FallTicks {
 			f.Falls = append(f.Falls, fl)
@@ -144,6 +154,12 @@ func (r *Runner) record() {
 		if fell, ok := e.Event.(space.EntityFell); ok {
 			// cuenta desde el primer frame que ya la muestra resuelta
 			r.falls = append(r.falls, Fall{Entity: fell.Entity, From: fell.From, To: fell.To, Height: fell.Height, Tick: r.World.Tick()})
+		}
+		if st, ok := e.Event.(crush.Footstep); ok {
+			if s, ok := stepOf(r.World.ECS(), st); ok {
+				s.Tick = r.World.Tick()
+				r.footsteps = append(r.footsteps, s)
+			}
 		}
 		for _, c := range cuesOf(r.World.ECS(), e.Event) {
 			c.Tick = r.World.Tick()
@@ -196,4 +212,20 @@ func (r *Runner) Hash() uint64 {
 func (r *Runner) Enqueue(c world.Command) error {
 	_, err := r.World.Enqueue(c)
 	return err
+}
+
+// stepOf pasa una pisada a coordenadas de mundo, con la dirección de la
+// marcha de quien pisa.
+func stepOf(r *ecs.Registry, ev crush.Footstep) (Step, bool) {
+	g := space.Of(r)
+	st, ok := ecs.Get[crush.Stride](r).Get(ev.Entity)
+	if !ok {
+		return Step{}, false
+	}
+	at, err1 := g.ToWorld(ev.Space, units.V3(ev.Pos.X, ev.Pos.Y, 0))
+	ahead, err2 := g.ToWorld(ev.Space, units.V3(ev.Pos.X+st.Dir.X, ev.Pos.Y+st.Dir.Y, 0))
+	if err1 != nil || err2 != nil {
+		return Step{}, false
+	}
+	return Step{Walker: ev.Entity, Space: ev.Space, Pos: at, Dir: ahead.Sub(at).XY()}, true
 }

@@ -152,6 +152,8 @@ type StepPreview struct {
 	Length units.Length
 	Width  units.Length
 	Right  bool
+	// Remaining es cuánto le falta caminar para apoyar ese pie.
+	Remaining units.Length
 }
 
 // NextSteps devuelve las pisadas previstas de todos los que caminan.
@@ -166,7 +168,7 @@ func NextSteps(w *world.World) []StepPreview {
 		}
 		f := next(e, *st, l.Space, l.Pos.XY())
 		out = append(out, StepPreview{Entity: e, Space: l.Space, Center: f.center, Dir: f.dir,
-			Length: st.FootLength, Width: st.FootWidth, Right: st.Right})
+			Length: st.FootLength, Width: st.FootWidth, Right: st.Right, Remaining: max(st.Length-st.Travel, 0)})
 	})
 	return out
 }

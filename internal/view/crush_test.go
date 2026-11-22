@@ -9,7 +9,8 @@ import (
 
 // En el escenario de cierre, al bajar la mano: el frame muestra los restos
 // con su causa y el espíritu, los que huyen llevan la gota, la historia cuenta
-// la muerte con causa y lugar, y la giantess deja ver dónde pisará al caminar.
+// la muerte con causa y lugar, y la giantess deja ver dónde pisará al caminar
+// y dónde acaba de pisar.
 func TestCrushPresentation(t *testing.T) {
 	spec, err := scenario.ReadFile("../../tests/scenarios/un_descuido_en_el_escritorio.json")
 	if err != nil {
@@ -29,13 +30,18 @@ func TestCrushPresentation(t *testing.T) {
 		}
 		return p.Step()
 	})
-	sawFootprint, sawFlee := false, false
+	sawFootprint, sawFlee, sawStep := false, false, false
 	for in.World.Tick()-in.Start < 200 {
 		r.StepOnce()
 		f := r.Cur
 		for _, fp := range f.Footprints {
 			if fp.Walker == in.Refs["giantess"] && fp.Length > 0 && fp.Dir.LengthSq() > 0 {
 				sawFootprint = true
+			}
+		}
+		for _, st := range f.Steps {
+			if st.Walker == in.Refs["giantess"] && st.Dir.LengthSq() > 0 && f.Tick-st.Tick < StepTicks {
+				sawStep = true
 			}
 		}
 		for _, th := range f.Things {
@@ -46,6 +52,9 @@ func TestCrushPresentation(t *testing.T) {
 	}
 	if !sawFootprint {
 		t.Error("el frame nunca mostró la próxima pisada de la giantess")
+	}
+	if !sawStep {
+		t.Error("el frame nunca mostró un pie apoyado")
 	}
 	if !sawFlee {
 		t.Error("ningún tiny huyó con la gota")

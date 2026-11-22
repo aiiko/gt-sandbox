@@ -1905,6 +1905,55 @@
           "fragile": {}
         }
       }
+    },
+    {
+      "ref": "tiny21",
+      "visual": "tiny_lavender",
+      "spawn": {
+        "name": "Tiny 21",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1550000,
+            "y": 750000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 0
+        },
+        "components": {
+          "mover": {
+            "speed": 20000
+          },
+          "agent": {
+            "scale": "tiny",
+            "work": 1,
+            "distance_cost": 0.2,
+            "sight": 200000,
+            "reflex": 4
+          },
+          "member": {
+            "colony": "$nest",
+            "forage": 0.02
+          },
+          "needs": [
+            {
+              "name": "hunger",
+              "value": 800,
+              "decay": 2
+            },
+            {
+              "name": "energy",
+              "value": 900,
+              "decay": 1
+            }
+          ],
+          "fragile": {}
+        }
+      }
     }
   ],
   "commands": [

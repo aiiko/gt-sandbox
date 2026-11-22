@@ -16,6 +16,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import floors  # noqa: E402
 import micro  # noqa: E402
 import rooms  # noqa: E402
 import sprites  # noqa: E402
@@ -29,6 +30,7 @@ BASE = os.path.join(HERE, 'base')
 def build(out):
     rooms.main(out, BASE)
     micro.main(out, BASE)
+    floors.main(out)
     sprites.main(out, BASE)
     ui.main(sprites.save)
 

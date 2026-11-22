@@ -255,3 +255,40 @@ func TestMicroCargoAndContactLayers(t *testing.T) {
 		t.Fatalf("palma fuera del foco: %s, quería escritorio", got)
 	}
 }
+
+// Un piso en baldosas cubre su extensión desde la esquina mínima y recorta
+// la última fila y columna en el borde, sin invadir al vecino.
+func TestTiledFloorCoversExtent(t *testing.T) {
+	tile := `{"pivot":[0,0],"layer":"background","tile":true,"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	manifest := `{"image":"atlas.png","sprites":{"floor":{"macro":` + sampleVariant + `,"micro":` + tile + `}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &view.Frame{Spaces: []view.Space{{ID: 1, Extent: units.Rect{Max: units.V2(2500, 2500)}}}}
+	// 0,003 px/µm: cada baldosa de 3 px cubre 1 mm; la extensión, 2,5 mm (7,5 px).
+	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	s := a.Arrange(f, proj, map[ids.ID]string{1: "floor"}, Micro, 1)
+	var union image.Rectangle
+	n := 0
+	for _, p := range s.Placements() {
+		if p.ID == 1 && p.Space {
+			union, n = union.Union(p.Dest), n+1
+			if p.Src.Dx() > 3 || p.Src.Dy() > 3 || p.Dest.Size() != p.Src.Size() {
+				t.Errorf("baldosa %v → %v", p.Src, p.Dest)
+			}
+		}
+	}
+	if n != 9 || union.Dx() != 8 || union.Dy() != 8 {
+		t.Fatalf("%d baldosas cubren %v, se esperaban 9 en 8×8 px", n, union)
+	}
+	x0, y0 := proj.ToScreen(units.V3(0, 0, 0))
+	if union.Min.X != int(x0+0.5) || union.Max.Y != int(y0+0.5) {
+		t.Errorf("la esquina mínima %v,%v no queda abajo a la izquierda de %v", x0, y0, union)
+	}
+	bad := strings.Replace(tile, `"pivot":[0,0]`, `"pivot":[1,1]`, 1)
+	manifest = `{"image":"atlas.png","sprites":{"floor":{"macro":` + sampleVariant + `,"micro":` + bad + `}}}`
+	if _, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json"); err == nil || !strings.Contains(err.Error(), "baldosa") {
+		t.Fatalf("pivote de baldosa: %v", err)
+	}
+}

@@ -64,6 +64,9 @@ def cookie(ref, x, y):
 COOKIES = [cookie('cookie1', 260000, 100000), cookie('cookie2', 300000, 90000), cookie('cookie3', 340000, 130000)]
 NEAR_HAND = {'tiny16': (250000, 120000), 'tiny17': (300000, 110000), 'tiny18': (350000, 147000)}
 HUNGRY = 80
+# Tiny 21 bajó por la pata antes de que empiece la mañana: está en el tatami,
+# en el camino de la giantess cuando vuelve con el desayuno.
+FLOOR_TINY = (1550000, 750000)
 
 
 def build(name, title, care, notes, expect):
@@ -91,6 +94,11 @@ def build(name, title, care, notes, expect):
     d['entities'][i + 1:i + 1] = [LEG] + PORTALS
     j = next(j for j, e in enumerate(d['entities']) if e['ref'] == 'nest')
     d['entities'][j + 1:j + 1] = copy.deepcopy(COOKIES)
+    last = max(i for i, e in enumerate(d['entities']) if e['ref'].startswith('tiny'))
+    floor = copy.deepcopy(d['entities'][last])
+    floor['ref'], floor['spawn']['name'] = 'tiny21', 'Tiny 21'
+    floor['spawn']['location'] = {'space': '$bedroom', 'pos': {'x': FLOOR_TINY[0], 'y': FLOOR_TINY[1], 'z': 0}}
+    d['entities'].insert(last + 1, floor)
     d['commands'][0]['data']['components']['agent']['care'] = care
     d['expect'] = expect + [{'no_event': 'command_rejected'}]
     out = os.path.join(DIR, name + '.json')

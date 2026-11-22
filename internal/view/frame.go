@@ -103,7 +103,24 @@ type Footprint struct {
 	Dir    units.Vec2   `json:"dir"`
 	Length units.Length `json:"length"`
 	Width  units.Length `json:"width"`
+	// Stride y Remaining: el largo del paso y cuánto falta para que el pie
+	// baje (la sombra se oscurece al acercarse).
+	Stride    units.Length `json:"stride"`
+	Remaining units.Length `json:"remaining"`
 }
+
+// Step es una pisada reciente: el pie apoyado en Pos (mundo), mirando hacia
+// Dir, desde Tick. Se dibuja durante StepTicks.
+type Step struct {
+	Walker ids.ID     `json:"walker"`
+	Space  ids.ID     `json:"space"`
+	Pos    units.Vec3 `json:"pos"`
+	Dir    units.Vec2 `json:"dir"`
+	Tick   clock.Tick `json:"tick"`
+}
+
+// StepTicks es cuánto se ve un pie apoyado.
+const StepTicks clock.Tick = 8
 
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
 // recorrer, empezando por la posición actual.
@@ -158,6 +175,8 @@ type Frame struct {
 	Cues     []Cue      `json:"cues,omitempty"`
 	// Footprints son las pisadas previstas (sombra del pie).
 	Footprints []Footprint `json:"footprints,omitempty"`
+	// Steps son las pisadas recientes (el pie apoyado).
+	Steps []Step `json:"steps,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -286,12 +305,16 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)
 	})
+	strides := ecs.Get[crush.Stride](r)
 	for _, st := range crush.NextSteps(w) {
 		at, err1 := g.ToWorld(st.Space, units.V3(st.Center.X, st.Center.Y, 0))
 		ahead, err2 := g.ToWorld(st.Space, units.V3(st.Center.X+st.Dir.X, st.Center.Y+st.Dir.Y, 0))
 		if err1 == nil && err2 == nil {
 			f.Footprints = append(f.Footprints, Footprint{Walker: st.Entity, Space: st.Space, Pos: at,
-				Dir: ahead.Sub(at).XY(), Length: st.Length, Width: st.Width})
+				Dir: ahead.Sub(at).XY(), Length: st.Length, Width: st.Width, Remaining: st.Remaining})
+			if s, ok := strides.Get(st.Entity); ok {
+				f.Footprints[len(f.Footprints)-1].Stride = s.Length
+			}
 		}
 	}
 
