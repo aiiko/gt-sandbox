@@ -44,6 +44,10 @@ type Encounter struct {
 	// desde la que la deja (vacía = DefaultDropPose).
 	Portion  *cmds.Spawn `json:"portion,omitempty"`
 	DropPose string      `json:"drop_pose,omitempty"`
+	// HoverPose y RestPose son las poses de la palma ofrecida: suspendida y
+	// apoyada (vacías = DefaultHoverPose y DefaultRestPose).
+	HoverPose string `json:"hover_pose,omitempty"`
+	RestPose  string `json:"rest_pose,omitempty"`
 	// Sightings y Cooldowns están ordenados por superficie (y acción).
 	Sightings []Sighting `json:"sightings,omitempty"`
 	Cooldowns []Cooldown `json:"cooldowns,omitempty"`
@@ -201,7 +205,7 @@ func check(w *world.World) error {
 }
 
 // Actions son las acciones de encuentro, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{Observe{}, Share{}} }
+func Actions() []ai.Action { return []ai.Action{Observe{}, Share{}, OfferPalm{}} }
 
 // Install registra el componente, los eventos y el sistema de avistamientos.
 // Las acciones se instalan con ai.Install(w, encounter.Actions()...).
@@ -214,6 +218,8 @@ func Install(w *world.World) error {
 		world.RegisterEvent[Skipped](w),
 		world.RegisterEvent[Observed](w),
 		world.RegisterEvent[Shared](w),
+		world.RegisterEvent[PalmOffered](w),
+		world.RegisterEvent[PalmWithdrawn](w),
 		// Después de ai.look (Order -50) y antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -45}, look{}),
 	)

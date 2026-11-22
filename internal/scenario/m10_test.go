@@ -2,7 +2,6 @@ package scenario_test
 
 import (
 	"encoding/json"
-	"slices"
 	"testing"
 
 	"gtsandbox/internal/scenario"
@@ -25,7 +24,7 @@ func TestTinyRidesHand(t *testing.T) {
 		}
 		in := run(t, "tiny_rides_hand.json", edit)
 		a, _ := ecs.Get[ai.Agent](in.World.ECS()).Get(in.Refs["tiny"])
-		if got := slices.Contains(a.Visited, in.Refs["desk2"]); got != curious {
+		if got := a.HasVisited(in.Refs["desk2"]); got != curious {
 			t.Errorf("curioso=%v: visitó desk2 = %v (%v)", curious, got, a.Visited)
 		}
 	}

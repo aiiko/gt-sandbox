@@ -4,6 +4,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/attach"
+	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
@@ -17,7 +18,14 @@ import (
 const (
 	ExploreRange   = 10 * units.Centimeter // la vuelta al llegar
 	DynamicPortalX = 2.0                   // multiplicador de curiosidad
+	RevisitFactor  = 0.5                   // curiosidad por un Space que ya conoce
 )
+
+// Visit es un Space donde estuvo el agente y la última vez que lo vio ahí.
+type Visit struct {
+	Space ids.ID     `json:"space"`
+	At    clock.Tick `json:"at"`
+}
 
 // Explored se emite al llegar por primera vez a un Space explorando.
 type Explored struct {
@@ -27,20 +35,42 @@ type Explored struct {
 
 func (Explored) Kind() string { return "explored" }
 
-// Visited indica si el agente estuvo en el Space s.
-func (a *Agent) visited(s ids.ID) bool {
-	for _, v := range a.Visited {
-		if v == s {
-			return true
-		}
-	}
-	return false
+// HasVisited indica si el agente estuvo en el Space s.
+func (a *Agent) HasVisited(s ids.ID) bool {
+	_, ok := a.visitedAt(s)
+	return ok
 }
 
-func (a *Agent) visit(s ids.ID) {
-	if !a.visited(s) {
-		a.Visited = append(a.Visited, s)
+func (a *Agent) visitedAt(s ids.ID) (clock.Tick, bool) {
+	for _, v := range a.Visited {
+		if v.Space == s {
+			return v.At, true
+		}
 	}
+	return 0, false
+}
+
+func (a *Agent) visit(s ids.ID, now clock.Tick) {
+	for i, v := range a.Visited {
+		if v.Space == s {
+			a.Visited[i].At = now
+			return
+		}
+	}
+	a.Visited = append(a.Visited, Visit{Space: s, At: now})
+}
+
+// curiosityFor es cuánto le interesa el Space s: todo si es nuevo, una parte
+// si lo visitó hace más de Revisit, nada si no.
+func (a *Agent) curiosityFor(s ids.ID, now clock.Tick) float64 {
+	at, ok := a.visitedAt(s)
+	switch {
+	case !ok:
+		return a.Curiosity
+	case a.Revisit > 0 && now-at >= a.Revisit:
+		return a.Curiosity * RevisitFactor
+	}
+	return 0
 }
 
 type explore struct{}
@@ -78,10 +108,13 @@ func (explore) Options(c *Ctx) []Option {
 			continue
 		}
 		mine, other, ok := side(p, l.Space)
-		if !ok || a.visited(other.Space) || !g.IsSpace(other.Space) || InDanger(c.W, a.Scale, other.Space, other.Pos) {
+		if !ok || !g.IsSpace(other.Space) || InDanger(c.W, a.Scale, other.Space, other.Pos) {
 			continue
 		}
-		u := a.Curiosity
+		u := a.curiosityFor(other.Space, c.W.Tick())
+		if u <= 0 {
+			continue
+		}
 		if ecs.Get[attach.Contact](r).Has(k.Entity) {
 			u *= DynamicPortalX
 		}
@@ -119,7 +152,7 @@ func (explore) Step(c *Ctx, d *Doing) Result {
 		return Done
 	}
 	// Llegó al Space nuevo: lo registra y elige un punto para dar una vuelta.
-	c.Agent.visit(d.Place)
+	c.Agent.visit(d.Place, c.W.Tick())
 	c.W.Emit(Explored{Entity: c.Actor, Space: d.Place})
 	d.Stage = 1
 	if p, ok := WanderPoint(c.W, c.Actor, ExploreRange, "ai.explore"); ok {

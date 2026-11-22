@@ -143,3 +143,34 @@ Todo paso `spawn` emite `items_left {entity, items, motive}`, donde `motive` es 
 - `giantess_shares_crumbs` y `TestSharedCrumbsAreTraceable`: sin comida en el escritorio, los tinies salen a buscar y la giantess deja dos migajas. Cada una se sigue por `shared` → `noticed` → `job_posted` (`haul`) → `stored`.
 - `giantess_skips_sharing`: caen migajas mientras ella camina, y al llegar emite `encounter_skipped` (`enough`) sin dejar nada.
 - `TestNoSharingWithCrumbsInSight`: con migajas desde el principio, compartir no es opción.
+
+## Ofrecer la palma (M32)
+
+`offer_palm` queda disponible cuando hay un avistamiento reciente en una superficie con `contact_surface` (el escritorio, la mesa del living) y la mano también es superficie de contacto. Los pasos son:
+
+1. ir al lugar de la superficie (lo hace la acción); si al llegar no hay nadie, emite `encounter_skipped` con `reason: "gone"`;
+2. `pose` con `encounter.hover_pose` (`hand_hover`): la mano suspendida a menos de `ThreatHeight` es una sombra, y los tinies con `reflex` se apartan de la huella;
+3. `wait` durante `OfferAnnounce` (3 s);
+4. **apoyo que se cancela:** si quedan frágiles bajo la huella (`crush.Threat.Under` sin margen), emite `encounter_skipped` con `reason: "occupied"` y retira la mano sin apoyarla. Si no, `pose` con `encounter.rest_pose` (`hand_rest`). El apoyo de una giantess con `care` puede demorarse igual que en las ofertas, y la huella se revisa en cada tick hasta apoyar;
+5. al apoyar, `palm_offered {entity, surface}`. `attach` abre el portal de contacto como en cualquier apoyo;
+6. `wait` durante `OfferWait` (20 s). Los agentes de otra escala que llegan a la mano se anotan en `doing.items`;
+7. `Stop` vuelve a la pose de reposo y, si la mano llegó a apoyarse, emite `palm_withdrawn {entity, surface, boarded}` con quienes subieron.
+
+- **Enfriamiento.** Por superficie, `OfferCooldown` (5 minutos).
+- **Compromiso.** Con la mano suspendida o apoyada (`doing.posed`), solo algo urgente la interrumpe.
+- **Pasajeros.** Un tiny que sigue en la palma al retirarla queda ahí como pasajero y baja en el próximo apoyo. Llevarlo a un destino queda para «Llevar a un pasajero».
+
+### Curiosidad que se recupera
+
+`agent.visited` guarda cada Space con la última vez que el agente estuvo ahí (`[{space, at}]`). `agent.revisit` es cuánto tarda un Space visitado en volver a interesarle; con 0 (por defecto), nunca. Pasado ese tiempo, `explore` lo ofrece con `curiosity × RevisitFactor` (0,5), y el doble si el portal es dinámico.
+
+En la partida libre los tinies tienen `revisit` de 90 s, así que pueden volver a subir a una palma que ya conocen. Los escenarios de referencia no lo usan y no cambian. Cambia el formato de `agent` (`HashVersion` 8, `SnapshotSchema` 11).
+
+### Pruebas
+
+- `tiny_boards_offered_palm` y `TestTinyBoardsOfferedPalm`: algún tiny curioso cruza por el portal, y `boarded` coincide con los `explored` hacia la palma.
+- `nobody_boards_offered_palm` y `TestNobodyBoardsOfferedPalm`: sin curiosidad nadie sube, y la mano se retira al terminar la espera con `boarded: []`.
+- `offer_canceled_when_occupied` y `TestOfferCanceledWhenOccupied`: un tiny sin reflejos se queda bajo la huella; la giantess cancela (`occupied`), no apoya y no muere nadie.
+- `TestCuriosityRecovers`: la curiosidad por un Space visitado vuelve pasado `revisit`.
+
+Todas guardan y cargan cada 113 ticks.

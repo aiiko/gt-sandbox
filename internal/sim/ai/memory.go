@@ -132,7 +132,7 @@ func (s look) Run(w *world.World) {
 		if a.Sight <= 0 {
 			return
 		}
-		a.visit(l.Space)
+		a.visit(l.Space, w.Tick())
 		ix.Near(l.Space, l.Pos.XY(), a.Sight, func(e ids.ID, _ units.Vec2) {
 			if e != c.Actor && offers.Has(e) && !r.Despawning(e) {
 				Learn(w, a, c.Actor, e)

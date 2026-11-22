@@ -20,6 +20,9 @@ Parte de «Un descuido en el escritorio» (un_descuido_en_el_escritorio.json):
 - tests/scenarios/giantess_shares_crumbs.json: deja migajas donde los tinies
   buscan comida y no hay; giantess_skips_sharing.json: si al llegar ya hay
   migajas a la vista, no comparte.
+- tests/scenarios/tiny_boards_offered_palm.json, nobody_boards_offered_palm.json
+  y offer_canceled_when_occupied.json: los tres desenlaces de ofrecer la
+  palma (alguien sube, nadie sube, la huella ocupada cancela el apoyo).
 
 Los escenarios de referencia (la mañana y el descuido) no cambian.
 """
@@ -59,7 +62,11 @@ def crumb():
     return json.load(open(os.path.join(OBJECTS, 'crumb.json'), encoding='utf-8'))
 
 
-ENCOUNTER = {'observe': 0.12, 'share': 0.2}
+ENCOUNTER = {'observe': 0.12, 'share': 0.2, 'offer': 0.16}
+
+# Cuánto tarda un tiny en volver a interesarse por un Space donde ya estuvo
+# (la palma, sobre todo): 90 segundos.
+REVISIT = 90 * 20
 
 
 def satisfied(d):
@@ -116,6 +123,10 @@ def main():
     with_living_snack(d)
     d['random'] = {'agent': '$giantess', 'starts': copy.deepcopy(STARTS)}
     entity(d, 'giantess')['spawn']['components']['encounter'] = dict(copy.deepcopy(ENCOUNTER), portion=crumb())
+    for e in d['entities']:
+        a = e['spawn'].get('components', {}).get('agent')
+        if a and a.get('scale') == 'tiny':
+            a['revisit'] = REVISIT
     write(os.path.join(ROOT, 'content', 'partidas', 'casa.json'), d)
 
     d = copy.deepcopy(base)
@@ -206,6 +217,63 @@ def main():
         {'no_event': 'command_rejected'},
     ]
     write(os.path.join(SCENARIOS, 'giantess_skips_sharing.json'), d)
+
+    # Sin galletas: la huella de la mano (junto al borde del escritorio) queda
+    # libre una vez que la sombra aparta a los que pasaban por ahí.
+    offer = copy.deepcopy(base)
+    del offer['atlas']
+    offer['entities'] = [e for e in offer['entities'] if not e['ref'].startswith('cookie')]
+    satisfied(offer)
+    entity(offer, 'giantess')['spawn']['components']['encounter'] = {'offer': 0.3}
+    common = [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'offer_palm', 'target': '$desk1'}},
+        {'no_event': 'crushed'},
+        {'no_event': 'command_rejected'},
+    ]
+
+    d = copy.deepcopy(offer)
+    d['name'] = 'tiny_boards_offered_palm'
+    d['notes'] = ('La giantess apoya la palma abierta junto a la colonia y espera: algún tiny curioso cruza por '
+                  'el portal de contacto. Después retira la mano.')
+    d['ticks'] = 900
+    d['expect'] = common + [
+        {'event': 'palm_offered', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+        {'event': 'explored', 'match': {'space': '$palm'}},
+        {'event': 'palm_withdrawn', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+    ]
+    write(os.path.join(SCENARIOS, 'tiny_boards_offered_palm.json'), d)
+
+    d = copy.deepcopy(offer)
+    d['name'] = 'nobody_boards_offered_palm'
+    d['notes'] = ('Ofrece la palma a tinies sin curiosidad: nadie sube y la mano se retira al terminar la espera.')
+    d['ticks'] = 900
+    for e in d['entities']:
+        a = e['spawn'].get('components', {}).get('agent')
+        if a and a.get('scale') == 'tiny':
+            a['curiosity'] = 0
+    d['expect'] = common + [
+        {'event': 'palm_offered', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+        {'event': 'palm_withdrawn', 'match': {'entity': '$giantess', 'surface': '$desk1', 'boarded': []}},
+        {'no_event': 'explored', 'match': {'space': '$palm'}},
+    ]
+    write(os.path.join(SCENARIOS, 'nobody_boards_offered_palm.json'), d)
+
+    d = copy.deepcopy(offer)
+    d['name'] = 'offer_canceled_when_occupied'
+    d['notes'] = ('Un tiny sin reflejos se queda quieto donde la giantess iba a apoyar la mano: la sombra no lo '
+                  'aparta, así que al terminar el anuncio cancela el apoyo en vez de aplastarlo.')
+    d['ticks'] = 400
+    still = entity(d, 'tiny17')['spawn']
+    still['location']['pos'] = {'x': 300000, 'y': 110000, 'z': 0}
+    still['components']['agent'].update({'reflex': 0, 'curiosity': 0, 'work': 0})
+    still['components']['member']['forage'] = 0
+    still['components']['needs'] = [{'name': 'hunger', 'value': 900}, {'name': 'energy', 'value': 900}]
+    d['expect'] = common + [
+        {'event': 'encounter_skipped', 'match': {'entity': '$giantess', 'action': 'offer_palm', 'reason': 'occupied'}},
+        {'no_event': 'palm_offered'},
+        {'no_event': 'pressed', 'match': {'by': '$palm'}},
+    ]
+    write(os.path.join(SCENARIOS, 'offer_canceled_when_occupied.json'), d)
 
 
 if __name__ == '__main__':

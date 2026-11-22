@@ -668,6 +668,7 @@
           "encounter": {
             "observe": 0.12,
             "share": 0.2,
+            "offer": 0.16,
             "portion": {
               "name": "crumb",
               "visual": "crumb",
@@ -1043,7 +1044,8 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "curiosity": 0.8,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1093,7 +1095,8 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "curiosity": 0.8,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1143,7 +1146,8 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "curiosity": 0.8,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1192,7 +1196,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1241,7 +1246,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1290,7 +1296,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1339,7 +1346,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1388,7 +1396,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1437,7 +1446,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1486,7 +1496,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1535,7 +1546,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1584,7 +1596,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1633,7 +1646,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1682,7 +1696,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1731,7 +1746,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1780,7 +1796,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1829,7 +1846,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1878,7 +1896,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1927,7 +1946,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -1976,7 +1996,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",
@@ -2025,7 +2046,8 @@
             "work": 1,
             "distance_cost": 0.2,
             "sight": 200000,
-            "reflex": 4
+            "reflex": 4,
+            "revisit": 1800
           },
           "member": {
             "colony": "$nest",

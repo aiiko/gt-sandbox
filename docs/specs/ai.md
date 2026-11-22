@@ -41,7 +41,7 @@ Ejemplo: `breakfast` de la heladera va a la heladera, espera, saca una taza, va 
 
 ## Agentes (`agent`) y selector
 
-Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), `hand` y `idle_pose`, `sight`/`known`/`watch` (percepción), `curiosity`/`visited` (exploración), y el estado `doing` (con el lugar elegido, lo que carga y si cambió de pose), `suspended` y `recover_until`.
+Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defecto 1), `work` (ganas de trabajar), `distance_cost` (utilidad que se pierde por metro), `inertia` (por defecto 0,15), `hand` y `idle_pose`, `sight`/`known`/`watch` (percepción), `curiosity`/`visited`/`revisit` (exploración; `visited` guarda cada Space con la última vez que estuvo ahí), y el estado `doing` (con el lugar elegido, lo que carga y si cambió de pose), `suspended` y `recover_until`.
 
 - **Utilidad de usar una oferta:** `Σ w · (d(v) − d(v + amount)) − distance_cost · distancia` (al primer punto de uso), con `d(v) = ((1000 − v)/1000)²`. La curva cuadrática hace que una necesidad baja pese mucho más. Seguir con una acción en curso vale lo que falta de su efecto.
 - **Sin desperdicio:** una oferta cuyos efectos se desperdiciarían todos en más de la mitad no es una opción (no se come sin hambre aunque no haya nada mejor que hacer).
@@ -131,11 +131,15 @@ Hay eventos que interrumpen: `entity_fell` y `near_miss`. Cuando le pasa a un ag
 - `unreachable_food_retry` (aceptación de M9): una migaja encerrada; el tiny toma el trabajo, falla y lo vuelve a tomar recién 30 s después (exactamente dos asignaciones en 50 s).
 - `tiny_rides_hand` (aceptación de M10): dormitorio, living y cocina, cada uno con su escritorio salvo la cocina. La giantess escribe con la mano apoyada en el dormitorio y un tiny curioso sube a la palma. Después ella desayuna y come en el escritorio del living; el tiny baja y lo explora. Ella nota al tiny una vez y no cambia de plan; el tiny no cae. `TestTinyRidesHand` verifica que recuerda el escritorio nuevo y que sin curiosidad no sube. `TestBreakfastCommitted` arranca con más hambre: el desayuno corta la escritura, pero no al revés.
 
+## Pasos de oferta para otras acciones
+
+`ai.RunSteps(c, d, offer, loc)` y `ai.UndoSteps(c, d)` exponen el ejecutor de pasos de `use`. Así, acciones de otros paquetes hacen pasos de oferta sin un smart object: `encounter.share` y `encounter.offer_palm`, ver [encuentros](encuentros.md). El paso `spawn` emite `items_left {entity, items, motive}`, donde el motivo es la oferta, y anota los IDs en `doing.items`.
+
 ## Pendiente
 
 - Percepción: solo un radio y solo el propio Space (no se ve de la palma al escritorio). Lo que se ve se comparte con la colonia de inmediato, no al volver al nido. Personalidad más allá de pesos. Curvas de utilidad por contenido.
 - Más eventos que interrumpan, y prioridades de emergencia (huir) por encima de la utilidad.
 - Compromiso: hoy es un umbral fijo (`UrgentUtility`). Retomar una oferta a medias (la taza que quedó en el piso) en vez de empezar de nuevo.
-- Exploración: la curiosidad no decae con lo visitado ni se cansa; un Space visitado no vuelve a interesar nunca. El tiny no comparte con la colonia lo que explora.
+- Exploración: la curiosidad no se cansa. Un Space visitado solo vuelve a interesar con `revisit` (ver [encuentros](encuentros.md#curiosidad-que-se-recupera)), a mitad de utilidad. El tiny no comparte con la colonia lo que explora.
 - Lugares reservables (hoy dos agentes pueden elegir el mismo escritorio).
 - `spawn` en anillo fijo: variar posiciones con RNG cuando importe.

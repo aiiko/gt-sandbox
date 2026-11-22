@@ -83,9 +83,12 @@ type Agent struct {
 	// Avoid son objetivos con los que falló hace poco (ver RetryTicks).
 	Avoid []Avoid `json:"avoid,omitempty"`
 	// Curiosity es la utilidad de explorar un Space nuevo; Visited, los
-	// Spaces donde estuvo (solo se registran con Sight).
-	Curiosity float64  `json:"curiosity,omitempty"`
-	Visited   []ids.ID `json:"visited,omitempty"`
+	// Spaces donde estuvo y cuándo por última vez (solo se registran con
+	// Sight). Revisit es cuánto tarda un Space visitado en volver a
+	// interesarle (0 = nunca); al volver vale Curiosity*RevisitFactor.
+	Curiosity float64    `json:"curiosity,omitempty"`
+	Visited   []Visit    `json:"visited,omitempty"`
+	Revisit   clock.Tick `json:"revisit,omitempty"`
 	// Watch es el radio (en el mundo) en el que nota a otros agentes.
 	Watch units.Length `json:"watch,omitempty"`
 
