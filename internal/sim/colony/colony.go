@@ -26,6 +26,10 @@ import (
 // de Radius del nido se guarda en el depósito.
 type Colony struct {
 	Radius units.Length `json:"radius"`
+	// DangerRadius y DangerTicks son el tamaño y la duración de la zona de
+	// peligro que deja la muerte de un miembro (0 = por defecto).
+	DangerRadius units.Length `json:"danger_radius,omitempty"`
+	DangerTicks  clock.Tick   `json:"danger_ticks,omitempty"`
 }
 
 // Member es el componente "member" de un tiny: a qué colonia pertenece y
@@ -170,6 +174,10 @@ func Install(w *world.World) error {
 	w.AddInvariant("colony", check)
 	return errors.Join(
 		world.RegisterEvent[Stored](w),
+		world.RegisterEvent[MemberLost](w),
+		world.RegisterEvent[DangerExpired](w),
+		// Después de crush.resolve (Order -1) y antes de jobs.upkeep.
+		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences, Order: 0}, mourn{}),
 		// Después de ai.look (lo visto este tick se comparte el siguiente) y
 		// antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -40}, share{}),

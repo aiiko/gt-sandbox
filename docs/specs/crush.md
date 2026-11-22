@@ -1,4 +1,4 @@
-# Spec: Aplastamiento (M23–M25)
+# Spec: Aplastamiento (M23–M26)
 
 Paquete: `sim/crush`. Diseño y alcance del slice en la [propuesta](../propuesta.md#14-próximo-slice-un-descuido-en-el-escritorio).
 
@@ -11,7 +11,7 @@ Lo que baja sobre una superficie mata a los tinies frágiles que quedan debajo, 
 | `crusher` | `{source, force, thickness, radius, pressing}` | Aplastador: la palma (`source: "hand"`), un objeto (`"object"`). `pressing` es estado |
 | `fragile` | `{}` | Quien muere aplastado (los tinies) |
 | `shelter` | `{strength, radius}` | Refugio: el nido (`content/objects/nest.json`, fuerza 50, 2 cm) |
-| `remains` | `{name, of, by, source, tick}` | Restos de un aplastado |
+| `remains` | `{name, of, by, source, tick, colony}` | Restos de un aplastado. `colony` la completa `colony.mourn` |
 | `stride` | `{length, side, foot_length, foot_width, force, travel, right, space, last}` | Quien pisa al caminar (la giantess). Desde `travel` es estado |
 
 El aplastamiento se activa por contenido. Un escenario sin `fragile` no cambia: la mañana en la casa sigue igual.
@@ -74,6 +74,25 @@ Un agente con `agent.reflex > 0` reacciona a una amenaza que lo cubre en su prop
 
 Con los números de los escenarios (tiny a 1 mm por tick, `reflex` de 4 ticks), un tiny tiene que estar a pocos milímetros del borde para salvarse de una mano que espera 20 ticks. De una pisada a 1 m/s no se salva casi nadie: el aviso dura 7 ticks.
 
+## Cuidado de la giantess (M26, en `sim/ai`)
+
+`agent.care` (0 a 1) cambia cómo apoya la mano. Un paso `pose` de un agente con `care` cuya mano (`agent.hand`) está suspendida sobre una superficie (una amenaza de `crush.Threats`) es el que la apoya, y antes de hacerlo:
+
+- espera `care · HoverExtra` ticks más (`HoverExtra` = 40), lo que da más tiempo para huir;
+- en el primer tick, si hay frágiles bajo la huella (con margen de 2 cm) a menos de su `watch`, hace una tirada de atención con el RNG `ai.attention`: los nota con probabilidad `1 − (1 − care)^n`, con `n` tinies a la vista. Si los nota emite `hesitated {entity, surface, seen}` (`Doing.wary`) y sigue esperando mientras haya alguno debajo, hasta `CareWaitMax` (100 ticks). Después apoya igual.
+
+`watch` también nota los restos (`noticed`). Su plan no cambia.
+
+## Consecuencias en la colonia (M26, en `sim/colony`)
+
+`colony.mourn` corre en Consequences después de `crush.resolve`, cuando la víctima todavía tiene su `member` (se destruye en el Flush). Por cada restos nuevos de un miembro:
+
+- completa `remains.colony`;
+- crea una zona de peligro: una entidad con `danger {scale, space, center, radius, until}` (store de `ai`) en el lugar de los restos, de `colony.danger_radius` (10 cm) por `colony.danger_ticks` (2 min);
+- emite `member_lost {colony, entity, cause, remains, danger}`.
+
+La colonia se entera en el acto, como de lo que ven sus miembros. Mientras la zona está vigente, los agentes de su escala no eligen opciones cuyo objetivo (o el de su trabajo) esté adentro, `ai.WanderPoint` (forage y la vuelta de explore) no elige puntos adentro y `explore` no cruza portales que terminan adentro. Al vencer, `colony.mourn` la borra con `danger_expired {danger, space}`.
+
 ## Invariantes
 
 - `crusher.pressing` está ordenado.
@@ -95,14 +114,16 @@ Generados por `python tools/scenarios/aplastamiento.py` a partir de `contact_ope
 - `tiny_flees_shadow` (M25): la mano espera 20 ticks antes de apoyarse. El tiny a 5 mm del borde huye y se salva con un susto, el del centro no llega, el encerrado entre celdas bloqueadas queda atrapado y el lejano no se entera.
 - `tiny_drops_crumb_to_flee` (M25): el tiny que levanta la migaja la suelta, deja el trabajo y huye. Nadie vuelve a buscarla mientras la sombra sigue ahí. Al apoyarse la mano, el que volvía se asusta, suspende el trabajo y lo termina después.
 - `tiny_flees_footsteps` (M25): con la giantess a 0,5 m/s, la vibración anuncia la segunda pisada. El tiny a 0,5 mm del borde se salva por poco y el del centro no.
+- `careless_giantess_crushes` y `careful_giantess_waits` (M26): la misma giantess escribe en el escritorio con dos tinies bajo la mano. Con `care` 0 los aplasta; con 0,9 espera más, los ve, titubea y nadie muere.
+- `colony_avoids_danger` (M26): la mano mata a un miembro, la colonia marca la zona, la giantess nota los restos y nadie toma el acarreo de una migaja junto a ellos hasta que la zona vence; después la migaja llega al nido.
 - `TestCrushScenariosSnapshots` (M25): los escenarios de aplastamiento dan el mismo log y hash guardando y cargando cada 3 ticks.
 - `TestCrushOnlyOnNewPress`: un tiny camina debajo de la palma apoyada y no muere, tampoco después de guardar y cargar. El mundo restaurado tiene el mismo hash.
 
 ## Pendiente
 
 - Debajo de una mano apoyada se puede caminar: la grilla del escritorio no sabe que la mano ocupa ese lugar.
-- Los restos no saben a qué colonia pertenecía la víctima. Llega en M26 con `member_lost`.
-- Cuidado de la giantess (M26).
+- Cuidado: la giantess no corre la mano a otro lugar ni recuerda dónde aplastó; los restos no cambian su plan.
+- Zonas de peligro: se evita el destino, no el camino (una ruta puede cruzar una zona).
 - Huida: sin pánico colectivo ni aviso entre tinies; la salida no considera amenazas que todavía no existen.
 - Pisadas: sin volumen barrido, sin ritmo propio (dependen solo de la distancia) y sin pisar cuando la giantess gira en el lugar. La casa todavía no tiene `stride` ni ruta al suelo: llega con el escenario de cierre (M27).
 - Fuerza de los objetos por masa y altura de caída: hoy es un valor fijo por objeto.

@@ -59,6 +59,7 @@ type Doing struct {
 	Place    ids.ID     `json:"place,omitempty"`
 	Item     ids.ID     `json:"item,omitempty"`
 	Posed    bool       `json:"posed,omitempty"`
+	Wary     bool       `json:"wary,omitempty"` // vio tinies debajo de la mano (pose con Care)
 	Goal     units.Vec2 `json:"goal,omitempty"` // destino de acciones sin objetivo (forage)
 	Since    clock.Tick `json:"since"`
 }
@@ -90,7 +91,10 @@ type Agent struct {
 	// Reflex son los ticks que tarda en reaccionar a una amenaza
 	// (crush.Threats); 0 = no huye. Alarm es el tick en que reacciona (0 =
 	// sin alarma) y Trapped, que ya no encontró salida.
-	Reflex  clock.Tick `json:"reflex,omitempty"`
+	Reflex clock.Tick `json:"reflex,omitempty"`
+	// Care (0 a 1) es cuánto cuida dónde apoya la mano: la sostiene más en
+	// el aire y puede notar a los tinies de debajo y esperar.
+	Care    float64    `json:"care,omitempty"`
 	Alarm   clock.Tick `json:"alarm,omitempty"`
 	Trapped bool       `json:"trapped,omitempty"`
 
@@ -373,7 +377,7 @@ func (s decide) best(c *Ctx) (Option, bool) {
 	for _, act := range s.acts.list {
 		for _, o := range act.Options(c) {
 			o.Action = act.Name()
-			if !o.Target.IsNil() && (c.Agent.avoids(o.Target, c.W.Tick()) || underThreat(c, o.Target)) {
+			if !o.Target.IsNil() && (c.Agent.avoids(o.Target, c.W.Tick()) || underThreat(c, o.Target) || endangered(c, o.Target)) {
 				continue
 			}
 			if !found || o.Utility > best.Utility || o.Utility == best.Utility && cmp.Or(
@@ -457,6 +461,12 @@ func Install(w *world.World, extra ...Action) error {
 		return err
 	}
 	if err := registerFlee(w); err != nil {
+		return err
+	}
+	if _, err := ecs.Register[Danger](r, "danger"); err != nil {
+		return err
+	}
+	if err := world.RegisterEvent[Hesitated](w); err != nil {
 		return err
 	}
 	acts := &actions{list: append([]Action{use{}, work{}, explore{}, flee{}}, extra...)}

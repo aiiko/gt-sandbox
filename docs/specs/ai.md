@@ -78,6 +78,10 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
 
 Ver `docs/specs/crush.md#huida-m25-en-simai`. Un agente con `reflex` se alarma bajo una amenaza de `crush.Threats` (`alarmed`), huye fuera de la huella (`flee`) o queda atrapado (`trapped`). `near_miss` interrumpe como una caída. Estado: `agent.reflex`, `alarm` y `trapped`.
 
+## Cuidado y zonas de peligro
+
+Ver `docs/specs/crush.md`. `agent.care` hace que un paso `pose` que apoya la mano espere y pueda titubear (`hesitated`, `Doing.wary`). El store `danger` marca zonas que los agentes de una escala evitan como destino (opciones, `WanderPoint`, `explore`) hasta que vencen.
+
 ## Reintentos
 
 Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 s): `agent.avoid`. Vale para cualquier acción; un trabajo inalcanzable vuelve a la cola y el que falló no lo retoma enseguida.

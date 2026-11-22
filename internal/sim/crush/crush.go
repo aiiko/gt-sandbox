@@ -57,6 +57,8 @@ type Remains struct {
 	By     ids.ID     `json:"by"` // el aplastador
 	Source string     `json:"source"`
 	Tick   clock.Tick `json:"tick"`
+	// Colony la completa la colonia de la víctima (sim/colony), si tenía.
+	Colony ids.ID `json:"colony,omitempty"`
 }
 
 // Crushed se emite por cada víctima. Remains es la entidad de los restos.

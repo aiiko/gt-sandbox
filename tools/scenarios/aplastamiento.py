@@ -1,4 +1,4 @@
-"""Genera los escenarios de aplastamiento (M23 a M25) en tests/scenarios/.
+"""Genera los escenarios de aplastamiento (M23 a M26) en tests/scenarios/.
 
 Parte de contact_opens_and_closes_route.json: dormitorio, escritorio a 75 cm,
 giantess y palma. La palma aplasta (crusher "hand", 2 cm de grosor) y los
@@ -360,6 +360,90 @@ def tiny_flees_footsteps():
     return d
 
 
+def giantess_at_desk(name, ticks, notes, care):
+    """La giantess quiere escribir en un cuaderno sobre el escritorio: sostiene
+    la mano 12 ticks y la apoya sobre la huella de siempre."""
+    d = base(name, ticks, notes)
+    for e in d['entities']:
+        if e['ref'] == 'giantess':
+            e['spawn']['components']['needs'] = [{'name': 'fun', 'value': 200, 'decay': 0}]
+    d['commands'][0]['data']['components']['agent'] = {
+        'scale': 'giantess', 'hand': '$palm', 'idle_pose': 'raised', 'watch': 2000000, 'care': care}
+    d['entities'] += [
+        {'ref': 'notebook', 'spawn': {
+            'name': 'cuaderno', 'location': {'space': '$desk1', 'pos': {'x': 500000, 'y': 300000, 'z': 0}},
+            'components': {'offers': [{
+                'action': 'write', 'scale': 'giantess', 'effects': [{'need': 'fun', 'amount': 300}],
+                'steps': [{'do': 'pose', 'pose': 'hover'}, {'do': 'wait', 'ticks': 12},
+                          {'do': 'pose', 'pose': 'rest'}, {'do': 'use', 'ticks': 100}]}]}}},
+        tiny('a', 'desk1', 200000, 200000, agent=dict(SCARED)),
+        tiny('b', 'desk1', 210000, 220000, agent=dict(SCARED)),
+    ]
+    return d
+
+
+def careless_giantess_crushes():
+    d = giantess_at_desk('careless_giantess_crushes', 200,
+                         'Una giantess distraída (care 0) sostiene la mano 12 ticks y la apoya: los dos tinies '
+                         'del centro de la huella se alarman pero no llegan a salir.', 0)
+    d['expect'] = [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'what': 'write'}},
+        {'no_event': 'hesitated'},
+        {'event': 'crushed', 'match': {'by': '$palm'}, 'count': 2},
+    ] + COMMON
+    return d
+
+
+def careful_giantess_waits():
+    d = giantess_at_desk('careful_giantess_waits', 300,
+                         'La misma escena con una giantess cuidadosa (care 0,9): sostiene la mano 36 ticks más, '
+                         've a los tinies debajo y espera a que se aparten (hesitated). Nadie muere.', 0.9)
+    d['expect'] = [
+        {'event': 'hesitated', 'match': {'entity': '$giantess', 'surface': '$desk1', 'seen': 2}, 'by': 20},
+        {'event': 'action_done', 'match': {'entity': '$giantess', 'what': 'write'}},
+        {'event': 'pressed', 'match': {'by': '$palm'}},
+        {'no_event': 'crushed'},
+    ] + COMMON
+    return d
+
+
+def colony_avoids_danger():
+    d = base('colony_avoids_danger', 1200,
+             'La mano se apoya en el tick 0 sobre un miembro de la colonia: muere y la colonia marca una zona de '
+             'peligro de 10 cm por 300 ticks alrededor de sus restos. La giantess, que mira, nota los restos. '
+             'Otro miembro ve una migaja junto a los restos y la colonia publica el acarreo, pero nadie lo toma '
+             'mientras dura la zona. Cuando vence, el trabajo se toma y la migaja llega al nido.')
+    d['commands'][0]['data']['components']['agent'] = {
+        'scale': 'giantess', 'hand': '$palm', 'idle_pose': 'raised', 'watch': 2000000}
+    member = {'colony': '$nest'}
+    d['entities'] += [
+        {'ref': 'nest', 'object': 'nest', 'spawn': {
+            'name': 'nido', 'location': {'space': '$desk1', 'pos': {'x': 450000, 'y': 300000, 'z': 0}},
+            'components': {'colony': {'radius': 30000, 'danger_ticks': 300}}}},
+        {'ref': 'crumb', 'object': 'crumb', 'spawn': {
+            'name': 'migaja', 'location': {'space': '$desk1', 'pos': {'x': 220000, 'y': 220000, 'z': 0}}}},
+    ]
+    victim = tiny('victim', 'desk1', 200000, 200000, agent={'scale': 'tiny'})
+    victim['spawn']['components']['member'] = dict(member)
+    worker = tiny('worker', 'desk1', 400000, 300000,
+                  agent={'scale': 'tiny', 'work': 1, 'distance_cost': 1, 'sight': 300000})
+    worker['spawn']['components']['member'] = dict(member)
+    d['entities'] += [victim, worker]
+    d['commands'] += [pose(0, 'rest'), pose(20, 'raised')]
+    d['expect'] = [
+        crushed('victim', 0, 1),
+        {'event': 'member_lost', 'match': {'colony': '$nest', 'entity': '$victim', 'cause': 'hand'},
+         'after': 0, 'by': 1},
+        {'event': 'noticed', 'match': {'entity': '$giantess'}, 'by': 20},
+        {'event': 'job_posted', 'match': {'target': '$crumb'}, 'by': 30},
+        {'no_event': 'job_assigned', 'by': 300},
+        {'event': 'danger_expired', 'after': 300, 'by': 301},
+        {'event': 'job_assigned', 'match': {'by': '$worker'}, 'after': 300},
+        {'event': 'stored', 'match': {'colony': '$nest', 'item': '$crumb'}},
+    ] + COMMON
+    return d
+
+
 # Tick en que el primer tiny está levantando la migaja (entre job_assigned y
 # el fin del paso de levantar, 1 s). Medido con simrun -events.
 PICKUP_TICK = 60
@@ -369,7 +453,8 @@ def main():
     for make in (palm_crushes_tiny, tiny_on_palm_is_safe, tiny_between_fingers_survives,
                  nest_shelters_from_palm, cup_lands_on_tiny, haul_requeued_after_death,
                  step_crushes_tiny_on_floor, step_spares_tiny_on_desk,
-                 tiny_flees_shadow, tiny_drops_crumb_to_flee, tiny_flees_footsteps):
+                 tiny_flees_shadow, tiny_drops_crumb_to_flee, tiny_flees_footsteps,
+                 careless_giantess_crushes, careful_giantess_waits, colony_avoids_danger):
         d = make()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as f:
             f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')

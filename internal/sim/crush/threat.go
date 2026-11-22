@@ -48,6 +48,25 @@ func (t Threat) Covers(p units.Vec3, margin units.Length) bool {
 	return false
 }
 
+// Under devuelve, en orden de store, los frágiles apoyados en la superficie
+// de la amenaza que quedan bajo su huella o a menos de margin.
+func (t Threat) Under(w *world.World, margin units.Length) []ids.ID {
+	r := w.ECS()
+	g := space.Of(r)
+	locs := comp.Of(r).Location
+	var out []ids.ID
+	ecs.Get[Fragile](r).Each(func(e ids.ID, _ *Fragile) {
+		l, ok := locs.Get(e)
+		if !ok || l.Space != t.Surface || r.Despawning(e) || g.IsSpace(e) {
+			return
+		}
+		if p, _, err := g.WorldPose(e); err == nil && t.Covers(p, margin) {
+			out = append(out, e)
+		}
+	})
+	return out
+}
+
 // Threats devuelve las amenazas del estado actual, en orden estable. Es una
 // función pura del estado (no hay caché que guardar ni reconstruir).
 func Threats(w *world.World) []Threat {

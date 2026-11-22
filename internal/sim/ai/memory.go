@@ -5,6 +5,7 @@ import (
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
@@ -146,8 +147,8 @@ func (s look) Run(w *world.World) {
 	})
 }
 
-// watch: el agente nota a los agentes de otra escala a menos de Watch (en el
-// mundo).
+// watch: el agente nota a los agentes de otra escala y a los restos de
+// aplastados a menos de Watch (en el mundo).
 func (s look) watch(w *world.World, c *Ctx) {
 	g := space.Of(w.ECS())
 	me, _, err := g.WorldPose(c.Actor)
@@ -158,6 +159,15 @@ func (s look) watch(w *world.World, c *Ctx) {
 	var seen []ids.ID
 	s.it.agents.Each(func(e ids.ID, o *Agent) {
 		if e == c.Actor || o.Scale == c.Agent.Scale || c.Agent.known(e) || w.ECS().Despawning(e) {
+			return
+		}
+		if p, _, err := g.WorldPose(e); err == nil && p.XY().DistSq(me.XY()) <= r2 {
+			seen = append(seen, e)
+		}
+	})
+	// también los restos de un aplastado
+	ecs.Get[crush.Remains](w.ECS()).Each(func(e ids.ID, _ *crush.Remains) {
+		if c.Agent.known(e) || w.ECS().Despawning(e) {
 			return
 		}
 		if p, _, err := g.WorldPose(e); err == nil && p.XY().DistSq(me.XY()) <= r2 {

@@ -380,6 +380,9 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 			return stepWait
 		}
 	case StepPose:
+		if careful(c, d) {
+			return stepWait
+		}
 		if err := (attach.SetPose{Entity: c.Actor, Pose: s.Pose}).Apply(w); err != nil {
 			return stepFail
 		}

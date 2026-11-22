@@ -13,7 +13,8 @@ func TestCrushScenariosSnapshots(t *testing.T) {
 	for _, name := range []string{
 		"palm_crushes_tiny", "tiny_on_palm_is_safe", "nest_shelters_from_palm", "cup_lands_on_tiny",
 		"haul_requeued_after_death", "step_crushes_tiny_on_floor", "tiny_flees_shadow",
-		"tiny_drops_crumb_to_flee", "tiny_flees_footsteps",
+		"tiny_drops_crumb_to_flee", "tiny_flees_footsteps", "careful_giantess_waits",
+		"colony_avoids_danger",
 	} {
 		t.Run(name, func(t *testing.T) {
 			spec, err := scenario.ReadFile("../../tests/scenarios/" + name + ".json")

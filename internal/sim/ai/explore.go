@@ -78,7 +78,7 @@ func (explore) Options(c *Ctx) []Option {
 			continue
 		}
 		mine, other, ok := side(p, l.Space)
-		if !ok || a.visited(other.Space) || !g.IsSpace(other.Space) {
+		if !ok || a.visited(other.Space) || !g.IsSpace(other.Space) || InDanger(c.W, a.Scale, other.Space, other.Pos) {
 			continue
 		}
 		u := a.Curiosity
@@ -139,12 +139,16 @@ func WanderPoint(w *world.World, actor ids.ID, rng units.Length, stream string) 
 		return units.Vec2{}, false
 	}
 	grid := ecs.Get[nav.Grid](r).Ptr(l.Space)
+	scale := ""
+	if a, ok := ecs.Get[Agent](r).Get(actor); ok {
+		scale = a.Scale
+	}
 	s := w.RNG(stream)
 	for range 8 {
 		p := l.Pos.XY().Add(units.V2(
 			units.Length(s.Int64N(int64(2*rng+1)))-rng,
 			units.Length(s.Int64N(int64(2*rng+1)))-rng))
-		if sp.Extent.Contains(p) && (grid == nil || grid.Walkable(p)) {
+		if sp.Extent.Contains(p) && (grid == nil || grid.Walkable(p)) && !InDanger(w, scale, l.Space, p) {
 			return p, true
 		}
 	}
