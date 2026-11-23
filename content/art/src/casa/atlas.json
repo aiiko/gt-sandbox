@@ -1842,106 +1842,81 @@
         }
       }
     },
-    "body_hair": {
+    "body_head": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          376
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_hair/micro_tile.png"
+              "body_head/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_skin": {
+    "body_neck": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          32,
+          208
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_skin/micro_tile.png"
+              "body_neck/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_hand": {
+    "body_shoulder_r": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          216
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_hand/micro_tile.png"
+              "body_shoulder_r/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_cardigan": {
+    "body_shoulder_l": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          216
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_cardigan/micro_tile.png"
-            ]
-          }
-        }
-      }
-    },
-    "body_sleeve": {
-      "macro": {
-        "hidden": true
-      },
-      "micro": {
-        "pivot": [
-          0,
-          0
-        ],
-        "layer": "background",
-        "tile": true,
-        "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              "body_sleeve/micro_tile.png"
+              "body_shoulder_l/micro_idle.png"
             ]
           }
         }
@@ -1953,100 +1928,335 @@
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          600
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_chest/micro_tile.png"
+              "body_chest/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_skirt": {
+    "body_back": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          600
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_skirt/micro_tile.png"
+              "body_back/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_thigh": {
+    "body_side_r": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          568
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_thigh/micro_tile.png"
+              "body_side_r/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_sock": {
+    "body_side_l": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          568
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_sock/micro_tile.png"
+              "body_side_l/micro_idle.png"
             ]
           }
         }
       }
     },
-    "body_shoe": {
+    "body_hips": {
       "macro": {
         "hidden": true
       },
       "micro": {
         "pivot": [
-          0,
-          0
+          24,
+          344
         ],
         "layer": "background",
-        "tile": true,
         "clips": {
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "body_shoe/micro_tile.png"
+              "body_hips/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_hand_r_back": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          248
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_hand_r_back/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_hand_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          248
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_hand_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_forearm_r": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          216
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_forearm_r/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_forearm_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          216
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_forearm_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_upper_arm_r": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          216
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_upper_arm_r/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_upper_arm_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          216
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_upper_arm_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_thigh_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          568
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_thigh_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_thigh_r": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          568
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_thigh_r/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_calf_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          280
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_calf_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_calf_r": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          280
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_calf_r/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_foot_l": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          408
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_foot_l/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "body_foot_r": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          24,
+          408
+        ],
+        "layer": "background",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "body_foot_r/micro_idle.png"
             ]
           }
         }

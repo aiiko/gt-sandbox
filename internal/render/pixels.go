@@ -429,10 +429,17 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			continue
 		}
 		// Patas, respaldos, cavidades (bolsillo del sofá) y zonas corporales
-		// proyectadas en 3D solo dibujan su baldosa micro cuando son el foco,
-		// para no tapar el mueble padre u otra superficie.
-		if scale == Micro && s.ID != focus && (visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket" || s.Projected) {
-			continue
+		// proyectadas en 3D solo dibujan su micro cuando son el foco. Las demás
+		// partes articuladas del cuerpo (salvo la palma) solo se dibujan cuando
+		// son el foco o están en contacto directo con él, para que la cabeza o
+		// las caderas no tapen el pie o el suelo en vista micro.
+		if scale == Micro && s.ID != focus {
+			if visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket" || s.Projected {
+				continue
+			}
+			if s.Kind == space.Articulated && visuals[s.ID] != "palm" && !scope[s.ID] {
+				continue
+			}
 		}
 		if v, ok := visible(s.ID); ok && v.Tile {
 			out.tiles(f, p, s, v)

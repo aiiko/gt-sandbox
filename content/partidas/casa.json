@@ -3687,7 +3687,7 @@
           }
         }
       },
-      "visual": "body_hair"
+      "visual": "body_head"
     },
     {
       "ref": "body_neck",
@@ -3761,7 +3761,7 @@
           }
         }
       },
-      "visual": "body_skin"
+      "visual": "body_neck"
     },
     {
       "ref": "body_shoulder_r",
@@ -3821,7 +3821,7 @@
           }
         }
       },
-      "visual": "body_cardigan"
+      "visual": "body_shoulder_r"
     },
     {
       "ref": "body_shoulder_l",
@@ -3881,7 +3881,7 @@
           }
         }
       },
-      "visual": "body_cardigan"
+      "visual": "body_shoulder_l"
     },
     {
       "ref": "body_chest",
@@ -4053,7 +4053,7 @@
           }
         }
       },
-      "visual": "body_cardigan"
+      "visual": "body_back"
     },
     {
       "ref": "body_side_r",
@@ -4138,7 +4138,7 @@
           }
         }
       },
-      "visual": "body_cardigan"
+      "visual": "body_side_r"
     },
     {
       "ref": "body_side_l",
@@ -4237,7 +4237,7 @@
           }
         }
       },
-      "visual": "body_cardigan"
+      "visual": "body_side_l"
     },
     {
       "ref": "body_hips",
@@ -4296,7 +4296,7 @@
           }
         }
       },
-      "visual": "body_skirt"
+      "visual": "body_hips"
     },
     {
       "ref": "body_hand_r_back",
@@ -4347,7 +4347,7 @@
           }
         }
       },
-      "visual": "body_hand"
+      "visual": "body_hand_r_back"
     },
     {
       "ref": "body_forearm_r",
@@ -4436,7 +4436,7 @@
           }
         }
       },
-      "visual": "body_sleeve"
+      "visual": "body_forearm_r"
     },
     {
       "ref": "body_upper_arm_r",
@@ -4510,7 +4510,7 @@
           }
         }
       },
-      "visual": "body_sleeve"
+      "visual": "body_upper_arm_r"
     },
     {
       "ref": "body_hand_l",
@@ -4576,7 +4576,7 @@
           }
         }
       },
-      "visual": "body_hand"
+      "visual": "body_hand_l"
     },
     {
       "ref": "body_forearm_l",
@@ -4665,7 +4665,7 @@
           }
         }
       },
-      "visual": "body_sleeve"
+      "visual": "body_forearm_l"
     },
     {
       "ref": "body_upper_arm_l",
@@ -4739,7 +4739,7 @@
           }
         }
       },
-      "visual": "body_sleeve"
+      "visual": "body_upper_arm_l"
     },
     {
       "ref": "body_thigh_l",
@@ -4843,7 +4843,7 @@
           }
         }
       },
-      "visual": "body_thigh"
+      "visual": "body_thigh_l"
     },
     {
       "ref": "body_calf_l",
@@ -4919,7 +4919,7 @@
           }
         }
       },
-      "visual": "body_sock"
+      "visual": "body_calf_l"
     },
     {
       "ref": "body_foot_l",
@@ -5000,7 +5000,7 @@
           }
         }
       },
-      "visual": "body_shoe"
+      "visual": "body_foot_l"
     },
     {
       "ref": "body_thigh_r",
@@ -5104,7 +5104,7 @@
           }
         }
       },
-      "visual": "body_thigh"
+      "visual": "body_thigh_r"
     },
     {
       "ref": "body_calf_r",
@@ -5180,7 +5180,7 @@
           }
         }
       },
-      "visual": "body_sock"
+      "visual": "body_calf_r"
     },
     {
       "ref": "body_foot_r",
@@ -5261,7 +5261,7 @@
           }
         }
       },
-      "visual": "body_shoe"
+      "visual": "body_foot_r"
     },
     {
       "ref": "joint_hand_r_edge",
