@@ -102,7 +102,7 @@ func (pixelGame) Layout(w, h int) (int, int) { return canvasLayout(w, h) }
 func (g pixelGame) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Image, defaultTransform ebiten.GeoM) {
 	a := g.art
 	a.defaultTransform = defaultTransform
-	a.viewport = render.PixelViewport(screen.Bounds(), canvas.Bounds().Size())
+	a.viewport = render.PixelViewportFor(screen.Bounds(), canvas.Bounds().Size(), uiScalePref)
 	if g.wantsShot() {
 		shot := ebiten.NewImageWithOptions(screen.Bounds(), nil)
 		defer shot.Deallocate()
@@ -375,8 +375,12 @@ func (g *game) artMouse() {
 		return
 	}
 	if _, wy := ebiten.Wheel(); wy != 0 {
-		v := a.viewport
-		g.wheelZoom(wy, [2]float64{(x - float64(v.Rect.Min.X)) / float64(v.Factor), (y - float64(v.Rect.Min.Y)) / float64(v.Factor)})
+		if pixel.In(a.layout.PanelRect) {
+			g.scrollPanel(wy)
+		} else {
+			v := a.viewport
+			g.wheelZoom(wy, [2]float64{(x - float64(v.Rect.Min.X)) / float64(v.Factor), (y - float64(v.Rect.Min.Y)) / float64(v.Factor)})
+		}
 	}
 	// La escena se elige en sus propios píxeles; la interfaz, en los del lienzo.
 	at, onScene := a.sceneView.Point(x, y)
@@ -396,13 +400,68 @@ func (g *game) artMouse() {
 				return
 			}
 		}
+		if pixel.In(a.layout.CardFollow) {
+			g.toggleFollow()
+			return
+		}
+		if pixel.In(a.layout.CardGo) {
+			g.goToEntity(g.sel)
+			return
+		}
+		if pixel.In(a.layout.CardRect) {
+			return
+		}
+		if pixel.In(a.layout.PanelClose) {
+			g.story, g.panelScroll = false, 0
+			return
+		}
+		for i, r := range a.layout.Tabs {
+			if pixel.In(r) {
+				g.panelTab, g.panelScroll = ui.PanelTab(i), 0
+				return
+			}
+		}
+		if pixel.In(a.layout.PanelScrollUp) {
+			g.scrollPanel(1)
+			return
+		}
+		if pixel.In(a.layout.PanelScrollDown) {
+			g.scrollPanel(-1)
+			return
+		}
 		for i, r := range a.layout.Story {
 			if pixel.In(r) {
-				if entries := g.storyEntries(); i < len(entries) {
-					g.focusStory(entries[i])
+				if lines := g.run.Chronicle.Lines(); i < len(lines) {
+					g.focusStory(lines[i])
 				}
 				return
 			}
+		}
+		for i, r := range a.layout.Activities {
+			if pixel.In(r) {
+				if i < len(g.panelActivities) {
+					g.sel = g.panelActivities[i]
+				}
+				return
+			}
+		}
+		for i, r := range a.layout.Tinies {
+			if pixel.In(r) {
+				if i < len(g.panelTinies) {
+					g.sel = g.panelTinies[i]
+				}
+				return
+			}
+		}
+		if pixel.In(a.layout.GiantessFocus) {
+			if gi := g.giantessID(); !gi.IsNil() {
+				g.sel = gi
+				g.goToEntity(gi)
+			}
+			return
+		}
+		if pixel.In(a.layout.PanelRect) {
+			return
 		}
 		if g.clickTinyBadge(pixel) {
 			return
@@ -413,8 +472,26 @@ func (g *game) artMouse() {
 		g.sel = a.last.Pick(at)
 		a.clickOn, a.clickAt = g.sel, world
 	}
-	if onScene && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+	if onScene && !pixel.In(a.layout.PanelRect) && !pixel.In(a.layout.CardRect) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		g.moveSelected(world)
+	}
+}
+
+// scrollPanel desplaza el contenido de la pestaña activa (wy > 0 = arriba).
+func (g *game) scrollPanel(wy float64) {
+	step := 2
+	if g.panelTab == ui.TabChronicle {
+		if wy > 0 {
+			g.panelScroll = min(g.panelScroll+step, max(0, len(g.run.Chronicle.Lines())-1))
+		} else {
+			g.panelScroll = max(0, g.panelScroll-step)
+		}
+	} else if g.panelTab == ui.TabColony {
+		if wy > 0 {
+			g.panelScroll = max(0, g.panelScroll-step)
+		} else {
+			g.panelScroll = min(g.panelScroll+step, max(0, len(g.panelTinies)-1))
+		}
 	}
 }
 
@@ -459,8 +536,15 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		if a.debug {
 			g.drawDebug(dst, f, proj, a.layout.Top+1)
 		}
-		if g.confirmExit {
-			drawExitPrompt(dst)
+		if g.help {
+			ui.DrawHelp(dst, a.atlas)
+		}
+		if g.pause.open {
+			if g.pause.page == pauseControls {
+				ui.DrawHelp(dst, a.atlas)
+			} else {
+				g.pause.layout = g.pauseView().Draw(dst)
+			}
 		}
 		return
 	}
@@ -473,15 +557,4 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		ebitenutil.DebugPrintAt(dst, name, 250, 4)
 	}
 	ebitenutil.DebugPrintAt(dst, "Tab  Escala     Clic  Elegir     T  Seguir     F  Centrar", 10, H-19)
-}
-
-// drawExitPrompt pregunta, sobre la partida en pausa, si volver al menú.
-func drawExitPrompt(dst *ebiten.Image) {
-	const title, keys = "¿Volver al menú principal?", "Enter  Volver      Esc  Seguir jugando"
-	W, H := dst.Bounds().Dx(), dst.Bounds().Dy()
-	w := max(ui.TextWidth(title), ui.TextWidth(keys)) + 20
-	x, y := (W-w)/2, H/2-20
-	ui.Box(dst, image.Rect(x, y, x+w, y+40), ui.Ivory)
-	ui.DrawText(dst, title, (W-ui.TextWidth(title))/2, y+5, ui.Plum)
-	ui.DrawText(dst, keys, (W-ui.TextWidth(keys))/2, y+21, ui.PlumSoft)
 }

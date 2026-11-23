@@ -45,6 +45,19 @@ const (
 	LevelSummary
 )
 
+// StoryKind clasifica el motivo de una entrada para el icono y el color en
+// la crónica (propuesta, 17.6).
+type StoryKind uint8
+
+const (
+	KindGeneral   StoryKind = iota
+	KindDanger              // muerte, tiny atrapado, susto
+	KindEncounter           // observa, comparte, ofrece palma
+	KindColony              // primera vez, despensa vacía, refugio terminado
+	KindRoutine             // actividad de la giantess
+	KindSummary             // resumen de la colonia
+)
+
 // StoryEntry es una entrada de la historia. Actor es quien la protagoniza y
 // Place la superficie o habitación donde ocurre (pueden faltar); la interfaz
 // los usa para enfocar desde la entrada. Seq la identifica: una línea de
@@ -57,6 +70,7 @@ type StoryEntry struct {
 	Actor ids.ID
 	Place ids.ID
 	Level StoryLevel
+	Kind  StoryKind
 	Grave bool // hito grave (una muerte, un tiny atrapado): va con aviso
 	Count int  // detalles agrupados en el diario del lugar (0 = uno solo)
 
@@ -151,7 +165,7 @@ func (c *Chronicle) Record(r *ecs.Registry, t clock.Tick, event world.Event) {
 	case ai.Consumed:
 		if ecs.Get[colony.Colony](r).Has(ev.Target) && ev.Left == 0 && !c.empty[ev.Target] {
 			c.empty[ev.Target] = true
-			c.add(StoryEntry{Tick: t, Text: fmt.Sprintf("La despensa de %s se vació.", k.name(ev.Target)), Place: ev.Target, Level: LevelMilestone})
+			c.add(StoryEntry{Tick: t, Text: fmt.Sprintf("La despensa de %s se vació.", k.name(ev.Target)), Place: ev.Target, Level: LevelMilestone, Kind: KindColony})
 		}
 		return
 	case colony.Stored:
@@ -171,7 +185,7 @@ func (c *Chronicle) Record(r *ecs.Registry, t clock.Tick, event world.Event) {
 		// la primera vez que un tiny llega a un lugar es un hito
 		if ev.Cause == "portal" && !k.isGiantess(ev.Entity) && ecs.Get[ai.Agent](r).Has(ev.Entity) && !k.isHand(ev.To) && !c.firsts[ev.To] {
 			c.firsts[ev.To] = true
-			c.add(StoryEntry{Tick: t, Text: fmt.Sprintf("Por primera vez un tiny llega a %s.", k.name(ev.To)), Actor: ev.Entity, Place: ev.To, Level: LevelMilestone})
+			c.add(StoryEntry{Tick: t, Text: fmt.Sprintf("Por primera vez un tiny llega a %s.", k.name(ev.To)), Actor: ev.Entity, Place: ev.To, Level: LevelMilestone, Kind: KindColony})
 		}
 	}
 	e, ok := k.entry(event)
@@ -209,7 +223,7 @@ func (c *Chronicle) summarize(now clock.Tick) {
 			text = strings.Join(parts[:n-1], ", ") + " y " + parts[n-1]
 		}
 		// lleva la hora en que se escribe, así la crónica queda en orden
-		c.add(StoryEntry{Tick: now, End: now, Text: "Desde las " + ClockAt(c.period) + ", la colonia: " + text + ".", Level: LevelSummary})
+		c.add(StoryEntry{Tick: now, End: now, Text: "Desde las " + ClockAt(c.period) + ", la colonia: " + text + ".", Level: LevelSummary, Kind: KindSummary})
 	}
 	c.period, c.tally = now, [tallyKinds]int32{}
 }
@@ -242,7 +256,7 @@ func (c *Chronicle) startRoutine(k chronicler, t clock.Tick, ev ai.ActionStarted
 	if place := k.room(ev.Target); what.place && !place.IsNil() {
 		text += " en " + k.name(place)
 	}
-	e := c.add(StoryEntry{Tick: t, Text: text + ".", Actor: ev.Entity, Level: LevelRoutine})
+	e := c.add(StoryEntry{Tick: t, Text: text + ".", Actor: ev.Entity, Level: LevelRoutine, Kind: KindRoutine})
 	c.routine[ev.Entity] = e.Seq
 }
 
@@ -414,14 +428,16 @@ func (k chronicler) entry(event world.Event) (StoryEntry, bool) {
 	e.Actor, e.Place = storySubjects(event)
 	switch ev := event.(type) {
 	case crush.Crushed:
-		e.Level, e.Grave = LevelMilestone, true
+		e.Level, e.Kind, e.Grave = LevelMilestone, KindDanger, true
 	case ai.Trapped:
-		e.Level, e.Grave = LevelMilestone, true
+		e.Level, e.Kind, e.Grave = LevelMilestone, KindDanger, true
 	case crush.NearMiss:
-		e.Level, e.plural = LevelMilestone, "%d tinies se salvaron por poco."
+		e.Level, e.Kind, e.plural = LevelMilestone, KindDanger, "%d tinies se salvaron por poco."
 	case ai.Hesitated, encounter.Observed, encounter.Shared,
-		encounter.PalmWithdrawn, encounter.Skipped, colony.RefugeBuilt:
-		e.Level = LevelMilestone
+		encounter.PalmWithdrawn, encounter.Skipped:
+		e.Level, e.Kind = LevelMilestone, KindEncounter
+	case colony.RefugeBuilt:
+		e.Level, e.Kind = LevelMilestone, KindColony
 	case ai.Explored:
 		e.plural = "%d tinies exploran " + k.name(ev.Space) + "."
 	case space.EntityReparented:

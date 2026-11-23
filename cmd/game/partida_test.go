@@ -236,17 +236,29 @@ func TestPopulationAndDeathNotice(t *testing.T) {
 	}
 	var deathTick clock.Tick
 	var sawNotice ui.Notice
+	sawThreat := false
 	for tick := 1; tick <= 600; tick++ {
 		f := stepTo(t, g, tick)
 		h := g.partida(f, ids.Nil)
-		if len(h.Notices) > 0 {
-			deathTick = f.Tick
-			sawNotice = h.Notices[0]
-			if h.Population >= h0.Population {
-				t.Fatalf("tick %d: murió un tiny pero la población siguió en %d", tick, h.Population)
+		for _, n := range h.Notices {
+			if n.Kind == ui.NoticeThreat {
+				sawThreat = true
 			}
+			if n.Kind == ui.NoticeDeath {
+				deathTick = f.Tick
+				sawNotice = n
+				if h.Population >= h0.Population {
+					t.Fatalf("tick %d: murió un tiny pero la población siguió en %d", tick, h.Population)
+				}
+				break
+			}
+		}
+		if deathTick != 0 {
 			break
 		}
+	}
+	if !sawThreat {
+		t.Error("no apareció ningún aviso de amenaza antes del deceso")
 	}
 	if deathTick == 0 {
 		t.Fatal("no apareció ninguna notificación de deceso en un_descuido_en_el_escritorio")

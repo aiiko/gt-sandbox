@@ -16,20 +16,28 @@ import (
 // de la ventana). run la conecta al monitor; en los tests vale 1.
 var deviceScale = func() float64 { return 1 }
 
+// uiScalePref es la escala de interfaz preferida (0 = Automático, 1..4).
+var uiScalePref int
+
 // canvasLayout da el lienzo que llena una ventana de w × h píxeles lógicos:
-// el factor de escena se elige con los píxeles físicos (propuesta, 17.2).
+// el factor de escena se elige con los píxeles físicos (propuesta, 17.2 y 17.6).
 func canvasLayout(w, h int) (int, int) {
 	s := deviceScale()
-	return render.CanvasSize(int(math.Ceil(float64(w)*s)), int(math.Ceil(float64(h)*s)))
+	return render.CanvasSizeFor(int(math.Ceil(float64(w)*s)), int(math.Ceil(float64(h)*s)), uiScalePref)
 }
 
-// windowConfig es la ventana que recuerda el juego entre sesiones. Es
-// configuración de presentación: no entra en partidas ni en la simulación.
+// windowConfig es la configuración local de presentación que recuerda el juego
+// entre sesiones (ventana y opciones de presentación). No entra en partidas ni
+// en la simulación.
 type windowConfig struct {
-	Width      int  `json:"width"`
-	Height     int  `json:"height"`
-	Maximized  bool `json:"maximized"`
-	Fullscreen bool `json:"fullscreen"`
+	Width         int      `json:"width"`
+	Height        int      `json:"height"`
+	Maximized     bool     `json:"maximized"`
+	Fullscreen    bool     `json:"fullscreen"`
+	Volume        *float64 `json:"volume,omitempty"`
+	UIScale       int      `json:"ui_scale,omitempty"`
+	ReducedMotion bool     `json:"reduced_motion,omitempty"`
+	PauseOnThreat bool     `json:"pause_on_threat,omitempty"`
 }
 
 // windowFile es dónde se guarda la ventana ("" si no hay carpeta de usuario).
@@ -93,6 +101,7 @@ func (t *windowTracker) open() {
 		}
 	}
 	t.cfg = c
+	uiScalePref = max(0, min(4, c.UIScale))
 	ebiten.SetWindowSize(c.Width, c.Height)
 	if c.Maximized {
 		ebiten.MaximizeWindow()

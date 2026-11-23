@@ -17,8 +17,11 @@ import (
 	"gtsandbox/internal/camera"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/render"
+	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/crush"
+	"gtsandbox/internal/sim/encounter"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -214,17 +217,24 @@ var needLabels = map[string]string{"hunger": "Hambre", "energy": "Energía", "fu
 // card arma el inspector resumido de la entidad elegida.
 func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 	var activity, step, cause string
+	var goal ids.ID
 	var needs []view.Need
 	hasMover := false
 	if t, ok := f.ThingByID(id); ok {
-		activity, step, needs, hasMover = t.Activity, t.Step, t.Needs, t.Mover != nil
+		activity, step, goal, needs, hasMover = t.Activity, t.Step, t.Goal, t.Needs, t.Mover != nil
 		cause = t.Remains
 	} else if s, ok := f.SpaceByID(id); ok {
-		activity, step, needs = s.Activity, s.Step, s.Needs
+		activity, step, goal, needs = s.Activity, s.Step, s.Goal, s.Needs
 	} else {
 		return nil
 	}
-	c := &ui.Card{Name: capital(g.display(id)), Emote: f.Emote(id)}
+	c := &ui.Card{
+		Name:      capital(g.display(id)),
+		Emote:     f.Emote(id),
+		Following: g.follow == id,
+		CanFollow: true,
+		CanGo:     true,
+	}
 	var place []string
 	for _, s := range chain(f, spaceOf(f, id)) {
 		place = append(place, capital(g.display(s)))
@@ -245,6 +255,11 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 	if cause != "" {
 		c.Activity = remainsCause[cause]
 	}
+	if !goal.IsNil() && cause == "" {
+		if dest := g.destName(f, goal); dest != "" && !strings.Contains(strings.ToLower(c.Activity), strings.ToLower(dest)) {
+			c.Dest = "Destino: " + dest
+		}
+	}
 	if carrying != "" && !strings.HasPrefix(c.Activity, "Acarrea") {
 		c.Carrying = "Lleva " + carrying
 	}
@@ -260,6 +275,25 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 	}
 	c.Diary = g.diary(id)
 	return c
+}
+
+// destName nombra el destino de una acción (el lugar o el objeto objetivo).
+func (g *game) destName(f *view.Frame, goal ids.ID) string {
+	if goal.IsNil() {
+		return ""
+	}
+	if s, ok := f.SpaceByID(goal); ok && s.Name != "" {
+		return capital(g.display(goal))
+	}
+	if t, ok := f.ThingByID(goal); ok {
+		if t.Name != "" {
+			return capital(g.display(goal))
+		}
+		if !t.Space.IsNil() {
+			return capital(g.display(t.Space))
+		}
+	}
+	return ""
 }
 
 // giantessID es la entidad que dibuja el retrato.
@@ -299,15 +333,16 @@ func (g *game) diary(id ids.ID) []ui.StoryLine {
 	return out
 }
 
-// deathNoticeDuration es cuánto tiempo real permanece en pantalla la
-// notificación de un deceso (independiente de x1/x4/x16), y deathNoticeMax
-// cuántas se apilan a la vez.
+// deathNoticeDuration es cuánto tiempo real permanece en pantalla un aviso
+// (independiente de x1/x4/x16), y deathNoticeMax cuántos se apilan a la vez.
 const (
-	deathNoticeDuration = 10 * time.Second
-	deathNoticeMax      = 3
+	deathNoticeDuration  = 10 * time.Second
+	threatNoticeCooldown = 8 * time.Second
+	deathNoticeMax       = 3
 )
 
-type deathNotice struct {
+type hudNotice struct {
+	kind         ui.NoticeKind
 	title, cause string
 	entry        view.StoryEntry
 	left         time.Duration
@@ -341,38 +376,128 @@ func (g *game) deathCause(ev crush.Crushed) string {
 	return base
 }
 
+func (g *game) pushNotice(n hudNotice) {
+	g.notices = append([]hudNotice{n}, g.notices...)
+	if len(g.notices) > deathNoticeMax {
+		g.notices = g.notices[:deathNoticeMax]
+	}
+}
+
 // updateNotices descuenta dt en tiempo real de las notificaciones activas y
-// suma los decesos nuevos de g.run.Events (sin perderlos a x4/x16).
+// suma avisos nuevos (decesos, amenazas, palma ofrecida y refugio terminado).
 func (g *game) updateNotices(dt time.Duration) {
 	if dt > 0 {
 		for i := range g.notices {
 			g.notices[i].left -= dt
 		}
-		g.notices = slices.DeleteFunc(g.notices, func(n deathNotice) bool { return n.left <= 0 })
+		g.notices = slices.DeleteFunc(g.notices, func(n hudNotice) bool { return n.left <= 0 })
+		for sp, left := range g.threatCooldown {
+			if left <= dt {
+				delete(g.threatCooldown, sp)
+			} else {
+				g.threatCooldown[sp] = left - dt
+			}
+		}
 	}
+	threatTriggered := false
 	for _, pub := range g.run.Events {
 		if pub.Seq <= g.noticeSeq {
 			continue
 		}
 		g.noticeSeq = pub.Seq
-		ev, ok := pub.Event.(crush.Crushed)
-		if !ok {
+		switch ev := pub.Event.(type) {
+		case crush.Crushed:
+			who := capital(g.display(ev.Remains))
+			if who == "" {
+				who = "Un tiny"
+			}
+			g.pushNotice(hudNotice{
+				kind:  ui.NoticeDeath,
+				title: who + " falleció",
+				cause: g.deathCause(ev),
+				entry: view.StoryEntry{Tick: pub.Tick, Actor: ev.Remains, Place: ev.Space},
+				left:  deathNoticeDuration,
+			})
+		case encounter.PalmOffered:
+			place := g.display(ev.Surface)
+			cause := "La giantess ofrece la palma"
+			if place != "" {
+				cause = "En " + place
+			}
+			g.pushNotice(hudNotice{
+				kind:  ui.NoticePalm,
+				title: "Palma ofrecida",
+				cause: cause,
+				entry: view.StoryEntry{Tick: pub.Tick, Place: ev.Surface},
+				left:  deathNoticeDuration,
+			})
+		case colony.RefugeBuilt:
+			sp := spaceOf(g.run.Cur, ev.Site)
+			place := g.display(sp)
+			cause := "Nuevo refugio disponible"
+			if place != "" {
+				cause = "Terminado en " + place
+			}
+			g.pushNotice(hudNotice{
+				kind:  ui.NoticeRefuge,
+				title: "Refugio terminado",
+				cause: cause,
+				entry: view.StoryEntry{Tick: pub.Tick, Actor: ev.By, Place: sp},
+				left:  deathNoticeDuration,
+			})
+		case ai.Trapped:
+			sp := spaceOf(g.run.Cur, ev.Entity)
+			if g.threatCooldown[sp] <= 0 {
+				if g.threatCooldown == nil {
+					g.threatCooldown = map[ids.ID]time.Duration{}
+				}
+				g.threatCooldown[sp] = threatNoticeCooldown
+				who := capital(g.display(ev.Entity))
+				g.pushNotice(hudNotice{
+					kind:  ui.NoticeThreat,
+					title: "Amenaza a la colonia",
+					cause: who + " quedó atrapado",
+					entry: view.StoryEntry{Tick: pub.Tick, Actor: ev.Entity, Place: sp},
+					left:  deathNoticeDuration,
+				})
+				threatTriggered = true
+			}
+		}
+	}
+	// Amenazas activas (tinies alarmados en alguna superficie).
+	alarmedBySpace := map[ids.ID]int{}
+	for _, t := range g.run.Cur.Things {
+		if isTiny(t) && t.Alarmed {
+			alarmedBySpace[t.Space]++
+		}
+	}
+	for _, sp := range slices.Sorted(maps.Keys(alarmedBySpace)) {
+		if g.threatCooldown[sp] > 0 {
 			continue
 		}
-		who := capital(g.display(ev.Remains))
-		if who == "" {
-			who = "Un tiny"
+		if g.threatCooldown == nil {
+			g.threatCooldown = map[ids.ID]time.Duration{}
 		}
-		dn := deathNotice{
-			title: who + " falleció",
-			cause: g.deathCause(ev),
-			entry: view.StoryEntry{Tick: pub.Tick, Actor: ev.Remains, Place: ev.Space},
+		g.threatCooldown[sp] = threatNoticeCooldown
+		n := alarmedBySpace[sp]
+		cause := fmt.Sprintf("%d tinies en peligro", n)
+		if n == 1 {
+			cause = "1 tiny en peligro"
+		}
+		if place := g.display(sp); place != "" {
+			cause += " en " + place
+		}
+		g.pushNotice(hudNotice{
+			kind:  ui.NoticeThreat,
+			title: "Amenaza a la colonia",
+			cause: cause,
+			entry: view.StoryEntry{Tick: g.run.Cur.Tick, Place: sp},
 			left:  deathNoticeDuration,
-		}
-		g.notices = append([]deathNotice{dn}, g.notices...)
-		if len(g.notices) > deathNoticeMax {
-			g.notices = g.notices[:deathNoticeMax]
-		}
+		})
+		threatTriggered = true
+	}
+	if threatTriggered && g.pauseOnThreat && !g.run.Paused && !g.pause.open && g.shot == "" {
+		g.run.Paused = true
 	}
 }
 
@@ -386,6 +511,20 @@ func (g *game) dismissNotice(i int) {
 // partida arma la interfaz de partida de un frame.
 func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 	g.updateNotices(0)
+	pauseLbl := "Pausa"
+	if g.run.Paused {
+		pauseLbl = "Reanudar"
+	}
+	ctxKey, ctxLbl := "H", "Panel"
+	if g.story {
+		ctxLbl = "Ocultar"
+	}
+	if !g.sel.IsNil() {
+		ctxKey, ctxLbl = "T", "Seguir"
+		if g.follow == g.sel {
+			ctxLbl = "Soltar"
+		}
+	}
 	h := ui.HUD{
 		Clock:      clockAt(f.Tick),
 		Paused:     g.run.Paused,
@@ -393,12 +532,15 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 		Location:   g.location(f, focus),
 		Population: tinyPopulation(f),
 		ShowPop:    true,
-		// Tab nombra su destino; F3 (overlays técnicos) no entra en la barra.
-		Controls: ui.Controls("Espacio", "Pausa", "1-3", "Vel.", "Tab", g.scaleLabel(f), "T", "Seguir",
-			"F", "General", "H", "Historia"),
+		Controls:   ui.Controls("Espacio", pauseLbl, "Tab", g.scaleLabel(f), ctxKey, ctxLbl, "F1", "Ayuda"),
+	}
+	if len(f.Colonies) > 0 {
+		col := f.Colonies[0]
+		h.Pantry = &ui.Pantry{Portions: col.Portions, Goal: col.Goal}
 	}
 	for _, dn := range g.notices {
 		h.Notices = append(h.Notices, ui.Notice{
+			Kind:      dn.kind,
 			Title:     dn.title,
 			Cause:     dn.cause,
 			Focusable: g.storyTarget(f, dn.entry) != ids.Nil,
@@ -419,22 +561,204 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 			h.Face = f.Expression(gi)
 		}
 		for _, e := range g.storyEntries() {
-			h.Story = append(h.Story, ui.StoryLine{Time: clockAt(e.Tick), Text: capital(e.Text), Focusable: g.storyTarget(f, e) != ids.Nil, Tone: storyTone(e)})
+			h.Story = append(h.Story, storyLine(f, g, e))
 		}
+		h.Panel = g.sidePanel(f, h.Face)
 	}
 	return h
 }
 
-// storyTone colorea la hora de una línea de la crónica: coral si es grave,
-// turquesa si es un encuentro u otro hito.
+func storyLine(f *view.Frame, g *game, e view.StoryEntry) ui.StoryLine {
+	return ui.StoryLine{
+		Time:      clockAt(e.Tick),
+		Text:      capital(e.Text),
+		Focusable: g.storyTarget(f, e) != ids.Nil,
+		Tone:      storyTone(e),
+		Icon:      storyIcon(e),
+	}
+}
+
+// sidePanel arma el panel lateral izquierdo con sus tres pestañas.
+func (g *game) sidePanel(f *view.Frame, face string) *ui.SidePanel {
+	p := &ui.SidePanel{Tab: g.panelTab, Scroll: g.panelScroll}
+	for _, e := range g.run.Chronicle.Lines() {
+		p.Chronicle = append(p.Chronicle, storyLine(f, g, e))
+	}
+	p.Colony = g.colonyPanel(f)
+	p.Giantess = g.giantessPanel(f, face)
+	return p
+}
+
+// shortActivity agrupa las actividades de los tinies en categorías legibles
+// para el resumen de la pestaña Colonia.
+func shortActivity(t view.Thing) string {
+	if t.Alarmed || t.Activity == "flee" {
+		return "Huye"
+	}
+	base, _ := strings.CutSuffix(t.Activity, " (suspendida)")
+	switch base {
+	case "work":
+		switch t.Job {
+		case "pluck":
+			return "Fibras"
+		case "build":
+			return "Refugio"
+		default:
+			return "Acarrea"
+		}
+	case "search", "forage":
+		return "Busca"
+	case "use:eat", "use:nibble":
+		return "Come"
+	case "use:rest", "use:shelter":
+		return "Descansa"
+	case "chat":
+		return "Conversa"
+	case "explore":
+		return "Explora"
+	}
+	return "Libre"
+}
+
+func (g *game) colonyPanel(f *view.Frame) *ui.ColonyPanel {
+	cp := &ui.ColonyPanel{}
+	if len(f.Colonies) > 0 {
+		col := f.Colonies[0]
+		cp.Portions, cp.Goal = col.Portions, col.Goal
+		if col.Site != nil {
+			cp.Site = &ui.SiteProgress{
+				Delivered: col.Site.Delivered,
+				Required:  col.Site.Required,
+				Done:      col.Site.Done,
+			}
+		}
+	}
+	counts := map[string]int{}
+	rep := map[string]ids.ID{}
+	g.panelTinies = g.panelTinies[:0]
+	for _, t := range f.Things {
+		if !isTiny(t) {
+			continue
+		}
+		cat := shortActivity(t)
+		counts[cat]++
+		if rep[cat].IsNil() {
+			rep[cat] = t.ID
+		}
+		hunger, _ := view.NeedOf(t.Needs, "hunger")
+		energy, _ := view.NeedOf(t.Needs, "energy")
+		cp.Tinies = append(cp.Tinies, ui.TinyRow{
+			Name:     capital(g.display(t.ID)),
+			Activity: cat,
+			Hungry:   hunger < 300,
+			Tired:    energy < 300,
+			Alarmed:  t.Alarmed,
+		})
+		g.panelTinies = append(g.panelTinies, t.ID)
+	}
+	g.panelActivities = g.panelActivities[:0]
+	for _, label := range slices.Sorted(maps.Keys(counts)) {
+		cp.Activities = append(cp.Activities, ui.ActivityCount{Label: label, Count: counts[label]})
+		g.panelActivities = append(g.panelActivities, rep[label])
+	}
+	return cp
+}
+
+func (g *game) giantessPanel(f *view.Frame, face string) *ui.GiantessPanel {
+	gi := g.giantessID()
+	if gi.IsNil() {
+		return nil
+	}
+	s, ok := f.SpaceByID(gi)
+	if !ok {
+		return nil
+	}
+	carrying := ""
+	for _, t := range f.Things {
+		if t.CarriedBy == gi {
+			carrying = g.display(t.ID)
+		}
+	}
+	gp := &ui.GiantessPanel{
+		Face:     face,
+		Activity: activityText(s.Activity, s.Step, carrying),
+		Dest:     g.destName(f, s.Goal),
+	}
+	for _, n := range s.Needs {
+		label, ok := needLabels[n.Name]
+		if !ok {
+			label = capital(n.Name)
+		}
+		gp.Needs = append(gp.Needs, ui.Need{Label: label, Value: n.Value})
+	}
+	return gp
+}
+
+// storyTone colorea la hora y el icono de una línea de la crónica: ámbar para
+// peligro, cian para encuentros y turquesa para otros hitos.
 func storyTone(e view.StoryEntry) ui.Tone {
 	switch {
-	case e.Grave:
+	case e.Grave || e.Kind == view.KindDanger:
 		return ui.ToneDanger
+	case e.Kind == view.KindEncounter:
+		return ui.ToneEncounter
 	case e.Level == view.LevelMilestone:
 		return ui.ToneMilestone
 	}
 	return ui.ToneNormal
+}
+
+func storyIcon(e view.StoryEntry) ui.StoryIcon {
+	switch e.Kind {
+	case view.KindDanger:
+		return ui.IconDanger
+	case view.KindEncounter:
+		return ui.IconEncounter
+	case view.KindColony:
+		return ui.IconColony
+	case view.KindRoutine:
+		return ui.IconRoutine
+	case view.KindSummary:
+		return ui.IconSummary
+	}
+	if e.Grave {
+		return ui.IconDanger
+	}
+	if e.Level == view.LevelMilestone {
+		return ui.IconColony
+	}
+	return ui.IconNone
+}
+
+// goToEntity lleva la cámara a la entidad elegida (botón «Ir allí» de la
+// ficha): abre la vista micro de su superficie si tiene una, o centra macro
+// sobre ella.
+func (g *game) goToEntity(id ids.ID) {
+	if id.IsNil() || g.art == nil {
+		return
+	}
+	f := g.run.Cur
+	g.stopFollowing()
+	if ms := g.microSurface(f, id); !ms.IsNil() {
+		g.art.focus = ms
+		g.fitArt()
+		if t, ok := f.ThingByID(id); ok {
+			if s, ok := f.SpaceByID(ms); ok {
+				g.cam.X = float64(t.Pose.Pos.X - s.Pose.Pos.X)
+				g.cam.Y = float64(t.Pose.Pos.Y - s.Pose.Pos.Y)
+			}
+		}
+		g.startArtFade()
+		return
+	}
+	if p, ok := entityPose(f, id); ok {
+		if !g.art.focus.IsNil() {
+			g.art.focus = ids.Nil
+			g.fitArt()
+			g.startArtFade()
+		}
+		g.cam.X, g.cam.Y = float64(p.Pos.X), float64(p.Pos.Y)
+	}
 }
 
 // storyTarget es lo que se enfoca desde una entrada: el actor si sigue en el

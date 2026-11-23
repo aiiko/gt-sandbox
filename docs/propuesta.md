@@ -1136,6 +1136,8 @@ Con la capa de interfaz a 960 × 540 lógicos en 1080p hay espacio para paneles 
 
 **Menú de pausa (`Esc`).** Pausa la partida y ofrece: Continuar, Guardar partida, Cargar partida, Opciones (volumen, escala de interfaz, pantalla completa, movimiento reducido y pausa ante amenazas), Controles y Volver al menú principal. Reemplaza a la pregunta actual de volver al menú. `Esc` sigue soltando primero la selección y el seguimiento, como hoy. Guardar y cargar usan el snapshot existente de `-save`/`-load`.
 
+**Estado.** Implementado. La barra superior incorpora la despensa (`Portions/Goal`); el panel lateral izquierdo (plegable con `H`) reúne las pestañas **Crónica** (desplazable, con iconos y color ámbar/cian), **Colonia** (despensa, avance del refugio, actividades clicables y lista de tinies con alertas) y **Giantess** (retrato, necesidades, actividad y destino); la ficha derecha suma destino y los botones **Seguir** e **Ir allí**; los avisos cubren decesos, amenazas a la colonia, palma ofrecida y refugio terminado; la barra inferior muestra 4 controles contextuales con `F1`/`?` para la ayuda completa con leyenda de símbolos; y `Esc` abre el menú de pausa con Guardar/Cargar (snapshots) y Opciones persistidas en la configuración local de presentación. Verificado por `TestHUDFitsAt1x2x3x`, `TestSidePanelColonyGiantessAndCard`, `TestPauseMenuOptionsAndSaveLoad`, `TestPauseOnThreatPausesGame` y `TestPalmAndRefugeNotices`.
+
 ### 17.7. Otras mejoras para entender qué pasa
 
 | Mejora | Qué aclara |

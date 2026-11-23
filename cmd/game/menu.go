@@ -316,7 +316,7 @@ func (a *app) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Image, d
 		return
 	}
 	a.defaultTransform = defaultTransform
-	a.viewport = render.PixelViewport(screen.Bounds(), canvas.Bounds().Size())
+	a.viewport = render.PixelViewportFor(screen.Bounds(), canvas.Bounds().Size(), uiScalePref)
 	a.viewport.Blit(screen, canvas)
 }
 

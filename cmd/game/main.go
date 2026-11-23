@@ -256,13 +256,22 @@ type game struct {
 	shotDone   bool
 	shotErr    error
 
-	fromMenu    bool // abierta desde el menú: Esc ofrece volver
-	confirmExit bool // preguntando si volver al menú
-	wasPaused   bool // pausa de antes de preguntar
-	toMenu      bool // el jugador eligió volver al menú
+	fromMenu      bool       // abierta desde el menú: Esc ofrece volver al menú
+	pause         pauseState // menú de pausa (Esc)
+	wasPaused     bool       // pausa de antes de abrir el menú de pausa
+	toMenu        bool       // el jugador eligió volver al menú
+	quitGame      bool       // el jugador eligió salir desde el menú de pausa
+	help          bool       // F1 / ?: ayuda completa con leyenda de símbolos
+	pauseOnThreat bool       // opción: pausar al aparecer una amenaza
 
-	notices   []deathNotice // notificaciones de deceso vigentes (tiempo real)
-	noticeSeq uint64        // último pub.Seq ya procesado para notices
+	panelTab        ui.PanelTab // pestaña activa del panel lateral izquierdo
+	panelScroll     int         // desplazamiento del panel lateral
+	panelActivities []ids.ID    // tiny representativo de cada actividad (pestaña Colonia)
+	panelTinies     []ids.ID    // IDs de la lista de tinies (pestaña Colonia)
+
+	notices        []hudNotice              // avisos vigentes arriba a la derecha (tiempo real)
+	noticeSeq      uint64                   // último pub.Seq ya procesado para notices
+	threatCooldown map[ids.ID]time.Duration // enfriamiento de avisos de amenaza por superficie
 }
 
 func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
@@ -484,19 +493,30 @@ func (g *game) Update() error {
 		}
 		return ebiten.Termination
 	}
+	if g.quitGame {
+		return ebiten.Termination
+	}
 	windowKeys()
 	if g.w == 0 {
 		return nil // todavía sin Layout
 	}
 	if !g.fitted {
+		g.applySavedPrefs()
 		g.startView()
 	}
 	dt := time.Second / time.Duration(ebiten.TPS())
 	if a := g.art; a != nil && !a.pendingFade {
 		a.fade = max(0, a.fade-dt)
 	}
-	if g.confirmExit {
-		g.exitPrompt()
+	if g.pause.open {
+		g.handlePause(g.pauseInput())
+		g.observeSound()
+		return nil
+	}
+	if g.help {
+		if helpTogglePressed() || inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			g.help = false
+		}
 		g.observeSound()
 		return nil
 	}
@@ -573,14 +593,18 @@ func (g *game) keys() {
 		g.toggleFollow()
 	case k(ebiten.KeyM):
 		g.toggleMute()
+	case helpTogglePressed() && g.art != nil:
+		g.help = !g.help
 	case k(ebiten.KeyF3) && g.art != nil:
 		g.art.debug = !g.art.debug
 	case k(ebiten.KeyH):
-		g.story, g.logBack = !g.story, 0
+		g.story, g.logBack, g.panelScroll = !g.story, 0, 0
 	case g.story && k(ebiten.KeyPageUp):
 		g.logBack = min(g.logBack+storyRows, max(0, len(r.Chronicle.Lines())-storyRows))
+		g.scrollPanel(1)
 	case g.story && k(ebiten.KeyPageDown):
 		g.logBack = max(0, g.logBack-storyRows)
+		g.scrollPanel(-1)
 	case k(ebiten.KeyF):
 		if g.art != nil && g.artAtlas != "" && g.art.focus.IsNil() {
 			g.stopFollowing()
@@ -590,12 +614,14 @@ func (g *game) keys() {
 		}
 		g.fit()
 	case k(ebiten.KeyEscape):
-		if g.fromMenu && g.sel.IsNil() && g.follow.IsNil() {
-			g.confirmExit, g.wasPaused, r.Paused = true, r.Paused, true
+		if !g.sel.IsNil() || !g.follow.IsNil() {
+			g.sel = ids.Nil
+			g.stopFollowing()
 			return
 		}
-		g.sel = ids.Nil
-		g.stopFollowing()
+		if g.art != nil {
+			g.openPause()
+		}
 	case k(ebiten.KeyG):
 		g.layers.Grids = !g.layers.Grids
 	case k(ebiten.KeyP):
@@ -634,16 +660,15 @@ func panKeys(pressed func(ebiten.Key) bool) (dx, dy float64) {
 	return dx, dy
 }
 
-// exitPrompt atiende la pregunta de volver al menú: Enter vuelve, Esc sigue
-// jugando como estaba.
-func (g *game) exitPrompt() {
-	k := inpututil.IsKeyJustPressed
-	switch {
-	case k(ebiten.KeyEnter), k(ebiten.KeyNumpadEnter):
-		g.toMenu = true
-	case k(ebiten.KeyEscape):
-		g.confirmExit, g.run.Paused = false, g.wasPaused
+// helpTogglePressed devuelve true cuando el usuario pulsa F1 o «?» (Shift+/).
+func helpTogglePressed() bool {
+	if inpututil.IsKeyJustPressed(ebiten.KeyF1) {
+		return true
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeySlash) && (ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight)) {
+		return true
+	}
+	return false
 }
 
 // toggleMicro alterna entre la vista macro y la vista micro del Space

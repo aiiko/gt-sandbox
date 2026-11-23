@@ -39,10 +39,26 @@ func CanvasFactor(w, h int) int {
 	return max(1, min(w/MinCanvasWidth, h/MinCanvasHeight, MaxCanvasFactor))
 }
 
+// CanvasFactorFor devuelve el factor del lienzo de interfaz para w × h: con
+// pref <= 0 usa CanvasFactor (automático); con pref en 1..4 lo aplica sin
+// bajar el lienzo de 480 × 270 píxeles lógicos.
+func CanvasFactorFor(w, h, pref int) int {
+	if pref <= 0 {
+		return CanvasFactor(w, h)
+	}
+	limit := max(1, min(w/480, h/270))
+	return min(pref, limit)
+}
+
 // CanvasSize es el tamaño del lienzo que llena una pantalla física de w × h,
 // redondeado hacia arriba para que no queden bandas.
 func CanvasSize(w, h int) (int, int) {
-	n := CanvasFactor(w, h)
+	return CanvasSizeFor(w, h, 0)
+}
+
+// CanvasSizeFor es CanvasSize con un factor de interfaz preferido (0 = auto).
+func CanvasSizeFor(w, h, pref int) (int, int) {
+	n := CanvasFactorFor(w, h, pref)
 	return (max(w, 1) + n - 1) / n, (max(h, 1) + n - 1) / n
 }
 
@@ -59,7 +75,12 @@ type Viewport struct {
 // PixelViewport centra un lienzo de tamaño canvas sobre la pantalla, escalado
 // por el factor de escena de esa pantalla.
 func PixelViewport(screen image.Rectangle, canvas image.Point) Viewport {
-	factor := CanvasFactor(screen.Dx(), screen.Dy())
+	return PixelViewportFor(screen, canvas, 0)
+}
+
+// PixelViewportFor es PixelViewport con un factor de interfaz preferido (0 = auto).
+func PixelViewportFor(screen image.Rectangle, canvas image.Point, pref int) Viewport {
+	factor := CanvasFactorFor(screen.Dx(), screen.Dy(), pref)
 	size := canvas.Mul(factor)
 	origin := screen.Min.Add(screen.Size().Sub(size).Div(2))
 	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(size)}, Factor: factor}

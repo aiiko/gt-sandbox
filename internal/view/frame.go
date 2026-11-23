@@ -62,7 +62,30 @@ type Space struct {
 	// Activity y Step describen lo que hace un agente que es un Space (la giantess).
 	Activity string `json:"activity,omitempty"`
 	Step     string `json:"step,omitempty"`
+	Goal     ids.ID `json:"goal,omitempty"`
 	Needs    []Need `json:"needs,omitempty"`
+}
+
+// Colony resume el estado de una colonia (despensa y obra del refugio) para
+// la interfaz de partida.
+type Colony struct {
+	ID       ids.ID `json:"id"`
+	Name     string `json:"name,omitempty"`
+	Space    ids.ID `json:"space"`
+	Portions int32  `json:"portions"`
+	Goal     int32  `json:"goal"` // meta de porciones (Stock * miembros vivos)
+	Members  int    `json:"members"`
+	Site     *Site  `json:"site,omitempty"`
+}
+
+// Site es el avance de la obra del refugio auxiliar de una colonia.
+type Site struct {
+	ID        ids.ID `json:"id"`
+	Name      string `json:"name,omitempty"`
+	Space     ids.ID `json:"space"`
+	Delivered int32  `json:"delivered"`
+	Required  int32  `json:"required"`
+	Done      bool   `json:"done,omitempty"`
 }
 
 // Need es el valor de una necesidad de un agente, en [0, needs.Max].
@@ -187,6 +210,8 @@ type Frame struct {
 	Footprints []Footprint `json:"footprints,omitempty"`
 	// Steps son las pisadas recientes (el pie apoyado).
 	Steps []Step `json:"steps,omitempty"`
+	// Colonies resume el estado de cada colonia (despensa y refugio).
+	Colonies []Colony `json:"colonies,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -265,6 +290,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos)}
 		if a, ok := agents.Get(id); ok {
 			s.Activity, s.Step = activity(r, a)
+			s.Goal, _, _ = purpose(r, id, a)
 		}
 		s.Needs = needsOf(r, id)
 		for e := s.Parent; !e.IsNil() && s.Depth < space.MaxDepth; e = g.Parent(e) {
@@ -345,10 +371,44 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	contacts.Each(func(id ids.ID, k *attach.Contact) {
 		f.Contacts = append(f.Contacts, Contact{ID: id, A: k.A, B: k.B, Since: k.Since})
 	})
+
+	// Colonias: despensa, meta y avance de la obra del refugio.
+	colMembers := map[ids.ID]int{}
+	ecs.Get[colony.Member](r).Each(func(e ids.ID, m *colony.Member) {
+		if !r.Despawning(e) {
+			colMembers[m.Colony]++
+		}
+	})
+	colSites := map[ids.ID]*Site{}
+	ecs.Get[colony.BuildSite](r).Each(func(id ids.ID, b *colony.BuildSite) {
+		if _, exists := colSites[b.Colony]; exists {
+			return
+		}
+		var sp ids.ID
+		if l, ok := cs.Location.Get(id); ok {
+			sp = l.Space
+		}
+		colSites[b.Colony] = &Site{ID: id, Name: names(id), Space: sp, Delivered: b.Delivered, Required: b.Required, Done: b.Done}
+	})
+	portions := ecs.Get[ai.Portions](r)
+	ecs.Get[colony.Colony](r).Each(func(id ids.ID, col *colony.Colony) {
+		var sp ids.ID
+		if l, ok := cs.Location.Get(id); ok {
+			sp = l.Space
+		}
+		p, _ := portions.Get(id)
+		m := colMembers[id]
+		f.Colonies = append(f.Colonies, Colony{
+			ID: id, Name: names(id), Space: sp,
+			Portions: p.Left, Goal: col.Stock * int32(m), Members: m,
+			Site: colSites[id],
+		})
+	})
 	byID := func(a, b ids.ID) int { return cmp.Compare(a, b) }
 	slices.SortFunc(f.Things, func(a, b Thing) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Portals, func(a, b Portal) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Contacts, func(a, b Contact) int { return byID(a.ID, b.ID) })
+	slices.SortFunc(f.Colonies, func(a, b Colony) int { return byID(a.ID, b.ID) })
 	return f
 }
 
