@@ -437,3 +437,36 @@ func TestFlattenClimbs(t *testing.T) {
 		t.Fatal("cambió algo fuera de la tira o el frame original")
 	}
 }
+
+// De cerca también: un tiny a media pata se dibuja en la base de la pata,
+// no medio metro al norte sobre el piso.
+func TestMicroClimberAtLegBase(t *testing.T) {
+	manifest := `{"image":"atlas.png","scales":["micro"],"sprites":{"tiny":{"micro":` + sampleVariant +
+		`},"desk":{"micro":` + sampleVariant + `},"climb":{"micro":{"hidden":true}}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := units.V3(10*units.Centimeter, 0, 0)
+	frame := &view.Frame{
+		Spaces: []view.Space{
+			{ID: 1, Extent: units.RectWH(0, 0, units.Meter, units.Meter)},
+			{ID: 2, Parent: 1, Pose: view.Pose{Pos: base}, Extent: units.RectWH(0, 0, 2*units.Centimeter, 74*units.Centimeter)},
+			// el escritorio, más alto que la pata, tapa su base
+			{ID: 4, Parent: 1, Pose: view.Pose{Pos: base.Add(units.V3(0, 0, 75*units.Centimeter))}, Extent: units.RectWH(0, 0, 60*units.Centimeter, 40*units.Centimeter)},
+		},
+		Things: []view.Thing{{ID: 3, Space: 2, Pose: view.Pose{Pos: base.Add(units.V3(0, 50*units.Centimeter, 0))}}},
+	}
+	visuals := map[ids.ID]string{2: ClimbVisual, 3: "tiny", 4: "desk"}
+	proj := (camera.Camera{Zoom: 0.0016}).Project(fixedmath.Identity, 960, 540)
+	scene := a.Arrange(frame, proj, visuals, Micro, 1)
+	r, ok := scene.Bounds(3)
+	x, y := proj.ToScreen(base)
+	if !ok || !image.Pt(int(x), int(y)).In(r.Inset(-1)) {
+		t.Fatalf("tiny en %v, la base de la pata está en %v,%v", r, x, y)
+	}
+	// y se dibuja delante del escritorio, no tapado por él
+	if id := scene.Pick(image.Pt(int(x), int(y))); id != 3 {
+		t.Fatalf("en la base de la pata se ve %s, quería el tiny", id)
+	}
+}
