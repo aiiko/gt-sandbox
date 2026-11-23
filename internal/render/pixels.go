@@ -27,11 +27,15 @@ const (
 	MinCanvasHeight = 270
 )
 
+// MaxCanvasFactor limita el factor de escena: en pantallas grandes el
+// lienzo crece en vez de agrandar la interfaz (a 1440p, N = 3 y no 5).
+const MaxCanvasFactor = 3
+
 // CanvasFactor es el factor de escena para una pantalla física de w × h
-// píxeles: el mayor entero que deja un lienzo de al menos el mínimo (1 si la
-// pantalla es más chica).
+// píxeles: el mayor entero, hasta MaxCanvasFactor, que deja un lienzo de al
+// menos el mínimo (1 si la pantalla es más chica).
 func CanvasFactor(w, h int) int {
-	return max(1, min(w/MinCanvasWidth, h/MinCanvasHeight))
+	return max(1, min(w/MinCanvasWidth, h/MinCanvasHeight, MaxCanvasFactor))
 }
 
 // CanvasSize es el tamaño del lienzo que llena una pantalla física de w × h,

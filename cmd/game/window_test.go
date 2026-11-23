@@ -18,7 +18,7 @@ func TestCanvasLayoutFillsWindow(t *testing.T) {
 	}
 	defer func(s func() float64) { deviceScale = s }(deviceScale)
 	deviceScale = func() float64 { return 1.5 } // 1280×720 lógicos = 1920×1080 físicos
-	if cw, ch := canvasLayout(1280, 720); cw != 480 || ch != 270 {
+	if cw, ch := canvasLayout(1280, 720); cw != 640 || ch != 360 {
 		t.Errorf("con escala 1,5: lienzo %dx%d", cw, ch)
 	}
 }

@@ -25,10 +25,11 @@ func TestPixelViewport(t *testing.T) {
 	}{
 		{480, 270, 1, image.Pt(480, 270)},
 		{960, 540, 2, image.Pt(480, 270)},
-		{1920, 1080, 4, image.Pt(480, 270)},
+		{1920, 1080, 3, image.Pt(640, 360)},
 		{1920, 1009, 3, image.Pt(640, 337)}, // ventana maximizada en 1080p
 		{1031, 601, 2, image.Pt(516, 301)},
-		{2560, 1440, 5, image.Pt(512, 288)},
+		{2560, 1440, 3, image.Pt(854, 480)},
+		{3840, 2160, 3, image.Pt(1280, 720)},
 		{400, 200, 1, image.Pt(400, 200)},
 	} {
 		cw, ch := CanvasSize(tc.w, tc.h)
