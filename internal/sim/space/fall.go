@@ -39,6 +39,12 @@ func (g Graph) Supported(e ids.ID) bool {
 // e y cuya superficie está a la altura de e o más abajo. Devuelve también la
 // posición local de e en esa superficie y la altura de la caída.
 func (g Graph) Below(e ids.ID) (target ids.ID, local units.Vec3, height units.Length, ok bool) {
+	return g.BelowExcluding(e, ids.Nil)
+}
+
+// BelowExcluding es Below ignorando el Space exclude (p. ej. la superficie de
+// la que una entidad acaba de perder agarre).
+func (g Graph) BelowExcluding(e, exclude ids.ID) (target ids.ID, local units.Vec3, height units.Length, ok bool) {
 	pos, _, err := g.WorldPose(e)
 	if err != nil {
 		return ids.Nil, units.Vec3{}, 0, false
@@ -48,10 +54,32 @@ func (g Graph) Below(e ids.ID) (target ids.ID, local units.Vec3, height units.Le
 		return ids.Nil, units.Vec3{}, 0, false
 	}
 	g.spaces.Each(func(s ids.ID, sp *Space) {
-		if s == e || sp.Extent.Empty() || g.reg.Despawning(s) || g.CanPlace(e, s) != nil {
+		if s == e || s == exclude || sp.Extent.Empty() || g.reg.Despawning(s) || g.CanPlace(e, s) != nil {
 			return
 		}
 		if r, err := g.Root(s); err != nil || r != root {
+			return
+		}
+		if sp.Projection != nil {
+			if sp.IsClimb() {
+				return // un tramo vertical de trepada no recibe aterrizajes
+			}
+			ft, err := g.Frame(s)
+			if err != nil {
+				return
+			}
+			inFrame := ft.ApplyInv(pos)
+			uv, surfZ, okL := sp.LandingAt(inFrame.XY())
+			if !okL {
+				return
+			}
+			dz := inFrame.Z - surfZ
+			if dz < -SupportTolerance {
+				return
+			}
+			if !ok || dz < height || (dz == height && s < target) {
+				target, local, height, ok = s, units.V3(uv.X, uv.Y, 0), dz, true
+			}
 			return
 		}
 		l, err := g.FromWorld(s, pos)
@@ -74,6 +102,20 @@ func Land(w *world.World, e ids.ID) bool {
 		return false
 	}
 	to, local, h, ok := g.Below(e)
+	if !ok {
+		return false
+	}
+	return land(w, g, e, g.Parent(e), to, local, h)
+}
+
+// LandExcluding hace aterrizar ya mismo a e sobre la superficie más alta
+// debajo que no sea exclude (p. ej. al perder agarre de una zona inclinada).
+func LandExcluding(w *world.World, e, exclude ids.ID) bool {
+	g := Of(w.ECS())
+	if g.spaces.Has(e) {
+		return false
+	}
+	to, local, h, ok := g.BelowExcluding(e, exclude)
 	if !ok {
 		return false
 	}

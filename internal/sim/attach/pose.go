@@ -16,10 +16,12 @@ import (
 
 // PartPose es la ubicación de una parte del cuerpo respecto de su Space
 // contenedor (que no cambia: una pose mueve partes, no las reengancha).
+// Projection opcional actualiza la proyección 3D del Space de esa parte.
 type PartPose struct {
-	Part   ids.ID          `json:"part"`
-	Pos    units.Vec3      `json:"pos"`
-	Facing fixedmath.Angle `json:"facing"`
+	Part       ids.ID            `json:"part"`
+	Pos        units.Vec3        `json:"pos"`
+	Facing     fixedmath.Angle   `json:"facing"`
+	Projection *space.Projection `json:"projection,omitempty"`
 }
 
 // Poses es el componente de un cuerpo (store "poses"): poses con nombre,
@@ -49,15 +51,35 @@ func (c SetPose) Apply(w *world.World) error {
 	}
 	g := space.Of(r)
 	locs := comp.Of(r).Location
+	spaces := ecs.Get[space.Space](r)
 	for _, p := range parts {
 		if !locs.Has(p.Part) || !mountedOn(g, p.Part, c.Entity) {
 			return fmt.Errorf("set_pose %v: %v no es parte del cuerpo", c.Entity, p.Part)
 		}
+		if p.Projection != nil {
+			sp, ok := spaces.Get(p.Part)
+			if !ok {
+				return fmt.Errorf("set_pose %v: %v no es un Space", c.Entity, p.Part)
+			}
+			if err := p.Projection.Valid(sp.Extent); err != nil {
+				return fmt.Errorf("set_pose %v: %v: %w", c.Entity, p.Part, err)
+			}
+		}
 	}
+	affected := make([]ids.ID, 0, len(parts))
 	for _, p := range parts {
 		l := locs.Ptr(p.Part)
 		l.Pos, l.Facing = p.Pos, p.Facing
+		if p.Projection != nil {
+			spaces.Ptr(p.Part).Projection = p.Projection.Clone()
+		}
+		affected = append(affected, p.Part)
 	}
+	if ecs.Get[BodyState](r).Has(c.Entity) || ecs.Get[BodyJoints](r).Has(c.Entity) {
+		ecs.Get[BodyState](r).Set(c.Entity, BodyState{Pose: c.Pose, PoseTick: w.Tick()})
+	}
+	applyJoints(w, c.Entity, c.Pose)
+	checkGripOnPose(w, affected)
 	w.Emit(PoseChanged{Entity: c.Entity, Pose: c.Pose})
 	return nil
 }
@@ -94,6 +116,18 @@ func Install(w *world.World) error {
 	if _, err := ecs.Register[Poses](r, "poses"); err != nil {
 		return err
 	}
+	if _, err := ecs.Register[BodyState](r, "body_state"); err != nil {
+		return err
+	}
+	if _, err := ecs.Register[BodyJoints](r, "body_joints"); err != nil {
+		return err
+	}
+	if _, err := ecs.Register[BodyZone](r, "body_zone"); err != nil {
+		return err
+	}
+	if _, err := ecs.Register[Gripping](r, "gripping"); err != nil {
+		return err
+	}
 	w.AddInvariant("attach.contact", checkContacts)
 	return errors.Join(
 		world.RegisterCommand[SetPose](w),
@@ -102,6 +136,9 @@ func Install(w *world.World) error {
 		world.RegisterEvent[ContactEnded](w),
 		world.RegisterEvent[PortalOpened](w),
 		world.RegisterEvent[PortalClosed](w),
+		world.RegisterEvent[EntityGripped](w),
+		world.RegisterEvent[EntityLostGrip](w),
+		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -10}, gripUpkeep{}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseTopology}, contacts{}),
 		// Mismo Order que space.orphans y nav.portals, registrado después.
 		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 30}, contactCleanup{}),

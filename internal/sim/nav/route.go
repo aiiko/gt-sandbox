@@ -75,6 +75,7 @@ func (r *Router) RouteFor(w *world.World, actor ids.ID, scale string, penalty Po
 
 func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty PortalPenalty, actor ids.ID, fromSpace ids.ID, from units.Vec2, toSpace ids.ID, to units.Vec2) ([]Leg, error) {
 	grids := ecs.Get[Grid](reg)
+	spaces := ecs.Get[space.Space](reg)
 	g := space.Of(reg)
 	if !g.IsSpace(fromSpace) || !g.IsSpace(toSpace) {
 		return nil, ErrNotWalkable
@@ -109,7 +110,7 @@ func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty 
 
 	searches := 0
 	for {
-		path := r.dijkstra()
+		path := r.dijkstra(spaces)
 		if path == nil {
 			return nil, ErrNoPath
 		}
@@ -123,8 +124,9 @@ func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty 
 				continue
 			}
 			e := edge{}
+			sp, _ := spaces.Get(r.nodes[u].space)
 			if grid := grids.Ptr(r.nodes[u].space); grid == nil {
-				e = edge{cost: int64(r.nodes[v].pos.Sub(r.nodes[u].pos).Len()), path: []units.Vec2{r.nodes[v].pos}, ok: true}
+				e = edge{cost: int64(sp.SegmentLen3D(r.nodes[u].pos, r.nodes[v].pos)), path: []units.Vec2{r.nodes[v].pos}, ok: true}
 			} else {
 				if searches++; searches > MaxSearches {
 					return nil, ErrSearchBudget
@@ -133,7 +135,11 @@ func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty 
 				if err == ErrSearchBudget {
 					return nil, err
 				}
-				e = edge{cost: int64(c), path: p, ok: err == nil}
+				cost := int64(c)
+				if err == nil && sp.Projection != nil {
+					cost = projectedPathCost(sp, r.nodes[u].pos, p, cost)
+				}
+				e = edge{cost: cost, path: p, ok: err == nil}
 			}
 			r.exact[[2]int{u, v}] = e
 			refined = true
@@ -144,10 +150,24 @@ func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty 
 	}
 }
 
+func projectedPathCost(sp space.Space, start units.Vec2, path []units.Vec2, cost2D int64) int64 {
+	var d2, d3 int64
+	cur := start
+	for _, next := range path {
+		d2 += int64(next.Sub(cur).Len())
+		d3 += int64(sp.SegmentLen3D(cur, next))
+		cur = next
+	}
+	if d2 <= 0 {
+		return cost2D
+	}
+	return cost2D * d3 / d2
+}
+
 func (r *Router) isCrossing(u, v int) bool { return r.nodes[u].partner == v }
 
 // cost de la arista u→v: cruce de portal, tramo exacto o estimación.
-func (r *Router) cost(u, v int) int64 {
+func (r *Router) cost(spaces *ecs.Store[space.Space], u, v int) int64 {
 	if r.isCrossing(u, v) {
 		return r.nodes[u].cost
 	}
@@ -157,12 +177,15 @@ func (r *Router) cost(u, v int) int64 {
 		}
 		return e.cost
 	}
+	if sp, ok := spaces.Get(r.nodes[u].space); ok && sp.Projection != nil {
+		return int64(sp.SegmentLen3D(r.nodes[u].pos, r.nodes[v].pos))
+	}
 	return int64(r.nodes[v].pos.Sub(r.nodes[u].pos).Len())
 }
 
 // dijkstra devuelve la secuencia de nodos de 0 (origen) a 1 (destino), o
 // nil. Desempata por índice de nodo: determinista.
-func (r *Router) dijkstra() []int {
+func (r *Router) dijkstra(spaces *ecs.Store[space.Space]) []int {
 	n := len(r.nodes)
 	r.dist = r.dist[:0]
 	r.prev = r.prev[:0]
@@ -174,7 +197,7 @@ func (r *Router) dijkstra() []int {
 	}
 	r.dist[0] = 0
 	relax := func(u, v int) {
-		c := r.cost(u, v)
+		c := r.cost(spaces, u, v)
 		if c == inf || r.done[v] {
 			return
 		}

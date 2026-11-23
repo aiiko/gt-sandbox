@@ -87,6 +87,24 @@ func portalPenalty(w *world.World) PortalPenalty {
 	return nil
 }
 
+// PortalValidator revalida un cruce de portal en el instante exacto de dar el
+// paso (con las poses y movimientos ya aplicados en el tick actual).
+type PortalValidator func(w *world.World, actor, portal ids.ID) bool
+
+type portalValidatorRes struct{ fn PortalValidator }
+
+// SetPortalValidator registra una función de validación de cruce de portales.
+func SetPortalValidator(w *world.World, fn PortalValidator) {
+	world.SetResource(w, &portalValidatorRes{fn: fn})
+}
+
+func portalValidator(w *world.World) PortalValidator {
+	if r := world.Resource[portalValidatorRes](w); r != nil {
+		return r.fn
+	}
+	return nil
+}
+
 // Razones de MoveFailed.
 const (
 	ReasonNoPath      = "no_path"
@@ -303,10 +321,29 @@ func (mover) Run(w *world.World) {
 	reg := w.ECS()
 	grids := ecs.Get[Grid](reg)
 	portals := ecs.Get[Portal](reg)
+	spaces := ecs.Get[space.Space](reg)
 	locs := comp.Of(reg).Location
 	g := space.Of(reg)
-	ecs.Get[Mover](reg).Each(func(e ids.ID, m *Mover) {
+	validate := portalValidator(w)
+	movers := ecs.Get[Mover](reg)
+
+	// Los soportes móviles (Spaces con Mover, p. ej. la giantess) avanzan
+	// primero, así al validar cruces de portales dinámicos los tinies ven la
+	// posición actualizada del soporte en el mismo tick (propuesta 19.3).
+	var spaceMovers, thingMovers []ids.ID
+	movers.Each(func(e ids.ID, m *Mover) {
 		if m.Status != Moving || w.Tick() < m.WaitUntil {
+			return
+		}
+		if spaces.Has(e) {
+			spaceMovers = append(spaceMovers, e)
+		} else {
+			thingMovers = append(thingMovers, e)
+		}
+	})
+	step := func(e ids.ID) {
+		m := movers.Ptr(e)
+		if m == nil || m.Status != Moving || w.Tick() < m.WaitUntil {
 			return
 		}
 		loc := locs.Ptr(e)
@@ -324,6 +361,9 @@ func (mover) Run(w *world.World) {
 				}
 				d := leg.Path[0].Sub(pos)
 				n := d.Len()
+				if sp, ok := spaces.Get(leg.Space); ok && sp.Projection != nil {
+					n = sp.SegmentLen3D(pos, leg.Path[0])
+				}
 				if n <= left {
 					pos, left = leg.Path[0], left-n
 					leg.Path = leg.Path[1:]
@@ -336,6 +376,12 @@ func (mover) Run(w *world.World) {
 			if leg.Portal.IsNil() { // fin de la ruta
 				m.Legs = nil
 				break
+			}
+			if validate != nil && !validate(w, e, leg.Portal) {
+				// El apoyo o paso se cerró en este mismo tick: quedarse de este lado y replanear.
+				loc.Pos.X, loc.Pos.Y = pos.X, pos.Y
+				m.Status, m.Legs = Planning, nil
+				return
 			}
 			_, out := portals.Ptr(leg.Portal).ends(leg.Reverse)
 			if g.CanPlace(e, out.Space) != nil { // p. ej. cruzaría hacia sí mismo
@@ -353,7 +399,13 @@ func (mover) Run(w *world.World) {
 			*m = m.idle()
 			w.Emit(MoveArrived{Entity: e})
 		}
-	})
+	}
+	for _, e := range spaceMovers {
+		step(e)
+	}
+	for _, e := range thingMovers {
+		step(e)
+	}
 }
 
 // routeValid indica si la ruta sigue vigente: cada tramo en un Space vivo

@@ -157,6 +157,9 @@ func (r Rect) String() string { return fmt.Sprintf("[%v - %v]", r.Min, r.Max) }
 // Len devuelve la norma de v, redondeada hacia abajo al µm.
 func (a Vec2) Len() Length { return Length(Isqrt(uint64(a.LengthSq()))) }
 
+// Len devuelve la norma 3D de v, redondeada hacia abajo al µm.
+func (a Vec3) Len() Length { return Length(Isqrt(uint64(a.LengthSq()))) }
+
 // Isqrt devuelve ⌊√n⌋ en enteros. math.Sqrt es correctamente redondeado en
 // IEEE 754 (igual en todas las plataformas); el ajuste final lo hace exacto.
 func Isqrt(n uint64) uint64 {

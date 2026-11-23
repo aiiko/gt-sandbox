@@ -68,8 +68,9 @@ func (k *Kind) UnmarshalText(b []byte) error {
 
 // Space es el componente de una superficie.
 type Space struct {
-	Kind   Kind       `json:"kind"`
-	Extent units.Rect `json:"extent"` // límites de la superficie, en coordenadas locales
+	Kind       Kind        `json:"kind"`
+	Extent     units.Rect  `json:"extent"`               // límites de la superficie, en coordenadas locales
+	Projection *Projection `json:"projection,omitempty"` // proyección 3D opcional (nil = plano XY)
 }
 
 // MaxDepth limita la profundidad de la jerarquía; superarlo indica un ciclo.
@@ -148,17 +149,41 @@ func (g Graph) walk(e ids.ID) (fixedmath.Transform, ids.ID, error) {
 // ToWorld convierte un punto en coordenadas locales de s a coordenadas de su raíz.
 func (g Graph) ToWorld(s ids.ID, p units.Vec3) (units.Vec3, error) {
 	t, err := g.Frame(s)
-	return t.Apply(p), err
+	if err != nil {
+		return units.Vec3{}, err
+	}
+	if sp, ok := g.spaces.Get(s); ok && sp.Projection != nil {
+		p = sp.Project(p)
+	}
+	return t.Apply(p), nil
 }
 
 // FromWorld convierte un punto en coordenadas de la raíz a coordenadas locales de s.
 func (g Graph) FromWorld(s ids.ID, p units.Vec3) (units.Vec3, error) {
 	t, err := g.Frame(s)
-	return t.ApplyInv(p), err
+	if err != nil {
+		return units.Vec3{}, err
+	}
+	local := t.ApplyInv(p)
+	if sp, ok := g.spaces.Get(s); ok && sp.Projection != nil {
+		local = sp.Unproject(local)
+	}
+	return local, nil
 }
 
 // WorldPose devuelve posición y orientación de e en coordenadas de su raíz.
 func (g Graph) WorldPose(e ids.ID) (units.Vec3, fixedmath.Angle, error) {
+	if !g.spaces.Has(e) {
+		if l, ok := g.loc.Get(e); ok {
+			if sp, ok2 := g.spaces.Get(l.Space); ok2 && sp.Projection != nil {
+				t, err := g.Frame(l.Space)
+				if err != nil {
+					return units.Vec3{}, 0, err
+				}
+				return t.Apply(sp.Project(l.Pos)), t.Rot.Add(l.Facing), nil
+			}
+		}
+	}
 	t, err := g.Frame(e)
 	return t.Pos, t.Rot, err
 }
@@ -199,7 +224,11 @@ func (g Graph) Reparent(e, target ids.ID) (ids.ID, error) {
 	if err := g.CanPlace(e, target); err != nil {
 		return ids.Nil, err
 	}
-	src, srcRoot, err := g.walk(e)
+	srcPos, srcRot, err := g.WorldPose(e)
+	if err != nil {
+		return ids.Nil, err
+	}
+	_, srcRoot, err := g.walk(e)
 	if err != nil {
 		return ids.Nil, err
 	}
@@ -210,10 +239,16 @@ func (g Graph) Reparent(e, target ids.ID) (ids.ID, error) {
 	if srcRoot != dstRoot {
 		return ids.Nil, ErrDifferentRoots
 	}
+	dstPos := dst.ApplyInv(srcPos)
+	if !g.spaces.Has(e) {
+		if sp, ok := g.spaces.Get(target); ok && sp.Projection != nil {
+			dstPos = sp.Unproject(dstPos)
+		}
+	}
 	g.loc.Set(e, comp.Location{
 		Space:  target,
-		Pos:    dst.ApplyInv(src.Pos),
-		Facing: src.Rot.Sub(dst.Rot),
+		Pos:    dstPos,
+		Facing: srcRot.Sub(dst.Rot),
 	})
 	return old.Space, nil
 }
