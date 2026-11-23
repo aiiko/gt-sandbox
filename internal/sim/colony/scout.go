@@ -101,11 +101,12 @@ func (Scout) Options(c *ai.Ctx) []ai.Option {
 			if seenSpaces[end.Space] || !g.IsSpace(end.Space) || ai.InDanger(c.W, c.Agent.Scale, end.Space, end.Pos) {
 				continue
 			}
-			// Solo un explorador con oficio RoleScout cruza portales de contacto
-			// dinámicos hacia zonas corporales articuladas (propuesta 19.4).
+			// Los portales de contacto dinámicos hacia zonas corporales los
+			// cruzan exploradores (RoleScout) o suplentes aventureros
+			// (Adventure >= 0.5), con algo menos de prioridad para suplentes.
 			if isContact {
 				sp, ok := ecs.Get[space.Space](r).Get(end.Space)
-				if !ok || sp.Kind != space.Articulated || m.Role != RoleScout {
+				if !ok || sp.Kind != space.Articulated || (m.Role != RoleScout && m.Adventure < 0.5) {
 					continue
 				}
 			}
@@ -118,6 +119,9 @@ func (Scout) Options(c *ai.Ctx) []ai.Option {
 				base = 0.10
 			default:
 				continue
+			}
+			if isContact && m.Role != RoleScout {
+				base -= 0.04
 			}
 			seenSpaces[end.Space] = true
 			u := base + bonus - c.Agent.DistanceCost*ai.Distance(c, end.Space, end.Pos)
