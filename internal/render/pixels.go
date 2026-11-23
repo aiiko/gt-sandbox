@@ -47,10 +47,13 @@ func CanvasSize(w, h int) (int, int) {
 }
 
 // Viewport es el rectángulo del lienzo en píxeles físicos de la pantalla final.
-// Puede exceder la pantalla en menos de un píxel del lienzo por lado.
+// Puede exceder la pantalla en menos de un píxel del lienzo por lado. Un
+// píxel del lienzo mide Factor píxeles físicos o, con Down > 1, 1/Down: la
+// capa de escena alejada, que se reduce promediando (mipmaps).
 type Viewport struct {
 	Rect   image.Rectangle
 	Factor int
+	Down   int // 0 o 1: sin reducir
 }
 
 // PixelViewport centra un lienzo de tamaño canvas sobre la pantalla, escalado
@@ -62,13 +65,15 @@ func PixelViewport(screen image.Rectangle, canvas image.Point) Viewport {
 	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(size)}, Factor: factor}
 }
 
+func (v Viewport) down() int { return max(1, v.Down) }
+
 // Point convierte un punto físico al píxel del lienzo que aparece debajo.
 func (v Viewport) Point(x, y float64) (image.Point, bool) {
 	p := image.Pt(int(math.Floor(x)), int(math.Floor(y)))
-	if !p.In(v.Rect) {
+	if v.Factor == 0 || !p.In(v.Rect) {
 		return image.Point{}, false
 	}
-	return p.Sub(v.Rect.Min).Div(v.Factor), true
+	return p.Sub(v.Rect.Min).Mul(v.down()).Div(v.Factor), true
 }
 
 // Blit presenta el lienzo sin mezclar los píxeles vecinos, sobre el fondo.
@@ -80,8 +85,10 @@ func (v Viewport) Blit(screen interface {
 	v.Draw(screen, canvas)
 }
 
-// Draw presenta el lienzo sin mezclar los píxeles vecinos y sin fondo: así
-// la interfaz se compone sobre la capa de escena.
+// Draw presenta el lienzo sin fondo, así la interfaz se compone sobre la
+// capa de escena. Ampliado, sin mezclar los píxeles vecinos; reducido, con
+// filtro lineal, que Ebitengine resuelve con mipmaps (cada píxel físico es
+// el promedio de los del arte que cubre).
 func (v Viewport) Draw(screen interface {
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 }, canvas *ebiten.Image) {
@@ -89,7 +96,11 @@ func (v Viewport) Draw(screen interface {
 		return
 	}
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
-	op.GeoM.Scale(float64(v.Factor), float64(v.Factor))
+	if v.down() > 1 {
+		op.Filter = ebiten.FilterLinear
+	}
+	k := float64(v.Factor) / float64(v.down())
+	op.GeoM.Scale(k, k)
 	op.GeoM.Translate(float64(v.Rect.Min.X), float64(v.Rect.Min.Y))
 	screen.DrawImage(canvas, op)
 }
@@ -98,18 +109,24 @@ func (v Viewport) Draw(screen interface {
 var Backdrop = color.NRGBA{R: 16, G: 19, B: 24, A: 255}
 
 // Scene es la capa de escena que cubre el mismo rectángulo que el lienzo de
-// la interfaz con otro factor entero (el zoom de la rueda, propuesta 17.4):
-// mide lo justo para cubrirlo y queda centrada, a menos de un píxel físico
-// del centro del lienzo. Con el factor del lienzo es el lienzo mismo.
-func (v Viewport) Scene(factor int) Viewport {
+// la interfaz con otra escala (el zoom de la rueda, propuesta 17.4): factor
+// píxeles físicos por píxel del arte si es 1 o más (entero) y, por debajo de
+// 1, 1/factor píxeles del arte por píxel físico (½, ¼). Mide lo justo para
+// cubrir el lienzo y queda centrada, a menos de un píxel físico del centro
+// del lienzo. Con el factor del lienzo es el lienzo mismo.
+func (v Viewport) Scene(factor float64) Viewport {
 	if v.Factor == 0 || factor <= 0 {
 		return Viewport{}
 	}
+	up, down := int(math.Round(factor)), 0
+	if factor < 1 {
+		up, down = 1, int(math.Round(1/factor))
+	}
 	size := v.Rect.Size()
-	cover := image.Pt((size.X+factor-1)/factor, (size.Y+factor-1)/factor)
-	extra := cover.Mul(factor).Sub(size)
+	blocks := image.Pt((size.X+up-1)/up, (size.Y+up-1)/up)
+	extra := blocks.Mul(up).Sub(size)
 	origin := v.Rect.Min.Sub(extra.Div(2))
-	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(cover.Mul(factor))}, Factor: factor}
+	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(blocks.Mul(up))}, Factor: up, Down: down}
 }
 
 // Size es el tamaño del lienzo en sus propios píxeles.
@@ -117,7 +134,7 @@ func (v Viewport) Size() image.Point {
 	if v.Factor == 0 {
 		return image.Point{}
 	}
-	return v.Rect.Size().Div(v.Factor)
+	return v.Rect.Size().Mul(v.down()).Div(v.Factor)
 }
 
 type sprite struct {

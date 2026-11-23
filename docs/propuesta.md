@@ -1103,7 +1103,7 @@ El costo es que los píxeles de la escena y los de la interfaz pueden tener tama
 
 La cámara es presentación pura. `Camera.Zoom` sigue en px/µm y el factor de escena es solo cómo se muestra.
 
-**Estado.** Implementado en parte, con el foco en alejar: capas separadas, rueda con pasos enteros (1 a 4 en macro, 2 a 4 en micro) y punto fijo bajo el cursor, `F` vuelve al factor del lienzo. La interfaz sigue con el factor del lienzo *N* (todavía sin *U* configurable en Opciones). Faltan el zoom semántico, el paneo con arrastre y los límites del encuadre. [Presentación](specs/presentacion.md)
+**Estado.** Implementado en parte, con el foco en alejar: capas separadas, rueda por los factores ½, 1, 2, 3, 4, 6 y 8 en las dos escalas (½ reduce promediando con mipmaps; el resto es entero) y punto fijo bajo el cursor, `F` vuelve al factor del lienzo. La interfaz sigue con el factor del lienzo *N* (todavía sin *U* configurable en Opciones). Faltan el zoom semántico, el paneo con arrastre y los límites del encuadre. [Presentación](specs/presentacion.md)
 
 ### 17.5. Historia: una crónica de hitos y un diario por entidad
 

@@ -67,21 +67,24 @@ func TestViewportScene(t *testing.T) {
 	for _, screen := range []image.Point{{1920, 1080}, {1922, 1009}, {2560, 1440}, {1366, 768}} {
 		cw, ch := CanvasSize(screen.X, screen.Y)
 		v := PixelViewport(image.Rectangle{Max: screen}, image.Pt(cw, ch))
-		if s := v.Scene(v.Factor); s != v {
+		if s := v.Scene(float64(v.Factor)); s != v {
 			t.Fatalf("%v: con el factor del lienzo %+v, quería %+v", screen, s, v)
 		}
-		for factor := 1; factor <= 4; factor++ {
+		for _, factor := range []float64{0.25, 0.5, 1, 2, 3, 4, 6, 8} {
 			s := v.Scene(factor)
-			if s.Factor != factor || s.Rect.Dx() != s.Size().X*factor || !v.Rect.In(s.Rect) ||
-				s.Rect.Dx()-v.Rect.Dx() >= factor || s.Rect.Dy()-v.Rect.Dy() >= factor {
-				t.Fatalf("%v ×%d: capa %+v sobre %+v", screen, factor, s, v)
+			up, down := s.Factor, max(1, s.Down)
+			if float64(up)/float64(down) != factor || s.Rect.Dx()*down != s.Size().X*up || !v.Rect.In(s.Rect) ||
+				s.Rect.Dx()-v.Rect.Dx() >= up || s.Rect.Dy()-v.Rect.Dy() >= up {
+				t.Fatalf("%v ×%v: capa %+v sobre %+v", screen, factor, s, v)
 			}
 			if d := (s.Rect.Min.X + s.Rect.Max.X) - (v.Rect.Min.X + v.Rect.Max.X); d < -1 || d > 1 {
-				t.Fatalf("%v ×%d: descentrada %d medios píxeles", screen, factor, d)
+				t.Fatalf("%v ×%v: descentrada %d medios píxeles", screen, factor, d)
 			}
-			at := s.Rect.Min.Add(image.Pt(7, 5).Mul(factor))
-			if p, ok := s.Point(float64(at.X+factor-1), float64(at.Y)); !ok || p != image.Pt(7, 5) {
-				t.Fatalf("%v ×%d: puntero %v", screen, factor, p)
+			// El píxel físico que empieza en el bloque 7,5 cae sobre el
+			// píxel del arte 7,5 ampliado, o sobre el primero que promedia.
+			at := s.Rect.Min.Add(image.Pt(7, 5).Mul(up))
+			if p, ok := s.Point(float64(at.X+up-1), float64(at.Y)); !ok || p != image.Pt(7, 5).Mul(down) {
+				t.Fatalf("%v ×%v: puntero %v", screen, factor, p)
 			}
 		}
 	}

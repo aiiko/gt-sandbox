@@ -9,8 +9,8 @@ import (
 	"gtsandbox/internal/render"
 )
 
-// La rueda cambia el factor de la capa de escena de a un paso entero, dentro
-// de su rango, con el punto bajo el cursor fijo. Alejada a 1× en 1080p, la
+// La rueda recorre los niveles de la capa de escena de a uno, sin pasarse de
+// los extremos, con el punto bajo el cursor fijo. Alejada a 1× en 1080p, la
 // casa entera entra en pantalla; F vuelve al factor del lienzo.
 func TestWheelZoomSteps(t *testing.T) {
 	g := artGame(t, morningScenario)
@@ -24,7 +24,7 @@ func TestWheelZoomSteps(t *testing.T) {
 	}
 	project()
 	if got := g.art.sceneFactor(render.Macro); got != 2 {
-		t.Fatalf("factor de arranque %d, quería el del lienzo (2)", got)
+		t.Fatalf("factor de arranque %v, quería el del lienzo (2)", got)
 	}
 	cursor := [2]float64{700, 150}
 	before := g.proj.ToWorld(cursor[0], cursor[1])
@@ -33,12 +33,23 @@ func TestWheelZoomSteps(t *testing.T) {
 		t.Fatalf("el punto bajo el cursor se movió de %v a %v", before, after)
 	}
 	if got := g.art.sceneFactor(render.Macro); got != 1 {
-		t.Fatalf("alejado: factor %d", got)
+		t.Fatalf("alejado: factor %v", got)
 	}
-	g.wheelZoom(-1, cursor) // ya en el mínimo
-	g.wheelZoom(-0.5, cursor)
+	for _, want := range []float64{0.5, 0.5} {
+		g.wheelZoom(-1, cursor)
+		if got := g.art.sceneFactor(render.Macro); got != want {
+			t.Fatalf("alejando: factor %v, quería %v", got, want)
+		}
+	}
+	// Reducida a ½, la capa de escena tiene 2 × 2 píxeles del arte por
+	// píxel físico.
+	if size := g.sceneLayer(render.Macro).Size(); size != image.Pt(3840, 2160) {
+		t.Fatalf("capa reducida %v", size)
+	}
+	g.wheelZoom(-0.5, cursor) // media muesca no es un paso
+	g.wheelZoom(1.5, cursor)
 	if got := g.art.sceneFactor(render.Macro); got != 1 {
-		t.Fatalf("pasó el mínimo: factor %d", got)
+		t.Fatalf("acercando un nivel: factor %v", got)
 	}
 
 	g.fit() // re-centra con el factor alejado
@@ -61,18 +72,18 @@ func TestWheelZoomSteps(t *testing.T) {
 		}
 	}
 	if rooms < 3 {
-		t.Fatalf("solo %d habitaciones a la vista", rooms)
+		t.Fatalf("solo %v habitaciones a la vista", rooms)
 	}
 
-	g.wheelZoom(5, cursor)
-	if got := g.art.sceneFactor(render.Macro); got != 4 {
-		t.Fatalf("acercado: factor %d, quería el máximo (4)", got)
+	g.wheelZoom(10, cursor)
+	if got := g.art.sceneFactor(render.Macro); got != 8 {
+		t.Fatalf("acercado: factor %v, quería el máximo (8)", got)
 	}
 	if got := g.art.sceneFactor(render.Micro); got != 2 {
-		t.Fatalf("micro sin tocar: factor %d", got)
+		t.Fatalf("micro sin tocar: factor %v", got)
 	}
 	delete(g.art.factor, render.Macro) // lo que hace F
 	if got := g.art.sceneFactor(render.Macro); got != 2 {
-		t.Fatalf("después de F: factor %d", got)
+		t.Fatalf("después de F: factor %v", got)
 	}
 }

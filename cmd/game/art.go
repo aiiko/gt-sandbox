@@ -55,17 +55,20 @@ type artMode struct {
 	clickOn          ids.ID      // lo que eligió el último clic sobre la escena
 	clickAt          units.Vec2  // y dónde, en el mundo
 	// Capa de escena (propuesta, 17.4): el arte se dibuja en su propia
-	// imagen con un factor entero que cambia la rueda, y la interfaz se
-	// compone encima con el factor del lienzo.
-	factor    map[render.Scale]int // factor elegido con la rueda (sin elegir: el del lienzo)
-	wheel     float64              // giro de la rueda que todavía no llega a un paso
+	// imagen con un factor que cambia la rueda, y la interfaz se compone
+	// encima con el factor del lienzo.
+	factor    map[render.Scale]float64 // factor elegido con la rueda (sin elegir: el del lienzo)
+	wheel     float64                  // giro de la rueda que todavía no llega a un paso
 	scene     *ebiten.Image
 	sceneView render.Viewport // dónde cae la capa de escena en la pantalla final
 }
 
-// sceneFactors son los factores de escena a los que llega la rueda en cada
-// escala: enteros, para que el arte nunca se re-muestree.
-var sceneFactors = map[render.Scale][2]int{render.Macro: {1, 4}, render.Micro: {2, 4}}
+// zoomLevels son los factores de escena (píxeles físicos por píxel del arte)
+// que recorre la rueda: enteros, para que el arte ampliado nunca se
+// re-muestree, y ½, una reducción exacta que promedia. Más abajo la casa
+// queda diminuta en 1080p y la capa reducida pesa demasiado (¼ en 4K serían
+// 15360 × 8640 píxeles del arte).
+var zoomLevels = []float64{0.5, 1, 2, 3, 4, 6, 8}
 
 func (g *game) enableArt(path string) error {
 	if len(g.visuals) == 0 {
@@ -133,11 +136,11 @@ func (a *artMode) uiFactor() int { return max(1, a.viewport.Factor) }
 // sceneFactor es el factor de la capa de escena de una escala: el elegido con
 // la rueda o, si no se eligió, el del lienzo (un píxel del arte por píxel
 // del lienzo).
-func (a *artMode) sceneFactor(scale render.Scale) int {
+func (a *artMode) sceneFactor(scale render.Scale) float64 {
 	if n := a.factor[scale]; n > 0 {
 		return n
 	}
-	return a.uiFactor()
+	return float64(a.uiFactor())
 }
 
 // artScale es la escala que se ve: micro con una superficie en foco.
@@ -151,7 +154,7 @@ func (g *game) artScale(f *view.Frame) render.Scale {
 // sceneZoom es el zoom de la cámara (píxeles del lienzo por µm) con el que la
 // capa de escena muestra el arte de la escala a su factor.
 func (g *game) sceneZoom(scale render.Scale) float64 {
-	return g.artZoom(scale) * float64(g.art.sceneFactor(scale)) / float64(g.art.uiFactor())
+	return g.artZoom(scale) * g.art.sceneFactor(scale) / float64(g.art.uiFactor())
 }
 
 // sceneLayer es dónde cae la capa de escena de la escala en la pantalla. Sin
@@ -164,9 +167,9 @@ func (g *game) sceneLayer(scale render.Scale) render.Viewport {
 	return v.Scene(g.art.sceneFactor(scale))
 }
 
-// wheelZoom cambia el factor de escena de a un paso entero por muesca de la
-// rueda, con el punto del lienzo bajo el cursor fijo (el centro si se sigue
-// a alguien). Un factor de arranque fuera del rango no se fuerza a entrar.
+// wheelZoom cambia el factor de escena de a un nivel por muesca de la rueda,
+// con el punto del lienzo bajo el cursor fijo (el centro si se sigue a
+// alguien).
 func (g *game) wheelZoom(wy float64, cursor [2]float64) {
 	a := g.art
 	a.wheel += wy
@@ -177,21 +180,24 @@ func (g *game) wheelZoom(wy float64, cursor [2]float64) {
 	a.wheel -= float64(steps)
 	f := g.run.Cur
 	scale := g.artScale(f)
-	r := sceneFactors[scale]
 	old := a.sceneFactor(scale)
-	n := min(max(old+steps, min(r[0], old)), max(r[1], old))
+	i, found := slices.BinarySearch(zoomLevels, old)
+	if !found && steps > 0 {
+		i-- // un factor fuera de la lista: el primer paso cae en su vecino
+	}
+	n := zoomLevels[min(max(i+steps, 0), len(zoomLevels)-1)]
 	if n == old {
 		a.wheel = 0
 		return
 	}
 	if a.factor == nil {
-		a.factor = map[render.Scale]int{}
+		a.factor = map[render.Scale]float64{}
 	}
 	a.factor[scale] = n
 	if g.followsInView(f) {
 		cursor = [2]float64{float64(g.w) / 2, float64(g.h) / 2}
 	}
-	g.cam.ZoomAt(g.proj, cursor[0], cursor[1], float64(n)/float64(old))
+	g.cam.ZoomAt(g.proj, cursor[0], cursor[1], n/old)
 	g.cam.Zoom = g.sceneZoom(scale)
 }
 

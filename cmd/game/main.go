@@ -31,6 +31,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -72,7 +73,7 @@ func main() {
 	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para el pixel art")
 	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en pixel art")
 	debugArt := flag.Bool("debug", false, "arrancar con los overlays técnicos (F3) sobre el pixel art")
-	zoom := flag.Int("zoom", 0, "factor de escena inicial en pixel art, de 1 a 4 (0 = el del lienzo; la rueda lo cambia)")
+	zoom := flag.Float64("zoom", 0, "factor de escena inicial en pixel art: 0.5, 1, 2, 3, 4, 6 u 8 (0 = el del lienzo; la rueda lo cambia)")
 	pan := flag.String("pan", "", "desplazar el encuadre inicial dx,dy píxeles del lienzo (capturas)")
 	bench := flag.Duration("bench", 0, "medir simulación y dibujo durante esta duración (a x4, sin vsync) y salir")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
@@ -173,7 +174,10 @@ func main() {
 		}
 		g.art.cut, g.art.debug = *reducedMotion, *debugArt
 		if *zoom > 0 {
-			g.art.factor = map[render.Scale]int{render.Macro: *zoom, render.Micro: max(*zoom, sceneFactors[render.Micro][0])}
+			if !slices.Contains(zoomLevels, *zoom) {
+				fail(fmt.Errorf("-zoom %v: los factores son %v", *zoom, zoomLevels))
+			}
+			g.art.factor = map[render.Scale]float64{render.Macro: *zoom, render.Micro: *zoom}
 		}
 		app = pixelGame{g}
 		ebiten.SetWindowSizeLimits(render.MinCanvasWidth, render.MinCanvasHeight, -1, -1)
