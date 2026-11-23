@@ -30,6 +30,9 @@ type Colony struct {
 	// peligro que deja la muerte de un miembro (0 = por defecto).
 	DangerRadius units.Length `json:"danger_radius,omitempty"`
 	DangerTicks  clock.Tick   `json:"danger_ticks,omitempty"`
+	// Stock es la meta del depósito, en porciones por miembro vivo (0 = sin
+	// meta). Ver Deficit.
+	Stock int32 `json:"stock,omitempty"`
 }
 
 // Member es el componente "member" de un tiny: a qué colonia pertenece y
@@ -90,6 +93,32 @@ func (share) Run(w *world.World) {
 			_ = jobs.PostJob{Type: "haul", Target: n.Target, DestSpace: nest.Space, Dest: nest.Pos.XY()}.Apply(w)
 		}
 	}
+}
+
+// Deficit es cuánto le falta al depósito de la colonia col para llegar a
+// su meta (Colony.Stock por miembro vivo), en [0, 1]: 0 en la meta o sin
+// meta, 1 vacío. Se calcula al vuelo: no es estado.
+func Deficit(w *world.World, col ids.ID) float64 {
+	r := w.ECS()
+	c, ok := ecs.Get[Colony](r).Get(col)
+	if !ok || c.Stock <= 0 {
+		return 0
+	}
+	n := int32(0)
+	ecs.Get[Member](r).Each(func(e ids.ID, m *Member) {
+		if m.Colony == col && !r.Despawning(e) {
+			n++
+		}
+	})
+	goal := c.Stock * n
+	if goal <= 0 {
+		return 0
+	}
+	p, _ := ecs.Get[ai.Portions](r).Get(col)
+	if p.Left >= goal {
+		return 0
+	}
+	return float64(goal-max(p.Left, 0)) / float64(goal)
 }
 
 // hauled: ya hay un trabajo sobre e, o alguien lo carga.

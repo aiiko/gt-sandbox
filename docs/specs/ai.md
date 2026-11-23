@@ -88,7 +88,7 @@ Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 
 
 ## Colonias (`colony`)
 
-- La colonia es una entidad en el nido con `colony {radius}`. También es un smart object: `portions` es su depósito, y sus ofertas son comer del depósito (`consume` con `keep`) y descansar. Definición en `content/objects/nest.json`.
+- La colonia es una entidad en el nido con `colony {radius, stock}`. `stock` es la meta del depósito en porciones por miembro; `colony.Deficit` dice cuánto falta (ver [vida](vida.md#meta-de-la-despensa)). También es un smart object: `portions` es su depósito, y sus ofertas son comer del depósito (`consume` con `keep`) y descansar. Definición en `content/objects/nest.json`.
 - Los miembros tienen `member {colony, forage}`.
 - `colony.share` (fase Decide, entre `ai.look` y el selector):
   - cada miembro conoce su nido;
