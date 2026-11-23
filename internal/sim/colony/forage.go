@@ -24,12 +24,22 @@ func (Forage) Options(c *ai.Ctx) []ai.Option {
 	if !ok || m.Forage <= 0 {
 		return nil
 	}
-	return []ai.Option{{Utility: m.Forage}}
+	u := m.Forage
+	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony) > 0 &&
+		PendingFoodPortions(c.W, m.Colony) < MissingPortions(c.W, m.Colony) {
+		u += 0.04
+	}
+	return []ai.Option{{Utility: u}}
 }
 
 func (Forage) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
-	return m.Forage
+	u := m.Forage
+	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony) > 0 &&
+		PendingFoodPortions(c.W, m.Colony) < MissingPortions(c.W, m.Colony) {
+		u += 0.04
+	}
+	return u
 }
 
 // Start elige el destino: un punto transitable al azar cercano.

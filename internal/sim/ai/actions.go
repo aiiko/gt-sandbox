@@ -9,6 +9,7 @@ import (
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/needs"
 	"gtsandbox/internal/sim/space"
+	"gtsandbox/internal/sim/world"
 )
 
 // Effect es cuánto sube una necesidad al usar una oferta completa.
@@ -56,6 +57,24 @@ func distance(c *Ctx, sp ids.ID, p units.Vec2) float64 {
 
 // --- work: tomar y hacer un trabajo de la cola ---
 
+// JobScorer ajusta la utilidad de un trabajo para un agente (por ejemplo,
+// según su oficio y el estado de la colonia). Devolver ok=false oculta el
+// trabajo temporalmente para este agente (p. ej. espera breve por un
+// especialista). Es un recurso del mundo, no estado serializado.
+type JobScorer func(c *Ctx, jobID ids.ID, j jobs.Job, base float64) (float64, bool)
+
+type jobScorerRes struct{ fn JobScorer }
+
+// SetJobScorer registra un JobScorer en w (nil lo desactiva).
+func SetJobScorer(w *world.World, fn JobScorer) { world.SetResource(w, &jobScorerRes{fn: fn}) }
+
+func jobScorer(w *world.World) JobScorer {
+	if r := world.Resource[jobScorerRes](w); r != nil {
+		return r.fn
+	}
+	return nil
+}
+
 type work struct{}
 
 func (work) Name() string { return "work" }
@@ -64,6 +83,7 @@ func (work) Options(c *Ctx) []Option {
 	if c.Agent.Work <= 0 || !jobs.AssignedTo(c.W, c.Actor).IsNil() {
 		return nil
 	}
+	scorer := jobScorer(c.W)
 	var out []Option
 	locs := comp.Of(c.W.ECS()).Location
 	ecs.Get[jobs.Job](c.W.ECS()).Each(func(id ids.ID, _ *jobs.Job) {
@@ -73,12 +93,29 @@ func (work) Options(c *Ctx) []Option {
 		}
 		loc, _ := locs.Get(j.Target)
 		u := c.Agent.Work + 0.01*float64(j.Priority) - c.Agent.DistanceCost*distance(c, loc.Space, loc.Pos.XY())
+		if scorer != nil {
+			var allow bool
+			u, allow = scorer(c, id, j, u)
+			if !allow {
+				return
+			}
+		}
 		out = append(out, Option{Target: id, Utility: u})
 	})
 	return out
 }
 
-func (work) Utility(c *Ctx, _ *Doing) float64 { return c.Agent.Work }
+func (work) Utility(c *Ctx, d *Doing) float64 {
+	u := c.Agent.Work
+	if scorer := jobScorer(c.W); scorer != nil && d != nil {
+		if j, ok := ecs.Get[jobs.Job](c.W.ECS()).Get(d.Target); ok {
+			if adj, allow := scorer(c, d.Target, j, u+0.01*float64(j.Priority)); allow {
+				return adj
+			}
+		}
+	}
+	return u
+}
 
 func (work) Start(c *Ctx, d *Doing) bool { return jobs.Assign(c.W, d.Target, c.Actor) }
 

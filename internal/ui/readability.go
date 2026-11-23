@@ -110,10 +110,17 @@ type MinimapRoom struct {
 	Active         bool
 }
 
+// MinimapPin marca una pista vista (ámbar) o un destino/paso confirmado (verde).
+type MinimapPin struct {
+	X, Y      float32
+	Confirmed bool
+}
+
 // Minimap es el recuadro chico de la casa que se muestra en vista micro
-// (propuesta, 17.7): habitaciones, superficie activa y posición de la giantess.
+// (propuesta, 17.7 y 18.6): habitaciones, superficie activa, pistas y giantess.
 type Minimap struct {
 	Rooms       []MinimapRoom
+	Pins        []MinimapPin
 	HasGiantess bool
 	GX, GY      float32 // posición normalizada (0..1) de la giantess
 	HasFocus    bool
@@ -141,6 +148,15 @@ func (m Minimap) draw(dst *ebiten.Image, r image.Rectangle) {
 		if x1-x0 > 2 && y1-y0 > 2 {
 			vector.FillRect(dst, x0+1, y0+1, x1-x0-2, y1-y0-2, fill, false)
 		}
+	}
+	for _, pin := range m.Pins {
+		px := float32(in.Min.X) + pin.X*iw
+		py := float32(in.Max.Y) - pin.Y*ih
+		c := Amber
+		if pin.Confirmed {
+			c = Green
+		}
+		vector.FillRect(dst, px-1, py-1, 3, 3, c, false)
 	}
 	if m.HasFocus {
 		fx := float32(in.Min.X) + m.FX*iw

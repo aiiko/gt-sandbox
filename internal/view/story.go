@@ -62,6 +62,23 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.By, ev.Site
 	case colony.ChatDone:
 		return ev.A, ev.Gathering
+	case colony.LookoutWarned:
+		return ev.By, ev.Space
+	case colony.ExpeditionDeparted:
+		if len(ev.Members) > 0 {
+			return ev.Members[0], ev.Target
+		}
+		return ids.Nil, ev.Target
+	case colony.ExpeditionReported:
+		return ev.Entity, ev.Colony
+	case colony.ExpeditionCompleted:
+		return ids.Nil, ev.Target
+	case colony.ExpeditionStranded:
+		return ev.Entity, ids.Nil
+	case colony.StrandedReturned:
+		return ev.Entity, ev.Colony
+	case colony.RationEaten:
+		return ev.Entity, ids.Nil
 	}
 	return ids.Nil, ids.Nil
 }
@@ -124,6 +141,26 @@ func storyText(k chronicler, event world.Event) string {
 		return fmt.Sprintf("%s termina %s.", name(ev.By), name(ev.Site))
 	case colony.ChatDone:
 		return fmt.Sprintf("%s y %s conversan un rato.", name(ev.A), name(ev.B))
+	case colony.LookoutWarned:
+		return fmt.Sprintf("%s avisa de peligro en %s.", name(ev.By), name(ev.Space))
+	case colony.ExpeditionDeparted:
+		if len(ev.Members) == 1 {
+			return fmt.Sprintf("%s parte en expedición hacia %s.", name(ev.Members[0]), name(ev.Target))
+		}
+		return fmt.Sprintf("Sale una expedición de %d tinies hacia %s.", len(ev.Members), name(ev.Target))
+	case colony.ExpeditionReported:
+		return fmt.Sprintf("%s regresa al nido con %d hallazgos.", name(ev.Entity), ev.Findings)
+	case colony.ExpeditionCompleted:
+		if ev.Early {
+			return fmt.Sprintf("La expedición hacia %s vuelve antes (%s).", name(ev.Target), ev.Reason)
+		}
+		return fmt.Sprintf("Termina la expedición hacia %s.", name(ev.Target))
+	case colony.ExpeditionStranded:
+		return fmt.Sprintf("%s quedó varado y espera para volver.", name(ev.Entity))
+	case colony.StrandedReturned:
+		return fmt.Sprintf("%s logró volver al nido.", name(ev.Entity))
+	case colony.RationEaten:
+		return fmt.Sprintf("%s come una ración en el camino.", name(ev.Entity))
 	case attach.PoseChanged:
 		if a := ecs.Get[ai.Agent](r).Ptr(ev.Entity); a != nil && !a.Hand.IsNil() {
 			switch ev.Pose {

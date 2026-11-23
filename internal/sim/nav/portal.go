@@ -30,6 +30,9 @@ type Portal struct {
 	// recorrido físico (trepar una pata) se modela mejor como un Space propio.
 	Cost     units.Length `json:"cost"`
 	Disabled bool         `json:"disabled,omitempty"`
+	// Scale restringe quién puede cruzar este portal ("" = cualquier escala,
+	// "tiny" = solo movers con Scale == "tiny"). Ver propuesta 18.6.
+	Scale string `json:"scale,omitempty"`
 	// Version sube con cada cambio; las rutas la recuerdan.
 	Version uint64 `json:"version"`
 }

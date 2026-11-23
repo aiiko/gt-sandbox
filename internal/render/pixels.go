@@ -243,12 +243,39 @@ const (
 
 // ArtScene comparte las colocaciones de sprites entre el dibujo y el picking.
 type ArtScene struct {
-	atlas   *Atlas
-	sprites []sprite
-	clips   map[ids.ID]string
-	marks   map[ids.ID][]string
-	lifts   map[ids.ID]int
+	atlas    *Atlas
+	sprites  []sprite
+	clips    map[ids.ID]string
+	marks    map[ids.ID][]string
+	lifts    map[ids.ID]int
+	backdrop *basicSurface
+	cutaway  *cutawayMask
 }
+
+// cutawayMask recorta la capa frontal de una cavidad cerrada (pasacables del
+// zócalo o bolsillo del sofá) alrededor del tiny seguido (propuesta, 18.7).
+type cutawayMask struct {
+	outer image.Rectangle
+	hole  image.Rectangle
+}
+
+// basicSurface dibuja una superficie micro sin arte específico en el atlas
+// (patas, respaldos, pasacables, bolsillo del sofá o cualquier Space nuevo):
+// límites, tono de material y entradas/salidas. Ver propuesta 18.7.
+type basicSurface struct {
+	id      ids.ID
+	rect    image.Rectangle
+	climb   bool
+	portals []portalMark
+}
+
+type portalMark struct {
+	at       image.Point
+	disabled bool
+}
+
+// HasBackdrop indica si la escena usó la vista micro básica (sin arte propio).
+func (s ArtScene) HasBackdrop() bool { return s.backdrop != nil }
 
 // Clip devuelve el clip con el que se dibujó una entidad, o "" si no se dibujó.
 func (s ArtScene) Clip(id ids.ID) string { return s.clips[id] }
@@ -264,8 +291,11 @@ func (s ArtScene) Lift(id ids.ID) int { return s.lifts[id] }
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
 func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, scale Scale, focus ids.ID, featured ...ids.ID) ArtScene {
-	// ninguna de las dos vistas dibuja la altura: quien trepa se ve en la base
-	f = FlattenClimbs(f, visuals)
+	// En macro (o en micro de otra superficie), quien trepa se ve en la base;
+	// al enfocar en micro la propia pata/respaldo, su eje Y es la altura real.
+	if scale == Macro || visuals[focus] != ClimbVisual {
+		f = FlattenClimbs(f, visuals)
+	}
 	canvas := p.Bounds()
 	scope := map[ids.ID]bool{focus: true}
 	for _, c := range f.Contacts {
@@ -386,6 +416,11 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if !inFocus(s.ID) {
 			continue
 		}
+		// Patas, respaldos y cavidades (bolsillo del sofá) solo dibujan su
+		// baldosa micro cuando son el foco, para no tapar el mueble padre.
+		if scale == Micro && s.ID != focus && (visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket") {
+			continue
+		}
 		if v, ok := visible(s.ID); ok && v.Tile {
 			out.tiles(f, p, s, v)
 			continue
@@ -423,6 +458,31 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 	}
 	if scale == Micro {
+		// Recorte de capa frontal alrededor del tiny seguido en cavidades (18.7).
+		if v := visuals[focus]; v == "cable_duct" || v == "sofa_pocket" {
+			if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
+				b := buildBackdrop(f, p, *fs, false)
+				for _, fid := range featured {
+					if th, ok := f.ThingByID(fid); ok && th.Space == focus {
+						sx, sy := p.ToScreen(th.Pose.Pos)
+						cx, cy := int(math.Round(float64(sx))), int(math.Round(float64(sy)))
+						out.cutaway = &cutawayMask{
+							outer: b.rect,
+							hole:  image.Rect(cx-26, cy-26, cx+26, cy+26),
+						}
+						break
+					}
+				}
+			}
+		}
+		// Superficie básica si el Space enfocado no tiene arte micro propio
+		// (patas, respaldos, pasacables, bolsillo del sofá o superficies nuevas).
+		if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
+			if _, vis := visible(fs.ID); !vis {
+				out.backdrop = buildBackdrop(f, p, *fs, visuals[fs.ID] == ClimbVisual)
+				out.clips[fs.ID] = "basic"
+			}
+		}
 		// Señal del paso en cada extremo visible de un portal de contacto.
 		// El pie: su sombra antes de bajar, más oscura cuanto más cerca, y el
 		// pie apoyado durante StepTicks, por encima de lo que pisa.
@@ -768,6 +828,9 @@ func (s ArtScene) Pick(p image.Point) ids.ID {
 			}
 		}
 	}
+	if s.backdrop != nil && p.In(s.backdrop.rect) {
+		return s.backdrop.id
+	}
 	return ids.Nil
 }
 
@@ -830,6 +893,9 @@ func (a *Atlas) DrawClip(dst *ebiten.Image, visual string, scale Scale, clip str
 
 func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 	dst.Fill(color.NRGBA{R: 35, G: 41, B: 50, A: 255})
+	if s.backdrop != nil {
+		drawBackdrop(dst, s.backdrop)
+	}
 	s.atlas.tex()
 	var selection image.Rectangle
 	for _, sp := range s.sprites {
@@ -843,6 +909,9 @@ func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 			selection = sp.dest.Inset(-2)
 		}
 	}
+	if s.cutaway != nil {
+		drawCutaway(dst, s.cutaway)
+	}
 	if !selection.Empty() {
 		c := color.NRGBA{R: 118, G: 216, B: 203, A: 255}
 		for _, x := range []float32{float32(selection.Min.X), float32(selection.Max.X - 1)} {
@@ -852,4 +921,90 @@ func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 			}
 		}
 	}
+}
+
+func buildBackdrop(f *view.Frame, p camera.Projector, sp view.Space, climb bool) *basicSurface {
+	tr := sp.Pose.Transform()
+	corners := [4]units.Vec2{
+		sp.Extent.Min,
+		{X: sp.Extent.Max.X, Y: sp.Extent.Min.Y},
+		sp.Extent.Max,
+		{X: sp.Extent.Min.X, Y: sp.Extent.Max.Y},
+	}
+	var rect image.Rectangle
+	for i, c := range corners {
+		sx, sy := p.ToScreen(tr.Apply(units.V3(c.X, c.Y, 0)))
+		pt := image.Pt(int(math.Round(float64(sx))), int(math.Round(float64(sy))))
+		r := image.Rectangle{Min: pt, Max: pt.Add(image.Pt(1, 1))}
+		if i == 0 {
+			rect = r
+		} else {
+			rect = rect.Union(r)
+		}
+	}
+	var marks []portalMark
+	for _, pt := range f.Portals {
+		for _, end := range [2]struct {
+			sp  ids.ID
+			pos units.Vec3
+		}{{pt.ASpace, pt.A}, {pt.BSpace, pt.B}} {
+			if end.sp != sp.ID {
+				continue
+			}
+			sx, sy := p.ToScreen(end.pos)
+			marks = append(marks, portalMark{
+				at:       image.Pt(int(math.Round(float64(sx))), int(math.Round(float64(sy)))),
+				disabled: pt.Disabled,
+			})
+		}
+	}
+	return &basicSurface{id: sp.ID, rect: rect, climb: climb, portals: marks}
+}
+
+func drawBackdrop(dst *ebiten.Image, b *basicSurface) {
+	r := b.rect.Intersect(dst.Bounds())
+	if r.Empty() {
+		return
+	}
+	fill := color.NRGBA{R: 74, G: 82, B: 94, A: 255}
+	border := color.NRGBA{R: 132, G: 146, B: 164, A: 255}
+	if b.climb {
+		// Tira vertical (pata/respaldo): tono madera cálida con borde definido.
+		fill = color.NRGBA{R: 184, G: 134, B: 84, A: 255}
+		border = color.NRGBA{R: 112, G: 74, B: 42, A: 255}
+	}
+	x, y, w, h := float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), float32(r.Dy())
+	vector.FillRect(dst, x, y, w, h, fill, false)
+	vector.StrokeRect(dst, x, y, w, h, 1, border, false)
+	for _, m := range b.portals {
+		c := color.NRGBA{R: 118, G: 216, B: 203, A: 255}
+		if m.disabled {
+			c = color.NRGBA{R: 196, G: 96, B: 96, A: 255}
+		}
+		vector.FillRect(dst, float32(m.at.X-4), float32(m.at.Y-2), 8, 4, c, false)
+	}
+}
+
+// drawCutaway dibuja el techo/capa frontal semitransparente de una cavidad
+// dejando un recorte limpio alrededor del tiny seguido.
+func drawCutaway(dst *ebiten.Image, m *cutawayMask) {
+	outer := m.outer.Intersect(dst.Bounds())
+	if outer.Empty() {
+		return
+	}
+	hole := m.hole.Intersect(outer)
+	shade := color.NRGBA{R: 28, G: 24, B: 38, A: 115}
+	fill := func(r image.Rectangle) {
+		if !r.Empty() {
+			vector.FillRect(dst, float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), float32(r.Dy()), shade, false)
+		}
+	}
+	if hole.Empty() {
+		fill(outer)
+		return
+	}
+	fill(image.Rect(outer.Min.X, outer.Min.Y, outer.Max.X, hole.Min.Y))
+	fill(image.Rect(outer.Min.X, hole.Max.Y, outer.Max.X, outer.Max.Y))
+	fill(image.Rect(outer.Min.X, hole.Min.Y, hole.Min.X, hole.Max.Y))
+	fill(image.Rect(hole.Max.X, hole.Min.Y, outer.Max.X, hole.Max.Y))
 }

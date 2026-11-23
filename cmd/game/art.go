@@ -252,16 +252,15 @@ func (g *game) microSurface(f *view.Frame, id ids.ID) ids.ID {
 	if t, ok := f.ThingByID(id); ok {
 		id = t.Space
 	}
-	if s, ok := f.SpaceByID(id); ok && !s.Extent.Empty() && g.art.atlas.Visible(g.visuals[id], render.Micro) {
+	if s, ok := f.SpaceByID(id); ok && !s.Extent.Empty() {
 		return id
 	}
 	return ids.Nil
 }
 
 // artFocus es la superficie que se ve de cerca (Nil: la casa). De cerca, lo
-// seguido manda: se ve su superficie y, mientras está en una sin vista de
-// cerca (trepando una pata), la casa; al llegar a otra con vista de cerca se
-// vuelve a ella.
+// seguido manda: cualquier superficie con extensión (incluidas patas,
+// respaldos, pasacables y bolsillo del sofá) mantiene la vista micro.
 func (g *game) artFocus(f *view.Frame) ids.ID {
 	if g.art.focus.IsNil() {
 		return ids.Nil
@@ -465,6 +464,19 @@ func (g *game) artMouse() {
 			if pixel.In(r) {
 				if i < len(g.panelActivities) {
 					g.sel = g.panelActivities[i]
+				}
+				return
+			}
+		}
+		for i, r := range a.layout.ExpMembers {
+			if pixel.In(r) {
+				if i < len(g.panelExpMembers) {
+					id := g.panelExpMembers[i]
+					g.sel = id
+					if g.follow != id {
+						g.stopFollowing()
+						g.toggleFollow()
+					}
 				}
 				return
 			}

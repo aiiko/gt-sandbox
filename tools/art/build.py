@@ -21,6 +21,7 @@ import floors  # noqa: E402
 import giantess  # noqa: E402
 import macro  # noqa: E402
 import micro  # noqa: E402
+import oficios  # noqa: E402
 import seats  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
@@ -40,6 +41,7 @@ def build(out):
     sprites.main(out, BASE)
     ui.main(sprites.save)
     vida.main(out)
+    oficios.main(out)
 
 
 def pixels(path):

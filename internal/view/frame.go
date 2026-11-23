@@ -66,16 +66,31 @@ type Space struct {
 	Needs    []Need `json:"needs,omitempty"`
 }
 
-// Colony resume el estado de una colonia (despensa y obra del refugio) para
+// Expedition resume una expedición activa de la colonia para la interfaz.
+type Expedition struct {
+	ID       ids.ID   `json:"id"`
+	Target   ids.ID   `json:"target"`
+	Name     string   `json:"name,omitempty"`
+	Phase    string   `json:"phase"`
+	Guide    ids.ID   `json:"guide,omitempty"`
+	Members  []ids.ID `json:"members,omitempty"`
+	Reason   string   `json:"reason,omitempty"`
+	Findings int      `json:"findings,omitempty"`
+}
+
+// Colony resume el estado de una colonia (despensa, obra y expedición) para
 // la interfaz de partida.
 type Colony struct {
-	ID       ids.ID `json:"id"`
-	Name     string `json:"name,omitempty"`
-	Space    ids.ID `json:"space"`
-	Portions int32  `json:"portions"`
-	Goal     int32  `json:"goal"` // meta de porciones (Stock * miembros vivos)
-	Members  int    `json:"members"`
-	Site     *Site  `json:"site,omitempty"`
+	ID          ids.ID      `json:"id"`
+	Name        string      `json:"name,omitempty"`
+	Space       ids.ID      `json:"space"`
+	Portions    int32       `json:"portions"`
+	Goal        int32       `json:"goal"` // meta de porciones (Stock * miembros vivos)
+	Members     int         `json:"members"`
+	Site        *Site       `json:"site,omitempty"`
+	Expedition  *Expedition `json:"expedition,omitempty"`
+	Stranded    int         `json:"stranded,omitempty"`
+	NoExpReason string      `json:"no_exp_reason,omitempty"`
 }
 
 // Site es el avance de la obra del refugio auxiliar de una colonia.
@@ -121,9 +136,21 @@ type Thing struct {
 	// Remains es la causa ("hand", "foot", "object") si son los restos de un
 	// aplastado. Alarmed: un agente percibió una amenaza y todavía no huye o
 	// huye; Trapped: no encontró salida.
-	Remains string `json:"remains,omitempty"`
-	Alarmed bool   `json:"alarmed,omitempty"`
-	Trapped bool   `json:"trapped,omitempty"`
+	Remains       string `json:"remains,omitempty"`
+	Alarmed       bool   `json:"alarmed,omitempty"`
+	Trapped       bool   `json:"trapped,omitempty"`
+	Role          string `json:"role,omitempty"`
+	Why           string `json:"why,omitempty"`
+	Rations       int32  `json:"rations,omitempty"`
+	Stranded      bool   `json:"stranded,omitempty"`
+	NearestRefuge string `json:"nearest_refuge,omitempty"`
+}
+
+// ExpeditionMark es un hito o pista de expedición para el miniplano en micro.
+type ExpeditionMark struct {
+	ID        ids.ID     `json:"id"`
+	Pos       units.Vec3 `json:"pos"`
+	Confirmed bool       `json:"confirmed,omitempty"`
 }
 
 // Footprint es la próxima pisada prevista de quien camina: centro en el
@@ -212,6 +239,8 @@ type Frame struct {
 	Steps []Step `json:"steps,omitempty"`
 	// Colonies resume el estado de cada colonia (despensa y refugio).
 	Colonies []Colony `json:"colonies,omitempty"`
+	// Marks son pistas vistas y destinos confirmados para el miniplano en micro.
+	Marks []ExpeditionMark `json:"marks,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -339,6 +368,17 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if b, ok := ecs.Get[colony.BuildSite](r).Get(id); ok {
 			t.Built = b.Done
 		}
+		if m, ok := ecs.Get[colony.Member](r).Get(id); ok {
+			t.Role = m.Role
+			t.Why = colony.JobReason(w, id)
+		}
+		if pr, ok := ecs.Get[colony.Provisions](r).Get(id); ok {
+			t.Rations = pr.Rations
+		}
+		t.Stranded = ecs.Get[colony.Stranded](r).Has(id)
+		if t.Stranded || t.Activity == colony.ExpeditionActionName {
+			t.NearestRefuge = nearestShelterName(r, g, names, l.Space, p.Pos)
+		}
 		if m, ok := remains.Get(id); ok {
 			t.Remains = m.Source
 		}
@@ -391,6 +431,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		colSites[b.Colony] = &Site{ID: id, Name: names(id), Space: sp, Delivered: b.Delivered, Required: b.Required, Done: b.Done}
 	})
 	portions := ecs.Get[ai.Portions](r)
+	strandedStore := ecs.Get[colony.Stranded](r)
 	ecs.Get[colony.Colony](r).Each(func(id ids.ID, col *colony.Colony) {
 		var sp ids.ID
 		if l, ok := cs.Location.Get(id); ok {
@@ -398,18 +439,68 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		p, _ := portions.Get(id)
 		m := colMembers[id]
+		strandedCount := 0
+		strandedStore.Each(func(e ids.ID, st *colony.Stranded) {
+			if st.Colony == id && !r.Despawning(e) {
+				strandedCount++
+			}
+		})
+		var expView *Expedition
+		if expID, exp := colony.ActiveExpedition(w, id); exp != nil {
+			var mems []ids.ID
+			for _, em := range exp.Members {
+				if !em.Returned && !em.Stranded {
+					mems = append(mems, em.Entity)
+				}
+			}
+			expView = &Expedition{
+				ID: expID, Target: exp.Target, Name: names(exp.Target),
+				Phase: string(exp.Phase), Guide: exp.Guide, Members: mems,
+				Reason: exp.Reason, Findings: len(exp.Findings),
+			}
+		}
 		f.Colonies = append(f.Colonies, Colony{
 			ID: id, Name: names(id), Space: sp,
 			Portions: p.Left, Goal: col.Stock * int32(m), Members: m,
-			Site: colSites[id],
+			Site: colSites[id], Expedition: expView, Stranded: strandedCount,
+			NoExpReason: colony.NoExpeditionReason(w, id),
 		})
+	})
+	ecs.Get[colony.ExpeditionTarget](r).Each(func(id ids.ID, t *colony.ExpeditionTarget) {
+		if r.Despawning(id) {
+			return
+		}
+		if p, ok := pose(id); ok {
+			f.Marks = append(f.Marks, ExpeditionMark{ID: id, Pos: p.Pos, Confirmed: t.Visited})
+		}
 	})
 	byID := func(a, b ids.ID) int { return cmp.Compare(a, b) }
 	slices.SortFunc(f.Things, func(a, b Thing) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Portals, func(a, b Portal) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Contacts, func(a, b Contact) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Colonies, func(a, b Colony) int { return byID(a.ID, b.ID) })
+	slices.SortFunc(f.Marks, func(a, b ExpeditionMark) int { return byID(a.ID, b.ID) })
 	return f
+}
+
+func nearestShelterName(r *ecs.Registry, g space.Graph, names func(ids.ID) string, sp ids.ID, pos units.Vec3) string {
+	var bestName string
+	var bestD int64
+	found := false
+	ecs.Get[crush.Shelter](r).Each(func(id ids.ID, _ *crush.Shelter) {
+		if r.Despawning(id) {
+			return
+		}
+		wp, _, err := g.WorldPose(id)
+		if err != nil {
+			return
+		}
+		d := pos.XY().DistSq(wp.XY())
+		if !found || d < bestD {
+			bestName, bestD, found = names(id), d, true
+		}
+	})
+	return bestName
 }
 
 func (c *Capturer) grid(id ids.ID, g *nav.Grid) *Grid {

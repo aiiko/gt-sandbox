@@ -76,8 +76,15 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 	if def <= 0 {
 		return nil
 	}
+	hasRoles := HasRoles(c.W, m.Colony)
+	if hasRoles && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony) {
+		return nil // ya hay comida suficiente en acarreos para cubrir el faltante
+	}
 	locs := comp.Of(r).Location
-	var out []ai.Option
+	var spots []struct {
+		id  ids.ID
+		loc comp.Location
+	}
 	ecs.Get[SearchSpot](r).Each(func(e ids.ID, s *SearchSpot) {
 		l, ok := locs.Get(e)
 		if !ok || r.Despawning(e) || !c.Agent.Knows(e) || c.W.Tick() < s.EmptyUntil {
@@ -89,15 +96,38 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 		if knownFood(c, l) {
 			return // ya se sabe que ahí hay comida: la cola de trabajos se encarga
 		}
-		u := m.Search*def - c.Agent.DistanceCost*ai.Distance(c, l.Space, l.Pos.XY())
-		out = append(out, ai.Option{Target: e, Utility: u})
+		spots = append(spots, struct {
+			id  ids.ID
+			loc comp.Location
+		}{e, l})
 	})
+	if len(spots) == 0 {
+		return nil
+	}
+	bonus := 0.0
+	if hasRoles {
+		switch {
+		case m.Role == RoleGatherer:
+			bonus = RoleBonus
+		case len(spots) == 1 && specialistAvailable(c.W, m.Colony, RoleGatherer, c.Actor):
+			return nil // un solo punto libre y hay recolector disponible: dejárselo
+		}
+	}
+	out := make([]ai.Option, 0, len(spots))
+	for _, s := range spots {
+		u := m.Search*def + bonus - c.Agent.DistanceCost*ai.Distance(c, s.loc.Space, s.loc.Pos.XY())
+		out = append(out, ai.Option{Target: s.id, Utility: u})
+	}
 	return out
 }
 
 func (Search) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
-	return m.Search * Deficit(c.W, m.Colony)
+	u := m.Search * Deficit(c.W, m.Colony)
+	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer {
+		u += RoleBonus
+	}
+	return u
 }
 
 func (Search) Start(c *ai.Ctx, d *ai.Doing) bool {

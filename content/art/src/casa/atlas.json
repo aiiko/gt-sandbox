@@ -1122,7 +1122,20 @@
         "hidden": true
       },
       "micro": {
-        "hidden": true
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "climb/micro_tile.png"
+            ]
+          }
+        }
       }
     },
     "pass": {
@@ -1680,6 +1693,108 @@
             "frame_ticks": 1,
             "frames": [
               "refuge_site/micro_built.png"
+            ]
+          }
+        }
+      }
+    },
+    "cable_duct": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "cable_duct/micro_tile.png"
+            ]
+          }
+        }
+      }
+    },
+    "sofa_pocket": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          0,
+          0
+        ],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "sofa_pocket/micro_tile.png"
+            ]
+          }
+        }
+      }
+    },
+    "threshold_refuge": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          22,
+          24
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "threshold_refuge/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "lookout_post": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          12,
+          19
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "lookout_post/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "expedition_marker": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          10,
+          15
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "expedition_marker/micro_idle.png"
             ]
           }
         }

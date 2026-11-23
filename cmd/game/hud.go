@@ -131,6 +131,16 @@ var activities = map[string][2]string{
 	"observe":          {"Mira a los tinies", "mirar a los tinies"},
 	"share":            {"Comparte migajas", "compartir migajas"},
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
+	"watch":            {"Vigila el paso", "vigilar el paso"},
+	"eat_ration":       {"Come una ración", "comer una ración"},
+	"expedition":       {"En expedición", "salir de expedición"},
+}
+
+var roleLabels = map[string]string{
+	colony.RoleGatherer: "Recolector",
+	colony.RolePorter:   "Porteador",
+	colony.RoleBuilder:  "Constructor",
+	colony.RoleLookout:  "Vigía",
 }
 
 // remainsCause dice qué aplastó a quien dejó unos restos.
@@ -250,6 +260,44 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 	if t, ok := f.ThingByID(id); ok {
 		if text := g.lifeText(*t, carrying); text != "" {
 			c.Activity = text
+		}
+		if t.Stranded {
+			c.Activity = "Varado · busca volver al nido"
+		}
+		if lbl := roleLabels[t.Role]; lbl != "" && cause == "" {
+			c.Name = c.Name + " · " + lbl
+		}
+		if t.Why != "" && cause == "" {
+			c.Activity += " · " + t.Why
+		}
+		if t.Rations > 0 && cause == "" && carrying == "" {
+			c.Carrying = fmt.Sprintf("Lleva %d ración", t.Rations)
+			if t.Rations > 1 {
+				c.Carrying = fmt.Sprintf("Lleva %d raciones", t.Rations)
+			}
+		}
+		if t.NearestRefuge != "" && cause == "" && c.Dest == "" {
+			c.Dest = "Refugio cercano: " + capital(t.NearestRefuge)
+		}
+		// Si integra la expedición activa, mostrar objetivo, fase y compañeros.
+		if cause == "" && len(f.Colonies) > 0 && f.Colonies[0].Expedition != nil {
+			exp := f.Colonies[0].Expedition
+			if slices.Contains(exp.Members, id) {
+				var mates []string
+				for _, m := range exp.Members {
+					if m != id {
+						mates = append(mates, capital(g.display(m)))
+					}
+				}
+				info := fmt.Sprintf("Exp: %s (%s)", capital(exp.Name), exp.Phase)
+				if exp.Reason != "" {
+					info += " · " + exp.Reason
+				}
+				if len(mates) > 0 {
+					info += " · con " + strings.Join(mates, ", ")
+				}
+				c.Dest = info
+			}
 		}
 	}
 	if cause != "" {
@@ -636,6 +684,12 @@ func shortActivity(t view.Thing) string {
 		return "Conversa"
 	case "explore":
 		return "Explora"
+	case "watch":
+		return "Vigila"
+	case "expedition":
+		return "Expedición"
+	case "eat_ration":
+		return "Ración"
 	}
 	return "Libre"
 }
@@ -645,11 +699,39 @@ func (g *game) colonyPanel(f *view.Frame) *ui.ColonyPanel {
 	if len(f.Colonies) > 0 {
 		col := f.Colonies[0]
 		cp.Portions, cp.Goal = col.Portions, col.Goal
+		cp.NoExpReason, cp.Stranded = col.NoExpReason, col.Stranded
 		if col.Site != nil {
 			cp.Site = &ui.SiteProgress{
 				Delivered: col.Site.Delivered,
 				Required:  col.Site.Required,
 				Done:      col.Site.Done,
+			}
+		}
+		g.panelExpMembers = g.panelExpMembers[:0]
+		if col.Expedition != nil {
+			phase := map[string]string{
+				"gathering": "convoca",
+				"traveling": "en camino",
+				"surveying": "reconoce",
+				"returning": "vuelve",
+			}[col.Expedition.Phase]
+			if phase == "" {
+				phase = col.Expedition.Phase
+			}
+			cp.Expedition = fmt.Sprintf("Exp: %s · %s (%d)", capital(col.Expedition.Name), phase, len(col.Expedition.Members))
+			if col.Expedition.Reason != "" {
+				cp.Expedition += " · " + col.Expedition.Reason
+			}
+			for _, m := range col.Expedition.Members {
+				place := ""
+				if sp := spaceOf(f, m); !sp.IsNil() {
+					place = g.display(sp)
+				}
+				cp.ExpMembers = append(cp.ExpMembers, ui.ExpMemberRow{
+					Name:  capital(g.display(m)),
+					Place: place,
+				})
+				g.panelExpMembers = append(g.panelExpMembers, m)
 			}
 		}
 	}

@@ -236,13 +236,23 @@ type SiteProgress struct {
 	Done      bool
 }
 
+// ExpMemberRow es un integrante de la expedición activa en la pestaña Colonia.
+type ExpMemberRow struct {
+	Name  string
+	Place string
+}
+
 // ColonyPanel es el contenido de la pestaña Colonia.
 type ColonyPanel struct {
-	Portions   int32
-	Goal       int32
-	Site       *SiteProgress
-	Activities []ActivityCount
-	Tinies     []TinyRow
+	Portions    int32
+	Goal        int32
+	Site        *SiteProgress
+	Expedition  string         // resumen de la expedición activa ("" si no hay)
+	ExpMembers  []ExpMemberRow // integrantes clicables de la expedición
+	NoExpReason string         // qué impide partir cuando no hay expedición
+	Stranded    int            // tinies varados en regreso individual
+	Activities  []ActivityCount
+	Tinies      []TinyRow
 }
 
 // GiantessPanel es el contenido de la pestaña Giantess.
@@ -309,6 +319,7 @@ type Layout struct {
 	Tabs            [3]image.Rectangle // pestañas Crónica, Colonia, Giantess
 	Story           []image.Rectangle  // una por entrada de Panel.Chronicle
 	Activities      []image.Rectangle  // una por entrada de Panel.Colony.Activities
+	ExpMembers      []image.Rectangle  // una por integrante de Panel.Colony.ExpMembers
 	Tinies          []image.Rectangle  // una por entrada de Panel.Colony.Tinies
 	PanelScrollUp   image.Rectangle
 	PanelScrollDown image.Rectangle
@@ -721,6 +732,36 @@ func (h HUD) drawColonyTab(dst *ebiten.Image, lay *Layout, body image.Rectangle)
 		}
 		drawProgressBar(dst, x, y, w, "Refugio", txt, val, false)
 		y += 14
+	}
+
+	// Expedición activa, integrantes clicables, motivo que impide partir o varados (propuesta, 18.5 y 18.7).
+	if col.Expedition != "" {
+		DrawText(dst, Fit(col.Expedition, w), x, y, Turquoise)
+		y += LineHeight
+		if len(col.ExpMembers) > 0 {
+			lay.ExpMembers = make([]image.Rectangle, len(col.ExpMembers))
+			for i, em := range col.ExpMembers {
+				if y+LineHeight > body.Max.Y-40 {
+					break
+				}
+				rr := image.Rect(x, y, x+w, y+LineHeight)
+				label := "· " + em.Name
+				if em.Place != "" {
+					label += " (" + em.Place + ")"
+				}
+				DrawText(dst, Fit(label, w), x+2, y, Plum)
+				lay.ExpMembers[i] = rr
+				y += LineHeight
+			}
+		}
+	} else if col.NoExpReason != "" {
+		DrawText(dst, Fit("Sin salida: "+col.NoExpReason, w), x, y, PlumSoft)
+		y += LineHeight
+	}
+	if col.Stranded > 0 {
+		txt := fmt.Sprintf("Varados: %d", col.Stranded)
+		DrawText(dst, Fit(txt, w), x, y, Amber)
+		y += LineHeight
 	}
 
 	// Resumen de actividades (clic elige un tiny de esa actividad).

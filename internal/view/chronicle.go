@@ -436,8 +436,11 @@ func (k chronicler) entry(event world.Event) (StoryEntry, bool) {
 	case ai.Hesitated, encounter.Observed, encounter.Shared,
 		encounter.PalmWithdrawn, encounter.Skipped:
 		e.Level, e.Kind = LevelMilestone, KindEncounter
-	case colony.RefugeBuilt:
+	case colony.RefugeBuilt, colony.ExpeditionDeparted, colony.ExpeditionReported,
+		colony.ExpeditionCompleted, colony.StrandedReturned:
 		e.Level, e.Kind = LevelMilestone, KindColony
+	case colony.LookoutWarned, colony.ExpeditionStranded:
+		e.Level, e.Kind = LevelMilestone, KindDanger
 	case ai.Explored:
 		e.plural = "%d tinies exploran " + k.name(ev.Space) + "."
 	case space.EntityReparented:

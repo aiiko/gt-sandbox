@@ -3,7 +3,7 @@
   "seed": 42,
   "atlas": "../art/casa.json",
   "ticks": 1600,
-  "notes": "Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py).",
+  "notes": "Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py). Oficios y expediciones: oficios flexibles, puesto de vigía, mirador del respaldo, pasacables del zócalo, refugio del umbral y bolsillo del sofá (tools/scenarios/oficios.py).",
   "entities": [
     {
       "ref": "house",
@@ -994,6 +994,366 @@
       }
     },
     {
+      "ref": "cable_duct",
+      "visual": "cable_duct",
+      "spawn": {
+        "name": "pasacables del zócalo",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 200000,
+              "y": 40000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 5900000,
+            "y": 250000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "..........",
+              ".........."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_shelter",
+      "spawn": {
+        "name": "cobertura del zócalo",
+        "location": {
+          "space": "$cable_duct",
+          "pos": {
+            "x": 100000,
+            "y": 20000,
+            "z": 0
+          }
+        },
+        "components": {
+          "shelter": {
+            "strength": 500,
+            "radius": 110000
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_bedroom",
+      "spawn": {
+        "name": "boca del pasacables (dormitorio)",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 2950000,
+                "y": 270000
+              }
+            },
+            "b": {
+              "space": "$cable_duct",
+              "pos": {
+                "x": 10000,
+                "y": 20000
+              }
+            },
+            "cost": 50000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_living",
+      "spawn": {
+        "name": "boca del pasacables (living)",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$cable_duct",
+              "pos": {
+                "x": 190000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$living",
+              "pos": {
+                "x": 50000,
+                "y": 270000
+              }
+            },
+            "cost": 0,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "threshold_refuge",
+      "visual": "threshold_refuge",
+      "spawn": {
+        "name": "refugio del umbral",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 150000,
+            "y": 270000,
+            "z": 0
+          }
+        },
+        "components": {
+          "shelter": {
+            "strength": 500,
+            "radius": 60000
+          },
+          "landmark": {
+            "range": 1000000
+          },
+          "offers": [
+            {
+              "action": "rest",
+              "scale": "tiny",
+              "effects": [
+                {
+                  "need": "energy",
+                  "amount": 300
+                }
+              ],
+              "duration": 100
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "sofa_pocket",
+      "visual": "sofa_pocket",
+      "spawn": {
+        "name": "bolsillo del sofá",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 120000,
+              "y": 80000
+            }
+          }
+        },
+        "location": {
+          "space": "$sofa",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "......",
+              "......",
+              "......",
+              "......"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "pocket_shelter",
+      "spawn": {
+        "name": "abrigo del bolsillo",
+        "location": {
+          "space": "$sofa_pocket",
+          "pos": {
+            "x": 60000,
+            "y": 40000,
+            "z": 0
+          }
+        },
+        "components": {
+          "shelter": {
+            "strength": 500,
+            "radius": 80000
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_pocket_entry",
+      "spawn": {
+        "name": "abertura del bolsillo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sofa",
+              "pos": {
+                "x": 50000,
+                "y": 10000
+              }
+            },
+            "b": {
+              "space": "$sofa_pocket",
+              "pos": {
+                "x": 60000,
+                "y": 70000
+              }
+            },
+            "cost": 0,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "lookout_leg",
+      "visual": "lookout_post",
+      "spawn": {
+        "name": "puesto de vigía",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1400000,
+            "y": 950000,
+            "z": 0
+          }
+        },
+        "components": {
+          "lookout_post": {
+            "colony": "$nest",
+            "portal": "$leg1_bottom",
+            "watch_point": {
+              "x": 1475000,
+              "y": 975000
+            },
+            "watch_radius": 120000,
+            "alert_radius": 500000
+          },
+          "landmark": {
+            "range": 1000000
+          }
+        }
+      }
+    },
+    {
+      "ref": "backrest_lookout",
+      "visual": "expedition_marker",
+      "spawn": {
+        "name": "mirador del respaldo",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 350000,
+            "y": 380000,
+            "z": 0
+          }
+        },
+        "components": {
+          "expedition_target": {
+            "colony": "$nest",
+            "clue": "$chair_bridge_top",
+            "min_members": 1,
+            "max_members": 1,
+            "extra_clues": [
+              "$chair_leg_bottom"
+            ]
+          },
+          "landmark": {
+            "range": 300000
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_target",
+      "visual": "expedition_marker",
+      "spawn": {
+        "name": "salida del pasacables",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 150000,
+            "y": 270000,
+            "z": 0
+          }
+        },
+        "components": {
+          "expedition_target": {
+            "colony": "$nest",
+            "clue": "$duct_bedroom",
+            "min_members": 2,
+            "max_members": 4,
+            "max_duration": 4800
+          },
+          "landmark": {
+            "range": 300000
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa_pocket_target",
+      "visual": "expedition_marker",
+      "spawn": {
+        "name": "bolsillo del sofá",
+        "location": {
+          "space": "$sofa_pocket",
+          "pos": {
+            "x": 60000,
+            "y": 30000,
+            "z": 0
+          }
+        },
+        "components": {
+          "expedition_target": {
+            "colony": "$nest",
+            "clue": "$sofa_leg_bottom",
+            "min_members": 2,
+            "max_members": 4,
+            "waypoints": [
+              "$threshold_refuge"
+            ],
+            "max_duration": 7200
+          },
+          "landmark": {
+            "range": 200000
+          }
+        }
+      }
+    },
+    {
       "ref": "fridge",
       "visual": "fridge",
       "object": "fridge",
@@ -1569,7 +1929,8 @@
             "y": 330000,
             "z": 0
           }
-        }
+        },
+        "components": {}
       },
       "object": "crumb"
     },
@@ -1584,7 +1945,8 @@
             "y": 350000,
             "z": 0
           }
-        }
+        },
+        "components": {}
       },
       "object": "crumb"
     },
@@ -1599,7 +1961,8 @@
             "y": 365000,
             "z": 0
           }
-        }
+        },
+        "components": {}
       },
       "object": "crumb"
     },
@@ -1838,7 +2201,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -1895,7 +2259,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -1952,7 +2317,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2009,7 +2375,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2066,7 +2433,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2123,7 +2491,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2180,7 +2549,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2237,7 +2607,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2294,7 +2665,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2351,7 +2723,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2408,7 +2781,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2465,7 +2839,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2522,7 +2897,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2579,7 +2955,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2636,7 +3013,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2693,7 +3071,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2750,7 +3129,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2807,7 +3187,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2864,7 +3245,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2921,7 +3303,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",
@@ -2978,7 +3361,8 @@
         },
         "components": {
           "mover": {
-            "speed": 20000
+            "speed": 20000,
+            "scale": "tiny"
           },
           "agent": {
             "scale": "tiny",

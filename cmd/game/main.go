@@ -269,6 +269,7 @@ type game struct {
 	panelW, panelH  int         // tamaño elegido arrastrando los bordes (0 = por defecto)
 	panelResize     uint8       // 1 = borde derecho, 2 = inferior, 3 = esquina
 	panelActivities []ids.ID    // tiny representativo de cada actividad (pestaña Colonia)
+	panelExpMembers []ids.ID    // integrantes de la expedición activa (pestaña Colonia)
 	panelTinies     []ids.ID    // IDs de la lista de tinies (pestaña Colonia)
 
 	notices        []hudNotice              // avisos vigentes arriba a la derecha (tiempo real)

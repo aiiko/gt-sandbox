@@ -7,6 +7,7 @@ import (
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
+	"gtsandbox/internal/sim/world"
 )
 
 // Leg es un tramo de una ruta dentro de un Space. Al terminar Path, si
@@ -63,6 +64,16 @@ const inf = math.MaxInt64
 
 // Route busca una ruta desde (fromSpace, from) hasta (toSpace, to).
 func (r *Router) Route(reg *ecs.Registry, fromSpace ids.ID, from units.Vec2, toSpace ids.ID, to units.Vec2) ([]Leg, error) {
+	return r.route(reg, "", nil, nil, ids.Nil, fromSpace, from, toSpace, to)
+}
+
+// RouteFor busca una ruta aplicando el filtro de escala y penalizaciones de
+// portales (si se proveyeron).
+func (r *Router) RouteFor(w *world.World, actor ids.ID, scale string, penalty PortalPenalty, fromSpace ids.ID, from units.Vec2, toSpace ids.ID, to units.Vec2) ([]Leg, error) {
+	return r.route(w.ECS(), scale, w, penalty, actor, fromSpace, from, toSpace, to)
+}
+
+func (r *Router) route(reg *ecs.Registry, scale string, w *world.World, penalty PortalPenalty, actor ids.ID, fromSpace ids.ID, from units.Vec2, toSpace ids.ID, to units.Vec2) ([]Leg, error) {
 	grids := ecs.Get[Grid](reg)
 	g := space.Of(reg)
 	if !g.IsSpace(fromSpace) || !g.IsSpace(toSpace) {
@@ -75,13 +86,17 @@ func (r *Router) Route(reg *ecs.Registry, fromSpace ids.ID, from units.Vec2, toS
 	}
 	r.nodes = append(r.nodes[:0], rnode{space: fromSpace, pos: from, partner: -1}, rnode{space: toSpace, pos: to, partner: -1})
 	ecs.Get[Portal](reg).Each(func(e ids.ID, p *Portal) {
-		if p.Disabled || !g.IsSpace(p.A.Space) || !g.IsSpace(p.B.Space) {
+		if p.Disabled || (p.Scale != "" && p.Scale != scale) || !g.IsSpace(p.A.Space) || !g.IsSpace(p.B.Space) {
 			return
+		}
+		c := int64(p.Cost)
+		if penalty != nil && w != nil {
+			c += int64(penalty(w, actor, e))
 		}
 		i := len(r.nodes)
 		r.nodes = append(r.nodes,
-			rnode{space: p.A.Space, pos: p.A.Pos, portal: e, partner: i + 1, version: p.Version, cost: int64(p.Cost)},
-			rnode{space: p.B.Space, pos: p.B.Pos, portal: e, partner: i, reverse: true, version: p.Version, cost: int64(p.Cost)})
+			rnode{space: p.A.Space, pos: p.A.Pos, portal: e, partner: i + 1, version: p.Version, cost: c},
+			rnode{space: p.B.Space, pos: p.B.Pos, portal: e, partner: i, reverse: true, version: p.Version, cost: c})
 	})
 	if r.bySpace == nil {
 		r.bySpace, r.exact = map[ids.ID][]int{}, map[[2]int]edge{}

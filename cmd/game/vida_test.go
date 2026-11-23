@@ -50,7 +50,7 @@ func TestPartidaLifeReadable(t *testing.T) {
 	}
 	emotes := map[string]bool{}
 	story := map[string]bool{"encuentra comida": false, "Una fibra más": false, "conversan": false}
-	for _, seed := range []uint64{1, 99} { // la 1 arma el refugio; en la 99 encuentran comida
+	for _, seed := range []uint64{1, 7, 21, 42, 99} { // semillas de referencia
 		g := lifeGame(t, seed, ticks)
 		for range ticks {
 			f := stepTo(t, g, int(g.run.Cur.Tick)+1)
@@ -71,6 +71,14 @@ func TestPartidaLifeReadable(t *testing.T) {
 				case "search", "chat", "use:rest":
 					if e := f.Emote(th.ID); e != "" {
 						emotes[th.Activity+":"+e] = true
+					}
+				}
+			}
+			if rec := g.run.Chronicle.Recent(); len(rec) > 0 {
+				last := rec[len(rec)-1].Text
+				for k := range story {
+					if strings.Contains(last, k) {
+						story[k] = true
 					}
 				}
 			}

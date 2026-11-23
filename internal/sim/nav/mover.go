@@ -54,14 +54,38 @@ func (s *Status) UnmarshalText(b []byte) error {
 // la ruta planificada: el primer tramo está en el Space actual de la entidad.
 type Mover struct {
 	Speed     units.Length `json:"speed"` // µm por segundo
+	Scale     string       `json:"scale,omitempty"`
 	Status    Status       `json:"status"`
 	GoalSpace ids.ID       `json:"goal_space"`
 	Goal      units.Vec2   `json:"goal"`
 	Legs      []Leg        `json:"legs,omitempty"`
+	// WaitUntil pausa brevemente el avance sin cancelar el movimiento (p. ej.
+	// al esperar ante un aviso de vigía).
+	WaitUntil clock.Tick `json:"wait_until,omitempty"`
 }
 
-// idle devuelve el mover detenido, conservando velocidad y último destino.
-func (m Mover) idle() Mover { return Mover{Speed: m.Speed, GoalSpace: m.GoalSpace, Goal: m.Goal} }
+// idle devuelve el mover detenido, conservando velocidad, escala y último destino.
+func (m Mover) idle() Mover {
+	return Mover{Speed: m.Speed, Scale: m.Scale, GoalSpace: m.GoalSpace, Goal: m.Goal}
+}
+
+// PortalPenalty devuelve un costo extra (en µm) para cruzar un portal en un
+// tick dado (p. ej. por peligro o aviso de vigía). Es un recurso del mundo.
+type PortalPenalty func(w *world.World, actor, portal ids.ID) units.Length
+
+type portalPenaltyRes struct{ fn PortalPenalty }
+
+// SetPortalPenalty registra una función de penalización de portales en w.
+func SetPortalPenalty(w *world.World, fn PortalPenalty) {
+	world.SetResource(w, &portalPenaltyRes{fn: fn})
+}
+
+func portalPenalty(w *world.World) PortalPenalty {
+	if r := world.Resource[portalPenaltyRes](w); r != nil {
+		return r.fn
+	}
+	return nil
+}
 
 // Razones de MoveFailed.
 const (
@@ -107,7 +131,7 @@ func (c MoveTo) Apply(w *world.World) error {
 	} else if !space.Of(w.ECS()).IsSpace(target) {
 		return fmt.Errorf("move_to %v: %w: %v", c.Entity, space.ErrNotSpace, target)
 	}
-	*m = Mover{Speed: m.Speed, Status: Planning, GoalSpace: target, Goal: c.Goal}
+	*m = Mover{Speed: m.Speed, Scale: m.Scale, Status: Planning, GoalSpace: target, Goal: c.Goal}
 	return nil
 }
 
@@ -234,6 +258,7 @@ func (*planner) Name() string { return "nav.plan" }
 
 func (p *planner) Run(w *world.World) {
 	locs := comp.Of(w.ECS()).Location
+	pen := portalPenalty(w)
 	budget := PlanBudget
 	ecs.Get[Mover](w.ECS()).Each(func(e ids.ID, m *Mover) {
 		if m.Status != Planning || budget == 0 {
@@ -241,7 +266,7 @@ func (p *planner) Run(w *world.World) {
 		}
 		budget--
 		loc, _ := locs.Get(e)
-		legs, err := p.router.Route(w.ECS(), loc.Space, loc.Pos.XY(), m.GoalSpace, m.Goal)
+		legs, err := p.router.RouteFor(w, e, m.Scale, pen, loc.Space, loc.Pos.XY(), m.GoalSpace, m.Goal)
 		if err != nil {
 			fail(w, e, m, reason(err))
 			return
@@ -281,7 +306,7 @@ func (mover) Run(w *world.World) {
 	locs := comp.Of(reg).Location
 	g := space.Of(reg)
 	ecs.Get[Mover](reg).Each(func(e ids.ID, m *Mover) {
-		if m.Status != Moving {
+		if m.Status != Moving || w.Tick() < m.WaitUntil {
 			return
 		}
 		loc := locs.Ptr(e)

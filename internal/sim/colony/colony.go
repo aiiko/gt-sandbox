@@ -35,14 +35,19 @@ type Colony struct {
 	Stock int32 `json:"stock,omitempty"`
 }
 
-// Member es el componente "member" de un tiny: a qué colonia pertenece y
-// cuánto le gusta salir a buscar cuando no tiene nada mejor (utilidad).
+// Member es el componente "member" de un tiny: a qué colonia pertenece,
+// cuánto le gusta salir a buscar cuando no tiene nada mejor (utilidad),
+// su oficio preferido (Role) y su inclinación por la aventura (Adventure).
 type Member struct {
 	Colony ids.ID  `json:"colony"`
 	Forage float64 `json:"forage,omitempty"`
 	// Search es la utilidad de revisar un punto de búsqueda con la despensa
 	// vacía (se escala por Deficit). Ver la acción Search.
 	Search float64 `json:"search,omitempty"`
+	// Role es el oficio preferido: "", "gatherer", "porter", "builder", "lookout".
+	Role string `json:"role,omitempty"`
+	// Adventure es la inclinación por participar en expediciones [0, 1].
+	Adventure float64 `json:"adventure,omitempty"`
 }
 
 // Food marca algo que la colonia junta (componente "food"). Al guardarlo
@@ -80,11 +85,11 @@ func (share) Run(w *world.World) {
 			continue
 		}
 		m, ok := members.Get(n.Entity)
-		if !ok || !r.Alive(n.Target) || r.Despawning(n.Target) {
+		if !ok || !r.Alive(n.Target) || r.Despawning(n.Target) || inExpeditionField(w, n.Entity) {
 			continue
 		}
 		members.Each(func(e ids.ID, o *Member) {
-			if a := agents.Ptr(e); a != nil && o.Colony == m.Colony && e != n.Entity && !r.Despawning(e) {
+			if a := agents.Ptr(e); a != nil && o.Colony == m.Colony && e != n.Entity && !r.Despawning(e) && !inExpeditionField(w, e) {
 				ai.Learn(w, a, e, n.Target)
 			}
 		})
@@ -204,10 +209,14 @@ func Install(w *world.World) error {
 		}
 	}
 	w.AddInvariant("colony", check)
+	registerRoles(w)
 	return errors.Join(
 		registerSearch(w),
 		registerBuild(w),
 		registerGather(w),
+		registerLookout(w),
+		registerProvisions(w),
+		registerExpeditions(w),
 		world.RegisterEvent[Stored](w),
 		world.RegisterEvent[MemberLost](w),
 		world.RegisterEvent[DangerExpired](w),
@@ -221,7 +230,9 @@ func Install(w *world.World) error {
 }
 
 // Actions son las acciones de la colonia, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{Forage{}, Search{}, Chat{}} }
+func Actions() []ai.Action {
+	return []ai.Action{Forage{}, Search{}, Chat{}, Watch{}, EatRation{}, ExpeditionAction{}}
+}
 
 func register[T any](r *ecs.Registry, name string) error {
 	_, err := ecs.Register[T](r, name)

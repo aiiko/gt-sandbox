@@ -1,0 +1,426 @@
+{
+  "name": "duct_detour_and_giantess_door",
+  "seed": 18,
+  "ticks": 1800,
+  "notes": "M53 (propuesta 18.8.4): con la puerta sin peligro el tiny va al living por door1. Cuando una zona de peligro cubre door1, el regreso usa cable_duct, mientras la giantess (scale=giantess) sigue cruzando por door1.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 1000000,
+              "y": 1000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 50000,
+            "version": 0,
+            "rows": [
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "...................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "living",
+      "spawn": {
+        "name": "living",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 1000000,
+              "y": 1000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 1000000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 50000,
+            "version": 0,
+            "rows": [
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "....................",
+              "...................."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "cable_duct",
+      "spawn": {
+        "name": "pasacables",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 40000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 950000,
+            "y": 150000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "door1",
+      "spawn": {
+        "name": "door1",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 950000,
+                "y": 500000
+              }
+            },
+            "b": {
+              "space": "$living",
+              "pos": {
+                "x": 50000,
+                "y": 500000
+              }
+            },
+            "cost": 0,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_a",
+      "spawn": {
+        "name": "duct_a",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 950000,
+                "y": 170000
+              }
+            },
+            "b": {
+              "space": "$cable_duct",
+              "pos": {
+                "x": 10000,
+                "y": 20000
+              }
+            },
+            "cost": 50000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "duct_b",
+      "spawn": {
+        "name": "duct_b",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$cable_duct",
+              "pos": {
+                "x": 90000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$living",
+              "pos": {
+                "x": 50000,
+                "y": 170000
+              }
+            },
+            "cost": 0,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "t",
+      "spawn": {
+        "name": "explorador",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 750000,
+            "y": 500000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 0
+        },
+        "components": {
+          "mover": {
+            "speed": 40000,
+            "scale": "tiny"
+          },
+          "agent": {
+            "scale": "tiny"
+          }
+        }
+      }
+    },
+    {
+      "ref": "g",
+      "spawn": {
+        "name": "giantess",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 500000,
+            "y": 170000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 100000,
+          "height": 1700000,
+          "mass": 60
+        },
+        "components": {
+          "mover": {
+            "speed": 500000,
+            "scale": "giantess"
+          },
+          "agent": {
+            "scale": "giantess"
+          }
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 1,
+      "kind": "move_to",
+      "data": {
+        "entity": "$t",
+        "space": "$living",
+        "goal": {
+          "x": 200000,
+          "y": 500000
+        }
+      }
+    },
+    {
+      "tick": 1,
+      "kind": "move_to",
+      "data": {
+        "entity": "$g",
+        "space": "$living",
+        "goal": {
+          "x": 200000,
+          "y": 170000
+        }
+      }
+    },
+    {
+      "tick": 300,
+      "kind": "spawn",
+      "data": {
+        "name": "door_danger",
+        "components": {
+          "danger": {
+            "scale": "tiny",
+            "space": "$living",
+            "center": {
+              "x": 50000,
+              "y": 500000
+            },
+            "radius": 100000,
+            "until": 1800
+          }
+        }
+      }
+    },
+    {
+      "tick": 310,
+      "kind": "move_to",
+      "data": {
+        "entity": "$t",
+        "space": "$bedroom",
+        "goal": {
+          "x": 750000,
+          "y": 500000
+        }
+      }
+    }
+  ],
+  "expect": [
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$t",
+        "from": "$bedroom",
+        "to": "$living"
+      },
+      "by": 280
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$t",
+        "from": "$living",
+        "to": "$cable_duct"
+      },
+      "after": 300
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$t",
+        "from": "$cable_duct",
+        "to": "$bedroom"
+      },
+      "after": 300
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$g",
+        "from": "$bedroom",
+        "to": "$living"
+      }
+    },
+    {
+      "no_event": "entity_reparented",
+      "match": {
+        "entity": "$g",
+        "to": "$cable_duct"
+      }
+    },
+    {
+      "no_event": "command_rejected"
+    }
+  ]
+}

@@ -90,10 +90,11 @@ func TestWheelZoomSteps(t *testing.T) {
 	}
 }
 
-// Siguiendo de cerca a un tiny que pasa a una superficie sin vista de cerca
-// (trepa una pata), la vista pasa a la casa centrada en él, y vuelve a la
-// de cerca cuando llega a otra que la tiene.
-func TestFollowLeavesMicroSurface(t *testing.T) {
+// Siguiendo de cerca a un tiny que trepa una pata o un respaldo, la vista
+// permanece en micro sobre el tramo vertical con su vista básica, el tiny se
+// dibuja en su altura real y al llegar a otra superficie sigue en micro
+// (propuesta, 18.7).
+func TestFollowStaysInMicroOnClimb(t *testing.T) {
 	g := artGame(t, randomBase)
 	f := g.run.Cur
 	climber, desk := ids.Nil, ids.Nil
@@ -114,27 +115,35 @@ func TestFollowLeavesMicroSurface(t *testing.T) {
 	if climber.IsNil() || desk.IsNil() {
 		t.Fatal("ningún tiny trepó una pata")
 	}
+	th, _ := f.ThingByID(climber)
+	climbSpace := th.Space
 	g.art.focus, g.sel = desk, climber
 	g.toggleFollow()
-	if got := g.artFocus(f); !got.IsNil() {
-		t.Fatalf("trepando: vista de cerca de %s", g.name(got))
+	if got := g.artFocus(f); got != climbSpace {
+		t.Fatalf("trepando: se esperaba vista micro de %s, dio %s", g.name(climbSpace), g.name(got))
 	}
 	if !g.followsInView(f) || g.art.focus.IsNil() {
 		t.Fatal("la cámara dejó de acompañar al tiny o se olvidó de la vista de cerca")
 	}
-	th, _ := f.ThingByID(climber)
-	flat, _ := render.FlattenClimbs(f, g.visuals).ThingByID(climber)
 	proj := g.cam.Project(g.anchor(f), g.w, g.h)
-	if x, y := proj.ToScreen(flat.Pose.Pos); x != float32(g.w)/2 || y != float32(g.h)/2 {
-		t.Fatalf("el tiny no está en el centro: %v,%v", x, y)
+	if x, y := proj.ToScreen(th.Pose.Pos); x != float32(g.w)/2 || y != float32(g.h)/2 {
+		t.Fatalf("el tiny no está en el centro en micro: %v,%v", x, y)
 	}
-	if flat.Pose.Pos.Y == th.Pose.Pos.Y {
-		t.Fatal("en macro el tiny sigue corrido en la pata")
+	scene := g.art.atlas.Arrange(f, proj, g.visuals, render.Micro, climbSpace, g.sel, g.follow)
+	if scene.Clip(climbSpace) == "" {
+		t.Fatal("la pata enfocada en micro no se dibujó")
 	}
-	for i := 0; i < 2000 && g.microSurface(g.run.Cur, climber).IsNil(); i++ {
+	if clip := scene.Clip(climber); clip == "" {
+		t.Fatal("el tiny seguido no se dibujó en la vista micro de la pata")
+	}
+	for i := 0; i < 2000; i++ {
 		g.run.StepOnce()
+		if cur, ok := g.run.Cur.ThingByID(climber); ok && cur.Space != climbSpace {
+			if g.artFocus(g.run.Cur) != cur.Space {
+				t.Fatalf("al pasar a %s el foco quedó en %s", g.name(cur.Space), g.name(g.artFocus(g.run.Cur)))
+			}
+			return
+		}
 	}
-	if s := g.microSurface(g.run.Cur, climber); s.IsNil() || g.artFocus(g.run.Cur) != s {
-		t.Fatalf("al llegar arriba no volvió a la vista de cerca (%s)", g.name(g.artFocus(g.run.Cur)))
-	}
+	t.Fatal("el tiny no salió de la pata")
 }

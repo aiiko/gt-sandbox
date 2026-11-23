@@ -216,6 +216,10 @@ func (g *game) minimap(f *view.Frame, focus ids.ID) *ui.Minimap {
 	if len(mm.Rooms) == 0 {
 		return nil
 	}
+	for _, mk := range f.Marks {
+		mx, my := norm(mk.Pos.X, mk.Pos.Y)
+		mm.Pins = append(mm.Pins, ui.MinimapPin{X: mx, Y: my, Confirmed: mk.Confirmed})
+	}
 	if sp, ok := f.SpaceByID(focus); ok {
 		mm.HasFocus = true
 		mm.FX, mm.FY = norm(sp.Pose.Pos.X, sp.Pose.Pos.Y)

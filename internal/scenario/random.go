@@ -181,6 +181,9 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 	if err := randomLife(out.Entities[len(rest):], out.Entities, strings.TrimPrefix(colony, "$"), rnd); err != nil {
 		return nil, err
 	}
+	if err := randomTrades(out.Entities[len(rest):], out.Entities, rnd); err != nil {
+		return nil, err
+	}
 	out.Random = nil
 	return &out, nil
 }
@@ -237,6 +240,55 @@ func randomLife(tinies, entities []EntitySpec, nest string, rnd *rng.Stream) err
 			return err
 		}
 		entities[i].Spawn = raw
+	}
+	return nil
+}
+
+// randomTrades sortea oficios iniciales (mezcla equilibrada con generalistas)
+// e inclinación por la aventura independiente, solo cuando la partida incluye
+// destinos de expedición o puestos de vigía (activación por contenido).
+func randomTrades(tinies, entities []EntitySpec, rnd *rng.Stream) error {
+	hasAdventureMap := false
+	for _, e := range entities {
+		if strings.Contains(string(e.Spawn), `"expedition_target"`) || strings.Contains(string(e.Spawn), `"lookout_post"`) {
+			hasAdventureMap = true
+			break
+		}
+	}
+	if !hasAdventureMap {
+		return nil
+	}
+	roles := []string{"gatherer", "porter", "builder", "lookout", "", ""}
+	for i, e := range tinies {
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		m, _ := c["member"].(map[string]any)
+		if m == nil {
+			continue
+		}
+		if i < 4 {
+			m["role"] = roles[i]
+		} else {
+			m["role"] = roles[rnd.IntN(len(roles))]
+		}
+		if rnd.Float64() < 0.6 {
+			m["adventure"] = round2(0.4 + 0.5*rnd.Float64())
+		} else {
+			m["adventure"] = 0.0
+		}
+		if mv, _ := c["mover"].(map[string]any); mv != nil {
+			if _, has := mv["scale"]; !has {
+				mv["scale"] = "tiny"
+			}
+		}
+		raw, err := json.Marshal(spawn)
+		if err != nil {
+			return err
+		}
+		tinies[i].Spawn = raw
 	}
 	return nil
 }
