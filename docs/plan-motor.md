@@ -39,8 +39,8 @@ Los cambios salen de comparar la propuesta con lo que el motor hace hoy:
 **Hambre y cansancio que interrumpen.** Se verifica con escenarios que `use:eat` le gane a `work` con la histéresis actual cuando el hambre baja de ~300, y que `rest` haga lo mismo con la energía. Si la curva no alcanza, el ajuste es de contenido (`weights` o `amount`), no del selector.
 *Por qué:* con `d(v)` cuadrática, comer desde 300 vale ~0,33 y un acarreo 0,2 + prioridad; la regla de inercia (0,15) deja un margen fino. Medirlo antes de tocar código evita cambiar reglas que sostienen la aceptación de los slices anteriores.
 
-**Alternativa al nido.** Si `eat` falla (portal cerrado), el nido queda en `avoid` 30 s y el selector ya ofrece las migajas y galletas conocidas. Si no hay ninguna, el tiny espera: en un refugio de su Space si hay uno a menos de `FleeRange`, y si no, quieto donde está.
-*Por qué:* la propuesta pide buscar «una alternativa conocida y accesible» y no insistir con la ruta cerrada; los reintentos y las ofertas existentes ya lo hacen. Solo falta la espera segura, que reutiliza la búsqueda de refugios de `escape`.
+**Alternativa al nido.** Si `eat` falla (portal cerrado), el nido queda en `avoid` 30 s y el selector ya ofrece las migajas y galletas conocidas. Si no hay ninguna, el tiny espera quieto donde está hasta que el nido vuelve a ser una opción. (Esperar en un refugio cercano quedó fuera de la entrega: la huida ya lleva al refugio ante una amenaza.)
+*Por qué:* la propuesta pide buscar «una alternativa conocida y accesible» y no insistir con la ruta cerrada; los reintentos y las ofertas existentes ya lo hacen. No hizo falta código nuevo.
 
 **Cierre.** `tiny_returns_to_eat` (el hambre corta un acarreo, la carga queda en el piso, come y consume una porción del depósito), `tiny_rests_at_nest` (la energía sube) y `nest_unreachable_eats_crumb` (con la pata del escritorio cerrada, come una migaja conocida y no reintenta el nido antes de 30 s). Cambia el formato de `colony`: `HashVersion` y `SnapshotSchema`.
 
