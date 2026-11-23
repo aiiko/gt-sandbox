@@ -216,7 +216,7 @@ const appTitle = "gt-sandbox"
 // simulación solo recibe el número.
 func randomSeed() uint64 { return uint64(time.Now().UnixNano())%999_999 + 1 }
 
-func (*app) Layout(_, _ int) (int, int) { return render.CanvasWidth, render.CanvasHeight }
+func (*app) Layout(w, h int) (int, int) { return canvasLayout(w, h) }
 
 func (a *app) Update() error {
 	if a.g != nil {
@@ -226,6 +226,7 @@ func (a *app) Update() error {
 		}
 		return a.g.Update()
 	}
+	windowKeys()
 	before := a.menu.sel
 	act := a.menu.handle(a.input())
 	if a.sound != nil {
@@ -315,7 +316,7 @@ func (a *app) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Image, d
 		return
 	}
 	a.defaultTransform = defaultTransform
-	a.viewport = render.PixelViewport(screen.Bounds())
+	a.viewport = render.PixelViewport(screen.Bounds(), canvas.Bounds().Size())
 	a.viewport.Blit(screen, canvas)
 }
 

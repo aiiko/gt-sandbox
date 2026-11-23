@@ -199,6 +199,10 @@ func TestArtSampleUsesSameEntitiesAtBothScales(t *testing.T) {
 		{render.Macro, image.Pt(228, 134), image.Pt(235, 137)},
 		{render.Micro, image.Pt(135, 85), image.Pt(229, 214)},
 	} {
+		// Las posiciones son las del lienzo mínimo; el de la ventana de
+		// 1031×601 (516×301) lo rodea centrado.
+		shift := image.Pt((g.w-render.MinCanvasWidth)/2, (g.h-render.MinCanvasHeight)/2)
+		layout.cup, layout.tiny = layout.cup.Add(shift), layout.tiny.Add(shift)
 		proj := g.cam.Project(g.anchor(f), g.w, g.h)
 		scene := g.art.atlas.Arrange(f, proj, g.visuals, layout.scale, g.art.focus)
 		if got := scene.Pick(layout.cup); cup.IsNil() || got != cup {

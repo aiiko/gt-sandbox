@@ -21,16 +21,26 @@ func TestPixelViewport(t *testing.T) {
 	for _, tc := range []struct {
 		w, h   int
 		factor int
-		origin image.Point
+		canvas image.Point
 	}{
-		{480, 270, 1, image.Pt(0, 0)},
-		{960, 540, 2, image.Pt(0, 0)},
-		{1920, 1080, 4, image.Pt(0, 0)},
-		{1031, 601, 2, image.Pt(35, 30)},
+		{480, 270, 1, image.Pt(480, 270)},
+		{960, 540, 2, image.Pt(480, 270)},
+		{1920, 1080, 4, image.Pt(480, 270)},
+		{1920, 1009, 3, image.Pt(640, 337)}, // ventana maximizada en 1080p
+		{1031, 601, 2, image.Pt(516, 301)},
+		{2560, 1440, 5, image.Pt(512, 288)},
+		{400, 200, 1, image.Pt(400, 200)},
 	} {
-		v := PixelViewport(image.Rect(0, 0, tc.w, tc.h))
-		if v.Factor != tc.factor || v.Rect.Min != tc.origin {
-			t.Fatalf("%dx%d: viewport %+v", tc.w, tc.h, v)
+		cw, ch := CanvasSize(tc.w, tc.h)
+		v := PixelViewport(image.Rect(0, 0, tc.w, tc.h), image.Pt(cw, ch))
+		if v.Factor != tc.factor || image.Pt(cw, ch) != tc.canvas {
+			t.Fatalf("%dx%d: lienzo %dx%d, viewport %+v", tc.w, tc.h, cw, ch, v)
+		}
+		// Sin bandas: el lienzo cubre la pantalla y se pasa menos de un
+		// píxel del lienzo, repartido entre los dos lados.
+		screen := image.Rect(0, 0, tc.w, tc.h)
+		if !screen.In(v.Rect) || v.Rect.Dx()-tc.w >= tc.factor || v.Rect.Dy()-tc.h >= tc.factor || v.Rect.Min.X > 0 || v.Rect.Min.Y > 0 {
+			t.Fatalf("%dx%d: el lienzo no llena la pantalla: %+v", tc.w, tc.h, v)
 		}
 		point := image.Pt(123, 95)
 		at := v.Rect.Min.Add(point.Mul(tc.factor))
@@ -107,9 +117,9 @@ func TestSpritePickingUsesSnappedInterpolatedFrame(t *testing.T) {
 		Things: []view.Thing{{ID: 2, Space: 1, Name: "Otro nombre", Mover: &view.Mover{Status: "moving"}}},
 	}
 	f := view.Interpolate(previous, current, 0.5)
-	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
 	s := a.Arrange(f, proj, map[ids.ID]string{1: "table", 2: "person"}, Micro, 1)
-	v := PixelViewport(image.Rect(0, 0, 1031, 601))
+	v := PixelViewport(image.Rect(0, 0, 960, 540), image.Pt(MinCanvasWidth, MinCanvasHeight))
 	at := v.Rect.Min.Add(image.Pt(241, 135).Mul(v.Factor))
 	point, _ := v.Point(float64(at.X), float64(at.Y))
 	if got := s.Pick(point); got != 2 {
@@ -142,7 +152,7 @@ func TestMacroOcclusionUsesSupportAndForeground(t *testing.T) {
 		},
 	}
 	visuals := map[ids.ID]string{1: "room", 2: "thing", 3: "thing", 4: "thing"}
-	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
 	behind := a.Arrange(frame, proj, visuals, Macro, ids.Nil)
 	if id := behind.Pick(image.Pt(239, 134)); id != 3 {
 		t.Fatalf("detrás de la mesa y su ocupante: se eligió %s", id)
@@ -236,7 +246,7 @@ func TestMicroCargoAndContactLayers(t *testing.T) {
 		},
 		Contacts: []view.Contact{{A: 1, B: 2}},
 	}
-	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
 	visuals := map[ids.ID]string{1: "surface", 2: "surface", 3: "carrier", 4: "surface", 5: "nest"}
 	s := a.Arrange(f, proj, visuals, Micro, 1)
 	for point, want := range map[image.Point]ids.ID{
@@ -267,7 +277,7 @@ func TestTiledFloorCoversExtent(t *testing.T) {
 	}
 	f := &view.Frame{Spaces: []view.Space{{ID: 1, Extent: units.Rect{Max: units.V2(2500, 2500)}}}}
 	// 0,003 px/µm: cada baldosa de 3 px cubre 1 mm; la extensión, 2,5 mm (7,5 px).
-	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, CanvasWidth, CanvasHeight)
+	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
 	s := a.Arrange(f, proj, map[ids.ID]string{1: "floor"}, Micro, 1)
 	var union image.Rectangle
 	n := 0

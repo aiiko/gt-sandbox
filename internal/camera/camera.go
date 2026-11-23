@@ -9,6 +9,7 @@
 package camera
 
 import (
+	"image"
 	"math"
 
 	"gtsandbox/internal/core/fixedmath"
@@ -51,6 +52,11 @@ func (c Camera) Project(anchor fixedmath.Transform, w, h int) Projector {
 // Radians convierte un Angle a radianes (solo para dibujar).
 func Radians(a fixedmath.Angle) float64 {
 	return float64(a.Norm()) * 2 * math.Pi / float64(fixedmath.Turn)
+}
+
+// Bounds es el rectángulo de pantalla para el que se armó el Projector.
+func (p Projector) Bounds() image.Rectangle {
+	return image.Rect(0, 0, int(math.Round(2*p.hw)), int(math.Round(2*p.hh)))
 }
 
 // Local lleva un punto de mundo a coordenadas del ancla (µm, float).

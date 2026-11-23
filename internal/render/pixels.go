@@ -19,25 +19,42 @@ import (
 	"gtsandbox/internal/view"
 )
 
+// El lienzo de la escena llena la pantalla: mide pantalla / factor, con el
+// factor entero más grande que deja al menos MinCanvasWidth × MinCanvasHeight
+// píxeles lógicos (propuesta, 17.2).
 const (
-	CanvasWidth  = 480
-	CanvasHeight = 270
+	MinCanvasWidth  = 480
+	MinCanvasHeight = 270
 )
 
+// CanvasFactor es el factor de escena para una pantalla física de w × h
+// píxeles: el mayor entero que deja un lienzo de al menos el mínimo (1 si la
+// pantalla es más chica).
+func CanvasFactor(w, h int) int {
+	return max(1, min(w/MinCanvasWidth, h/MinCanvasHeight))
+}
+
+// CanvasSize es el tamaño del lienzo que llena una pantalla física de w × h,
+// redondeado hacia arriba para que no queden bandas.
+func CanvasSize(w, h int) (int, int) {
+	n := CanvasFactor(w, h)
+	return (max(w, 1) + n - 1) / n, (max(h, 1) + n - 1) / n
+}
+
 // Viewport es el rectángulo del lienzo en píxeles físicos de la pantalla final.
+// Puede exceder la pantalla en menos de un píxel del lienzo por lado.
 type Viewport struct {
 	Rect   image.Rectangle
 	Factor int
 }
 
-func PixelViewport(screen image.Rectangle) Viewport {
-	factor := min(screen.Dx()/CanvasWidth, screen.Dy()/CanvasHeight)
-	if factor < 1 {
-		return Viewport{}
-	}
-	w, h := CanvasWidth*factor, CanvasHeight*factor
-	origin := screen.Min.Add(image.Pt((screen.Dx()-w)/2, (screen.Dy()-h)/2))
-	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(image.Pt(w, h))}, Factor: factor}
+// PixelViewport centra un lienzo de tamaño canvas sobre la pantalla, escalado
+// por el factor de escena de esa pantalla.
+func PixelViewport(screen image.Rectangle, canvas image.Point) Viewport {
+	factor := CanvasFactor(screen.Dx(), screen.Dy())
+	size := canvas.Mul(factor)
+	origin := screen.Min.Add(screen.Size().Sub(size).Div(2))
+	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(size)}, Factor: factor}
 }
 
 // Point convierte un punto físico al píxel del lienzo que aparece debajo.
@@ -130,6 +147,7 @@ func (s ArtScene) Lift(id ids.ID) int { return s.lifts[id] }
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
 func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, scale Scale, focus ids.ID, featured ...ids.ID) ArtScene {
+	canvas := p.Bounds()
 	scope := map[ids.ID]bool{focus: true}
 	for _, c := range f.Contacts {
 		if c.A == focus {
@@ -226,7 +244,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 		addFrame := func(src image.Rectangle, layer int) {
 			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
-			if dest.Overlaps(image.Rect(0, 0, CanvasWidth, CanvasHeight)) {
+			if dest.Overlaps(canvas) {
 				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height,
 					alpha: lk.alpha, ghost: lk.ghost, space: isSpace})
 			}
@@ -389,7 +407,7 @@ func (s *ArtScene) tiles(f *view.Frame, p camera.Projector, sp view.Space, v var
 	stepX := units.Length(math.Round(float64(w) / perMeter * float64(units.Meter)))
 	stepY := units.Length(math.Round(float64(h) / perMeter * float64(units.Meter)))
 	t := sp.Pose.Transform()
-	canvas := image.Rect(0, 0, CanvasWidth, CanvasHeight)
+	canvas := p.Bounds()
 	px := func(l units.Length) int { return int(math.Round(float64(l) * perMeter / float64(units.Meter))) }
 	for y := sp.Extent.Min.Y; y < sp.Extent.Max.Y; y += stepY {
 		for x := sp.Extent.Min.X; x < sp.Extent.Max.X; x += stepX {

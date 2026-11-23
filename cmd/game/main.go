@@ -20,6 +20,8 @@
 // historia | G/P/C/R/L overlays (grillas, portales, contactos, rutas,
 // nombres) | Esc soltar. En pixel art, F3 superpone los overlays técnicos y,
 // en una partida del menú, Esc sin nada elegido pregunta si volver al menú.
+// F11 alterna pantalla completa; sin -size la ventana se recuerda entre
+// sesiones (window.go).
 package main
 
 import (
@@ -88,7 +90,10 @@ func main() {
 		}
 		return
 	}
-	width, height := render.CanvasWidth*2, render.CanvasHeight*2
+	// Sin -size, la ventana se abre maximizada y se recuerda entre sesiones;
+	// las capturas y las mediciones usan 960×540 para ser reproducibles.
+	width, height := render.MinCanvasWidth*2, render.MinCanvasHeight*2
+	remember := *size == "" && *shot == "" && *bench == 0
 	if *size != "" {
 		widthText, heightText, _ := strings.Cut(*size, "x")
 		w, widthErr := strconv.Atoi(widthText)
@@ -114,8 +119,8 @@ func main() {
 			fmt.Fprintln(os.Stderr, "game: sin sonido:", err)
 		}
 		a.sound = mixer
-		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
-		run(a, appTitle, width, height, fail)
+		ebiten.SetWindowSizeLimits(render.MinCanvasWidth, render.MinCanvasHeight, -1, -1)
+		run(a, appTitle, width, height, remember, fail)
 		return
 	}
 
@@ -167,9 +172,9 @@ func main() {
 		}
 		g.art.cut, g.art.debug = *reducedMotion, *debugArt
 		app = pixelGame{g}
-		ebiten.SetWindowSizeLimits(render.CanvasWidth, render.CanvasHeight, -1, -1)
+		ebiten.SetWindowSizeLimits(render.MinCanvasWidth, render.MinCanvasHeight, -1, -1)
 	} else if *size == "" {
-		width, height = 1280, 800
+		width, height, remember = 1280, 800, false
 	}
 	if *shot == "" && *bench == 0 {
 		mixer, err := loadSound(audioManifest, *volume, *mute)
@@ -178,16 +183,33 @@ func main() {
 		}
 		g.sound = mixer
 	}
-	run(app, appTitle+" | "+g.title, width, height, fail)
+	run(app, appTitle+" | "+g.title, width, height, remember, fail)
 }
 
-// run abre la ventana y corre el juego hasta que termina.
-func run(app ebiten.Game, title string, width, height int, fail func(error)) {
+// run abre la ventana y corre el juego hasta que termina. Con remember, la
+// ventana arranca como quedó la última vez (la primera, maximizada) y se
+// guarda al salir.
+func run(app ebiten.Game, title string, width, height int, remember bool, fail func(error)) {
 	ebiten.SetWindowTitle(title)
-	ebiten.SetWindowSize(width, height)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	deviceScale = func() float64 {
+		if m := ebiten.Monitor(); m != nil {
+			return m.DeviceScaleFactor()
+		}
+		return 1
+	}
+	ebiten.SetWindowSize(width, height)
+	if path := windowFile(); remember && path != "" {
+		window = &windowTracker{path: path}
+		window.open()
+	}
 	if err := ebiten.RunGame(app); err != nil {
 		fail(err)
+	}
+	if window != nil {
+		if err := window.save(); err != nil {
+			fmt.Fprintln(os.Stderr, "game: no se pudo guardar la ventana:", err)
+		}
 	}
 }
 
@@ -448,6 +470,7 @@ func (g *game) Update() error {
 		}
 		return ebiten.Termination
 	}
+	windowKeys()
 	if g.w == 0 {
 		return nil // todavía sin Layout
 	}

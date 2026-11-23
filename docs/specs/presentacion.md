@@ -2,7 +2,9 @@
 
 `go run ./cmd/game` abre el menú principal (ver [visor](visor.md#menú-principal-y-modos)); con `-scenario tests/scenarios/una_manana_en_la_casa.json` (o con solo `-follow`, `-micro` o `-shot`) abre «Una mañana en la casa» directo en la interfaz de partida. La prueba de arte del escritorio de M12 se abre con `-scenario tests/scenarios/muestra_pixel_art.json`. Ambas usan el mismo runner, simulación y cámara del visor. El escenario asigna un `visual` por entidad. El código de presentación vincula ese identificador al ID generacional que resolvió el escenario. El vínculo queda fuera del estado de simulación, el hash y los snapshots.
 
-La presentación dibuja en un lienzo de 480 × 270 píxeles. Usa el mayor múltiplo entero disponible en la pantalla final y centra el lienzo con bandas. El cursor usa la transformación inversa de ese mismo rectángulo. Las bandas quedan fuera de la escena.
+La presentación dibuja en un lienzo que llena la ventana ([propuesta, 17.2](../propuesta.md#172-un-lienzo-que-llena-la-ventana)). El factor de escena *N* es el mayor entero que deja al menos 480 × 270 píxeles lógicos (`render.CanvasFactor`, sobre los píxeles físicos), y el lienzo mide `pantalla / N` redondeado hacia arriba (`render.CanvasSize`, que usa el `Layout` del juego y del menú). `render.PixelViewport` lo centra sin bandas, excediendo la pantalla en menos de un píxel del lienzo por lado. El cursor usa la transformación inversa de ese mismo rectángulo. A 960 × 540 y a 1920 × 1080 el lienzo sigue midiendo 480 × 270, así que las capturas de referencia no cambian.
+
+Sin `-size`, `-shot` ni `-bench`, la ventana arranca como quedó en la sesión anterior (`ventana.json` en la carpeta de configuración del usuario, `os.UserConfigDir()/gt-sandbox`). La primera vez arranca maximizada, con el mayor múltiplo de 480 × 270 que entra en el 90 % del monitor como tamaño restaurado. `F11` alterna pantalla completa. Es configuración de presentación y no entra en las partidas.
 
 Cada variante se dibuja a escala nativa con el pivote en la posición de mundo interpolada, redondeada a un píxel del lienzo. El hit test recorre los sprites visibles en orden inverso al dibujo y consulta el alfa del mismo cuadro dibujado. El modo de prueba usa densidades de 16 px por 40 cm en macro y 16 px por 10 mm en micro.
 
@@ -124,7 +126,7 @@ Ver `docs/specs/crush.md#presentación-m27`. Los restos usan el visual `remains`
 
 ## Interfaz de partida
 
-Con un escenario que declara `atlas` (la casa) se abre la interfaz de partida. El juego arma un `ui.HUD` a partir del `Frame` (`g.partida`), y `HUD.Draw` lo dibuja sobre el lienzo de 480 × 270 con paneles marfil de esquinas redondeadas, borde ciruela y la fuente pixel de 12 px de `bitmapfont`, que trae tildes y eñes.
+Con un escenario que declara `atlas` (la casa) se abre la interfaz de partida. El juego arma un `ui.HUD` a partir del `Frame` (`g.partida`), y `HUD.Draw` lo dibuja sobre el lienzo de la escena (480 × 270 como mínimo) con paneles marfil de esquinas redondeadas, borde ciruela y la fuente pixel de 12 px de `bitmapfont`, que trae tildes y eñes.
 
 - **Barra superior.** Muestra el reloj de la casa: la mañana empieza a las 7:00 y cada segundo simulado es un minuto. La velocidad se lee por forma (dos barras en pausa, uno a tres triángulos) y por texto. El centro lleva el rótulo jerárquico de ubicación: en micro, el Space que contiene a la superficie y la superficie («Dormitorio › Escritorio», «Giantess › Palma»); en macro, la casa y la habitación de lo seguido o elegido. A la derecha aparece «Siguiendo a …» cuando hay seguimiento.
 - **Barra inferior.** Muestra los controles como teclas con su rótulo: `Espacio` pausa, `1-3` velocidad, `T` seguir, `F` encuadre general y `H` historia. El rótulo de `Tab` es su destino: la superficie a la que lleva («Escritorio», «Dormitorio», «Palma») o «Casa» de cerca. `F3` (debug) funciona pero no entra en la barra.

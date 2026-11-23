@@ -1067,6 +1067,8 @@ La escena deja de tener tamaño fijo. Se elige un **factor de escena** entero *N
 - **Factor por defecto.** Se usa el mayor *N* que permite ver la casa entera con margen para los paneles. Con la densidad del punto 17.3, eso da *N* = 2 en 1080p y *N* = 3 en 1440p.
 - **Capturas reproducibles.** `-shot`, `capturas.json` y `-bench` fijan el tamaño con `-size`, así que las referencias siguen siendo deterministas. Las capturas de referencia se regeneran una vez.
 
+**Estado.** Implementado. Mientras no cambie la densidad (17.3), el mínimo de 480 × 270 deja la casa entera, así que *N* sale de ese mínimo: 3 en una ventana maximizada de 1080p (lienzo de 640 × 337) y 4 a pantalla completa (480 × 270, como antes). A 960 × 540 el lienzo no cambia y las capturas de referencia siguen iguales. [Presentación](specs/presentacion.md)
+
 ### 17.3. Más detalle en la vista macro
 
 La casa es una sola zona, así que macro puede trabajar con el doble de píxeles. La densidad pasa de **16 px por 40 cm a 16 px por 20 cm (80 px/m)**. La casa ocupa 720 × 240 px, una proporción adecuada para un lienzo de 960 × 540 con paneles. La giantess de pie pasa a medir unos 62 × 76 px, suficiente para que se le lean la cara, las manos y lo que lleva. Micro mantiene 16 px por 10 mm.

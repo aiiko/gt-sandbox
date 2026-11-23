@@ -82,14 +82,13 @@ func (g *game) enableArt(path string) error {
 	return nil
 }
 
-func (pixelGame) Layout(_, _ int) (int, int) {
-	return render.CanvasWidth, render.CanvasHeight
-}
+// Layout da el lienzo que llena la ventana (propuesta, 17.2).
+func (pixelGame) Layout(w, h int) (int, int) { return canvasLayout(w, h) }
 
 func (g pixelGame) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Image, defaultTransform ebiten.GeoM) {
 	a := g.art
 	a.defaultTransform = defaultTransform
-	a.viewport = render.PixelViewport(screen.Bounds())
+	a.viewport = render.PixelViewport(screen.Bounds(), canvas.Bounds().Size())
 	a.viewport.Blit(screen, canvas)
 	if g.wantsShot() {
 		bounds := screen.Bounds()
@@ -215,12 +214,14 @@ func (g *game) startArtFade() {
 }
 
 func (a *artMode) blend(dst *ebiten.Image) {
-	if a.presented == nil {
-		a.presented = ebiten.NewImage(render.CanvasWidth, render.CanvasHeight)
+	size := dst.Bounds().Size()
+	if a.presented == nil || a.presented.Bounds().Size() != size {
+		// la ventana cambió de tamaño: el fundido en curso ya no calza
+		a.presented, a.fadeFrom, a.fade = ebiten.NewImage(size.X, size.Y), nil, 0
 	}
 	if a.pendingFade {
 		if a.fadeFrom == nil {
-			a.fadeFrom = ebiten.NewImage(render.CanvasWidth, render.CanvasHeight)
+			a.fadeFrom = ebiten.NewImage(size.X, size.Y)
 		}
 		a.fadeFrom.Clear()
 		a.fadeFrom.DrawImage(a.presented, nil)
@@ -242,7 +243,7 @@ func (g *game) artMouse() {
 	}
 	x, y := a.defaultTransform.Apply(ebiten.CursorPositionF())
 	pixel, ok := a.viewport.Point(x, y)
-	top, foot := artHeader, render.CanvasHeight-artFooter
+	top, foot := artHeader, g.h-artFooter
 	if g.artAtlas != "" {
 		top, foot = a.layout.Top, a.layout.Foot
 	}
@@ -327,21 +328,23 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		return
 	}
 	ink := color.NRGBA{R: 25, G: 30, B: 38, A: 255}
-	vector.FillRect(dst, 0, 0, render.CanvasWidth, artHeader, ink, false)
-	vector.FillRect(dst, 0, render.CanvasHeight-artFooter, render.CanvasWidth, artFooter, ink, false)
+	W, H := dst.Bounds().Dx(), dst.Bounds().Dy()
+	vector.FillRect(dst, 0, 0, float32(W), artHeader, ink, false)
+	vector.FillRect(dst, 0, float32(H-artFooter), float32(W), artFooter, ink, false)
 	ebitenutil.DebugPrintAt(dst, "PRUEBA DE ARTE / "+string(scale), 10, 4)
 	if name := g.name(g.sel); !g.sel.IsNil() {
 		ebitenutil.DebugPrintAt(dst, name, 250, 4)
 	}
-	ebitenutil.DebugPrintAt(dst, "Tab  Escala     Clic  Elegir     T  Seguir     F  Centrar", 10, render.CanvasHeight-19)
+	ebitenutil.DebugPrintAt(dst, "Tab  Escala     Clic  Elegir     T  Seguir     F  Centrar", 10, H-19)
 }
 
 // drawExitPrompt pregunta, sobre la partida en pausa, si volver al menú.
 func drawExitPrompt(dst *ebiten.Image) {
 	const title, keys = "¿Volver al menú principal?", "Enter  Volver      Esc  Seguir jugando"
+	W, H := dst.Bounds().Dx(), dst.Bounds().Dy()
 	w := max(ui.TextWidth(title), ui.TextWidth(keys)) + 20
-	x, y := (render.CanvasWidth-w)/2, render.CanvasHeight/2-20
+	x, y := (W-w)/2, H/2-20
 	ui.Box(dst, image.Rect(x, y, x+w, y+40), ui.Ivory)
-	ui.DrawText(dst, title, (render.CanvasWidth-ui.TextWidth(title))/2, y+5, ui.Plum)
-	ui.DrawText(dst, keys, (render.CanvasWidth-ui.TextWidth(keys))/2, y+21, ui.PlumSoft)
+	ui.DrawText(dst, title, (W-ui.TextWidth(title))/2, y+5, ui.Plum)
+	ui.DrawText(dst, keys, (W-ui.TextWidth(keys))/2, y+21, ui.PlumSoft)
 }
