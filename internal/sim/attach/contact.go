@@ -212,7 +212,7 @@ func surfacesTouch(a, b surf) (units.Rect, bool) {
 	if a.root != b.root {
 		return units.Rect{}, false
 	}
-	if !a.s.Body.IsNil() && a.s.Body == b.s.Body && !a.s.SelfContact && !b.s.SelfContact {
+	if !a.s.Body.IsNil() && a.s.Body == b.s.Body && !(a.s.SelfContact && b.s.SelfContact) {
 		return units.Rect{}, false
 	}
 	tol := max(a.s.tolerance(), b.s.tolerance())

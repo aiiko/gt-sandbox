@@ -22,6 +22,27 @@ import (
 	"gtsandbox/internal/sim/world"
 )
 
+// SupportNote recuerda un apoyo observado entre una zona corporal y una
+// superficie de la casa junto con la pose en que se abrió (propuesta 19.4).
+type SupportNote struct {
+	BodySpace  ids.ID     `json:"body_space"`
+	HouseSpace ids.ID     `json:"house_space"`
+	Pose       string     `json:"pose,omitempty"`
+	Tick       clock.Tick `json:"tick"`
+}
+
+// SupportDiscovered se emite cuando un expedicionario o explorador comunica a
+// la colonia un apoyo útil descubierto en el cuerpo de la giantess.
+type SupportDiscovered struct {
+	Colony     ids.ID `json:"colony"`
+	Entity     ids.ID `json:"entity"`
+	BodySpace  ids.ID `json:"body_space"`
+	HouseSpace ids.ID `json:"house_space"`
+	Pose       string `json:"pose,omitempty"`
+}
+
+func (SupportDiscovered) Kind() string { return "support_discovered" }
+
 // Colony es el componente "colony" de la entidad nido. Lo que llega a menos
 // de Radius del nido se guarda en el depósito.
 type Colony struct {
@@ -33,6 +54,8 @@ type Colony struct {
 	// Stock es la meta del depósito, en porciones por miembro vivo (0 = sin
 	// meta). Ver Deficit.
 	Stock int32 `json:"stock,omitempty"`
+	// KnownSupports guarda los apoyos cuerpo↔casa reportados a la colonia.
+	KnownSupports []SupportNote `json:"known_supports,omitempty"`
 }
 
 // Member es el componente "member" de un tiny: a qué colonia pertenece,

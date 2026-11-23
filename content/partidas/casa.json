@@ -1,6 +1,6 @@
 {
   "name": "Partida libre",
-  "seed": 42,
+  "seed": 43,
   "atlas": "../art/casa.json",
   "ticks": 1600,
   "notes": "Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py). Oficios y expediciones: oficios flexibles, puesto de vigía, mirador del respaldo, pasacables del zócalo, refugio del umbral y bolsillo del sofá (tools/scenarios/oficios.py). Mapa corporal: regiones completas de la giantess, articulaciones, apoyos, futón y almohada (tools/scenarios/cuerpo.py).",
@@ -4967,7 +4967,7 @@
           "contact_surface": {
             "tolerance": 40000,
             "scale": "tiny",
-            "stable_ticks": 2,
+            "stable_ticks": 4,
             "require_still": true,
             "support_offset": -20000,
             "access": [
@@ -5225,7 +5225,7 @@
           "contact_surface": {
             "tolerance": 40000,
             "scale": "tiny",
-            "stable_ticks": 2,
+            "stable_ticks": 4,
             "require_still": true,
             "support_offset": -20000,
             "access": [
@@ -7081,7 +7081,7 @@
                 "pos": {
                   "x": -160000,
                   "y": -100000,
-                  "z": 470000
+                  "z": 950000
                 },
                 "facing": 0
               },
@@ -7094,21 +7094,17 @@
                 },
                 "facing": 0,
                 "projection": {
-                  "origin": {
-                    "x": -170000,
-                    "y": -100000,
-                    "z": 470000
-                  },
-                  "axis_u": {
-                    "x": 1000000,
+                  "anchor_a": {
+                    "x": -100000,
                     "y": 0,
-                    "z": 0
+                    "z": 500000
                   },
-                  "axis_v": {
-                    "x": 0,
-                    "y": 1000000,
-                    "z": 0
-                  }
+                  "anchor_b": {
+                    "x": -100000,
+                    "y": 0,
+                    "z": 950000
+                  },
+                  "climb": true
                 }
               },
               {
@@ -7120,21 +7116,17 @@
                 },
                 "facing": 0,
                 "projection": {
-                  "origin": {
-                    "x": 30000,
-                    "y": -100000,
-                    "z": 470000
-                  },
-                  "axis_u": {
-                    "x": 1000000,
+                  "anchor_a": {
+                    "x": 100000,
                     "y": 0,
-                    "z": 0
+                    "z": 500000
                   },
-                  "axis_v": {
-                    "x": 0,
-                    "y": 1000000,
-                    "z": 0
-                  }
+                  "anchor_b": {
+                    "x": 100000,
+                    "y": 0,
+                    "z": 950000
+                  },
+                  "climb": true
                 }
               },
               {
@@ -7148,13 +7140,13 @@
                 "projection": {
                   "anchor_a": {
                     "x": -100000,
-                    "y": 240000,
+                    "y": 0,
                     "z": 60000
                   },
                   "anchor_b": {
                     "x": -100000,
-                    "y": 240000,
-                    "z": 470000
+                    "y": 0,
+                    "z": 500000
                   },
                   "climb": true
                 }
@@ -7170,13 +7162,13 @@
                 "projection": {
                   "anchor_a": {
                     "x": 100000,
-                    "y": 240000,
+                    "y": 0,
                     "z": 60000
                   },
                   "anchor_b": {
                     "x": 100000,
-                    "y": 240000,
-                    "z": 470000
+                    "y": 0,
+                    "z": 500000
                   },
                   "climb": true
                 }
@@ -7185,7 +7177,7 @@
                 "part": "$body_foot_l",
                 "pos": {
                   "x": -150000,
-                  "y": 160000,
+                  "y": -80000,
                   "z": 20000
                 },
                 "facing": 0
@@ -7194,10 +7186,32 @@
                 "part": "$body_foot_r",
                 "pos": {
                   "x": 50000,
-                  "y": 160000,
+                  "y": -80000,
                   "z": 20000
                 },
                 "facing": 0
+              },
+              {
+                "part": "$body_forearm_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 300000,
+                    "y": 0,
+                    "z": 1100000
+                  },
+                  "anchor_b": {
+                    "x": 260000,
+                    "y": 0,
+                    "z": 1250000
+                  },
+                  "climb": true
+                }
               },
               {
                 "part": "$body_forearm_l",
@@ -7208,40 +7222,102 @@
                 },
                 "facing": 0,
                 "projection": {
-                  "origin": {
+                  "anchor_a": {
                     "x": -280000,
-                    "y": -60000,
-                    "z": 470000
-                  },
-                  "axis_u": {
-                    "x": 1000000,
                     "y": 0,
-                    "z": 0
+                    "z": 950000
                   },
-                  "axis_v": {
-                    "x": 0,
-                    "y": 1000000,
-                    "z": 0
-                  }
+                  "anchor_b": {
+                    "x": -260000,
+                    "y": 0,
+                    "z": 1180000
+                  },
+                  "climb": true
                 }
               },
               {
                 "part": "$body_hand_l",
                 "pos": {
-                  "x": -150000,
-                  "y": 120000,
-                  "z": 490000
+                  "x": -320000,
+                  "y": -70000,
+                  "z": 950000
                 },
                 "facing": 0
+              },
+              {
+                "part": "$body_back",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 0,
+                    "y": -100000,
+                    "z": 1040000
+                  },
+                  "anchor_b": {
+                    "x": 0,
+                    "y": -100000,
+                    "z": 1400000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_side_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -180000,
+                    "y": 0,
+                    "z": 1040000
+                  },
+                  "anchor_b": {
+                    "x": -180000,
+                    "y": 0,
+                    "z": 1380000
+                  },
+                  "climb": true
+                }
               },
               {
                 "part": "$body_head",
                 "pos": {
                   "x": -100000,
                   "y": -100000,
-                  "z": 1200000
+                  "z": 1550000
                 },
                 "facing": 0
+              },
+              {
+                "part": "$body_neck",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1420000
+                  },
+                  "anchor_b": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1550000
+                  },
+                  "climb": true
+                }
               }
             ],
             "sit": [

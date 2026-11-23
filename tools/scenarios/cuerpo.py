@@ -469,7 +469,7 @@ def body_entities(giantess_ref='$giantess', palm_ref='$palm'):
                         'grips': [{'pos': {'x': 20000, 'y': 120000}, 'radius': 50000, 'label': 'borde del calzado izquierdo'}],
                     },
                     'contact_surface': {
-                        'tolerance': 40000, 'scale': 'tiny', 'stable_ticks': 2, 'require_still': True,
+                        'tolerance': 40000, 'scale': 'tiny', 'stable_ticks': 4, 'require_still': True,
                         'support_offset': -20000,
                         'access': [{'x': 20000, 'y': 120000}],
                         'access_reach': 80000, 'body': giantess_ref,
@@ -533,7 +533,7 @@ def body_entities(giantess_ref='$giantess', palm_ref='$palm'):
                         'grips': [{'pos': {'x': 80000, 'y': 120000}, 'radius': 50000, 'label': 'borde del calzado derecho'}],
                     },
                     'contact_surface': {
-                        'tolerance': 40000, 'scale': 'tiny', 'stable_ticks': 2, 'require_still': True,
+                        'tolerance': 40000, 'scale': 'tiny', 'stable_ticks': 4, 'require_still': True,
                         'support_offset': -20000,
                         'access': [{'x': 80000, 'y': 120000}],
                         'access_reach': 80000, 'body': giantess_ref,
@@ -684,7 +684,7 @@ def with_body_map(d):
     for name, parts in list(poses.items()):
         # Quitar partes corporales viejas si se re-ejecuta el script.
         base = [p for p in parts if not p['part'].startswith('$body_')]
-        if name.startswith('sit'):
+        if name.startswith('sit') and name != 'sit_hover':
             poses[name] = base + body_pose_parts('sit')
         elif 'hand_rest' in name:
             poses[name] = base + body_pose_parts('hand_rest')
@@ -714,6 +714,7 @@ def with_body_map(d):
         ],
     }]
 
+    d['seed'] = 43
     d['notes'] = d['notes'].split(' Mapa corporal:')[0] + (
         ' Mapa corporal: regiones completas de la giantess, articulaciones, apoyos, '
         'futón y almohada (tools/scenarios/cuerpo.py).')

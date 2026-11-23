@@ -114,10 +114,13 @@ func (explore) Options(c *Ctx) []Option {
 			continue
 		}
 		// La curiosidad casual sube a una palma apoyada y baja de ella, pero
-		// no encadena recorridos internos por el cuerpo entero (eso es asunto
-		// de exploradores y expediciones; propuesta 19.4).
-		if otherSp, ok := spaces.Get(other.Space); ok && hereSp.Kind == space.Articulated && otherSp.Kind == space.Articulated {
-			continue
+		// no encadena recorridos internos por el cuerpo entero ni se lanza
+		// sobre pies/piernas sin ser explorador (eso es asunto de exploradores
+		// y expediciones; propuesta 19.4).
+		if otherSp, ok := spaces.Get(other.Space); ok && otherSp.Kind == space.Articulated {
+			if hereSp.Kind == space.Articulated || ecs.Get[attach.BodyZone](r).Has(other.Space) {
+				continue
+			}
 		}
 		u := a.curiosityFor(other.Space, c.W.Tick())
 		if u <= 0 {

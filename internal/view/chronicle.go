@@ -437,7 +437,7 @@ func (k chronicler) entry(event world.Event) (StoryEntry, bool) {
 		encounter.PalmWithdrawn, encounter.Skipped:
 		e.Level, e.Kind = LevelMilestone, KindEncounter
 	case colony.RefugeBuilt, colony.ExpeditionDeparted, colony.ExpeditionReported,
-		colony.ExpeditionCompleted, colony.StrandedReturned:
+		colony.ExpeditionCompleted, colony.StrandedReturned, colony.SupportDiscovered:
 		e.Level, e.Kind = LevelMilestone, KindColony
 	case colony.LookoutWarned, colony.ExpeditionStranded:
 		e.Level, e.Kind = LevelMilestone, KindDanger

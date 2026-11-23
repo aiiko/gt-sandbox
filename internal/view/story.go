@@ -79,6 +79,10 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.Colony
 	case colony.RationEaten:
 		return ev.Entity, ids.Nil
+	case colony.SupportDiscovered:
+		return ev.Entity, ev.BodySpace
+	case attach.EntityGripped:
+		return ev.Entity, ev.Space
 	}
 	return ids.Nil, ids.Nil
 }
@@ -157,6 +161,17 @@ func storyText(k chronicler, event world.Event) string {
 		return fmt.Sprintf("Termina la expedición hacia %s.", name(ev.Target))
 	case colony.ExpeditionStranded:
 		return fmt.Sprintf("%s quedó varado y espera para volver.", name(ev.Entity))
+	case colony.SupportDiscovered:
+		when := posePhrase(ev.Pose)
+		if when != "" {
+			return fmt.Sprintf("Desde %s se puede bajar a %s %s.", name(ev.BodySpace), name(ev.HouseSpace), when)
+		}
+		return fmt.Sprintf("Desde %s se puede bajar a %s.", name(ev.BodySpace), name(ev.HouseSpace))
+	case attach.EntityGripped:
+		if ev.Label != "" {
+			return fmt.Sprintf("%s se sujeta en %s.", name(ev.Entity), ev.Label)
+		}
+		return fmt.Sprintf("%s se sujeta en %s.", name(ev.Entity), name(ev.Space))
 	case colony.StrandedReturned:
 		return fmt.Sprintf("%s logró volver al nido.", name(ev.Entity))
 	case colony.RationEaten:
@@ -209,4 +224,21 @@ func storyText(k chronicler, event world.Event) string {
 		return ""
 	}
 	return ""
+}
+
+func posePhrase(pose string) string {
+	switch pose {
+	case "lie_down":
+		return "cuando se recuesta"
+	case "sit", "sit_hand_rest", "sit_hand_hover", "sit_set_table", "sit_hand_sofa":
+		return "cuando se sienta"
+	case "hand_rest":
+		return "cuando apoya la mano"
+	case "idle":
+		return "cuando está parada"
+	case "":
+		return ""
+	default:
+		return "en pose " + pose
+	}
 }

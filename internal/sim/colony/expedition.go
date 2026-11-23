@@ -9,6 +9,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/ai"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
@@ -99,28 +100,30 @@ type ExpMember struct {
 // Expedition es el componente "expedition" de una salida en preparación o en
 // marcha (como máximo una por colonia).
 type Expedition struct {
-	Colony      ids.ID      `json:"colony"`
-	Target      ids.ID      `json:"target"`
-	Phase       ExpPhase    `json:"phase"`
-	Guide       ids.ID      `json:"guide"`
-	Members     []ExpMember `json:"members"`
-	WaypointIdx int         `json:"waypoint_idx,omitempty"`
-	Rendezvous  ids.ID      `json:"rendezvous,omitempty"`
-	PhaseUntil  clock.Tick  `json:"phase_until,omitempty"`
-	DepartTick  clock.Tick  `json:"depart_tick,omitempty"`
-	MaxUntil    clock.Tick  `json:"max_until,omitempty"`
-	Findings    []ids.ID    `json:"findings,omitempty"`
-	Reason      string      `json:"reason,omitempty"`
+	Colony       ids.ID        `json:"colony"`
+	Target       ids.ID        `json:"target"`
+	Phase        ExpPhase      `json:"phase"`
+	Guide        ids.ID        `json:"guide"`
+	Members      []ExpMember   `json:"members"`
+	WaypointIdx  int           `json:"waypoint_idx,omitempty"`
+	Rendezvous   ids.ID        `json:"rendezvous,omitempty"`
+	PhaseUntil   clock.Tick    `json:"phase_until,omitempty"`
+	DepartTick   clock.Tick    `json:"depart_tick,omitempty"`
+	MaxUntil     clock.Tick    `json:"max_until,omitempty"`
+	Findings     []ids.ID      `json:"findings,omitempty"`
+	SupportNotes []SupportNote `json:"support_notes,omitempty"`
+	Reason       string        `json:"reason,omitempty"`
 }
 
 // Stranded es el componente "stranded" de un expedicionario que quedó aislado
 // tras cerrarse un paso: conserva sus hallazgos y provisiones, busca refugio y
 // reintenta volver al nido cuando cambia un portal o vence RetryAt.
 type Stranded struct {
-	Colony    ids.ID     `json:"colony"`
-	Findings  []ids.ID   `json:"findings,omitempty"`
-	RetryAt   clock.Tick `json:"retry_at,omitempty"`
-	PortalSig uint64     `json:"portal_sig,omitempty"`
+	Colony       ids.ID        `json:"colony"`
+	Findings     []ids.ID      `json:"findings,omitempty"`
+	SupportNotes []SupportNote `json:"support_notes,omitempty"`
+	RetryAt      clock.Tick    `json:"retry_at,omitempty"`
+	PortalSig    uint64        `json:"portal_sig,omitempty"`
 }
 
 // Eventos de expedición.
@@ -370,9 +373,33 @@ func nearEntity(w *world.World, a, b ids.ID, dist units.Length) bool {
 	return ok1 && ok2 && la.Space == lb.Space && la.Pos.XY().DistSq(lb.Pos.XY()) <= int64(dist)*int64(dist)
 }
 
+func appendUniqueNote(list []SupportNote, note SupportNote) []SupportNote {
+	for _, n := range list {
+		if n.BodySpace == note.BodySpace && n.HouseSpace == note.HouseSpace && n.Pose == note.Pose {
+			return list
+		}
+	}
+	return append(list, note)
+}
+
+func bodyPoseOf(r *ecs.Registry, sp ids.ID) string {
+	if z, ok := ecs.Get[attach.BodyZone](r).Get(sp); ok && !z.Body.IsNil() {
+		if st, ok := ecs.Get[attach.BodyState](r).Get(z.Body); ok {
+			return st.Pose
+		}
+	}
+	parent := space.Of(r).Parent(sp)
+	if !parent.IsNil() {
+		if st, ok := ecs.Get[attach.BodyState](r).Get(parent); ok {
+			return st.Pose
+		}
+	}
+	return ""
+}
+
 // reportFindings comunica los hallazgos de la expedición a toda la colonia,
 // incorporando cada dato una sola vez y publicando acarreos sobre comida viva.
-func reportFindings(w *world.World, col, reporter ids.ID, findings []ids.ID, expID ids.ID) int {
+func reportFindings(w *world.World, col, reporter ids.ID, findings []ids.ID, notes []SupportNote, expID ids.ID) int {
 	r := w.ECS()
 	agents := ecs.Get[ai.Agent](r)
 	members := ecs.Get[Member](r)
@@ -401,6 +428,22 @@ func reportFindings(w *world.World, col, reporter ids.ID, findings []ids.ID, exp
 			}
 		}
 	}
+	if colComp := ecs.Get[Colony](r).Ptr(col); colComp != nil {
+		for _, n := range notes {
+			if !r.Alive(n.BodySpace) || !r.Alive(n.HouseSpace) {
+				continue
+			}
+			before := len(colComp.KnownSupports)
+			colComp.KnownSupports = appendUniqueNote(colComp.KnownSupports, n)
+			if len(colComp.KnownSupports) > before {
+				count++
+				w.Emit(SupportDiscovered{
+					Colony: col, Entity: reporter,
+					BodySpace: n.BodySpace, HouseSpace: n.HouseSpace, Pose: n.Pose,
+				})
+			}
+		}
+	}
 	if !expID.IsNil() {
 		w.Emit(ExpeditionReported{Expedition: expID, Colony: col, Entity: reporter, Findings: count})
 	}
@@ -412,10 +455,11 @@ func markStranded(w *world.World, expID ids.ID, exp *Expedition, idx int) {
 	e := exp.Members[idx].Entity
 	exp.Members[idx].Stranded = true
 	ecs.Get[Stranded](w.ECS()).Set(e, Stranded{
-		Colony:    exp.Colony,
-		Findings:  slices.Clone(exp.Findings),
-		RetryAt:   w.Tick() + StrandedRetryTicks,
-		PortalSig: portalSignature(w),
+		Colony:       exp.Colony,
+		Findings:     slices.Clone(exp.Findings),
+		SupportNotes: slices.Clone(exp.SupportNotes),
+		RetryAt:      w.Tick() + StrandedRetryTicks,
+		PortalSig:    portalSignature(w),
 	})
 	w.Emit(ExpeditionStranded{Expedition: expID, Entity: e})
 }
@@ -446,8 +490,26 @@ func (expeditionSystem) Run(w *world.World) {
 			if x.Cause != "portal" {
 				continue
 			}
+			var note *SupportNote
+			spFrom, ok1 := ecs.Get[space.Space](r).Get(x.From)
+			spTo, ok2 := ecs.Get[space.Space](r).Get(x.To)
+			if ok1 && ok2 && (spFrom.Kind == space.Articulated) != (spTo.Kind == space.Articulated) {
+				bodySp, houseSp := x.From, x.To
+				if spTo.Kind == space.Articulated {
+					bodySp, houseSp = x.To, x.From
+				}
+				note = &SupportNote{BodySpace: bodySp, HouseSpace: houseSp, Pose: bodyPoseOf(r, bodySp), Tick: w.Tick()}
+			}
 			if _, exp, _ := expeditionOf(w, x.Entity); exp != nil && exp.Phase != ExpGathering {
 				exp.Findings = appendUniqueID(exp.Findings, x.To)
+				if note != nil {
+					exp.SupportNotes = appendUniqueNote(exp.SupportNotes, *note)
+				}
+			} else if st := strandedStore.Ptr(x.Entity); st != nil {
+				st.Findings = appendUniqueID(st.Findings, x.To)
+				if note != nil {
+					st.SupportNotes = appendUniqueNote(st.SupportNotes, *note)
+				}
 			}
 		}
 	}
@@ -666,7 +728,7 @@ func runReturning(w *world.World, id ids.ID, exp *Expedition, target *Expedition
 	for _, i := range active {
 		e := exp.Members[i].Entity
 		if nearEntity(w, e, exp.Colony, GatherRadius) {
-			reportFindings(w, exp.Colony, e, exp.Findings, id)
+			reportFindings(w, exp.Colony, e, exp.Findings, exp.SupportNotes, id)
 			returnRations(w, exp.Colony, e)
 			exp.Members[i].Returned = true
 			continue
@@ -867,6 +929,14 @@ func (ExpeditionAction) Step(c *ai.Ctx, d *ai.Doing) ai.Result {
 		}
 		switch nav.Approach(w, c.Actor, l.Space, l.Pos.XY(), &d.Moving) {
 		case nav.Failed:
+			// Si está sobre una zona corporal y un paso/articulación se cerró
+			// temporalmente, esperar en un punto de agarre mientras quede margen.
+			if onArticulatedSpace(r, c.Actor) && w.Tick() < exp.PhaseUntil {
+				if gp, ok := nearestGripLocation(r, c.Actor); ok {
+					nav.Approach(w, c.Actor, gp.Space, gp.Pos.XY(), &d.Moving)
+				}
+				return ai.Running
+			}
 			// Paso cerrado o inalcanzable: intentar regresar; si tampoco hay
 			// camino al nido, queda varado.
 			if canReachNest(w, c.Actor, exp.Colony) {
@@ -908,7 +978,7 @@ func stepStranded(w *world.World, actor ids.ID, d *ai.Doing, st *Stranded) ai.Re
 		return ai.Failed
 	}
 	if nearEntity(w, actor, st.Colony, GatherRadius) {
-		count := reportFindings(w, st.Colony, actor, st.Findings, ids.Nil)
+		count := reportFindings(w, st.Colony, actor, st.Findings, st.SupportNotes, ids.Nil)
 		returnRations(w, st.Colony, actor)
 		ecs.Get[Stranded](r).Remove(actor)
 		w.Emit(StrandedReturned{Colony: st.Colony, Entity: actor, Findings: count})
@@ -928,11 +998,41 @@ func stepStranded(w *world.World, actor ids.ID, d *ai.Doing, st *Stranded) ai.Re
 			d.Stage, d.Moving = 0, false
 		}
 	}
-	// Mientras espera, acercarse a un refugio alcanzable en su Space (si hay).
-	if shLoc, ok := nearestShelter(w, actor); ok {
+	// Mientras espera, acercarse a un punto de agarre (en el cuerpo) o a un refugio en su Space.
+	if gp, ok := nearestGripLocation(r, actor); ok {
+		nav.Approach(w, actor, gp.Space, gp.Pos.XY(), &d.Moving)
+	} else if shLoc, ok := nearestShelter(w, actor); ok {
 		nav.Approach(w, actor, shLoc.Space, shLoc.Pos.XY(), &d.Moving)
 	}
 	return ai.Running
+}
+
+func onArticulatedSpace(r *ecs.Registry, actor ids.ID) bool {
+	l, ok := comp.Of(r).Location.Get(actor)
+	if !ok {
+		return false
+	}
+	sp, ok := ecs.Get[space.Space](r).Get(l.Space)
+	return ok && sp.Kind == space.Articulated
+}
+
+func nearestGripLocation(r *ecs.Registry, actor ids.ID) (comp.Location, bool) {
+	l, ok := comp.Of(r).Location.Get(actor)
+	if !ok {
+		return comp.Location{}, false
+	}
+	z, ok := ecs.Get[attach.BodyZone](r).Get(l.Space)
+	if !ok || len(z.Grips) == 0 {
+		return comp.Location{}, false
+	}
+	best := z.Grips[0]
+	bestD := l.Pos.XY().DistSq(best.Pos)
+	for _, g := range z.Grips[1:] {
+		if d := l.Pos.XY().DistSq(g.Pos); d < bestD {
+			best, bestD = g, d
+		}
+	}
+	return comp.Location{Space: l.Space, Pos: units.V3(best.Pos.X, best.Pos.Y, 0)}, true
 }
 
 func nearestShelter(w *world.World, actor ids.ID) (comp.Location, bool) {
@@ -1047,6 +1147,7 @@ func registerExpeditions(w *world.World) error {
 		world.RegisterEvent[ExpeditionCanceled](w),
 		world.RegisterEvent[ExpeditionStranded](w),
 		world.RegisterEvent[StrandedReturned](w),
+		world.RegisterEvent[SupportDiscovered](w),
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -35}, expeditionSystem{}),
 	)
 }

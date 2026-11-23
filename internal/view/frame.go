@@ -64,6 +64,10 @@ type Space struct {
 	Step     string `json:"step,omitempty"`
 	Goal     ids.ID `json:"goal,omitempty"`
 	Needs    []Need `json:"needs,omitempty"`
+	// Climb y Occluded informan a la vista micro si este Space es una trepada
+	// de costado o si ropa/pelo ocultan al tiny (propuesta 19.5).
+	Climb    bool `json:"climb,omitempty"`
+	Occluded bool `json:"occluded,omitempty"`
 }
 
 // Expedition resume una expedición activa de la colonia para la interfaz.
@@ -144,6 +148,7 @@ type Thing struct {
 	Rations       int32  `json:"rations,omitempty"`
 	Stranded      bool   `json:"stranded,omitempty"`
 	NearestRefuge string `json:"nearest_refuge,omitempty"`
+	GripLabel     string `json:"grip_label,omitempty"`
 }
 
 // ExpeditionMark es un hito o pista de expedición para el miniplano en micro.
@@ -309,6 +314,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	agents := ecs.Get[ai.Agent](r)
 	grids := ecs.Get[nav.Grid](r)
 	surfaces := ecs.Get[attach.Surface](r)
+	zones := ecs.Get[attach.BodyZone](r)
 	seen := map[ids.ID]bool{}
 	ecs.Get[space.Space](r).Each(func(id ids.ID, sp *space.Space) {
 		p, ok := pose(id)
@@ -316,7 +322,10 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			return
 		}
 		s := Space{ID: id, Name: names(id), Kind: sp.Kind, Parent: g.Parent(id), Pose: p,
-			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos)}
+			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos), Climb: sp.IsClimb()}
+		if z, ok := zones.Get(id); ok {
+			s.Occluded = z.Occluded
+		}
 		if a, ok := agents.Get(id); ok {
 			s.Activity, s.Step = activity(r, a)
 			s.Goal, _, _ = purpose(r, id, a)
@@ -381,6 +390,9 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		if m, ok := remains.Get(id); ok {
 			t.Remains = m.Source
+		}
+		if gr, ok := ecs.Get[attach.Gripping](r).Get(id); ok {
+			t.GripLabel = gr.Label
 		}
 		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)

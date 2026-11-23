@@ -90,15 +90,24 @@ func (Scout) Options(c *ai.Ctx) []ai.Option {
 	seenSpaces := map[ids.ID]bool{l.Space: true}
 	for _, k := range c.Agent.Known {
 		p := portals.Ptr(k.Entity)
-		if p == nil || p.Disabled || r.Despawning(k.Entity) || contacts.Has(k.Entity) {
+		if p == nil || p.Disabled || r.Despawning(k.Entity) {
 			continue
 		}
+		isContact := contacts.Has(k.Entity)
 		if p.Scale != "" && p.Scale != mvScale {
 			continue
 		}
 		for _, end := range [2]nav.PortalEnd{p.A, p.B} {
 			if seenSpaces[end.Space] || !g.IsSpace(end.Space) || ai.InDanger(c.W, c.Agent.Scale, end.Space, end.Pos) {
 				continue
+			}
+			// Solo un explorador con oficio RoleScout cruza portales de contacto
+			// dinámicos hacia zonas corporales articuladas (propuesta 19.4).
+			if isContact {
+				sp, ok := ecs.Get[space.Space](r).Get(end.Space)
+				if !ok || sp.Kind != space.Articulated || m.Role != RoleScout {
+					continue
+				}
 			}
 			at, vis := colonyVisitedAt(c.W, m.Colony, end.Space)
 			base := 0.0

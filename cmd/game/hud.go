@@ -22,6 +22,7 @@ import (
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/encounter"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -86,12 +87,26 @@ func chain(f *view.Frame, s ids.ID) []ids.ID {
 
 // location es el rótulo jerárquico de ubicación. En micro, el Space que
 // contiene a la superficie enfocada y la superficie («Dormitorio ›
-// Escritorio», «Giantess › Palma»). En macro, la casa y la habitación de lo
-// seguido o elegido.
+// Escritorio», «Giantess › Palma»), o la cadena completa desde el cuerpo si
+// está anidado en una zona corporal («Giantess › Antebrazo izquierdo › Puño»).
+// En macro, la casa y la habitación de lo seguido o elegido.
 func (g *game) location(f *view.Frame, focus ids.ID) []string {
 	if s, ok := f.SpaceByID(focus); ok {
 		if s.Parent.IsNil() {
 			return []string{capital(g.display(s.ID))}
+		}
+		c := chain(f, s.ID)
+		for i, id := range c {
+			if sp, ok := f.SpaceByID(id); ok && sp.Kind == space.Body {
+				out := make([]string, 0, len(c)-i+1)
+				for _, cid := range c[i:] {
+					out = append(out, capital(g.display(cid)))
+				}
+				if t, ok := f.ThingByID(g.follow); ok && t.Space == focus && t.GripLabel != "" {
+					out = append(out, capital(t.GripLabel))
+				}
+				return out
+			}
 		}
 		return []string{capital(g.display(s.Parent)), capital(g.display(s.ID))}
 	}

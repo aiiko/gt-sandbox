@@ -458,10 +458,11 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 	}
 	if scale == Micro {
-		// Recorte de capa frontal alrededor del tiny seguido en cavidades (18.7).
-		if v := visuals[focus]; v == "cable_duct" || v == "sofa_pocket" {
-			if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
-				b := buildBackdrop(f, p, *fs, false)
+		// Recorte de capa frontal alrededor del tiny seguido en cavidades o zonas
+		// ocultas por ropa o pelo (propuesta 18.7 y 19.5).
+		if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
+			if v := visuals[focus]; v == "cable_duct" || v == "sofa_pocket" || fs.Occluded {
+				b := buildBackdrop(f, p, *fs, visuals[fs.ID] == ClimbVisual || fs.Climb)
 				for _, fid := range featured {
 					if th, ok := f.ThingByID(fid); ok && th.Space == focus {
 						sx, sy := p.ToScreen(th.Pose.Pos)
@@ -476,10 +477,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			}
 		}
 		// Superficie básica si el Space enfocado no tiene arte micro propio
-		// (patas, respaldos, pasacables, bolsillo del sofá o superficies nuevas).
+		// (patas, respaldos, pasacables, bolsillo del sofá o zonas corporales).
 		if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
 			if _, vis := visible(fs.ID); !vis {
-				out.backdrop = buildBackdrop(f, p, *fs, visuals[fs.ID] == ClimbVisual)
+				out.backdrop = buildBackdrop(f, p, *fs, visuals[fs.ID] == ClimbVisual || fs.Climb)
 				out.clips[fs.ID] = "basic"
 			}
 		}
