@@ -35,6 +35,13 @@ const (
 // seed y se quitan las expectativas: una partida no tiene veredicto. Con la
 // misma semilla, la misma partida.
 func Randomize(base *Spec, seed uint64) (*Spec, error) {
+	return RandomizeCount(base, seed, 0)
+}
+
+// RandomizeCount es como Randomize pero permite fijar la cantidad de tinies
+// cuando count > 0 (con count <= 0 sortea entre RandomMinTinies y
+// RandomMaxTinies).
+func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 	rnd := rng.NewStream(seed, "partida")
 	var (
 		molds []map[string]any
@@ -83,23 +90,33 @@ func Randomize(base *Spec, seed uint64) (*Spec, error) {
 	}
 
 	// Celdas libres cerca del nido, en orden de grilla y después barajadas.
-	var cells []units.Vec2
+	var cells, restCells []units.Vec2
 	for y := range grid.H {
 		for x := range grid.W {
 			p := grid.Center(x, y)
 			d := p.Sub(center)
-			if grid.At(x, y) == nav.Blocked || max(d.X, -d.X) > randomSpread || max(d.Y, -d.Y) > randomSpread {
+			if grid.At(x, y) == nav.Blocked {
 				continue
 			}
 			if max(d.X, -d.X) < randomNestGap && max(d.Y, -d.Y) < randomNestGap {
 				continue
 			}
+			if max(d.X, -d.X) > randomSpread || max(d.Y, -d.Y) > randomSpread {
+				restCells = append(restCells, p)
+				continue
+			}
 			cells = append(cells, p)
 		}
 	}
-	n := min(RandomMinTinies+rnd.IntN(RandomMaxTinies-RandomMinTinies+1), len(cells))
-	if n == 0 {
+	if count > len(cells) {
+		cells = append(cells, restCells...)
+	}
+	if len(cells) == 0 {
 		return nil, fmt.Errorf("scenario: no hay celdas libres cerca del nido")
+	}
+	n := count
+	if n <= 0 {
+		n = min(RandomMinTinies+rnd.IntN(RandomMaxTinies-RandomMinTinies+1), len(cells))
 	}
 	order := rnd.Perm(len(cells))
 	colors := slices.Sorted(maps.Keys(visuals))
@@ -114,7 +131,7 @@ func Randomize(base *Spec, seed uint64) (*Spec, error) {
 	for i := range n {
 		spawn := deepCopy(mold).(map[string]any)
 		spawn["name"] = fmt.Sprintf("Tiny %02d", i+1)
-		p := cells[order[i]]
+		p := cells[order[i%len(cells)]]
 		if jitter > 0 {
 			p.X += units.Length(rnd.Int64N(2*jitter+1) - jitter)
 			p.Y += units.Length(rnd.Int64N(2*jitter+1) - jitter)

@@ -56,6 +56,7 @@ const morningScenario = "tests/scenarios/una_manana_en_la_casa.json"
 func main() {
 	scen := flag.String("scenario", "", "escenario JSON a reproducir")
 	newRandom := flag.Bool("new-game", false, "empezar una partida al azar (con -seed, repetible)")
+	tinies := flag.Int("tinies", 0, "cantidad inicial de tinies para -new-game (0 = al azar)")
 	crowd := flag.Int("crowd", 0, "en vez de un escenario, n tinies caminando por un escritorio")
 	seed := flag.Uint64("seed", 0, "semilla para -crowd (por defecto 1) y -new-game (por defecto, al azar)")
 	load := flag.String("load", "", "en vez de un escenario, continuar un snapshot JSON")
@@ -97,7 +98,10 @@ func main() {
 		}
 		width, height = w, h
 	}
-	direct := *scen != "" || *load != "" || *crowd > 0 || *newRandom || *debugView ||
+	if *tinies < 0 {
+		fail(fmt.Errorf("-tinies debe ser positivo"))
+	}
+	direct := *scen != "" || *load != "" || *crowd > 0 || *newRandom || *tinies > 0 || *debugView ||
 		*shot != "" || *bench > 0 || *micro != "" || *follow != "" || *pan != ""
 
 	if !direct {
@@ -120,11 +124,11 @@ func main() {
 	}
 	var g *game
 	var err error
-	if *newRandom {
+	if *newRandom || *tinies > 0 {
 		if *seed == 0 {
 			*seed = randomSeed()
 		}
-		g, err = newRandomGame(*seed)
+		g, err = newRandomGameCount(*seed, *tinies)
 	} else {
 		g, err = newGame(*scen, *crowd, max(*seed, 1), *load)
 	}
@@ -226,6 +230,9 @@ type game struct {
 	confirmExit bool // preguntando si volver al menú
 	wasPaused   bool // pausa de antes de preguntar
 	toMenu      bool // el jugador eligió volver al menú
+
+	notices   []deathNotice // notificaciones de deceso vigentes (tiempo real)
+	noticeSeq uint64        // último pub.Seq ya procesado para notices
 }
 
 func newGame(scen string, crowd int, seed uint64, load string) (*game, error) {
@@ -476,6 +483,11 @@ func (g *game) Update() error {
 		}
 	default:
 		g.run.Advance(dt)
+	}
+	if !g.run.Paused {
+		g.updateNotices(dt)
+	} else {
+		g.updateNotices(0)
 	}
 	g.observeSound()
 	return nil

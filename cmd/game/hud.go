@@ -6,6 +6,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -17,6 +18,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/render"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -228,16 +230,110 @@ func (g *game) storyEntries() []view.StoryEntry {
 	return s[max(0, len(s)-storyShown):]
 }
 
+// deathNoticeDuration es cuánto tiempo real permanece en pantalla la
+// notificación de un deceso (independiente de x1/x4/x16), y deathNoticeMax
+// cuántas se apilan a la vez.
+const (
+	deathNoticeDuration = 10 * time.Second
+	deathNoticeMax      = 3
+)
+
+type deathNotice struct {
+	title, cause string
+	entry        view.StoryEntry
+	left         time.Duration
+}
+
+// tinyPopulation cuenta los tinies vivos en el frame.
+func tinyPopulation(f *view.Frame) int {
+	n := 0
+	for _, t := range f.Things {
+		if isTiny(t) {
+			n++
+		}
+	}
+	return n
+}
+
+// deathCause describe la causa del deceso de un evento crush.Crushed.
+func (g *game) deathCause(ev crush.Crushed) string {
+	base := remainsCause[ev.Source]
+	if ev.Source == "object" {
+		if by := g.display(ev.By); by != "" {
+			base = "Aplastado por " + by
+		}
+	}
+	if base == "" {
+		base = "Aplastado"
+	}
+	if place := g.display(ev.Space); place != "" {
+		return base + " en " + place
+	}
+	return base
+}
+
+// updateNotices descuenta dt en tiempo real de las notificaciones activas y
+// suma los decesos nuevos de g.run.Events (sin perderlos a x4/x16).
+func (g *game) updateNotices(dt time.Duration) {
+	if dt > 0 {
+		for i := range g.notices {
+			g.notices[i].left -= dt
+		}
+		g.notices = slices.DeleteFunc(g.notices, func(n deathNotice) bool { return n.left <= 0 })
+	}
+	for _, pub := range g.run.Events {
+		if pub.Seq <= g.noticeSeq {
+			continue
+		}
+		g.noticeSeq = pub.Seq
+		ev, ok := pub.Event.(crush.Crushed)
+		if !ok {
+			continue
+		}
+		who := capital(g.display(ev.Remains))
+		if who == "" {
+			who = "Un tiny"
+		}
+		dn := deathNotice{
+			title: who + " falleció",
+			cause: g.deathCause(ev),
+			entry: view.StoryEntry{Tick: pub.Tick, Actor: ev.Remains, Place: ev.Space},
+			left:  deathNoticeDuration,
+		}
+		g.notices = append([]deathNotice{dn}, g.notices...)
+		if len(g.notices) > deathNoticeMax {
+			g.notices = g.notices[:deathNoticeMax]
+		}
+	}
+}
+
+// dismissNotice cierra manualmente la notificación i.
+func (g *game) dismissNotice(i int) {
+	if i >= 0 && i < len(g.notices) {
+		g.notices = slices.Delete(g.notices, i, i+1)
+	}
+}
+
 // partida arma la interfaz de partida de un frame.
 func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
+	g.updateNotices(0)
 	h := ui.HUD{
-		Clock:    clockAt(f.Tick),
-		Paused:   g.run.Paused,
-		Speed:    max(0, slices.Index(view.Speeds, g.run.Speed)),
-		Location: g.location(f, focus),
+		Clock:      clockAt(f.Tick),
+		Paused:     g.run.Paused,
+		Speed:      max(0, slices.Index(view.Speeds, g.run.Speed)),
+		Location:   g.location(f, focus),
+		Population: tinyPopulation(f),
+		ShowPop:    true,
 		// Tab nombra su destino; F3 (overlays técnicos) no entra en la barra.
 		Controls: ui.Controls("Espacio", "Pausa", "1-3", "Vel.", "Tab", g.scaleLabel(f), "T", "Seguir",
 			"F", "General", "H", "Historia"),
+	}
+	for _, dn := range g.notices {
+		h.Notices = append(h.Notices, ui.Notice{
+			Title:     dn.title,
+			Cause:     dn.cause,
+			Focusable: g.storyTarget(f, dn.entry) != ids.Nil,
+		})
 	}
 	if !g.follow.IsNil() {
 		h.Following = capital(g.display(g.follow))

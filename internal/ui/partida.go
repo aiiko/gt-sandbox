@@ -124,19 +124,29 @@ type StoryLine struct {
 	Focusable bool // se puede enfocar al actor o al lugar
 }
 
+// Notice es una notificación temporal en pantalla (p. ej. el deceso de un tiny).
+type Notice struct {
+	Title     string
+	Cause     string
+	Focusable bool
+}
+
 // HUD es todo lo que muestra la interfaz de partida en un frame. Lo arma el
 // juego a partir del Frame; Draw solo lo dibuja.
 type HUD struct {
-	Clock     string
-	Paused    bool
-	Speed     int // índice en view.Speeds, 0..2
-	Location  []string
-	Following string
-	Card      *Card
-	Story     []StoryLine
-	Face      string // expresión del retrato; "" oculta el panel de historia
-	Controls  []Control
-	Sound     *Sound // nil: sin sonido (capturas, sin dispositivo)
+	Clock      string
+	Paused     bool
+	Speed      int // índice en view.Speeds, 0..2
+	Location   []string
+	Following  string
+	Population int      // cantidad de tinies vivos
+	ShowPop    bool     // muestra el indicador de población en la barra superior
+	Notices    []Notice // notificaciones activas (decesos recientes)
+	Card       *Card
+	Story      []StoryLine
+	Face       string // expresión del retrato; "" oculta el panel de historia
+	Controls   []Control
+	Sound      *Sound // nil: sin sonido (capturas, sin dispositivo)
 }
 
 // Sound es el estado del sonido que muestra la barra superior: un parlante
@@ -152,9 +162,11 @@ const SoundWidth = 30
 
 // Layout son las zonas interactivas que dejó el último Draw.
 type Layout struct {
-	Story []image.Rectangle // una por entrada de Story, en el mismo orden
-	Top   int               // alto de la barra superior
-	Foot  int               // y de la barra inferior
+	Story       []image.Rectangle // una por entrada de Story, en el mismo orden
+	Notices     []image.Rectangle // una por entrada de Notices, en el mismo orden
+	NoticeClose []image.Rectangle // botón «×» de cada entrada de Notices
+	Top         int               // alto de la barra superior
+	Foot        int               // y de la barra inferior
 }
 
 // Separator es el separador del rótulo jerárquico de ubicación.
@@ -188,6 +200,15 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 	}
 	loc := strings.Join(h.Location, Separator)
 	right := W - 8
+	if h.ShowPop {
+		pop := strconv.Itoa(h.Population)
+		pw := TextWidth(pop)
+		DrawText(dst, pop, right-pw, 4, Plum)
+		if atlas != nil {
+			atlas.DrawClip(dst, "tiny", render.Macro, "idle", image.Pt(right-pw-6, 10))
+		}
+		right -= pw + 16
+	}
 	if h.Following != "" {
 		f := "Siguiendo a " + h.Following
 		fw := TextWidth(f)
@@ -195,11 +216,15 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 		DrawText(dst, f, right-fw, 4, Plum)
 		right -= fw + 20
 	}
-	loc = Fit(loc, right-left)
+	loc = Fit(loc, max(right-left, 0))
 	lx := max(left, (W-TextWidth(loc))/2)
 	DrawText(dst, loc, lx, 4, Plum)
 
 	drawControls(dst, h.Controls)
+
+	if len(h.Notices) > 0 {
+		lay.Notices, lay.NoticeClose = drawNotices(dst, atlas, h.Notices, W-4, topH+5)
+	}
 
 	// Panel de historia con el retrato de la giantess.
 	if h.Face != "" {
@@ -209,6 +234,56 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 		h.Card.draw(dst, atlas, W-4, H-footH-4)
 	}
 	return lay
+}
+
+// drawNotices dibuja las notificaciones temporales (p. ej. decesos de tinies)
+// apiladas arriba a la derecha, debajo de la barra superior, cada una con su
+// botón «×» para cerrarla.
+func drawNotices(dst *ebiten.Image, atlas *render.Atlas, notices []Notice, right, top int) ([]image.Rectangle, []image.Rectangle) {
+	const w = 188
+	rects := make([]image.Rectangle, len(notices))
+	closes := make([]image.Rectangle, len(notices))
+	y := top
+	for i, n := range notices {
+		causeLines := WrapWidth(n.Cause, w-18)
+		if len(causeLines) > 2 {
+			causeLines = causeLines[:2]
+		}
+		h := (1+len(causeLines))*LineHeight + 6
+		r := image.Rect(right-w, y, right, y+h)
+		Box(dst, r, Ivory)
+		// franja coral a la izquierda para destacar el aviso
+		vector.FillRect(dst, float32(r.Min.X+2), float32(r.Min.Y+2), 3, float32(h-4), Coral, false)
+		tx := r.Min.X + 9
+		ty := r.Min.Y + 3
+		title := Fit(n.Title, w-42)
+		DrawText(dst, title, tx, ty, Plum)
+		if atlas != nil {
+			atlas.DrawClip(dst, "emote", render.Macro, "spirit", image.Pt(tx+TextWidth(title)+7, ty+11))
+		}
+		if n.Focusable {
+			ax, ay := float32(r.Max.X-20), float32(ty+4)
+			vector.FillRect(dst, ax, ay, 2, 5, Turquoise, false)
+			vector.FillRect(dst, ax+2, ay+1, 1, 3, Turquoise, false)
+			vector.FillRect(dst, ax+3, ay+2, 1, 1, Turquoise, false)
+		}
+		// botón «×» arriba a la derecha
+		cr := image.Rect(r.Max.X-13, r.Min.Y+2, r.Max.X-2, r.Min.Y+13)
+		cx, cy := float32(cr.Min.X+3), float32(cr.Min.Y+3)
+		for k := range 5 {
+			vector.FillRect(dst, cx+float32(k), cy+float32(k), 1, 1, PlumSoft, false)
+			vector.FillRect(dst, cx+4-float32(k), cy+float32(k), 1, 1, PlumSoft, false)
+		}
+		ty += LineHeight
+		for _, line := range causeLines {
+			DrawText(dst, line, tx, ty, PlumSoft)
+			ty += LineHeight
+		}
+		rects[i] = r
+		closes[i] = cr
+		y = r.Max.Y + 3
+	}
+	return rects, closes
 }
 
 // drawControls dibuja la barra inferior: controles como teclas con su rótulo.

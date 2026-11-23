@@ -327,11 +327,16 @@ const randomBase = "content/partidas/casa.json"
 
 // newRandomGame arma una partida al azar a partir de randomBase.
 func newRandomGame(seed uint64) (*game, error) {
+	return newRandomGameCount(seed, 0)
+}
+
+// newRandomGameCount arma una partida al azar con tinies inicial (0 = al azar).
+func newRandomGameCount(seed uint64, tinies int) (*game, error) {
 	base, err := scenario.ReadFile(randomBase)
 	if err != nil {
 		return nil, err
 	}
-	spec, err := scenario.Randomize(base, seed)
+	spec, err := scenario.RandomizeCount(base, seed, tinies)
 	if err != nil {
 		return nil, err
 	}

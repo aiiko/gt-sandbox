@@ -250,6 +250,20 @@ func (g *game) artMouse() {
 		return
 	}
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		for i, r := range a.layout.NoticeClose {
+			if pixel.In(r) {
+				g.dismissNotice(i)
+				return
+			}
+		}
+		for i, r := range a.layout.Notices {
+			if pixel.In(r) {
+				if i < len(g.notices) {
+					g.focusStory(g.notices[i].entry)
+				}
+				return
+			}
+		}
 		for i, r := range a.layout.Story {
 			if pixel.In(r) {
 				if entries := g.storyEntries(); i < len(entries) {

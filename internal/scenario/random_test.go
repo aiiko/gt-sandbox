@@ -182,3 +182,29 @@ func TestRandomizeCare(t *testing.T) {
 		t.Fatal("la mañana sin care no debería ganar uno")
 	}
 }
+
+func TestRandomizeCount(t *testing.T) {
+	base, err := ReadFile(morning)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []int{1, 35, 250} {
+		s, err := RandomizeCount(base, 7, want)
+		if err != nil {
+			t.Fatalf("count %d: %v", want, err)
+		}
+		in, err := Build(s)
+		if err != nil {
+			t.Fatalf("count %d: %v", want, err)
+		}
+		got := 0
+		for ref := range in.Refs {
+			if len(ref) >= 5 && ref[:4] == "tiny" {
+				got++
+			}
+		}
+		if got != want {
+			t.Fatalf("count %d: creó %d tinies", want, got)
+		}
+	}
+}

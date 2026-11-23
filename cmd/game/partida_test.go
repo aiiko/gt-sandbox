@@ -220,3 +220,57 @@ func TestTabNamesItsDestination(t *testing.T) {
 		t.Fatalf("de cerca: foco %v, Tab dice %q", g.art.focus, tab())
 	}
 }
+
+// La barra superior muestra la población viva de tinies y, al morir uno,
+// aparece una notificación temporal con la causa del deceso.
+func TestPopulationAndDeathNotice(t *testing.T) {
+	const sc = "tests/scenarios/un_descuido_en_el_escritorio.json"
+	g := artGame(t, sc)
+	f0 := g.run.Cur
+	h0 := g.partida(f0, ids.Nil)
+	if !h0.ShowPop || h0.Population == 0 {
+		t.Fatalf("población inicial inválida: %+v", h0)
+	}
+	if len(h0.Notices) != 0 {
+		t.Fatalf("no debería haber notificaciones al inicio: %+v", h0.Notices)
+	}
+	var deathTick clock.Tick
+	var sawNotice ui.Notice
+	for tick := 1; tick <= 600; tick++ {
+		f := stepTo(t, g, tick)
+		h := g.partida(f, ids.Nil)
+		if len(h.Notices) > 0 {
+			deathTick = f.Tick
+			sawNotice = h.Notices[0]
+			if h.Population >= h0.Population {
+				t.Fatalf("tick %d: murió un tiny pero la población siguió en %d", tick, h.Population)
+			}
+			break
+		}
+	}
+	if deathTick == 0 {
+		t.Fatal("no apareció ninguna notificación de deceso en un_descuido_en_el_escritorio")
+	}
+	if !strings.Contains(sawNotice.Title, "falleció") || !strings.Contains(sawNotice.Cause, "Aplastado") {
+		t.Errorf("notificación inesperada: %+v", sawNotice)
+	}
+	if !sawNotice.Focusable {
+		t.Errorf("la notificación debería permitir enfocar los restos: %+v", sawNotice)
+	}
+	// Sigue visible tras 5 s reales, se puede cerrar manualmente y expira tras deathNoticeDuration.
+	g.updateNotices(deathNoticeDuration / 2)
+	before := len(g.partida(g.run.Cur, ids.Nil).Notices)
+	if before == 0 {
+		t.Error("la notificación desapareció antes de la mitad de su duración real")
+	}
+	g.dismissNotice(0)
+	if after := len(g.partida(g.run.Cur, ids.Nil).Notices); after != before-1 {
+		t.Errorf("dismissNotice dejó %d notificaciones, se esperaban %d", after, before-1)
+	}
+	g.updateNotices(deathNoticeDuration)
+	for _, n := range g.partida(g.run.Cur, ids.Nil).Notices {
+		if n.Title == sawNotice.Title {
+			t.Errorf("la notificación %q no expiró tras %v reales", n.Title, deathNoticeDuration)
+		}
+	}
+}
