@@ -1589,6 +1589,70 @@
           }
         }
       }
+    },
+    "napkin": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          32,
+          30
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "napkin/micro_idle.png"
+            ]
+          }
+        },
+        "layer": "ground"
+      }
+    },
+    "fiber": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          7,
+          3
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "fiber/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "refuge_site": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          14,
+          13
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "refuge_site/micro_idle.png"
+            ]
+          },
+          "built": {
+            "frame_ticks": 1,
+            "frames": [
+              "refuge_site/micro_built.png"
+            ]
+          }
+        }
+      }
     }
   }
 }

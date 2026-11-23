@@ -85,6 +85,10 @@ Invariantes: `0 ≤ delivered ≤ required` y una obra con `done` tiene `shelter
 
 Stores nuevos (`fiber_source`, `material`, `build_site`): `HashVersion` 10 y `SnapshotSchema` 13.
 
+### Arte
+
+`tools/art/vida.py` dibuja la servilleta, la fibra y la obra (cuadros `idle` y `built`) en vista micro; en macro están ocultas. Se regeneran con `python tools/art/build.py` y `go run ./cmd/artpack`.
+
 ### Escenarios
 
 - `colony_builds_refuge`: con la despensa en la meta, dos tinies desprenden tres fibras, las llevan y uno arma el refugio. `TestColonyBuildsRefuge` verifica que cada fibra cuenta una vez, que la obra conserva su ID y recibe `shelter`, y la continuidad desde snapshots (uno a mitad de la obra).

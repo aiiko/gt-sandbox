@@ -22,6 +22,7 @@ import rooms  # noqa: E402
 import seats  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
+import vida  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(HERE))
 SRC = os.path.join(ROOT, 'content', 'art', 'src', 'casa')
@@ -35,6 +36,7 @@ def build(out):
     seats.main(out)
     sprites.main(out, BASE)
     ui.main(sprites.save)
+    vida.main(out)
 
 
 def pixels(path):
