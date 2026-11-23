@@ -29,7 +29,7 @@ import (
 
 // HashVersion identifica el formato de Hash(). Incrementarlo si cambia qué se
 // hashea o cómo, para que los golden files viejos fallen de forma explícita.
-const HashVersion = 10
+const HashVersion = 11
 
 // System es una unidad de lógica que corre en una fase del tick.
 //

@@ -207,6 +207,7 @@ func Install(w *world.World) error {
 	return errors.Join(
 		registerSearch(w),
 		registerBuild(w),
+		registerGather(w),
 		world.RegisterEvent[Stored](w),
 		world.RegisterEvent[MemberLost](w),
 		world.RegisterEvent[DangerExpired](w),
@@ -220,7 +221,7 @@ func Install(w *world.World) error {
 }
 
 // Actions son las acciones de la colonia, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{Forage{}, Search{}} }
+func Actions() []ai.Action { return []ai.Action{Forage{}, Search{}, Chat{}} }
 
 func register[T any](r *ecs.Registry, name string) error {
 	_, err := ecs.Register[T](r, name)

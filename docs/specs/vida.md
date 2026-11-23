@@ -94,3 +94,31 @@ Stores nuevos (`fiber_source`, `material`, `build_site`): `HashVersion` 10 y `Sn
 - `colony_builds_refuge`: con la despensa en la meta, dos tinies desprenden tres fibras, las llevan y uno arma el refugio. `TestColonyBuildsRefuge` verifica que cada fibra cuenta una vez, que la obra conserva su ID y recibe `shelter`, y la continuidad desde snapshots (uno a mitad de la obra).
 - `fiber_dropped_is_recovered`: la sombra de la palma hace huir al que lleva la fibra y la suelta; otro miembro la entrega y el total es 1.
 - `refuge_shelters_from_palm`: un tiny arma el refugio y la palma se apoya encima: los de dentro emiten `sheltered` y el de afuera muere.
+
+## Reunión (M42)
+
+### Diversión
+
+Los tinies que se reúnen tienen la necesidad `fun`. El punto de reunión es su única fuente; sin `fun`, `chat` no es una opción.
+
+### `gathering`
+
+Componente del punto de reunión (con `landmark`): `wait` (plazo para que llegue el segundo, 20 s), `talk_ticks` (8 s), `pause` (30 s), `gain` (300), y el estado `next` (desde cuándo vuelve a ofrecerse), `until` (fin de la conversación en curso), `seats [{by, arrived}]` (a lo sumo dos) y `pair` (los que conversan, hasta que se cuenta).
+
+`reservation` admite un solo dueño, así que las plazas viven en el componente del punto: entran en el hash y el snapshot. Invariantes: a lo sumo dos plazas, sin repetidos, y cada plaza de un agente vivo es de alguien cuya acción (en curso o suspendida) es `chat` sobre ese punto. `colony.gather` (Decide) libera las plazas de quien murió.
+
+### La acción `chat`
+
+- Opciones: miembros con `fun`, hambre y energía ≥ `ChatReady` (500) y sin trabajo asignado; el punto conocido, fuera de la pausa, sin conversación en curso y con plaza libre. La utilidad es la ganancia de `fun` con la curva de las necesidades (como una oferta, y sin desperdicio) menos la distancia.
+- `Start` toma una plaza. Etapas: caminar a la plaza (a ±1,5 cm del centro), esperar al compañero y conversar.
+- Cuando las dos plazas llegaron, el primero en verlo fija `until = ahora + talk_ticks` y emite `chat_started {gathering, a, b}`. Los dos terminan por ese tick, no por su propio contador, así que terminan en el mismo tick sin depender del orden del store: a cada uno le sube `fun` en `gain` y el primero emite `chat_done {gathering, a, b}`.
+- Si vence `wait` sin compañero, emite `chat_abandoned {reason: "alone"}` y falla (el punto queda evitado 30 s). Si el compañero se va a mitad de la conversación (huye, lo interrumpe algo urgente o muere), `chat_abandoned {reason: "partner_left"}`.
+- `Stop` libera la plaza; con el punto vacío empieza la pausa.
+
+Store nuevo (`gathering`): `HashVersion` 11 y `SnapshotSchema` 14.
+
+### Escenarios
+
+- `tinies_chat`: dos tinies aburridos conversan y vuelven a reunirse cuando vence la pausa. `TestChatRaisesFun` verifica que la diversión de los dos sube en `gain` al completar.
+- `chat_partner_never_comes`: el otro no tiene ganas; el primero espera solo, vence el plazo y se retira.
+- `chat_interrupted_by_threat`: la sombra de la palma corta la conversación, los dos huyen y nadie gana diversión.

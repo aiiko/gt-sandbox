@@ -55,7 +55,7 @@ def crumb(ref, space, x, y):
 
 
 def tiny(ref, space, x, y, hunger=900, energy=900, decay=(0, 0), work=0.2, sight=200000,
-         agent=None, member=None, extra=None):
+         agent=None, member=None, extra=None, fun=None):
     a = {'scale': 'tiny', 'work': work, 'distance_cost': 0.2, 'sight': sight}
     a.update(agent or {})
     m = {'colony': '$nest'}
@@ -67,6 +67,8 @@ def tiny(ref, space, x, y, hunger=900, energy=900, decay=(0, 0), work=0.2, sight
         'needs': [{'name': 'hunger', 'value': hunger, 'decay': decay[0]},
                   {'name': 'energy', 'value': energy, 'decay': decay[1]}],
     }
+    if fun is not None:
+        comps['needs'].append({'name': 'fun', 'value': fun, 'decay': decay[2] if len(decay) > 2 else 0})
     comps.update(extra or {})
     return {'ref': ref, 'spawn': {
         'name': ref,
@@ -300,10 +302,80 @@ def refuge_shelters_from_palm():
     return d
 
 
+# --- M42: reunión ---
+
+def gathering(x, y, wait=400, talk=160, pause=600):
+    return {'ref': 'meet', 'spawn': {
+        'name': 'punto de reunión', 'location': {'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}},
+        'components': {'gathering': {'wait': wait, 'talk_ticks': talk, 'pause': pause, 'gain': 300},
+                       'landmark': {'range': 1000000}}}}
+
+
+def tinies_chat():
+    d = world('tinies_chat', 1200,
+              'M42: dos tinies bien alimentados, descansados y aburridos van al punto de reunión junto al '
+              'nido, conversan y a los dos les sube la diversión (TestChatRaisesFun). El punto queda en '
+              'pausa y, al vencer, vuelven a reunirse.')
+    d['entities'] += [
+        nest(450000, 300000, portions=5),
+        gathering(400000, 300000),
+        tiny('a', 'desk1', 300000, 200000, fun=200),
+        tiny('b', 'desk1', 500000, 150000, fun=250),
+    ]
+    d['expect'] = [
+        {'event': 'chat_started', 'match': {'gathering': '$meet'}, 'by': 900, 'count': 1},
+        {'event': 'chat_done', 'match': {'gathering': '$meet'}, 'by': 900, 'count': 1},
+        {'event': 'chat_started', 'match': {'gathering': '$meet'}, 'after': 900},
+        {'event': 'action_done', 'match': {'entity': '$a', 'action': 'chat'}},
+        {'event': 'action_done', 'match': {'entity': '$b', 'action': 'chat'}},
+        {'no_event': 'chat_abandoned'},
+    ] + COMMON
+    return d
+
+
+def chat_partner_never_comes():
+    d = world('chat_partner_never_comes', 900,
+              'M42: un tiny aburrido va al punto de reunión, pero el otro tiny no tiene ganas de conversar. '
+              'Espera solo hasta que vence el plazo, se retira y el punto queda libre.')
+    d['entities'] += [
+        nest(450000, 300000, portions=5),
+        gathering(400000, 300000, wait=200),
+        tiny('a', 'desk1', 300000, 200000, fun=200),
+        tiny('b', 'desk1', 500000, 150000, fun=950),
+    ]
+    d['expect'] = [
+        {'event': 'chat_abandoned', 'match': {'gathering': '$meet', 'entity': '$a', 'reason': 'alone'}},
+        {'event': 'action_failed', 'match': {'entity': '$a', 'action': 'chat'}},
+        {'no_event': 'chat_started'},
+    ] + COMMON
+    return d
+
+
+def chat_interrupted_by_threat():
+    d = world('chat_interrupted_by_threat', 700,
+              'M42: dos tinies conversan bajo donde la giantess sostiene la mano. La sombra corta la '
+              'conversación: los dos huyen y el punto queda libre, sin diversión ganada.')
+    d['entities'] += [
+        nest(500000, 350000, portions=5),
+        gathering(200000, 200000, talk=400),
+        tiny('a', 'desk1', 180000, 160000, fun=200, agent={'reflex': 4}),
+        tiny('b', 'desk1', 230000, 240000, fun=250, agent={'reflex': 4}),
+    ]
+    d['commands'] += [pose(200, 'hover')]
+    d['expect'] = [
+        {'event': 'chat_started', 'match': {'gathering': '$meet'}, 'by': 200},
+        {'event': 'action_interrupted', 'match': {'entity': '$a', 'action': 'chat', 'by': 'flee'}},
+        {'event': 'action_started', 'match': {'entity': '$b', 'action': 'flee'}},
+        {'no_event': 'chat_done'},
+    ] + COMMON
+    return d
+
+
 def main():
     for f in [tiny_returns_to_eat, tiny_rests_at_nest, nest_unreachable_eats_crumb,
               colony_searches_spots, search_portal_closed,
-              colony_builds_refuge, fiber_dropped_is_recovered, refuge_shelters_from_palm]:
+              colony_builds_refuge, fiber_dropped_is_recovered, refuge_shelters_from_palm,
+              tinies_chat, chat_partner_never_comes, chat_interrupted_by_threat]:
         d = f()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as out:
             json.dump(d, out, ensure_ascii=False, indent=2)

@@ -97,6 +97,7 @@ Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 
   - si es comida (`food`), no está en el nido y nadie la lleva ni tiene un trabajo sobre ella, la colonia publica un `haul` al nido.
 - `colony.store` (fase Consequences): la comida suelta, sin reservar y a menos de `radius` del nido se guarda; suma sus porciones (o 1) al depósito y desaparece (`stored {colony, item, portions, total}`).
 - Acción `search` (de `colony`): revisar un punto de búsqueda conocido cuando falta comida en la despensa (ver [vida](vida.md#search_spot-y-la-acción-search)).
+- Acción `chat` (de `colony`): conversar con otro miembro en un punto de reunión; sube `fun` a los dos (ver [vida](vida.md#reunión-m42)).
 - Acción `forage` (de `colony`, instalada como acción extra de `ai`): caminar a un punto transitable al azar a menos de `ForageRange` (30 cm), con el RNG `colony.forage`. Vale `member.forage`, así que solo gana cuando no hay nada mejor. Así se encuentran cosas fuera de la vista.
 
 ## Suspensión y reanudación
