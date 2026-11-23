@@ -279,7 +279,11 @@ type HUD struct {
 	Card       *Card
 	Panel      *SidePanel  // panel lateral izquierdo (nil si está plegado con H)
 	Story      []StoryLine // últimas líneas de la crónica (compatibilidad y resúmenes)
-	Face       string      // expresión actual de la giantess
+	Face       string      // expresión actual de la giantess (compatibilidad)
+	Portrait   string      // retrato siempre visible abajo a la izquierda ("" si no hay giantess)
+	Minimap    *Minimap    // miniplano de la casa en vista micro (nil en macro)
+	RoomLabels []RoomLabel // rótulos de habitaciones que evitan los paneles (macro)
+	Tooltip    *Tooltip    // información al pasar el cursor
 	Controls   []Control
 	Sound      *Sound // nil: sin sonido (capturas, sin dispositivo)
 }
@@ -314,6 +318,9 @@ type Layout struct {
 	CardGo          image.Rectangle   // botón Ir allí de la ficha
 	Notices         []image.Rectangle // una por entrada de Notices
 	NoticeClose     []image.Rectangle // botón «×» de cada entrada de Notices
+	PortraitRect    image.Rectangle   // retrato siempre visible de la giantess
+	MinimapRect     image.Rectangle   // miniplano en vista micro
+	TabControlRect  image.Rectangle   // etiqueta de Tab en la barra inferior
 	Top             int               // alto de la barra superior
 	Foot            int               // y de la barra inferior
 }
@@ -327,11 +334,16 @@ const (
 )
 
 // rect ubica el panel lateral izquierdo según el tamaño del lienzo, el
-// tamaño elegido arrastrando sus bordes y la pestaña activa.
-func (p *SidePanel) rect(W, H int) image.Rectangle {
+// tamaño elegido arrastrando sus bordes y la pestaña activa. Deja lugar
+// abajo a la izquierda para el retrato siempre visible de la giantess.
+func (p *SidePanel) rect(W, H int, hasPortrait bool) image.Rectangle {
 	minW := min(152, max(120, W/2-12))
 	maxW := max(minW, min(380, W/2-8))
-	avail := H - topH - footH - 10
+	bottomReserve := 10
+	if hasPortrait {
+		bottomReserve = 62 // 52 px del retrato + margen
+	}
+	avail := H - topH - footH - bottomReserve
 	minH := min(88, max(64, avail))
 	maxH := max(minH, avail)
 
@@ -353,6 +365,22 @@ func (p *SidePanel) rect(W, H int) image.Rectangle {
 	}
 	h = min(maxH, max(minH, h))
 	return image.Rect(4, topH+5, 4+w, topH+5+h)
+}
+
+func portraitRect(H int) image.Rectangle {
+	const pw = 52
+	bottom := H - footH - 4
+	return image.Rect(4, bottom-pw, 4+pw, bottom)
+}
+
+func minimapRect(H int, hasPortrait bool) image.Rectangle {
+	const mw, mh = 96, 40
+	bottom := H - footH - 4
+	x := 4
+	if hasPortrait {
+		x = 60
+	}
+	return image.Rect(x, bottom-mh, x+mw, bottom)
 }
 
 func sidePanelResizeZones(pr image.Rectangle) (right, bottom, corner image.Rectangle) {
@@ -427,8 +455,15 @@ func (c Card) layout(W, H int) (rect, followBtn, goBtn image.Rectangle) {
 // dibujar (útil para pruebas de ajuste a 1×, 2× y 3×).
 func (h HUD) LayoutFor(W, H int) Layout {
 	lay := Layout{Top: topH + 2, Foot: H - footH}
+	hasPortrait := h.Portrait != ""
+	if hasPortrait {
+		lay.PortraitRect = portraitRect(H)
+	}
+	if h.Minimap != nil {
+		lay.MinimapRect = minimapRect(H, hasPortrait)
+	}
 	if h.Panel != nil {
-		pr := h.Panel.rect(W, H)
+		pr := h.Panel.rect(W, H, hasPortrait)
 		lay.PanelRect = pr
 		lay.Tabs, lay.PanelClose = sidePanelTabs(pr)
 		lay.PanelResizeR, lay.PanelResizeB, lay.PanelResizeBR = sidePanelResizeZones(pr)
@@ -502,23 +537,44 @@ func (h HUD) Draw(dst *ebiten.Image, atlas *render.Atlas) Layout {
 	}
 	DrawText(dst, loc, lx, 4, Plum)
 
-	drawControls(dst, h.Controls)
+	lay.TabControlRect = drawControls(dst, h.Controls)
 
 	if len(h.Notices) > 0 {
 		lay.Notices, lay.NoticeClose = drawNotices(dst, atlas, h.Notices, W-4, topH+5)
 	}
+	hasPortrait := h.Portrait != ""
+	if hasPortrait {
+		pr := portraitRect(H)
+		lay.PortraitRect = pr
+		Box(dst, pr, IvoryDim)
+		if atlas != nil {
+			atlas.DrawClip(dst, "portrait", render.Macro, h.Portrait, pr.Min.Add(image.Pt(2, 2)))
+		}
+	}
+	if h.Minimap != nil {
+		mr := minimapRect(H, hasPortrait)
+		lay.MinimapRect = mr
+		h.Minimap.draw(dst, mr)
+	}
 	if h.Panel != nil {
-		h.drawSidePanel(dst, atlas, &lay, W, H)
+		h.drawSidePanel(dst, atlas, &lay, W, H, hasPortrait)
 	}
 	if h.Card != nil {
 		lay.CardRect, lay.CardFollow, lay.CardGo = h.Card.draw(dst, atlas, W, H)
 	}
+	if len(h.RoomLabels) > 0 {
+		obstacles := append([]image.Rectangle{lay.PanelRect, lay.CardRect, lay.PortraitRect, lay.MinimapRect}, lay.Notices...)
+		DrawRoomLabels(dst, h.RoomLabels, image.Rect(4, lay.Top+2, W-4, lay.Foot-2), obstacles)
+	}
+	if h.Tooltip != nil {
+		h.Tooltip.draw(dst, W, H)
+	}
 	return lay
 }
 
-func (h HUD) drawSidePanel(dst *ebiten.Image, atlas *render.Atlas, lay *Layout, W, H int) {
+func (h HUD) drawSidePanel(dst *ebiten.Image, atlas *render.Atlas, lay *Layout, W, H int, hasPortrait bool) {
 	p := h.Panel
-	pr := p.rect(W, H)
+	pr := p.rect(W, H, hasPortrait)
 	lay.PanelRect = pr
 	lay.PanelResizeR, lay.PanelResizeB, lay.PanelResizeBR = sidePanelResizeZones(pr)
 	Box(dst, pr, IvoryPanel)
@@ -901,9 +957,12 @@ func drawNotices(dst *ebiten.Image, atlas *render.Atlas, notices []Notice, right
 }
 
 // drawControls dibuja la barra inferior: controles como teclas con su rótulo.
-func drawControls(dst *ebiten.Image, controls []Control) {
+// Devuelve el rectángulo de la etiqueta «Tab» (para resaltar la superficie al
+// pasar el cursor por encima, propuesta 17.7).
+func drawControls(dst *ebiten.Image, controls []Control) image.Rectangle {
 	W, H := dst.Bounds().Dx(), dst.Bounds().Dy()
 	vector.FillRect(dst, 0, float32(H-footH), float32(W), float32(footH), Plum, false)
+	var tabRect image.Rectangle
 	x := 4
 	for _, c := range controls {
 		kw := TextWidth(c.Key) + 6
@@ -914,8 +973,12 @@ func drawControls(dst *ebiten.Image, controls []Control) {
 		Box(dst, image.Rect(x, H-footH+2, x+kw, H-2), Ivory)
 		DrawText(dst, c.Key, x+3, H-footH+2, Plum)
 		DrawText(dst, c.Label, x+kw+3, H-footH+3, Ivory)
+		if c.Key == "Tab" {
+			tabRect = image.Rect(x, H-footH, x+kw+3+lw, H)
+		}
 		x += kw + 3 + lw + 8
 	}
+	return tabRect
 }
 
 func (c Card) draw(dst *ebiten.Image, atlas *render.Atlas, W, H int) (rect, followBtn, goBtn image.Rectangle) {
@@ -1072,11 +1135,14 @@ func drawEye(dst *ebiten.Image, x, y int) {
 }
 
 // TinyBadge es el indicador de los tinies de una superficie en la vista
-// macro, donde no se dibujan: el marcador del tiny y cuántos hay, con un
-// palito (TinyStem) que baja hasta ellos. En coral si alguno está alarmado.
+// macro, donde no se dibujan: el marcador del tiny, cuántos hay y el icono de
+// su actividad dominante, con un palito (TinyStem) que baja hasta ellos. En
+// ámbar si hay una amenaza sobre la superficie y en coral si alguno está alarmado.
 type TinyBadge struct {
-	Count   int
-	Alarmed bool
+	Count      int
+	Alarmed    bool
+	Threatened bool
+	Activity   BadgeActivity
 }
 
 const (
@@ -1087,7 +1153,11 @@ const (
 // Rect es el globo para tinies centrados en at; lift lo sube más (para no
 // pisar otro globo).
 func (b TinyBadge) Rect(at image.Point, lift int) image.Rectangle {
-	w := 4 + 5 + 3 + TextWidth(strconv.Itoa(b.Count)) + 4
+	iconW := 0
+	if b.Activity != BadgeIdle {
+		iconW = 7
+	}
+	w := 4 + 5 + 3 + TextWidth(strconv.Itoa(b.Count)) + iconW + 4
 	bottom := at.Y - tinyBadgeGap - lift
 	return image.Rect(at.X-w/2, bottom-tinyBadgeH, at.X-w/2+w, bottom)
 }
@@ -1101,10 +1171,17 @@ func TinyStem(dst *ebiten.Image, r image.Rectangle, at image.Point) {
 // Draw dibuja el globo r.
 func (b TinyBadge) Draw(dst *ebiten.Image, atlas *render.Atlas, r image.Rectangle) {
 	fill := Ivory
+	if b.Threatened {
+		fill = Amber
+	}
 	if b.Alarmed {
 		fill = Coral
 	}
 	Box(dst, r, fill)
 	atlas.DrawClip(dst, "tiny", render.Macro, "idle", image.Pt(r.Min.X+6, r.Min.Y+6))
-	DrawText(dst, strconv.Itoa(b.Count), r.Min.X+12, r.Min.Y, Plum)
+	count := strconv.Itoa(b.Count)
+	DrawText(dst, count, r.Min.X+12, r.Min.Y, Plum)
+	if b.Activity != BadgeIdle {
+		drawBadgeActivity(dst, r.Min.X+12+TextWidth(count)+2, r.Min.Y+4, b.Activity)
+	}
 }

@@ -464,11 +464,21 @@ func (g *game) updateNotices(dt time.Duration) {
 			}
 		}
 	}
-	// Amenazas activas (tinies alarmados en alguna superficie).
+	// Amenazas activas: tinies alarmados o superficie con tinies bajo una mano/pisada (17.7).
 	alarmedBySpace := map[ids.ID]int{}
+	tiniesBySpace := map[ids.ID]int{}
 	for _, t := range g.run.Cur.Things {
-		if isTiny(t) && t.Alarmed {
+		if !isTiny(t) {
+			continue
+		}
+		tiniesBySpace[t.Space]++
+		if t.Alarmed {
 			alarmedBySpace[t.Space]++
+		}
+	}
+	for sp := range threatenedSurfaces(g.run.Cur) {
+		if tiniesBySpace[sp] > 0 && alarmedBySpace[sp] == 0 {
+			alarmedBySpace[sp] = tiniesBySpace[sp]
 		}
 	}
 	for _, sp := range slices.Sorted(maps.Keys(alarmedBySpace)) {
@@ -555,16 +565,26 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 	if !g.sel.IsNil() && g.sel != focus {
 		h.Card = g.card(f, g.sel)
 	}
+	// El retrato de la giantess está siempre visible abajo a la izquierda.
+	face := ""
+	if gi := g.giantessID(); !gi.IsNil() {
+		face = f.Expression(gi)
+		h.Portrait = face
+	}
+	if !focus.IsNil() {
+		h.Minimap = g.minimap(f, focus)
+	}
 	if g.story {
 		h.Face = view.FaceNeutral
-		if gi := g.giantessID(); !gi.IsNil() {
-			h.Face = f.Expression(gi)
+		if face != "" {
+			h.Face = face
 		}
 		for _, e := range g.storyEntries() {
 			h.Story = append(h.Story, storyLine(f, g, e))
 		}
 		h.Panel = g.sidePanel(f, h.Face)
 	}
+	h.Tooltip = g.hoverTooltip(f, focus)
 	return h
 }
 

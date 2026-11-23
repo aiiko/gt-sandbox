@@ -180,4 +180,29 @@ func TestSidePanelResizeZonesAndClamp(t *testing.T) {
 	if lTiny.PanelRect.Dx() < 152 || lTiny.PanelRect.Dy() < 88 {
 		t.Fatalf("tamaño mínimo demasiado chico: %v", lTiny.PanelRect)
 	}
+	// Con retrato siempre visible, el panel no lo pisa ni en su alto máximo.
+	hPort := HUD{Portrait: "neutral", Panel: &SidePanel{Tab: TabChronicle, Height: 9999}}
+	lPort := hPort.LayoutFor(960, 540)
+	if lPort.PortraitRect.Empty() || lPort.PanelRect.Overlaps(lPort.PortraitRect) {
+		t.Fatalf("el panel %v pisa el retrato %v", lPort.PanelRect, lPort.PortraitRect)
+	}
+}
+
+// Los rótulos de habitaciones evitan los paneles y quedan dentro de safe (17.7).
+func TestPlaceRoomLabelsAvoidsObstacles(t *testing.T) {
+	safe := image.Rect(4, 23, 956, 520)
+	panel := image.Rect(4, 24, 210, 200)
+	labels := []RoomLabel{
+		{Text: "Cocina", At: image.Pt(100, 100)},
+		{Text: "Dormitorio", At: image.Pt(480, 400)},
+	}
+	rects := PlaceRoomLabels(labels, safe, []image.Rectangle{panel})
+	for i, r := range rects {
+		if !r.In(safe) {
+			t.Errorf("rótulo %d fuera de safe: %v", i, r)
+		}
+		if r.Overlaps(panel) {
+			t.Errorf("rótulo %d pisa el panel: %v vs %v", i, r, panel)
+		}
+	}
 }

@@ -187,3 +187,59 @@ func TestPalmAndRefugeNotices(t *testing.T) {
 		t.Fatalf("faltan avisos de palma/refugio: %+v", g.notices)
 	}
 }
+
+// Mejoras de lectura (17.7) y retrato siempre visible de la giantess:
+// - el retrato aparece aunque el panel lateral esté plegado (g.story = false);
+// - en micro aparece el miniplano con habitaciones, foco y giantess;
+// - en macro, los globos de tinies muestran actividad dominante y amenaza;
+// - el hover sobre un globo lista los tinies y qué hacen;
+// - doble clic sobre una entidad activa el seguimiento.
+func TestReadability177AndAlwaysPortrait(t *testing.T) {
+	g := artGame(t, randomBase)
+	f := stepTo(t, g, 120)
+
+	// Retrato siempre visible incluso con el panel plegado.
+	g.story = false
+	hMacro := g.partida(f, ids.Nil)
+	if hMacro.Portrait == "" {
+		t.Fatal("el retrato de la giantess debería estar siempre visible")
+	}
+	if hMacro.Panel != nil {
+		t.Fatal("con g.story=false el panel lateral debería estar plegado")
+	}
+	if hMacro.Minimap != nil {
+		t.Fatal("en macro no debería mostrarse el miniplano")
+	}
+
+	// En micro aparece el miniplano con habitaciones, foco y posición de la giantess.
+	hMicro := g.partida(f, g.artDesk)
+	if hMicro.Minimap == nil || len(hMicro.Minimap.Rooms) < 3 || !hMicro.Minimap.HasGiantess || !hMicro.Minimap.HasFocus {
+		t.Fatalf("miniplano incompleto: %+v", hMicro.Minimap)
+	}
+
+	// En macro, los globos tienen actividad dominante y hover sobre el globo lista tinies.
+	proj := g.cam.Project(g.anchor(f), g.w, g.h)
+	groups := tinyGroups(f, proj, g.visuals)
+	if len(groups) == 0 {
+		t.Fatal("sin globos de tinies en macro")
+	}
+	g.art.badges = groups
+	g.art.layout = hMacro.LayoutFor(g.w, g.h)
+	g.art.hoverOK = true
+	g.art.hoverPixel = groups[0].badge.Min.Add(groups[0].badge.Size().Div(2))
+	tip := g.hoverTooltip(f, ids.Nil)
+	if tip == nil || !strings.Contains(tip.Title, "Tinies en") || len(tip.Lines) == 0 {
+		t.Fatalf("tooltip sobre globo de tinies inesperado: %+v", tip)
+	}
+
+	// Doble clic sobre una entidad activa el seguimiento.
+	target := groups[0].tinies[0]
+	g.selectOrFollow(target)
+	if g.sel != target || !g.follow.IsNil() {
+		t.Fatalf("primer clic: sel=%v follow=%v", g.sel, g.follow)
+	}
+	g.selectOrFollow(target)
+	if g.follow != target {
+		t.Fatalf("doble clic debería activar seguimiento: follow=%v, quería %v", g.follow, target)
+	}
+}

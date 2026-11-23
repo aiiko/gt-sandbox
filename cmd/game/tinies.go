@@ -21,12 +21,14 @@ import (
 // tinyGroup son los tinies de una misma superficie, como se indican en la
 // vista macro (donde los tinies no se dibujan).
 type tinyGroup struct {
-	surface ids.ID
-	tinies  []ids.ID
-	dots    []image.Point // cada tiny en el lienzo
-	at      image.Point   // centro del grupo en el lienzo
-	alarmed bool
-	badge   image.Rectangle // dónde quedó el globo
+	surface    ids.ID
+	tinies     []ids.ID
+	dots       []image.Point // cada tiny en el lienzo
+	at         image.Point   // centro del grupo en el lienzo
+	alarmed    bool
+	threatened bool
+	activity   ui.BadgeActivity
+	badge      image.Rectangle // dónde quedó el globo
 }
 
 // isTiny dice si una cosa del Frame es un tiny vivo: un agente con
@@ -57,9 +59,12 @@ func tinyGroups(f *view.Frame, proj camera.Projector, visuals map[ids.ID]string)
 		g.alarmed = g.alarmed || t.Alarmed
 	}
 	slices.SortFunc(out, func(a, b tinyGroup) int { return cmp.Compare(a.surface, b.surface) })
+	threats := threatenedSurfaces(f)
 	var placed []image.Rectangle
 	for i := range out {
 		g := &out[i]
+		g.threatened = threats[g.surface]
+		g.activity = dominantBadgeActivity(f, g.tinies)
 		var sum image.Point
 		top := math.MaxInt
 		for _, d := range g.dots {
@@ -67,7 +72,7 @@ func tinyGroups(f *view.Frame, proj camera.Projector, visuals map[ids.ID]string)
 			top = min(top, d.Y)
 		}
 		g.at = image.Pt(sum.X/len(g.dots), top)
-		b := ui.TinyBadge{Count: len(g.tinies), Alarmed: g.alarmed}
+		b := ui.TinyBadge{Count: len(g.tinies), Alarmed: g.alarmed, Threatened: g.threatened, Activity: g.activity}
 		for lift := 0; ; lift += 4 {
 			g.badge = b.Rect(g.at, lift)
 			if !slices.ContainsFunc(placed, g.badge.Overlaps) || lift > 80 {
@@ -79,8 +84,30 @@ func tinyGroups(f *view.Frame, proj camera.Projector, visuals map[ids.ID]string)
 	return out
 }
 
+func dominantBadgeActivity(f *view.Frame, tinies []ids.ID) ui.BadgeActivity {
+	counts := map[string]int{}
+	for _, id := range tinies {
+		if t, ok := f.ThingByID(id); ok {
+			cat := shortActivity(*t)
+			if cat == "Huye" {
+				return ui.BadgeFlee
+			}
+			if cat != "Libre" {
+				counts[cat]++
+			}
+		}
+	}
+	best, bestN := "", 0
+	for _, cat := range slices.Sorted(maps.Keys(counts)) {
+		if counts[cat] > bestN {
+			best, bestN = cat, counts[cat]
+		}
+	}
+	return badgeActivityOf(best)
+}
+
 // drawTinyBadges marca en macro dónde están los tinies: un punto por tiny y
-// un globo por superficie con cuántos hay.
+// un globo por superficie con cuántos hay, su actividad dominante y si hay amenaza.
 func (g *game) drawTinyBadges(dst *ebiten.Image, groups []tinyGroup) {
 	for _, gr := range groups {
 		for _, d := range gr.dots {
@@ -92,7 +119,7 @@ func (g *game) drawTinyBadges(dst *ebiten.Image, groups []tinyGroup) {
 		ui.TinyStem(dst, gr.badge, gr.at)
 	}
 	for _, gr := range groups {
-		ui.TinyBadge{Count: len(gr.tinies), Alarmed: gr.alarmed}.Draw(dst, g.art.atlas, gr.badge)
+		ui.TinyBadge{Count: len(gr.tinies), Alarmed: gr.alarmed, Threatened: gr.threatened, Activity: gr.activity}.Draw(dst, g.art.atlas, gr.badge)
 	}
 }
 

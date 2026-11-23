@@ -20,7 +20,6 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/render"
-	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -61,6 +60,14 @@ type artMode struct {
 	wheel     float64                  // giro de la rueda que todavía no llega a un paso
 	scene     *ebiten.Image
 	sceneView render.Viewport // dónde cae la capa de escena en la pantalla final
+	// Hover y doble clic (propuesta, 17.7).
+	hoverOK       bool
+	hoverPixel    image.Point
+	hoverOnScene  bool
+	hoverAt       image.Point
+	tabHover      bool
+	lastClickID   ids.ID
+	lastClickTime time.Time
 }
 
 // zoomLevels son los factores de escena (píxeles físicos por píxel del arte)
@@ -367,6 +374,9 @@ func (g *game) artMouse() {
 	}
 	x, y := a.defaultTransform.Apply(ebiten.CursorPositionF())
 	pixel, ok := a.viewport.Point(x, y)
+	at, onScene := a.sceneView.Point(x, y)
+	a.hoverOK, a.hoverPixel, a.hoverOnScene, a.hoverAt = ok, pixel, onScene, at
+	a.tabHover = ok && pixel.In(a.layout.TabControlRect)
 	top, foot := artHeader, g.h-artFooter
 	if g.artAtlas != "" {
 		top, foot = a.layout.Top, a.layout.Foot
@@ -389,9 +399,17 @@ func (g *game) artMouse() {
 		}
 	}
 	// La escena se elige en sus propios píxeles; la interfaz, en los del lienzo.
-	at, onScene := a.sceneView.Point(x, y)
 	world := a.proj.ToWorld(float64(at.X)+0.5, float64(at.Y)+0.5)
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if pixel.In(a.layout.PortraitRect) {
+			if gi := g.giantessID(); !gi.IsNil() {
+				g.selectOrFollow(gi)
+			}
+			return
+		}
+		if pixel.In(a.layout.MinimapRect) {
+			return
+		}
 		for i, r := range a.layout.NoticeClose {
 			if pixel.In(r) {
 				g.dismissNotice(i)
@@ -454,15 +472,14 @@ func (g *game) artMouse() {
 		for i, r := range a.layout.Tinies {
 			if pixel.In(r) {
 				if i < len(g.panelTinies) {
-					g.sel = g.panelTinies[i]
+					g.selectOrFollow(g.panelTinies[i])
 				}
 				return
 			}
 		}
 		if pixel.In(a.layout.GiantessFocus) {
 			if gi := g.giantessID(); !gi.IsNil() {
-				g.sel = gi
-				g.goToEntity(gi)
+				g.selectOrFollow(gi)
 			}
 			return
 		}
@@ -475,10 +492,11 @@ func (g *game) artMouse() {
 		if !onScene {
 			return
 		}
-		g.sel = a.last.Pick(at)
+		picked := a.last.Pick(at)
+		g.selectOrFollow(picked)
 		a.clickOn, a.clickAt = g.sel, world
 	}
-	if onScene && !pixel.In(a.layout.PanelRect) && !pixel.In(a.layout.CardRect) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+	if onScene && !pixel.In(a.layout.PanelRect) && !pixel.In(a.layout.CardRect) && !pixel.In(a.layout.PortraitRect) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		g.moveSelected(world)
 	}
 }
@@ -581,27 +599,19 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 	a.last.Draw(a.scene, g.sel)
 
 	if house := g.artAtlas != ""; house {
+		var labels []ui.RoomLabel
 		if focus.IsNil() {
-			for _, room := range f.Spaces {
-				if room.Kind != space.Static || g.visuals[room.ID] == "" || room.Name == "" {
-					continue
-				}
-				c := view.Corners(room)
-				south := c[0].Add(c[1].Sub(c[0]).MulDiv(1, 2))
-				x, y := proj.ToScreen(south)
-				label := capital(room.Name)
-				w := ui.TextWidth(label)
-				r := image.Rect(int(x)-w/2-4, int(y)+8, int(x)+w/2+4, int(y)+23)
-				ui.Box(dst, r, ui.Ivory)
-				ui.DrawText(dst, label, r.Min.X+4, r.Min.Y+1, ui.Plum)
-			}
+			g.drawTabHighlight(dst, f, proj)
 			a.badges = tinyGroups(f, proj, g.visuals)
 			g.drawTinyBadges(dst, a.badges)
+			labels = g.roomLabels(f, proj)
 		} else {
 			a.badges = nil
 		}
 		g.drawEmotes(a.scene, f, scale)
-		a.layout = g.partida(f, focus).Draw(dst, a.atlas)
+		hud := g.partida(f, focus)
+		hud.RoomLabels = labels
+		a.layout = hud.Draw(dst, a.atlas)
 		if a.debug {
 			g.drawDebug(dst, f, proj, a.layout.Top+1)
 		}

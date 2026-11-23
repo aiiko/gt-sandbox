@@ -1150,6 +1150,8 @@ Con la capa de interfaz a 960 × 540 lógicos en 1080p hay espacio para paneles 
 | **Rótulos que no se tapan** | Los rótulos de habitaciones se colocan en la capa de interfaz y evitan los paneles. Si una habitación queda tapada, el rótulo se pega al borde visible |
 | **Atajos de selección** | Doble clic sigue a la entidad. Al pasar el cursor por la etiqueta de `Tab`, se resalta la superficie a la que lleva |
 
+**Estado.** Implementado. Además, el retrato de la giantess permanece siempre visible abajo a la izquierda (incluso con el panel plegado), el panel lateral es redimensionable arrastrando sus bordes derecho e inferior (tamaño guardado en `ventana.json`), y las mejoras de lectura se verifican en `TestPlaceRoomLabelsAvoidsObstacles`, `TestSidePanelResizeZonesAndClamp` y `TestReadability177AndAlwaysPortrait`.
+
 ### 17.8. Orden y aceptación
 
 1. **Capas y lienzo variable.** Escena e interfaz separadas, ventana grande, `F11`, zoom entero con la rueda, paneo con arrastre y capturas regeneradas. Todavía sin arte nuevo.
