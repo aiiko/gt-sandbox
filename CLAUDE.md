@@ -1,6 +1,6 @@
 # gt-sandbox
 
-Simulador de vida multi-escala (giantess + tinies) en Go. Diseño: `docs/propuesta.md`. Plan del motor e hitos: `docs/plan-motor.md`.
+Simulador de vida multi-escala (giantess + tinies) en Go. El diseño está en `docs/propuesta.md`.
 
 ## Flujo de trabajo
 

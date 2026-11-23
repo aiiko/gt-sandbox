@@ -789,7 +789,7 @@ La interfaz de partida tiene su propio estilo, distinto del visor de debug: pane
 
 El primer lote de arte cubre suelo, paredes, puertas y mobiliario del dormitorio, cocina y living con la ambientación japonesa. El lote micro cubre escritorio, palma, mesa del living, nido, tinies, taza y migajas. Cada pieza tiene un archivo fuente editable con capas, versionado junto al atlas, y un comando reproducible arma el PNG y el manifiesto a partir de esas fuentes. El atlas exportado no se edita a mano. Las exportaciones que consume el juego son PNG transparentes y metadatos JSON con identificador visual, escala, rectángulos del atlas, pivotes, capas y clips. La asignación de arte usa identificadores visuales estables independientes del nombre mostrado. La paleta y los tamaños se calibran con la primera escena antes de extender el lote.
 
-La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las referencias macro y micro de esta dirección. El [plan de hitos](plan-motor.md) lleva esas reglas al recorrido completo.
+La [muestra de presentación](specs/presentacion.md#prueba-de-arte) reúne las referencias macro y micro de esta dirección.
 
 ### Sonido
 
@@ -834,7 +834,7 @@ El sonido es presentación, como los símbolos de expresión. Sale de los evento
 
 El foco inmediato es presentar una casa que ya funciona como ecosistema vivo. La giantess puede seguir con su rutina aunque los tinies la observen o interactúen con su entorno. El jugador puede pasar de una escala a la otra y reconocer cómo una acción cotidiana cambia las posibilidades de la colonia.
 
-La casa ya cuenta con [sonido](#sonido) y con las consecuencias de [Un descuido en el escritorio](#14-un-descuido-en-el-escritorio). La [próxima entrega](#15-rutinas-y-encuentros-en-la-casa) amplía lo que hace la giantess en esa misma casa y le da motivos para actuar cuando nota a los tinies. Para entregas posteriores quedan más superficies explorables, construcción tiny, relaciones, personalidad, eventos ambientales, fluidos, simulación anatómica continua, economías más amplias y una banda sonora.
+La casa ya cuenta con [sonido](#sonido), las consecuencias de [Un descuido en el escritorio](#14-un-descuido-en-el-escritorio), [rutinas y encuentros](#15-rutinas-y-encuentros-en-la-casa) y [asientos transitables](specs/asientos.md). La [próxima entrega](#16-vida-cotidiana-de-los-tinies) se centra en las decisiones de los tinies y en cómo su actividad cambia el nido y sus alrededores. Para entregas posteriores quedan más superficies explorables, construcción libre para la colonia, relaciones, personalidad, eventos ambientales, fluidos, simulación anatómica continua, economías más amplias y una banda sonora.
 
 ## 14. Un descuido en el escritorio
 
@@ -954,7 +954,7 @@ Cada señal sale de un evento o del `Frame` y no modifica el mundo, igual que lo
 
 ## 15. Rutinas y encuentros en la casa
 
-La giantess alterna su rutina doméstica con acciones que surgen de lo que hacen los tinies. En la partida libre actual cambian la colonia y el cuidado de la giantess, mientras ella arranca con las mismas necesidades. Hambre y diversión tampoco decaen en el escenario base. La percepción ya registra cuándo nota a un tiny, pero ese encuentro todavía no le abre ninguna acción.
+La giantess alterna su rutina doméstica con acciones que surgen de lo que hacen los tinies. La partida libre sortea sus necesidades iniciales y su cuidado. El hambre y la diversión vuelven a bajar con el tiempo, y notar a los tinies puede llevarla a observarlos, compartir comida u ofrecer la palma. La [spec de encuentros](specs/encuentros.md) describe la implementación.
 
 ### 15.1. Cómo decide la giantess
 
@@ -962,7 +962,7 @@ La giantess alterna su rutina doméstica con acciones que surgen de lo que hacen
 - **Los encuentros abren opciones locales.** La percepción de otra escala registra actividad reciente por superficie. Un avistamiento puede motivar que se acerque a mirar. Ver a los tinies buscando comida donde quedan pocas migajas puede motivar que comparta. La frecuencia de cada acción se limita por superficie, incluso cuando los tinies se esconden o nadie se acerca. La situación se comprueba de nuevo al llegar, antes de dejar comida o apoyar la mano.
 - **Las necesidades y los encuentros compiten en el mismo selector.** Las opciones de encuentro tienen una utilidad moderada, independiente de que a la giantess le falte diversión. Se mantienen las reglas de compromiso e interrupción del selector. Los tinies eligen su respuesta con sus tareas, exploración y reflejos. El historial distingue qué motivó a la giantess, qué hizo y cómo respondieron los tinies.
 
-### 15.2. Acciones de la próxima entrega
+### 15.2. Acciones de rutina y encuentro
 
 | Acción | Cuándo está disponible | Qué cambia en la escena |
 | --- | --- | --- |
@@ -987,3 +987,55 @@ Merendar y compartir reutilizan la colocación de comida. Ofrecer la palma reuti
 | --- | --- | --- |
 | **Ordenar el escritorio** | Terminó de comer y quedó una taza sobre el escritorio. | Recoge esa misma taza y la lleva a la cocina. Requiere mover un objeto que ya existe. |
 | **Llevar a un pasajero** | Un tiny subió a la palma y hay una superficie de desembarco accesible. | Elige la mesa del living o el escritorio como destino y vuelve a ofrecer contacto. El pasajero decide si baja. |
+
+## 16. Vida cotidiana de los tinies
+
+En **Nueva partida**, los tinies ya pueden descubrir y acarrear migajas, comer, descansar en el nido, cruzar portales y huir de amenazas. Cuando ninguna tarea gana prioridad, el forrajeo elige un punto al azar en la superficie y la curiosidad puede atraerlos a un portal. La próxima iteración les da motivos para salir, volver y quedarse un rato en el nido. Al seguir a un tiny en vista micro, se debería poder ver qué intenta hacer, adónde va y qué cambia cuando termina. [Sistemas de IA y colonia](specs/ai.md)
+
+### 16.1. Lluvia de ideas
+
+| Idea | Qué decisión agrega | Alcance |
+| --- | --- | --- |
+| Buscar comida por sectores | Si escasea la comida, decidir qué rincón cercano revisar o a qué fuente conocida volver. | Próxima iteración |
+| Volver al nido a comer o descansar | Decidir entre seguir con la tarea o volver antes de que el hambre o el cansancio se vuelvan urgentes. | Próxima iteración |
+| Acondicionar un refugio con fibras de papel | Dedicar un viaje a traer material para que las próximas salidas tengan dónde resguardarse. | Próxima iteración |
+| Juntarse a conversar | Buscar a otro tiny en una pausa y pasar un rato en el nido cuando hay margen. | Próxima iteración |
+| Hacer guardia y avisar | Quedarse cerca de un paso para advertirle a otro tiny que vienen pisadas o que va a bajar la palma. | Más adelante |
+| Preparar un depósito en otra habitación | Acortar los viajes con una reserva intermedia y decidir cuánta comida dejar lejos del nido. | Más adelante |
+| Hacer una expedición en la palma | Aprovechar un contacto breve para alcanzar una fuente lejana y buscar una ruta de regreso. | Más adelante |
+| Juntar gotas junto a una taza | Aprovechar un recurso que aparece con la rutina de la giantess, con un motivo distinto del hambre. | Más adelante |
+
+### 16.2. Objetivos de la próxima iteración
+
+1. **Hacer que la despensa motive las salidas.** Si el nido está por debajo de una meta de porciones por miembro, los tinies dan prioridad a acarrear desde fuentes de comida conocidas. Si ninguna está al alcance, un tiny elige un punto de búsqueda que ya vio y al que puede llegar, como un rincón del escritorio o un borde de la silla. Solo un tiny revisa cada punto a la vez. La salida termina al descubrir comida o al revisar el punto. Un punto vacío pierde prioridad por un tiempo. El hallazgo de comida se comparte y genera trabajo con el sistema actual. Con la despensa abastecida, baja la prioridad del forrajeo. La exploración libre sigue sirviendo para descubrir nuevos puntos y pasos.
+2. **Dar al nido una rutina visible.** Comer consume una porción y descansar recupera energía. Se ajustan las necesidades y prioridades de la partida libre para que ambos ocurran durante una sesión normal y en momentos distintos según el tiny. El hambre o el cansancio urgentes pueden interrumpir una tarea de colonia. Si el nido está momentáneamente fuera de alcance, el tiny busca una alternativa conocida y accesible, como comer una migaja cercana o esperar en una zona segura hasta poder volver.
+3. **Construir un refugio auxiliar junto a una ruta de salida.** En un punto fijo cerca del borde del escritorio, los tinies pueden juntar fibras de papel de una servilleta y llevarlas de a una. Estos trabajos ganan prioridad cuando la despensa está abastecida. Al reunir las fibras requeridas, un tiny termina el refugio. Desde entonces, los tinies pueden elegirlo para huir y quedar protegidos de un apoyo de palma que el refugio resista. Las fibras entregadas quedan en el sitio y los encargos pendientes los puede tomar otro miembro.
+4. **Darles algo que hacer juntos.** Cuando están bien alimentados y descansados y no tienen un encargo prioritario, los tinies pueden acercarse a un punto de reunión junto al nido. Si llega otro tiny disponible, conversan brevemente y a ambos les sube la diversión al completar la actividad. Si el compañero tarda o surge una urgencia, la espera termina y el lugar queda disponible. Cada reunión ocupa a dos tinies y tiene una pausa antes de volver a ofrecerse. Para esta actividad alcanza con una necesidad de diversión y una animación o símbolo legible en micro.
+
+La huida conserva la prioridad ante una amenaza inmediata. Si se cierra un paso de la ruta, aparece peligro o desaparece el objetivo, el tiny reevalúa la tarea y libera las reservas cuando la abandona. Los trabajos pendientes se pueden retomar cuando vuelve a haber un objetivo accesible. Los avistamientos de la giantess siguen reconociendo la búsqueda de comida, así que un recorrido nuevo puede acabar en un gesto de compartir migajas. La ficha del tiny muestra su motivo y destino. El historial registra hallazgos, entregas y reuniones completadas.
+
+### 16.3. Entidades nuevas
+
+Cada punto puede ser destino de una acción y guardar su propio estado. La partida coloca los puntos de búsqueda, una servilleta, un sitio de obra y un punto de reunión en las superficies existentes. Las fibras aparecen durante la simulación.
+
+| Entidad | Datos y comportamiento | Ciclo de vida |
+| --- | --- | --- |
+| **Punto de búsqueda** | Marca un lugar para revisar, como un rincón del escritorio o el borde de la silla. Tiene ubicación, una reserva exclusiva y un plazo antes de volver a ofrecerse si se revisó sin encontrar comida. | Permanece en su superficie. Un tiny que lo descubre y puede llegar lo reserva mientras lo revisa. El punto queda libre al terminar o abandonar la salida. |
+| **Servilleta** | Fuente de fibras en el escritorio. Guarda cuántas quedan y se puede reservar mientras un tiny desprende una. | Al completar la acción, gasta una unidad de su reserva y crea una fibra suelta en el mismo paso. Al agotarse, deja de ofrecer material. |
+| **Fibra de papel** | Una unidad de material con su propia ubicación. Se reserva y se lleva con el mecanismo de acarreo existente. | Nace al desprenderse de la servilleta. Si el tiny la suelta al huir, queda en el lugar para que alguien la recoja. Cuando se confirma su entrega en la obra, cuenta una vez y la fibra se retira de la escena. |
+| **Obra del refugio auxiliar** | Sitio fijo junto a la ruta de salida del escritorio. Guarda cuántas fibras requiere, cuántas recibió y si terminó el armado. Un tiny reserva el sitio para armarlo cuando están todos los materiales. | Conserva el mismo ID al pasar de obra a refugio. Al terminar, recibe `shelter`, el componente que ya define la resistencia y el radio de protección del nido. Desde ese momento puede ser destino de huida. |
+| **Punto de reunión** | Lugar junto al nido con dos plazas, un plazo para que llegue el segundo tiny y una pausa entre conversaciones. Su ocupación es independiente del uso del nido para comer o descansar. | Permanece en el escritorio. Al terminar la conversación o cancelarse por falta de compañero, peligro o pérdida de un participante, libera las plazas. |
+
+**Entidades existentes.** El nido mantiene su depósito y recibe la meta de porciones por miembro. Cada tiny guarda su diversión en `needs` y su actividad en `agent.doing`. La comida cerca de la silla se representa con migajas. Desprender una fibra, acarrearla y armar el refugio son encargos sobre la servilleta, la fibra y la obra respectivamente. Cada encargo se crea como una entidad con el componente `job` y reserva su objetivo cuando se asigna. [Reservas y trabajos](specs/ai.md#reservas-y-trabajos-jobs)
+
+**Descubrimiento y coordinación.** La búsqueda usa la memoria de los tinies. La percepción incorpora los puntos de búsqueda, la servilleta y las fibras cercanas para que puedan descubrirlos y compartir el hallazgo con la colonia. Antes de pedir otra fibra, la obra cuenta las que ya recibió, las que están en viaje y las que quedaron sueltas y se pueden recuperar. El total entregado se conserva aunque cambie el encargado. [Percepción y memoria](specs/ai.md#percepción-y-memoria)
+
+### 16.4. Cierre de la iteración
+
+El escenario de referencia parte de la casa existente. El nido tiene pocas porciones, queda una fuente de comida por descubrir cerca de la silla y hay una servilleta con fibras en el escritorio. Los tinies deciden por su cuenta quién busca, quién acarrea y cuándo vuelve. Una vez abastecida la despensa, la colonia puede terminar el refugio mientras otros miembros comen, descansan o se reúnen. Una amenaza durante un acarreo pone a prueba la huida y la posibilidad de retomar el trabajo.
+
+- **Abastecimiento.** Un escenario controlado verifica el ciclo de búsqueda, hallazgo, acarreo, depósito y consumo. Con la despensa abastecida, se inician menos salidas de búsqueda que en la misma situación con pocas porciones.
+- **Rutina y ocio.** En los primeros cinco minutos de simulación de cada semilla de referencia, los tinies completan al menos tres actividades distintas entre buscar, acarrear, comer, descansar, preparar el refugio y reunirse. En escenarios controlados, descansar aumenta la energía y una conversación completada aumenta la diversión de los dos participantes. Si un tiny espera solo hasta que vence el plazo, se retira y libera el punto de reunión.
+- **Coordinación y progreso.** Dos tinies no se reservan el mismo punto, migaja o fibra. Cada fibra entregada cuenta una vez y el total se conserva si cambia el encargado. Al terminar el armado, la obra conserva su ID y recibe la protección. Un tiny dentro queda protegido ante un apoyo de palma que el refugio pueda resistir.
+- **Interrupciones.** Una amenaza interrumpe un acarreo o una conversación y el tiny intenta huir. Si un portal se cierra a mitad de una salida, el tiny vuelve a evaluar sus opciones sin insistir continuamente en la ruta cerrada. Las tareas abandonadas dejan sus reservas disponibles.
+- **Lectura y continuidad.** En micro se distinguen búsqueda, acarreo, regreso por hambre o cansancio y reunión. Al continuar desde un snapshot a mitad de una salida o de la preparación del refugio, se obtienen los mismos eventos y el mismo hash que en la ejecución continua.

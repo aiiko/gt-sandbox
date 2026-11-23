@@ -2,8 +2,6 @@
 
 Paquetes: `content/objects` (`chair`, `sofa`), `sim/crush` (`SourceSeat`), `sim/ai` (`SeatCareScale`, `Hesitated.Source`), `internal/view`, `internal/render`, `internal/sound`, `cmd/game`.
 
-Diseño y alcance en el [plan](../plan-motor.md#hitos-de-asientos-en-la-casa-planificados).
-
 ## Superficies y accesos (M34)
 
 - **Silla común (`content/objects/chair.json`):** `Space` elevado de `40 × 40 cm` (`nav_grid` de 2 cm, `contact_surface`), fija en el dormitorio frente a `desk1` a 45 cm de altura (`(1,60 m, 0,55 m, 0,45 m)`).

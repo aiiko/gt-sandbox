@@ -1,6 +1,6 @@
 # Spec: Rutinas y encuentros (M28–M33)
 
-Diseño y alcance del slice en la [propuesta](../propuesta.md#15-rutinas-y-encuentros-en-la-casa); hitos y justificación en el [plan](../plan-motor.md#hitos-de-rutinas-y-encuentros-cerrados).
+Diseño y alcance del slice en la [propuesta](../propuesta.md#15-rutinas-y-encuentros-en-la-casa).
 
 ## Rutina variable (M28)
 
@@ -108,7 +108,7 @@ Las acciones de encuentro son acciones extra de `ai` (`ai.Install(w, encounter.A
 
 En la partida libre `encounter.observe` vale 0,12. Le gana a quedarse sin hacer nada, pero no interrumpe una actividad en curso: la inercia es 0,15.
 
-Que un tiny se aleje o se esconda porque lo miran queda fuera de esta entrega (ver el [plan](../plan-motor.md#m30-observar)).
+Que un tiny se aleje o se esconda porque lo miran queda fuera de esta entrega.
 
 Prueba: `giantess_observes_desk`. Sin necesidades que atender, la giantess va a mirar el escritorio, emite `observed`, no asusta a nadie y no vuelve a mirarlo en 75 s.
 
