@@ -10,6 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/render"
 	"gtsandbox/internal/scenario"
 	"gtsandbox/internal/view"
@@ -100,7 +101,7 @@ func TestMorningMicroArtKeepsIdentityAndCamera(t *testing.T) {
 			t.Fatalf("no se seleccionó el tiny en %s", scale)
 		}
 		x, y := g.proj.ToScreen(tiny.Pose.Pos)
-		if x != 240 || y != 135 || g.follow != tiny.ID || g.sel != tiny.ID {
+		if x != float32(g.w)/2 || y != float32(g.h)/2 || g.follow != tiny.ID || g.sel != tiny.ID {
 			t.Fatalf("%s: se perdió el seguimiento en (%f, %f)", scale, x, y)
 		}
 		if scale == render.Macro && !g.art.focus.IsNil() {
@@ -132,13 +133,24 @@ func TestMorningMacroArt(t *testing.T) {
 	f := g.run.Cur
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	scene := g.art.atlas.Arrange(f, g.proj, g.visuals, render.Macro, ids.Nil)
-	g.sel = scene.Pick(image.Pt(238, 93))
+	screen := func(v units.Vec3) image.Point {
+		x, y := g.proj.ToScreen(v)
+		return image.Pt(int(math.Round(float64(x))), int(math.Round(float64(y))))
+	}
+	gi, _ := f.SpaceByID(g.giantessID())
+	// al empezar está parada sobre el borde del futón: se elige su brazo este
+	g.sel = scene.Pick(screen(gi.Pose.Pos).Add(image.Pt(7, -28)))
 	if g.visuals[g.sel] != "giantess" {
 		t.Fatalf("clic en la giantess devolvió %s", g.name(g.sel))
 	}
-	for x, want := range map[int]string{180: "door_noren", 300: "door"} {
-		if id := scene.Pick(image.Pt(x, 135)); g.visuals[id] != want {
-			t.Errorf("umbral en (%d, 135): se seleccionó %s, quería %s", x, g.name(id), want)
+	for _, pt := range f.Portals {
+		want := g.visuals[pt.ID]
+		if want != "door" && want != "door_noren" {
+			continue
+		}
+		at := screen(units.V3(pt.A.X+(pt.B.X-pt.A.X)/2, pt.A.Y+(pt.B.Y-pt.A.Y)/2, pt.A.Z))
+		if id := scene.Pick(at); g.visuals[id] != want {
+			t.Errorf("umbral en %v: se seleccionó %s, quería %s", at, g.name(id), want)
 		}
 	}
 	g.toggleFollow()
@@ -201,7 +213,7 @@ func TestArtSampleUsesSameEntitiesAtBothScales(t *testing.T) {
 	} {
 		// Las posiciones son las del lienzo mínimo; el de la ventana de
 		// 1031×601 (516×301) lo rodea centrado.
-		shift := image.Pt((g.w-render.MinCanvasWidth)/2, (g.h-render.MinCanvasHeight)/2)
+		shift := image.Pt((g.w-480)/2, (g.h-270)/2)
 		layout.cup, layout.tiny = layout.cup.Add(shift), layout.tiny.Add(shift)
 		proj := g.cam.Project(g.anchor(f), g.w, g.h)
 		scene := g.art.atlas.Arrange(f, proj, g.visuals, layout.scale, g.art.focus)

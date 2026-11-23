@@ -92,7 +92,7 @@ func main() {
 	}
 	// Sin -size, la ventana se abre maximizada y se recuerda entre sesiones;
 	// las capturas y las mediciones usan 960×540 para ser reproducibles.
-	width, height := render.MinCanvasWidth*2, render.MinCanvasHeight*2
+	width, height := 960, 540
 	remember := *size == "" && *shot == "" && *bench == 0
 	if *size != "" {
 		widthText, heightText, _ := strings.Cut(*size, "x")

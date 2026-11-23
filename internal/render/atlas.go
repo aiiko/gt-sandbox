@@ -23,9 +23,17 @@ const (
 	Micro Scale = "micro"
 )
 
+// Densidades por defecto, en píxeles por metro, para un atlas que no las
+// declara: 16 px por 40 cm en macro y 16 px por 10 mm en micro.
+const (
+	DefaultMacroDensity = 40
+	DefaultMicroDensity = 1600
+)
+
 type atlasManifest struct {
 	Image   string                       `json:"image"`
 	Scales  []Scale                      `json:"scales,omitempty"`
+	Density map[Scale]int                `json:"density,omitempty"`
 	Sprites map[string]map[Scale]variant `json:"sprites"`
 }
 
@@ -55,6 +63,7 @@ type Atlas struct {
 	pixels  image.Image
 	texture *ebiten.Image
 	scales  []Scale
+	density map[Scale]int
 	sprites map[string]map[Scale]variant
 }
 
@@ -101,6 +110,13 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 			return nil, fmt.Errorf("atlas %s: escala inválida o duplicada %q", file, scale)
 		}
 	}
+	density := map[Scale]int{Macro: DefaultMacroDensity, Micro: DefaultMicroDensity}
+	for _, scale := range slices.Sorted(maps.Keys(manifest.Density)) {
+		if !slices.Contains(manifest.Scales, scale) || manifest.Density[scale] <= 0 {
+			return nil, fmt.Errorf("atlas %s: densidad inválida para %q: %d", file, scale, manifest.Density[scale])
+		}
+		density[scale] = manifest.Density[scale]
+	}
 	for _, id := range slices.Sorted(maps.Keys(manifest.Sprites)) {
 		if id == "" {
 			return nil, fmt.Errorf("atlas %s: identificador de sprite vacío", file)
@@ -122,7 +138,7 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 			}
 		}
 	}
-	return &Atlas{source: file, pixels: pixels, scales: manifest.Scales, sprites: manifest.Sprites}, nil
+	return &Atlas{source: file, pixels: pixels, scales: manifest.Scales, density: density, sprites: manifest.Sprites}, nil
 }
 
 func validateVariant(v variant, bounds image.Rectangle, context string) error {
@@ -193,6 +209,10 @@ func (a *Atlas) Require(id string) error {
 }
 
 func (a *Atlas) Supports(scale Scale) bool { return slices.Contains(a.scales, scale) }
+
+// Density es la densidad del arte de una escala, en píxeles por metro: la
+// cámara la usa como zoom para que cada píxel del lienzo sea uno del arte.
+func (a *Atlas) Density(scale Scale) int { return a.density[scale] }
 
 // Clips devuelve los clips ordenados de una variante visible, o nil si no se dibuja.
 func (a *Atlas) Clips(id string, scale Scale) []string {

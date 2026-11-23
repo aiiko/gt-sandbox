@@ -1,5 +1,5 @@
-"""Lote de sprites de M15: tiny en cuatro direcciones, poses de la giantess,
-palma elevada y taza en mano."""
+"""Lote de sprites de M15: tiny en cuatro direcciones, palma elevada y taza
+en mano (la giantess macro está en giantess.py)."""
 import os
 from PIL import Image, ImageOps
 from px import Canvas, load, hexc
@@ -159,127 +159,6 @@ def tinies():
             save(tiny_frame(full, 'south', 'left' if i == 1 else 'right', 0, fall=i), f'{name}/micro_fall_{i}.png')
 
 
-# ------------------------------------------------------------ giantess
-
-G = {'a': INK, 'b': '#5D508D', 'f': '#FFD8B9', 'e': '#CE8190', 'i': '#9A8BE3', 'k': '#C8B9F5',
-     'm': '#67588F', 'h': '#FF9CAD'}
-SHADOW = (0x91, 0x6B, 0x8F, 255)
-
-
-def gload(name):
-    return load(os.path.join(BASE, 'giantess', f'macro_{name}.png'))
-
-
-def clear_lower(im, y0):
-    out = im.copy()
-    for y in range(y0, im.height):
-        for x in range(im.width):
-            out.putpixel((x, y), (0, 0, 0, 0))
-    return out
-
-
-# Cuánto baja el torso al sentarse. Sentada ocupa menos alto para que el
-# mueble que tiene delante (escritorio, mesa) siga a la vista.
-SEAT_DROP = 7
-
-
-def seated(facing):
-    """Sentada en seiza sobre un zabuton: el torso baja y las piernas se pliegan."""
-    src = gload(f'idle_{facing}' if facing != 'west' else 'idle_east')
-    upper = clear_lower(src, 29)
-    c = Canvas(31, 38)
-    # zabuton coral, más ancho que el cuerpo para que asome a los lados
-    c.rrect(1, 30, 29, 8, '#FF9CAD', '#C66F86')
-    c.hline(2, 31, 27, '#FFC2CD')
-    c.px(3, 36, '#C66F86')
-    c.px(27, 36, '#C66F86')
-    # rodillas y falda plegadas
-    c.rrect(4, 29, 23, 6, '#67588F', INK)
-    c.hline(5, 30, 21, '#7969A4')
-    c.paste(upper.crop((0, 0, 31, 29)), 0, SEAT_DROP)
-    im = c.im
-    if facing == 'west':
-        im = ImageOps.mirror(im)
-    return im
-
-
-def arm(c, pts, hand):
-    for x, y in pts:
-        c.px(x, y, '#9A8BE3')
-        c.px(x, y + 1, '#67588F')
-    hx, hy = hand
-    c.rect(hx, hy, 2, 2, '#FFD8B9')
-    c.px(hx + 1, hy + 1, '#CE8190')
-
-
-def reaching(facing):
-    src = gload(f'idle_{facing}' if facing != 'west' else 'idle_east')
-    c = Canvas(31, 38)
-    c.paste(src, 0, 0)
-    if facing == 'east' or facing == 'west':
-        arm(c, [(x, 22) for x in range(24, 29)], (28, 21))
-        c.hline(24, 24, 5, INK)
-    elif facing == 'south':
-        # antebrazo hacia la cámara, mano delante del cuerpo
-        c.rrect(17, 25, 6, 5, '#9A8BE3', INK)
-        c.rrect(18, 29, 5, 4, '#FFD8B9', INK)
-        c.px(20, 31, '#CE8190')
-    else:
-        # de espaldas: el brazo sube por delante, por encima del hombro
-        for y in range(10, 22):
-            c.px(24, y, '#9A8BE3')
-            c.px(25, y, '#67588F')
-        c.px(23, 10, INK)
-        c.rect(24, 7, 2, 3, '#FFD8B9')
-        c.px(26, 8, INK)
-    im = c.im
-    if facing == 'west':
-        im = ImageOps.mirror(im)
-    return im
-
-
-def onigiri(c, x, y):
-    c.px(x + 1, y, '#FFFFFF')
-    c.hline(x, y + 1, 3, '#FFFFFF')
-    c.hline(x, y + 2, 3, '#2F3B4C')
-    c.px(x - 1, y + 2, INK)
-    c.px(x + 3, y + 2, INK)
-
-
-def eating(facing, frame):
-    base = seated('east' if facing == 'west' else facing)
-    c = Canvas(31, 38)
-    c.paste(base, 0, 0)
-    up = frame == 1
-    d = SEAT_DROP - 4
-    if facing == 'north':
-        # codo que sube y baja junto a la cabeza
-        y = (18 if up else 21) + d
-        c.rrect(23, y, 4, 4, '#9A8BE3', INK)
-    elif facing == 'south':
-        y = (18 if up else 23) + d
-        c.rrect(17, y + 2, 5, 5, '#9A8BE3', INK)
-        c.rect(18, y, 3, 3, '#FFD8B9')
-        onigiri(c, 18, y - 2)
-    else:
-        y = (17 if up else 22) + d
-        c.rrect(22, y + 2, 5, 5, '#9A8BE3', INK)
-        c.rect(24, y, 3, 3, '#FFD8B9')
-        onigiri(c, 25, y - 2)
-    im = c.im
-    if facing == 'west':
-        im = ImageOps.mirror(im)
-    return im
-
-
-def giantess():
-    for facing in ('south', 'north', 'east', 'west'):
-        save(reaching(facing), f'giantess/macro_reach_{facing}.png')
-        save(seated(facing), f'giantess/macro_sit_{facing}.png')
-        for i in (1, 2):
-            save(eating(facing, i), f'giantess/macro_eat_{facing}_{i}.png')
-
-
 # ------------------------------------------------------------ palma y taza
 
 PALM_SIZE = 480  # cuadro cuadrado: el pivote queda en el centro en las cuatro orientaciones
@@ -327,12 +206,6 @@ def cup():
             if p[3] and p[:3] in {(0xBD, 0x89, 0x7F), (0xA7, 0x72, 0x79), (0xA9, 0x77, 0x79)} and y > 60:
                 held.putpixel((x, y), (0, 0, 0, 0))
     save(held, 'cup/micro_held.png')
-    macro = load(os.path.join(BASE, 'cup/macro_idle.png'))
-    c = Canvas(8, 5)
-    c.paste(macro, 0, 0)
-    c.px(6, 2, '#FFD8B9')  # dedos sobre el asa
-    c.px(6, 1, '#FFD8B9')
-    save(c.im, 'cup/macro_held.png')
 
 
 def plate_micro(c, cx, cy, shadow):
@@ -361,18 +234,6 @@ def plate():
     c = Canvas(98, 64)
     plate_micro(c, 47, 29, False)
     save(c.im, 'plate/micro_held.png')
-    c = Canvas(6, 4)
-    c.rect(1, 0, 4, 1, INK)
-    c.rect(0, 1, 6, 2, INK)
-    c.rect(1, 3, 4, 1, INK)
-    c.rect(1, 1, 4, 2, '#FFF6EA')
-    c.px(2, 1, '#D9A066')
-    save(c.im, 'plate/macro_idle.png')
-    c2 = Canvas(7, 4)
-    c2.paste(c.im, 0, 0)
-    c2.px(5, 1, '#FFD8B9')
-    c2.px(6, 2, '#FFD8B9')
-    save(c2.im, 'plate/macro_held.png')
 
 
 def tiny_shadow():
@@ -478,21 +339,12 @@ def remains():
     save(m.im, 'remains/macro_idle.png')
 
 
-def footprint():
-    """Sombra de la próxima pisada (macro): un óvalo; la presentación la aclara."""
-    c = Canvas(7, 4)
-    c.ellipse(3, 2, 3, 1, INK)
-    save(c.im, 'footprint/macro_idle.png')
-
-
 def main(src, base):
     global SRC, BASE
     SRC, BASE = src, base
     remains()
-    footprint()
     tinies()
     tiny_shadow()
-    giantess()
     palm()
     palm_shadows()
     pass_sign()

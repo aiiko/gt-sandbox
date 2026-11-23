@@ -8,9 +8,9 @@ import (
 
 func TestCanvasLayoutFillsWindow(t *testing.T) {
 	for _, tc := range []struct{ w, h, cw, ch int }{
-		{960, 540, 480, 270},   // capturas de referencia: el lienzo de siempre
-		{1920, 1009, 640, 337}, // maximizada en 1080p: más mundo, sin bandas
-		{1031, 601, 516, 301},
+		{960, 540, 960, 540},   // capturas de referencia: el lienzo de 1080p a 1×
+		{1920, 1009, 960, 505}, // maximizada en 1080p
+		{1031, 601, 1031, 601},
 	} {
 		if cw, ch := canvasLayout(tc.w, tc.h); cw != tc.cw || ch != tc.ch {
 			t.Errorf("%dx%d: lienzo %dx%d, quería %dx%d", tc.w, tc.h, cw, ch, tc.cw, tc.ch)
@@ -18,17 +18,17 @@ func TestCanvasLayoutFillsWindow(t *testing.T) {
 	}
 	defer func(s func() float64) { deviceScale = s }(deviceScale)
 	deviceScale = func() float64 { return 1.5 } // 1280×720 lógicos = 1920×1080 físicos
-	if cw, ch := canvasLayout(1280, 720); cw != 640 || ch != 360 {
+	if cw, ch := canvasLayout(1280, 720); cw != 960 || ch != 540 {
 		t.Errorf("con escala 1,5: lienzo %dx%d", cw, ch)
 	}
 }
 
 func TestDefaultWindowFitsMonitor(t *testing.T) {
 	for _, tc := range []struct{ mw, mh, w, h int }{
-		{1920, 1080, 1440, 810},
-		{2560, 1440, 1920, 1080},
-		{1366, 768, 960, 540},
-		{800, 600, 480, 270},
+		{1920, 1080, 1536, 864},
+		{2560, 1440, 2304, 1296},
+		{1366, 768, 768, 432},
+		{800, 600, 768, 432},
 	} {
 		if w, h := defaultWindow(tc.mw, tc.mh); w != tc.w || h != tc.h {
 			t.Errorf("monitor %dx%d: ventana %dx%d, quería %dx%d", tc.mw, tc.mh, w, h, tc.w, tc.h)

@@ -4,8 +4,9 @@
     python tools/art/build.py -check     # verifica que las fuentes coinciden
     go run ./cmd/artpack                 # después, rearmar el atlas
 
-Requiere Pillow. Las imágenes de base/ son las piezas originales de M14 que
-los scripts modifican (paredes, heladera, nido, mesa, giantess, palma, taza).
+Requiere Pillow. Las imágenes de base/ son piezas micro originales de M14 que
+los scripts modifican (nido, mesa, taza, tiny lavanda). Todo el arte macro
+(casa a 80 px/m y giantess) sale de macro.py y giantess.py.
 """
 import os
 import sys
@@ -17,8 +18,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import floors  # noqa: E402
+import giantess  # noqa: E402
+import macro  # noqa: E402
 import micro  # noqa: E402
-import rooms  # noqa: E402
 import seats  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
@@ -30,7 +32,8 @@ BASE = os.path.join(HERE, 'base')
 
 
 def build(out):
-    rooms.main(out, BASE)
+    macro.main(out)
+    giantess.main(out)
     micro.main(out, BASE)
     floors.main(out)
     seats.main(out)

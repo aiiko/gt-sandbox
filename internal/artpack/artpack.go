@@ -5,7 +5,8 @@
 // salvo que cada cuadro y cada primer plano nombra archivos en lugar de
 // rectángulos. Un cuadro puede ser una lista de capas del mismo tamaño que se
 // componen de abajo hacia arriba. El resultado es determinista: las mismas
-// fuentes producen los mismos bytes de PNG y JSON.
+// fuentes producen los mismos bytes de PNG y JSON. `density` (píxeles por
+// metro de cada escala) pasa tal cual al manifiesto exportado.
 package artpack
 
 import (
@@ -32,6 +33,7 @@ type sourceManifest struct {
 	Image   string                              `json:"image"`
 	Width   int                                 `json:"width"`
 	Scales  []string                            `json:"scales,omitempty"`
+	Density map[string]int                      `json:"density,omitempty"`
 	Sprites map[string]map[string]sourceVariant `json:"sprites"`
 }
 
@@ -76,6 +78,7 @@ func (l *layers) UnmarshalJSON(b []byte) error {
 type outManifest struct {
 	Image   string                           `json:"image"`
 	Scales  []string                         `json:"scales,omitempty"`
+	Density map[string]int                   `json:"density,omitempty"`
 	Sprites map[string]map[string]outVariant `json:"sprites"`
 }
 
@@ -132,6 +135,11 @@ func Pack(src fs.FS) (*Result, error) {
 	}
 	if m.Width <= 0 {
 		return nil, fmt.Errorf("atlas.json: falta el ancho del atlas")
+	}
+	for _, scale := range slices.Sorted(maps.Keys(m.Density)) {
+		if m.Density[scale] <= 0 {
+			return nil, fmt.Errorf("atlas.json: densidad inválida para %s: %d", scale, m.Density[scale])
+		}
 	}
 
 	pieces := map[string]*piece{}
@@ -234,7 +242,7 @@ func Pack(src fs.FS) (*Result, error) {
 		return []int{q.at.X, q.at.Y, p.img.Bounds().Dx(), p.img.Bounds().Dy()}
 	}
 
-	out := outManifest{Image: m.Image, Scales: m.Scales, Sprites: map[string]map[string]outVariant{}}
+	out := outManifest{Image: m.Image, Scales: m.Scales, Density: m.Density, Sprites: map[string]map[string]outVariant{}}
 	for name, variants := range m.Sprites {
 		out.Sprites[name] = map[string]outVariant{}
 		for scale, v := range variants {

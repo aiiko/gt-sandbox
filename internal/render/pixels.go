@@ -21,10 +21,11 @@ import (
 
 // El lienzo de la escena llena la pantalla: mide pantalla / factor, con el
 // factor entero más grande que deja al menos MinCanvasWidth × MinCanvasHeight
-// píxeles lógicos (propuesta, 17.2).
+// píxeles lógicos (propuesta, 17.2). El mínimo deja ver la casa entera a
+// 80 px/m (720 × 240) con margen para la interfaz: N = 2 en 1080p y 3 en 1440p.
 const (
-	MinCanvasWidth  = 480
-	MinCanvasHeight = 270
+	MinCanvasWidth  = 768
+	MinCanvasHeight = 432
 )
 
 // MaxCanvasFactor limita el factor de escena: en pantallas grandes el

@@ -23,11 +23,11 @@ func TestPixelViewport(t *testing.T) {
 		factor int
 		canvas image.Point
 	}{
-		{480, 270, 1, image.Pt(480, 270)},
-		{960, 540, 2, image.Pt(480, 270)},
-		{1920, 1080, 3, image.Pt(640, 360)},
-		{1920, 1009, 3, image.Pt(640, 337)}, // ventana maximizada en 1080p
-		{1031, 601, 2, image.Pt(516, 301)},
+		{768, 432, 1, image.Pt(768, 432)},
+		{960, 540, 1, image.Pt(960, 540)},
+		{1920, 1080, 2, image.Pt(960, 540)},
+		{1920, 1009, 2, image.Pt(960, 505)}, // ventana maximizada en 1080p
+		{1600, 900, 2, image.Pt(800, 450)},
 		{2560, 1440, 3, image.Pt(854, 480)},
 		{3840, 2160, 3, image.Pt(1280, 720)},
 		{400, 200, 1, image.Pt(400, 200)},
@@ -118,9 +118,9 @@ func TestSpritePickingUsesSnappedInterpolatedFrame(t *testing.T) {
 		Things: []view.Thing{{ID: 2, Space: 1, Name: "Otro nombre", Mover: &view.Mover{Status: "moving"}}},
 	}
 	f := view.Interpolate(previous, current, 0.5)
-	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
+	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, 480, 270)
 	s := a.Arrange(f, proj, map[ids.ID]string{1: "table", 2: "person"}, Micro, 1)
-	v := PixelViewport(image.Rect(0, 0, 960, 540), image.Pt(MinCanvasWidth, MinCanvasHeight))
+	v := PixelViewport(image.Rect(0, 0, 960, 540), image.Pt(480, 270))
 	at := v.Rect.Min.Add(image.Pt(241, 135).Mul(v.Factor))
 	point, _ := v.Point(float64(at.X), float64(at.Y))
 	if got := s.Pick(point); got != 2 {
@@ -153,7 +153,7 @@ func TestMacroOcclusionUsesSupportAndForeground(t *testing.T) {
 		},
 	}
 	visuals := map[ids.ID]string{1: "room", 2: "thing", 3: "thing", 4: "thing"}
-	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, 480, 270)
 	behind := a.Arrange(frame, proj, visuals, Macro, ids.Nil)
 	if id := behind.Pick(image.Pt(239, 134)); id != 3 {
 		t.Fatalf("detrás de la mesa y su ocupante: se eligió %s", id)
@@ -247,7 +247,7 @@ func TestMicroCargoAndContactLayers(t *testing.T) {
 		},
 		Contacts: []view.Contact{{A: 1, B: 2}},
 	}
-	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, 480, 270)
 	visuals := map[ids.ID]string{1: "surface", 2: "surface", 3: "carrier", 4: "surface", 5: "nest"}
 	s := a.Arrange(f, proj, visuals, Micro, 1)
 	for point, want := range map[image.Point]ids.ID{
@@ -278,7 +278,7 @@ func TestTiledFloorCoversExtent(t *testing.T) {
 	}
 	f := &view.Frame{Spaces: []view.Space{{ID: 1, Extent: units.Rect{Max: units.V2(2500, 2500)}}}}
 	// 0,003 px/µm: cada baldosa de 3 px cubre 1 mm; la extensión, 2,5 mm (7,5 px).
-	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, MinCanvasWidth, MinCanvasHeight)
+	proj := (camera.Camera{Zoom: 0.003}).Project(fixedmath.Identity, 480, 270)
 	s := a.Arrange(f, proj, map[ids.ID]string{1: "floor"}, Micro, 1)
 	var union image.Rectangle
 	n := 0
@@ -301,5 +301,29 @@ func TestTiledFloorCoversExtent(t *testing.T) {
 	manifest = `{"image":"atlas.png","sprites":{"floor":{"macro":` + sampleVariant + `,"micro":` + bad + `}}}`
 	if _, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json"); err == nil || !strings.Contains(err.Error(), "baldosa") {
 		t.Fatalf("pivote de baldosa: %v", err)
+	}
+}
+
+func TestAtlasDensity(t *testing.T) {
+	sprites := `"sprites":{"cup":{"macro":` + sampleVariant + `,"micro":` + sampleVariant + `}}`
+	a, err := LoadAtlas(sampleAtlas(t, `{"image":"atlas.png",`+sprites+`}`), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.Density(Macro) != DefaultMacroDensity || a.Density(Micro) != DefaultMicroDensity {
+		t.Fatalf("sin density: macro %d, micro %d", a.Density(Macro), a.Density(Micro))
+	}
+	a, err = LoadAtlas(sampleAtlas(t, `{"image":"atlas.png","density":{"macro":80},`+sprites+`}`), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.Density(Macro) != 80 || a.Density(Micro) != DefaultMicroDensity {
+		t.Fatalf("con density: macro %d, micro %d", a.Density(Macro), a.Density(Micro))
+	}
+	for _, density := range []string{`{"macro":0}`, `{"micro":-5}`, `{"lejos":80}`} {
+		manifest := `{"image":"atlas.png","density":` + density + `,` + sprites + `}`
+		if _, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json"); err == nil || !strings.Contains(err.Error(), "densidad inválida") {
+			t.Errorf("density %s: error %v", density, err)
+		}
 	}
 }

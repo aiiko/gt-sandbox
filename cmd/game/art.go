@@ -102,9 +102,9 @@ func (g pixelGame) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Ima
 func (g *game) fitArt() {
 	f := g.run.Cur
 	focus := g.artFocus(f)
-	g.cam.Zoom = 16.0 / float64(40*units.Centimeter)
+	g.cam.Zoom = g.artZoom(render.Macro)
 	if !focus.IsNil() {
-		g.cam.Zoom = 16.0 / float64(units.Centimeter)
+		g.cam.Zoom = g.artZoom(render.Micro)
 	}
 	if g.followsInView(f) {
 		g.cam.Anchor = ids.Nil
@@ -124,7 +124,13 @@ func (g *game) fitArt() {
 	}
 	g.cam.Anchor = ids.Nil
 	g.cam.Fit(f.Bounds(), g.w, g.h)
-	g.cam.Zoom = 16.0 / float64(40*units.Centimeter)
+	g.cam.Zoom = g.artZoom(render.Macro)
+}
+
+// artZoom es el zoom (px/µm) con el que un píxel del lienzo es un píxel del
+// arte de la escala, según la densidad que declara el atlas.
+func (g *game) artZoom(scale render.Scale) float64 {
+	return float64(g.art.atlas.Density(scale)) / float64(units.Meter)
 }
 
 func (g *game) microSurface(f *view.Frame, id ids.ID) ids.ID {

@@ -713,7 +713,7 @@ El suelo se proyecta en planta ortográfica, con el norte arriba en ambas vistas
 
 | Vista | Qué se lee | Densidad inicial de arte | Escena de referencia |
 | --- | --- | --- | --- |
-| Macro | Habitaciones, puertas, muebles, rutina y desplazamiento de la giantess | 16 px por 40 cm. La referencia de la giantess de pie usa un lienzo de 31 × 38 px | La casa completa y el viaje del dormitorio al living |
+| Macro | Habitaciones, puertas, muebles, rutina y desplazamiento de la giantess | 16 px por 20 cm (80 px/m, [17.3](#173-más-detalle-en-la-vista-macro)). La giantess de pie usa un lienzo de 62 × 76 px | La casa completa y el viaje del dormitorio al living |
 | Micro | Tinies individuales, migajas, bordes y pasos entre superficies | 16 px por 10 mm. El tiny tiene una silueta visible de 12–16 px de alto | El nido y las migajas sobre el escritorio, el borde de la palma y el descenso a la mesa del living |
 
 La escena se dibuja en un lienzo lógico de **480 × 270 px**. La ventana de escritorio admite ese lienzo a partir de 1×. Se usa el mayor factor entero que entre, con muestreo por vecino más cercano (nearest-neighbor) y bandas centradas cuando sobra espacio. La posición se interpola primero y se alinea a la cuadrícula de píxeles al dibujar. Las densidades son parámetros para la primera prueba de arte y se ajustan con capturas de la casa y la palma. La cuadrícula visual es independiente de las celdas de navegación.
@@ -1067,7 +1067,7 @@ La escena deja de tener tamaño fijo. Se elige un **factor de escena** entero *N
 - **Factor por defecto.** Se usa el mayor *N*, con un máximo de 3, que permite ver la casa entera con margen para los paneles. Con la densidad del punto 17.3, eso da *N* = 2 en 1080p y *N* = 3 en 1440p.
 - **Capturas reproducibles.** `-shot`, `capturas.json` y `-bench` fijan el tamaño con `-size`, así que las referencias siguen siendo deterministas. Las capturas de referencia se regeneran una vez.
 
-**Estado.** Implementado. Mientras no cambie la densidad (17.3), el mínimo de 480 × 270 deja la casa entera, así que *N* sale de ese mínimo, con un tope de 3 para que en pantallas grandes la interfaz no se agrande: en 1080p, 640 × 337 maximizada y 640 × 360 a pantalla completa; en 1440p, 854 × 480. A 960 × 540 el lienzo no cambia y las capturas de referencia siguen iguales. [Presentación](specs/presentacion.md)
+**Estado.** Implementado. Con la densidad de 17.3, el lienzo mínimo es 768 × 432 (la casa de 720 × 240 más los paneles) y *N* tiene un tope de 3 para que en pantallas grandes la interfaz no se agrande: en 1080p, 960 × 540 a ×2; en 1440p, 854 × 480 a ×3. Las capturas de referencia se toman a 960 × 540, el lienzo de 1080p a 1×. [Presentación](specs/presentacion.md)
 
 ### 17.3. Más detalle en la vista macro
 
@@ -1080,7 +1080,9 @@ La casa es una sola zona, así que macro puede trabajar con el doble de píxeles
 | Suelos y paredes | Tatami, azulejo y madera con textura propia. Puertas y noren se distinguen abiertos o cerrados |
 | Tinies | Siguen midiendo menos de un píxel a esta escala, así que se mantienen como marcadores y globos (punto 17.7) |
 
-**Migración sin cortar el juego.** El atlas declara su densidad por escala (`density` en el manifiesto) y deja de depender de la constante de `art.go`. Mientras una pieza no tenga su versión nueva, `artpack` arma la variante macro escalando la fuente actual 2× por vecino más cercano. El cambio de densidad funciona desde el primer commit y el arte se reemplaza de a una pieza, en este orden: giantess, muebles con uso y suelos y paredes. Las piezas de `tools/art/` ajustan su tamaño en el script.
+**Migración de una vez.** El atlas declara su densidad por escala (`density` en el manifiesto) y la cámara la toma de ahí, sin constantes en `art.go`. No hay escalado intermedio: todas las fuentes macro se redibujaron por código a 80 px/m (`tools/art/macro.py` para la casa y los muebles, `tools/art/giantess.py` para la giantess), con la misma ubicación en la escena (tamaño, pivote, profundidad y anclaje de carga al doble) y más detalle: ojos con brillo, flequillo y moño, cárdigan con blusa y lazo, falda tableada y zabuton en la giantess; vetas, tatami con heri, shoji, azulejos, bacha, anafe y alfombra seigaiha en la casa. Los marcadores de tinies y restos, los símbolos y el retrato son interfaz y conservan su tamaño.
+
+**Estado.** Implementado. Ya no quedan piezas macro dibujadas a mano: `tools/art/base/` solo guarda originales micro.
 
 ### 17.4. Zoom con la rueda: escena e interfaz en capas separadas
 
