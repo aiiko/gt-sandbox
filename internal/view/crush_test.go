@@ -76,10 +76,10 @@ func TestCrushPresentation(t *testing.T) {
 		t.Fatal("no hay restos en el frame")
 	}
 	told := false
-	for _, s := range r.Story {
+	for _, s := range r.Chronicle.Recent() {
 		told = told || strings.Contains(s.Text, "quedó bajo la palma en escritorio")
 	}
 	if !told {
-		t.Errorf("la historia no cuenta la muerte: %+v", r.Story)
+		t.Errorf("la historia no cuenta la muerte: %+v", r.Chronicle.Recent())
 	}
 }

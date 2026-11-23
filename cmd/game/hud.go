@@ -23,17 +23,7 @@ import (
 	"gtsandbox/internal/view"
 )
 
-// La mañana empieza a las 7:00 y cada segundo simulado es un minuto del reloj
-// de la casa.
-const (
-	dayStart         = 7 * 60
-	minutesPerSecond = 1
-)
-
-func clockAt(t clock.Tick) string {
-	m := dayStart + int(t)/clock.TPS*minutesPerSecond
-	return fmt.Sprintf("%02d:%02d", m/60%24, m%60)
-}
+func clockAt(t clock.Tick) string { return view.ClockAt(t) }
 
 // displayNames traduce los nombres internos que no están en castellano.
 var displayNames = map[string]string{
@@ -268,6 +258,7 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 	if hasMover {
 		c.Order = "Clic der.: ir allí"
 	}
+	c.Diary = g.diary(id)
 	return c
 }
 
@@ -285,8 +276,27 @@ func (g *game) giantessID() ids.ID {
 const storyShown = 6
 
 func (g *game) storyEntries() []view.StoryEntry {
-	s := g.run.Story
+	s := g.run.Chronicle.Lines()
 	return s[max(0, len(s)-storyShown):]
+}
+
+// diaryShown es cuántas entradas del diario muestra la ficha.
+const diaryShown = 3
+
+// diary son las últimas entradas del diario de una entidad o lugar.
+func (g *game) diary(id ids.ID) []ui.StoryLine {
+	d := g.run.Chronicle.Diary(id)
+	// en su propio diario, «Tiny 03 explora cocina» es «Explora cocina»
+	self := g.display(id) + " "
+	var out []ui.StoryLine
+	for _, e := range d[max(0, len(d)-diaryShown):] {
+		text := e.Text
+		if t, ok := strings.CutPrefix(text, self); ok && self != " " {
+			text = t
+		}
+		out = append(out, ui.StoryLine{Time: clockAt(e.Tick), Text: capital(text)})
+	}
+	return out
 }
 
 // deathNoticeDuration es cuánto tiempo real permanece en pantalla la
@@ -409,10 +419,22 @@ func (g *game) partida(f *view.Frame, focus ids.ID) ui.HUD {
 			h.Face = f.Expression(gi)
 		}
 		for _, e := range g.storyEntries() {
-			h.Story = append(h.Story, ui.StoryLine{Time: clockAt(e.Tick), Text: capital(e.Text), Focusable: g.storyTarget(f, e) != ids.Nil})
+			h.Story = append(h.Story, ui.StoryLine{Time: clockAt(e.Tick), Text: capital(e.Text), Focusable: g.storyTarget(f, e) != ids.Nil, Tone: storyTone(e)})
 		}
 	}
 	return h
+}
+
+// storyTone colorea la hora de una línea de la crónica: coral si es grave,
+// turquesa si es un encuentro u otro hito.
+func storyTone(e view.StoryEntry) ui.Tone {
+	switch {
+	case e.Grave:
+		return ui.ToneDanger
+	case e.Level == view.LevelMilestone:
+		return ui.ToneMilestone
+	}
+	return ui.ToneNormal
 }
 
 // storyTarget es lo que se enfoca desde una entrada: el actor si sigue en el

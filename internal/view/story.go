@@ -6,9 +6,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
-	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
-	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/encounter"
@@ -16,16 +14,6 @@ import (
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
-
-// StoryEntry resume un evento publicado en el tick indicado. Actor es quien
-// lo protagoniza y Place la superficie o habitación donde ocurre (pueden
-// faltar); la interfaz los usa para enfocar desde la entrada.
-type StoryEntry struct {
-	Tick  clock.Tick
-	Text  string
-	Actor ids.ID
-	Place ids.ID
-}
 
 // storySubjects devuelve el actor y el lugar de un evento de la historia.
 func storySubjects(event world.Event) (actor, place ids.ID) {
@@ -78,54 +66,11 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 	return ids.Nil, ids.Nil
 }
 
-func storyText(r *ecs.Registry, event world.Event) string {
-	names := comp.Of(r).Name
-	name := func(id ids.ID) string {
-		if n, ok := names.Get(id); ok && n != "" {
-			switch n {
-			case "cup":
-				return "la taza"
-			case "plate":
-				return "el plato"
-			}
-			return string(n)
-		}
-		return id.String()
-	}
-	isHand := func(id ids.ID) bool {
-		s, ok := ecs.Get[space.Space](r).Get(id)
-		if !ok || s.Kind != space.Articulated {
-			return false
-		}
-		l, _ := comp.Of(r).Location.Get(id)
-		a := ecs.Get[ai.Agent](r).Ptr(l.Space)
-		return a != nil && a.Hand == id
-	}
+// storyText es el texto de un evento para la historia ("" si no se cuenta).
+// Las actividades de la giantess las cuenta la rutina de la crónica.
+func storyText(k chronicler, event world.Event) string {
+	r, name, isHand := k.r, k.name, k.isHand
 	switch ev := event.(type) {
-	case ai.ActionStarted:
-		switch ev.What {
-		case "breakfast":
-			return fmt.Sprintf("%s decide preparar el desayuno.", name(ev.Entity))
-		case "watch":
-			return fmt.Sprintf("%s decide mirar televisión.", name(ev.Entity))
-		case "sleep":
-			return fmt.Sprintf("%s se dispone a dormir.", name(ev.Entity))
-		case "snack_living":
-			return fmt.Sprintf("%s decide merendar en el living.", name(ev.Entity))
-		case "relax":
-			return fmt.Sprintf("%s decide descansar en el sofá.", name(ev.Entity))
-		case "observe":
-			return fmt.Sprintf("%s se acerca a mirar a los tinies de %s.", name(ev.Entity), name(ev.Target))
-		}
-	case ai.ActionDone:
-		switch ev.What {
-		case "breakfast":
-			return fmt.Sprintf("%s termina de desayunar.", name(ev.Entity))
-		case "snack_living":
-			return fmt.Sprintf("%s termina de merendar.", name(ev.Entity))
-		case "relax":
-			return fmt.Sprintf("%s termina de descansar.", name(ev.Entity))
-		}
 	case ai.ItemDropped:
 		return fmt.Sprintf("%s deja %s en %s.", name(ev.Entity), name(ev.Item), name(ev.On))
 	case ai.ItemsLeft:

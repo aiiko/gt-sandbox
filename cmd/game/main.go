@@ -572,7 +572,7 @@ func (g *game) keys() {
 	case k(ebiten.KeyH):
 		g.story, g.logBack = !g.story, 0
 	case g.story && k(ebiten.KeyPageUp):
-		g.logBack = min(g.logBack+storyRows, max(0, len(r.Story)-storyRows))
+		g.logBack = min(g.logBack+storyRows, max(0, len(r.Chronicle.Lines())-storyRows))
 	case g.story && k(ebiten.KeyPageDown):
 		g.logBack = max(0, g.logBack-storyRows)
 	case k(ebiten.KeyF):
@@ -802,7 +802,7 @@ func (g *game) hud(screen *ebiten.Image) {
 const storyRows = 8
 
 func (g *game) storyPanel(screen *ebiten.Image) {
-	story := g.run.Story
+	story := g.run.Chronicle.Lines()
 	end := len(story) - g.logBack
 	start := max(0, end-storyRows)
 	lines := []string{"Historia | H eventos | RePág/AvPág recorrer"}

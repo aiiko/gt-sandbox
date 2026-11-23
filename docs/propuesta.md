@@ -1120,6 +1120,8 @@ La historia tiene dos niveles. La **crónica** cuenta la partida solo con lo que
 
 **Criterio de aceptación.** En los primeros 5 minutos de `casa.json` con la semilla de referencia, la crónica no tiene ninguna línea de «explora», «sube a» ni «asigna un acarreo». Muestra todos los aplastamientos, sustos y encuentros. La ficha de un tiny que exploró muestra esas exploraciones en su diario.
 
+**Estado.** Implementado (`view.Chronicle`, verificado por `TestChronicleAcceptance`). La crónica reemplaza a `Runner.Story`. Los hitos se distinguen por el color de la hora: coral los graves y turquesa los demás. Los iconos por tipo y el panel con pestañas quedan para 17.6. Los avisos siguen siendo los de los decesos. [Presentación](specs/presentacion.md#interfaz-de-partida)
+
 ### 17.6. Interfaz de partida y menú de pausa
 
 Con la capa de interfaz a 960 × 540 lógicos en 1080p hay espacio para paneles que no tapen la casa.

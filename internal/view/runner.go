@@ -51,10 +51,10 @@ type Runner struct {
 	Speed  int // multiplicador; uno de Speeds
 	acc    time.Duration
 
-	Prev, Cur *Frame       // estado antes y después del último Step
-	Log       []Logged     // últimos LogSize eventos, del más viejo al más nuevo
-	Story     []StoryEntry // últimos LogSize resúmenes, en orden de publicación
-	Events    []Published  // últimos LogSize eventos con su tipo
+	Prev, Cur *Frame      // estado antes y después del último Step
+	Log       []Logged    // últimos LogSize eventos, del más viejo al más nuevo
+	Chronicle Chronicle   // la historia: crónica y diarios (propuesta, 17.5)
+	Events    []Published // últimos LogSize eventos con su tipo
 	seq       uint64
 	Err       error  // primer error de step; detiene el Runner
 	falls     []Fall // caídas recientes, para animarlas
@@ -149,7 +149,6 @@ func (r *Runner) attachRecent(f *Frame) {
 }
 
 func (r *Runner) record() {
-	first := len(r.Story)
 	for _, e := range r.World.Events() {
 		if fell, ok := e.Event.(space.EntityFell); ok {
 			// cuenta desde el primer frame que ya la muestra resuelta
@@ -172,22 +171,14 @@ func (r *Runner) record() {
 		r.Log = append(r.Log, Logged{Tick: e.Tick, Kind: e.Event.Kind(), Data: string(data)})
 		r.seq++
 		r.Events = append(r.Events, Published{Seq: r.seq, Tick: e.Tick, Event: e.Event})
-		if summary := storyText(r.World.ECS(), e.Event); summary != "" {
-			actor, place := storySubjects(e.Event)
-			entry := StoryEntry{Tick: e.Tick, Text: summary, Actor: actor, Place: place}
-			if !slices.Contains(r.Story[first:], entry) {
-				r.Story = append(r.Story, entry)
-			}
-		}
+		r.Chronicle.Record(r.World.ECS(), e.Tick, e.Event)
 	}
+	r.Chronicle.Flush(r.World.Tick())
 	if over := len(r.Log) - LogSize; over > 0 {
 		r.Log = append(r.Log[:0], r.Log[over:]...)
 	}
 	if over := len(r.Events) - LogSize; over > 0 {
 		r.Events = append(r.Events[:0], r.Events[over:]...)
-	}
-	if over := len(r.Story) - LogSize; over > 0 {
-		r.Story = append(r.Story[:0], r.Story[over:]...)
 	}
 }
 

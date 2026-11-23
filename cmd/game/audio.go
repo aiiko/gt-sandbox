@@ -142,9 +142,7 @@ func (g *game) uiState() sound.UIState {
 		micro = !g.artFocus(g.run.Cur).IsNil()
 	}
 	st := sound.UIState{Selected: g.sel, Following: g.follow, Micro: micro, Paused: g.run.Paused, Story: g.story}
-	if n := len(g.run.Story); n > 0 {
-		st.Last = g.run.Story[n-1]
-	}
+	st.Last = g.run.Chronicle.Last()
 	return st
 }
 

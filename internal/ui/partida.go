@@ -115,6 +115,7 @@ type Card struct {
 	Needs    []Need
 	Order    string // orden disponible ("Clic der. mover aquí")
 	Emote    string // símbolo actual, para repetirlo junto al nombre
+	Diary    []StoryLine
 }
 
 // StoryLine es una entrada del panel de historia.
@@ -122,6 +123,26 @@ type StoryLine struct {
 	Time      string
 	Text      string
 	Focusable bool // se puede enfocar al actor o al lugar
+	Tone      Tone
+}
+
+// Tone es el color de la hora de una línea de la historia.
+type Tone uint8
+
+const (
+	ToneNormal    Tone = iota
+	ToneMilestone      // un hito: turquesa
+	ToneDanger         // grave: coral
+)
+
+func (t Tone) color() color.Color {
+	switch t {
+	case ToneMilestone:
+		return Turquoise
+	case ToneDanger:
+		return Coral
+	}
+	return PlumSoft
 }
 
 // Notice es una notificación temporal en pantalla (p. ej. el deceso de un tiny).
@@ -314,6 +335,7 @@ func (h HUD) drawStory(dst *ebiten.Image, atlas *render.Atlas, bottom int) []ima
 	type entry struct {
 		lines []string
 		time  string
+		tone  Tone
 		focus bool
 		index int // en h.Story; -1 para el texto de espera
 	}
@@ -324,7 +346,7 @@ func (h HUD) drawStory(dst *ebiten.Image, atlas *render.Atlas, bottom int) []ima
 		if n+len(lines) > 4 {
 			break
 		}
-		entries = append([]entry{{lines, h.Story[i].Time, h.Story[i].Focusable, i}}, entries...)
+		entries = append([]entry{{lines, h.Story[i].Time, h.Story[i].Tone, h.Story[i].Focusable, i}}, entries...)
 		n += len(lines)
 	}
 	if n == 0 {
@@ -347,7 +369,7 @@ func (h HUD) drawStory(dst *ebiten.Image, atlas *render.Atlas, bottom int) []ima
 	for _, e := range entries {
 		top := y
 		if e.time != "" {
-			DrawText(dst, e.time, br.Min.X+5, y, PlumSoft)
+			DrawText(dst, e.time, br.Min.X+5, y, e.tone.color())
 		}
 		for _, l := range e.lines {
 			DrawText(dst, l, br.Min.X+43, y, Plum)
@@ -369,7 +391,10 @@ func (h HUD) drawStory(dst *ebiten.Image, atlas *render.Atlas, bottom int) []ima
 }
 
 func (c Card) draw(dst *ebiten.Image, atlas *render.Atlas, right, bottom int) {
-	const w = 150
+	w := 150
+	if len(c.Diary) > 0 {
+		w = 200 // el diario necesita más ancho que las necesidades
+	}
 	lines := 1
 	if c.Place != "" {
 		lines++
@@ -383,7 +408,13 @@ func (c Card) draw(dst *ebiten.Image, atlas *render.Atlas, right, bottom int) {
 	if c.Order != "" {
 		lines++
 	}
+	if len(c.Diary) > 0 {
+		lines += len(c.Diary)
+	}
 	h := lines*LineHeight + len(c.Needs)*11 + 8
+	if len(c.Diary) > 0 {
+		h += 3 // la raya que separa el diario
+	}
 	r := image.Rect(right-w, bottom-h, right, bottom)
 	Box(dst, r, Ivory)
 	x, y := r.Min.X+5, r.Min.Y+4
@@ -405,6 +436,16 @@ func (c Card) draw(dst *ebiten.Image, atlas *render.Atlas, right, bottom int) {
 	}
 	if c.Order != "" {
 		DrawText(dst, Fit(c.Order, w-10), x, y, PlumSoft)
+		y += LineHeight
+	}
+	if len(c.Diary) > 0 {
+		vector.FillRect(dst, float32(x), float32(y+1), float32(w-10), 1, IvoryDim, false)
+		y += 3
+		for _, d := range c.Diary {
+			DrawText(dst, d.Time, x, y, PlumSoft)
+			DrawText(dst, Fit(d.Text, w-10-36), x+36, y, Plum)
+			y += LineHeight
+		}
 	}
 }
 

@@ -181,7 +181,9 @@ func TestMixerRules(t *testing.T) {
 // seguimiento y no además como selección.
 func TestUISounds(t *testing.T) {
 	a, b := ids.Make(1, 1), ids.Make(2, 1)
-	entry := view.StoryEntry{Tick: 10, Text: "giantess apoya la mano."}
+	entry := view.StoryEntry{Seq: 1, Tick: 10, Text: "Desayuna en cocina."}
+	done := entry
+	done.End, done.Text = 400, "Desayuna en cocina, hasta las 07:20."
 	for _, c := range []struct {
 		name      string
 		prev, cur UIState
@@ -196,6 +198,8 @@ func TestUISounds(t *testing.T) {
 		{"reanudar", UIState{Paused: true}, UIState{}, []string{UIResume}},
 		{"historia oculta", UIState{}, UIState{Last: entry}, nil},
 		{"historia", UIState{Story: true}, UIState{Story: true, Last: entry}, []string{UIStory}},
+		// completar la línea de una actividad no es una entrada nueva
+		{"rutina completada", UIState{Story: true, Last: entry}, UIState{Story: true, Last: done}, nil},
 	} {
 		if got := UISounds(c.prev, c.cur); !slices.Equal(got, c.want) {
 			t.Errorf("%s: %v, quería %v", c.name, got, c.want)

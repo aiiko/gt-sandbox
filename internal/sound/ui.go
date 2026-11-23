@@ -52,7 +52,7 @@ func UISounds(prev, cur UIState) []string {
 			out = append(out, UIResume)
 		}
 	}
-	if cur.Story && cur.Last != prev.Last && cur.Last.Text != "" {
+	if cur.Story && cur.Last.Seq != prev.Last.Seq && cur.Last.Text != "" {
 		out = append(out, UIStory)
 	}
 	return out

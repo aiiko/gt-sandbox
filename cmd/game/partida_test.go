@@ -147,11 +147,11 @@ func TestPartidaStoryFocus(t *testing.T) {
 	palm := refOf(t, morningScenario, "palm")
 	stepTo(t, g, 300)
 	var climb, start view.StoryEntry
-	for _, e := range g.run.Story {
+	for _, e := range g.run.Chronicle.Recent() {
 		if strings.HasSuffix(e.Text, "sube a la mano.") && climb.Actor.IsNil() {
 			climb = e
 		}
-		if strings.Contains(e.Text, "desayuno") {
+		if strings.HasPrefix(e.Text, "Desayuna") {
 			start = e
 		}
 	}

@@ -39,7 +39,7 @@ func runScenario(t *testing.T, file string, seen func(f *Frame, in *scenario.Ins
 }
 
 func storyHas(r *Runner, part string) bool {
-	for _, s := range r.Story {
+	for _, s := range r.Chronicle.Recent() {
 		if strings.Contains(s.Text, part) {
 			return true
 		}
@@ -53,23 +53,23 @@ func storyHas(r *Runner, part string) bool {
 func TestEncounterStory(t *testing.T) {
 	r, _ := runScenario(t, "giantess_snacks_in_living.json", nil)
 	if !storyHas(r, "Caen migajas de la merienda.") || storyHas(r, "para los tinies") {
-		t.Errorf("merienda: %+v", r.Story)
+		t.Errorf("merienda: %+v", r.Chronicle.Recent())
 	}
 	r, _ = runScenario(t, "giantess_shares_crumbs.json", nil)
 	if !storyHas(r, "deja unas migajas para los tinies de escritorio") || storyHas(r, "Caen migajas") {
-		t.Errorf("compartir: %+v", r.Story)
+		t.Errorf("compartir: %+v", r.Chronicle.Recent())
 	}
 	r, _ = runScenario(t, "tiny_boards_offered_palm.json", nil)
 	if !storyHas(r, "ofrece la palma abierta") || !storyHas(r, "Subieron 3 tinies a la palma") {
-		t.Errorf("alguien sube: %+v", r.Story)
+		t.Errorf("alguien sube: %+v", r.Chronicle.Recent())
 	}
 	r, _ = runScenario(t, "nobody_boards_offered_palm.json", nil)
 	if !storyHas(r, "Nadie sube a la palma") || storyHas(r, "Subieron") {
-		t.Errorf("nadie sube: %+v", r.Story)
+		t.Errorf("nadie sube: %+v", r.Chronicle.Recent())
 	}
 	r, _ = runScenario(t, "offer_canceled_when_occupied.json", nil)
 	if !storyHas(r, "no la apoya") || storyHas(r, "ofrece la palma abierta") {
-		t.Errorf("cancelada: %+v", r.Story)
+		t.Errorf("cancelada: %+v", r.Chronicle.Recent())
 	}
 }
 

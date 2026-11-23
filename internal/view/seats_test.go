@@ -12,7 +12,7 @@ func TestSeatsStoryAndExpression(t *testing.T) {
 		file string
 		want []string
 	}{
-		{"giantess_sits_and_relaxes.json", []string{"decide descansar en el sofá", "se sienta", "termina de descansar"}},
+		{"giantess_sits_and_relaxes.json", []string{"Descansa en el sofá, hasta las", "se sienta"}},
 		{"chair_sit_crushes_tiny.json", []string{"quedó bajo la giantess al sentarse en silla"}},
 		{"careful_sit_needs_high_care.json", []string{"nota tinies en silla y espera antes de sentarse"}},
 	} {
@@ -24,7 +24,7 @@ func TestSeatsStoryAndExpression(t *testing.T) {
 				}
 			})
 			var lines []string
-			for _, e := range run.Story {
+			for _, e := range run.Chronicle.Recent() {
 				lines = append(lines, e.Text)
 			}
 			all := strings.Join(lines, "\n")

@@ -278,11 +278,11 @@ func TestMorningViewer(t *testing.T) {
 	}
 
 	pending := []string{
-		"preparar el desayuno", "deja la taza en escritorio", "Caen migajas del desayuno",
+		"Desayuna", "deja la taza en escritorio", "Caen migajas del desayuno",
 		"asigna un acarreo", "sube a la mano", "levanta la mano", "entra en living",
 		"baja de la mano", "explora mesa del living",
 	}
-	for _, e := range g.run.Story {
+	for _, e := range g.run.Chronicle.Recent() {
 		if len(pending) > 0 && strings.Contains(e.Text, pending[0]) {
 			pending = pending[1:]
 		}

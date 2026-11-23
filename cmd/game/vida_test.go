@@ -75,7 +75,7 @@ func TestPartidaLifeReadable(t *testing.T) {
 				}
 			}
 		}
-		for _, e := range g.run.Story {
+		for _, e := range g.run.Chronicle.Recent() {
 			for k := range story {
 				if strings.Contains(e.Text, k) {
 					story[k] = true
