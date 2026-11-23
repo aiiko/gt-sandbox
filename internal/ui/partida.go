@@ -223,6 +223,7 @@ type ActivityCount struct {
 // TinyRow es una fila de la lista de tinies en la pestaña Colonia.
 type TinyRow struct {
 	Name     string
+	Role     string
 	Activity string
 	Hungry   bool
 	Tired    bool
@@ -796,6 +797,13 @@ func (h HUD) drawColonyTab(dst *ebiten.Image, lay *Layout, body image.Rectangle)
 	rowsAvail := max(1, (body.Max.Y-12-y)/LineHeight)
 	start := min(max(0, h.Panel.Scroll), max(0, len(col.Tinies)-rowsAvail))
 	end := min(len(col.Tinies), start+rowsAvail)
+	hasRoles := false
+	for _, t := range col.Tinies {
+		if t.Role != "" {
+			hasRoles = true
+			break
+		}
+	}
 	for i := start; i < end; i++ {
 		t := col.Tinies[i]
 		rr := image.Rect(body.Min.X, y, body.Max.X-2, y+LineHeight)
@@ -813,9 +821,19 @@ func (h HUD) drawColonyTab(dst *ebiten.Image, lay *Layout, body image.Rectangle)
 			DrawText(dst, "H", rr.Max.X-alertW-9, y, Amber)
 			alertW += 10
 		}
-		nameW := 52
+		nameW := 48
 		DrawText(dst, Fit(t.Name, nameW), x, y, Plum)
-		DrawText(dst, Fit(t.Activity, max(20, w-nameW-alertW-4)), x+nameW+3, y, PlumSoft)
+		actX := x + nameW + 3
+		if hasRoles {
+			roleW := min(58, max(36, (w-nameW-alertW-8)/2))
+			roleTxt := t.Role
+			if roleTxt == "" {
+				roleTxt = "Generalista"
+			}
+			DrawText(dst, Fit(roleTxt, roleW), actX, y, Lilac)
+			actX += roleW + 3
+		}
+		DrawText(dst, Fit(t.Activity, max(20, x+w-actX-alertW)), actX, y, PlumSoft)
 		y += LineHeight
 	}
 	drawScrollBar(dst, body, start > 0, end < len(col.Tinies), &lay.PanelScrollUp, &lay.PanelScrollDown)

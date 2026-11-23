@@ -751,6 +751,7 @@ func (g *game) colonyPanel(f *view.Frame) *ui.ColonyPanel {
 		energy, _ := view.NeedOf(t.Needs, "energy")
 		cp.Tinies = append(cp.Tinies, ui.TinyRow{
 			Name:     capital(g.display(t.ID)),
+			Role:     roleLabels[t.Role],
 			Activity: cat,
 			Hungry:   hunger < 300,
 			Tired:    energy < 300,
