@@ -293,6 +293,13 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 				c.Carrying = fmt.Sprintf("Lleva %d raciones", t.Rations)
 			}
 		}
+		if t.GripLabel != "" && cause == "" {
+			if c.Activity != "" {
+				c.Activity += " · Agarrado a " + t.GripLabel
+			} else {
+				c.Activity = "Agarrado a " + t.GripLabel
+			}
+		}
 		if t.NearestRefuge != "" && cause == "" && c.Dest == "" {
 			c.Dest = "Refugio cercano: " + capital(t.NearestRefuge)
 		}
@@ -864,8 +871,9 @@ func (g *game) goToEntity(id ids.ID) {
 		g.fitArt()
 		if t, ok := f.ThingByID(id); ok {
 			if s, ok := f.SpaceByID(ms); ok {
-				g.cam.X = float64(t.Pose.Pos.X - s.Pose.Pos.X)
-				g.cam.Y = float64(t.Pose.Pos.Y - s.Pose.Pos.Y)
+				pos := s.MicroPos(t.Pose.Pos, t.LocalPos)
+				g.cam.X = float64(pos.X - s.Pose.Pos.X)
+				g.cam.Y = float64(pos.Y - s.Pose.Pos.Y)
 			}
 		}
 		g.startArtFade()

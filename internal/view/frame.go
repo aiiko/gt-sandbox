@@ -47,6 +47,12 @@ type Grid struct {
 	Cost    []nav.Cost   `json:"cost"` // fila por fila, desde y = 0
 }
 
+// Grip es un punto de agarre (costura, puño, mechón) en coordenadas locales del Space.
+type Grip struct {
+	Pos   units.Vec2 `json:"pos"`
+	Label string     `json:"label,omitempty"`
+}
+
 // Space es un Space con su pose de mundo.
 type Space struct {
 	ID      ids.ID     `json:"id"`
@@ -64,10 +70,23 @@ type Space struct {
 	Step     string `json:"step,omitempty"`
 	Goal     ids.ID `json:"goal,omitempty"`
 	Needs    []Need `json:"needs,omitempty"`
-	// Climb y Occluded informan a la vista micro si este Space es una trepada
-	// de costado o si ropa/pelo ocultan al tiny (propuesta 19.5).
-	Climb    bool `json:"climb,omitempty"`
-	Occluded bool `json:"occluded,omitempty"`
+	// Climb, Occluded, Projected y Grips informan a la vista micro sobre zonas
+	// corporales (trepadas de costado, ropa/pelo que tapan, proyección 3D y agarres).
+	Climb     bool   `json:"climb,omitempty"`
+	Occluded  bool   `json:"occluded,omitempty"`
+	Projected bool   `json:"projected,omitempty"`
+	Grips     []Grip `json:"grips,omitempty"`
+}
+
+// MicroPos devuelve la posición sobre el plano micro del Space: en superficies
+// con proyección 3D (trepadas o planos inclinados del cuerpo) proyecta las
+// coordenadas locales 2D sobre la baldosa dibujada; en superficies planas
+// devuelve worldPos sin cambios.
+func (s Space) MicroPos(worldPos, localPos units.Vec3) units.Vec3 {
+	if !s.Projected {
+		return worldPos
+	}
+	return s.Pose.Transform().Apply(units.V3(localPos.X, localPos.Y, 0))
 }
 
 // Expedition resume una expedición activa de la colonia para la interfaz.
@@ -119,6 +138,7 @@ type Thing struct {
 	Name      string       `json:"name,omitempty"`
 	Space     ids.ID       `json:"space"`
 	Pose      Pose         `json:"pose"`
+	LocalPos  units.Vec3   `json:"local_pos,omitempty"`
 	Radius    units.Length `json:"radius"`
 	Height    units.Length `json:"height"`
 	Body      bool         `json:"body"`
@@ -200,6 +220,8 @@ type Portal struct {
 	ID       ids.ID     `json:"id"`
 	A        units.Vec3 `json:"a"`
 	B        units.Vec3 `json:"b"`
+	ALocal   units.Vec2 `json:"a_local,omitempty"`
+	BLocal   units.Vec2 `json:"b_local,omitempty"`
 	ASpace   ids.ID     `json:"a_space"`
 	BSpace   ids.ID     `json:"b_space"`
 	Disabled bool       `json:"disabled,omitempty"`
@@ -322,9 +344,16 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			return
 		}
 		s := Space{ID: id, Name: names(id), Kind: sp.Kind, Parent: g.Parent(id), Pose: p,
-			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos), Climb: sp.IsClimb()}
+			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos),
+			Climb: sp.IsClimb(), Projected: sp.Projection != nil}
 		if z, ok := zones.Get(id); ok {
 			s.Occluded = z.Occluded
+			if len(z.Grips) > 0 {
+				s.Grips = make([]Grip, len(z.Grips))
+				for i, gr := range z.Grips {
+					s.Grips[i] = Grip{Pos: gr.Pos, Label: gr.Label}
+				}
+			}
 		}
 		if a, ok := agents.Get(id); ok {
 			s.Activity, s.Step = activity(r, a)
@@ -360,7 +389,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if !ok {
 			return
 		}
-		t := Thing{ID: id, Name: names(id), Space: l.Space, Pose: p}
+		t := Thing{ID: id, Name: names(id), Space: l.Space, Pose: p, LocalPos: l.Pos}
 		if b, ok := cs.Body.Get(id); ok {
 			t.Radius, t.Height, t.Body = b.Radius, b.Height, true
 		}
@@ -417,8 +446,8 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if errA != nil || errB != nil {
 			return
 		}
-		f.Portals = append(f.Portals, Portal{ID: id, A: a, B: b, ASpace: p.A.Space, BSpace: p.B.Space,
-			Disabled: p.Disabled, Dynamic: contacts.Has(id)})
+		f.Portals = append(f.Portals, Portal{ID: id, A: a, B: b, ALocal: p.A.Pos, BLocal: p.B.Pos,
+			ASpace: p.A.Space, BSpace: p.B.Space, Disabled: p.Disabled, Dynamic: contacts.Has(id)})
 	})
 	contacts.Each(func(id ids.ID, k *attach.Contact) {
 		f.Contacts = append(f.Contacts, Contact{ID: id, A: k.A, B: k.B, Since: k.Since})

@@ -16,6 +16,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/view"
 )
 
@@ -228,6 +229,8 @@ const (
 	// FootVisual es el pie de la giantess visto de cerca: su sombra antes de
 	// bajar (shadow_<dir>) y el pie apoyado (foot_<dir>).
 	FootVisual = "foot"
+	// GripVisual marca un punto de agarre (costura, puño, mechón) en una zona corporal.
+	GripVisual = "grip_point"
 	// ShadowReach es la altura a la que la sombra anticipada de una mano deja de verse.
 	ShadowReach = units.Meter
 	// fallLift limita cuántos píxeles cae un sprite en la animación de caída.
@@ -412,13 +415,23 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			addFrame(frameRect(v.Foreground), layerForeground)
 		}
 	}
+	microPos := func(spaceID ids.ID, worldPos, localPos units.Vec3) units.Vec3 {
+		if scale != Micro {
+			return worldPos
+		}
+		if sp, ok := f.SpaceByID(spaceID); ok && sp.Projected {
+			return sp.MicroPos(worldPos, localPos)
+		}
+		return worldPos
+	}
 	for _, s := range f.Spaces {
 		if !inFocus(s.ID) {
 			continue
 		}
-		// Patas, respaldos y cavidades (bolsillo del sofá) solo dibujan su
-		// baldosa micro cuando son el foco, para no tapar el mueble padre.
-		if scale == Micro && s.ID != focus && (visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket") {
+		// Patas, respaldos, cavidades (bolsillo del sofá) y zonas corporales
+		// proyectadas en 3D solo dibujan su baldosa micro cuando son el foco,
+		// para no tapar el mueble padre u otra superficie.
+		if scale == Micro && s.ID != focus && (visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket" || s.Projected) {
 			continue
 		}
 		if v, ok := visible(s.ID); ok && v.Tile {
@@ -465,7 +478,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 				b := buildBackdrop(f, p, *fs, visuals[fs.ID] == ClimbVisual || fs.Climb)
 				for _, fid := range featured {
 					if th, ok := f.ThingByID(fid); ok && th.Space == focus {
-						sx, sy := p.ToScreen(th.Pose.Pos)
+						sx, sy := p.ToScreen(microPos(th.Space, th.Pose.Pos, th.LocalPos))
 						cx, cy := int(math.Round(float64(sx))), int(math.Round(float64(sy)))
 						out.cutaway = &cutawayMask{
 							outer: b.rect,
@@ -502,8 +515,17 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 					look{visual: FootVisual, ghost: true, layer: layerForeground})
 			}
 		}
+		focusArticulated := false
+		if fs, ok := f.SpaceByID(focus); ok {
+			focusArticulated = fs.Kind == space.Articulated
+			for _, gr := range fs.Grips {
+				pos := fs.Pose.Transform().Apply(units.V3(gr.Pos.X, gr.Pos.Y, 0))
+				add(fs.ID, fs.ID, ids.Nil, pos, []string{"idle"}, false, image.Point{},
+					look{visual: GripVisual, ghost: true, layer: layerGround, alpha: 0.78})
+			}
+		}
 		for _, pt := range f.Portals {
-			if !pt.Dynamic {
+			if !pt.Dynamic && !focusArticulated {
 				continue
 			}
 			state := []string{"open"}
@@ -512,23 +534,36 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			}
 			for _, end := range []struct {
 				pos   units.Vec3
+				local units.Vec2
 				space ids.ID
-			}{{pt.A, pt.ASpace}, {pt.B, pt.BSpace}} {
+			}{{pt.A, pt.ALocal, pt.ASpace}, {pt.B, pt.BLocal, pt.BSpace}} {
+				if !pt.Dynamic && end.space != focus {
+					continue
+				}
 				if inFocus(end.space) {
-					add(pt.ID, end.space, ids.Nil, end.pos, state, false, image.Point{},
+					pos := microPos(end.space, end.pos, units.V3(end.local.X, end.local.Y, 0))
+					add(pt.ID, end.space, ids.Nil, pos, state, false, image.Point{},
 						look{visual: PassVisual, ghost: true, layer: layerGround})
 				}
 			}
 		}
 		// Sombra anticipada de una superficie móvil que todavía no se apoya
-		// sobre la superficie enfocada.
+		// sobre la superficie enfocada (solo visuales con clip shadow_<dir>).
 		if fs, ok := f.SpaceByID(focus); ok {
 			for _, s := range f.Spaces {
 				if s.Mover != nil || s.Extent.Empty() || inFocus(s.ID) {
 					continue
 				}
+				shadowClip := "shadow_" + compass(s.Pose.Rot)
+				v, ok := visible(s.ID)
+				if !ok || v.Tile {
+					continue
+				}
+				if _, has := v.Clips[shadowClip]; !has {
+					continue
+				}
 				if lk, offset, ok := handShadow(fs, s); ok {
-					add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{"shadow_" + compass(s.Pose.Rot)}, false, offset, lk)
+					add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{shadowClip}, false, offset, lk)
 				}
 			}
 		}
@@ -537,19 +572,20 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if t.CarriedBy.IsNil() && inFocus(t.Space) {
 			names := actor{mover: t.Mover, facing: t.Pose.Rot, activity: t.Activity, step: t.Step,
 				carrying: carrying[t.ID], built: t.Built}.clips()
+			pos := microPos(t.Space, t.Pose.Pos, t.LocalPos)
 			var offset image.Point
 			if fl, ok := f.FallOf(t.ID); ok {
 				// Cae desde arriba con aceleración; su sombra lo espera en el apoyo.
 				lift := fallOffset(p, fl, f.Tick)
 				names, offset = append([]string{"fall"}, names...), image.Pt(0, -lift)
-				add(t.ID, t.Space, ids.Nil, t.Pose.Pos, []string{"shadow"}, false, image.Point{},
+				add(t.ID, t.Space, ids.Nil, pos, []string{"shadow"}, false, image.Point{},
 					look{ghost: true, layer: layerGround, alpha: 0.3 + 0.5*float32(fallLift-lift)/fallLift})
 			}
-			add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, offset, look{})
+			add(t.ID, t.Space, ids.Nil, pos, names, false, offset, look{})
 			if scale == Micro && slices.Contains(featured, t.ID) {
 				// Lo seguido se ve a través de una superficie que lo tapa (la
 				// mano apoyada encima del extremo del paso).
-				add(t.ID, t.Space, ids.Nil, t.Pose.Pos, names, false, offset, look{ghost: true, top: true, alpha: 0.45})
+				add(t.ID, t.Space, ids.Nil, pos, names, false, offset, look{ghost: true, top: true, alpha: 0.45})
 			}
 		}
 	}
@@ -564,7 +600,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		var support ids.ID
 		var pos units.Vec3
 		if carrier, ok := f.ThingByID(t.CarriedBy); ok {
-			support, pos = carrier.Space, carrier.Pose.Pos
+			support, pos = carrier.Space, microPos(carrier.Space, carrier.Pose.Pos, carrier.LocalPos)
 		} else if carrier, ok := f.SpaceByID(t.CarriedBy); ok {
 			support, pos = carrier.Parent, carrier.Pose.Pos
 		} else {
@@ -788,6 +824,10 @@ func (a actor) clips() []string {
 				direction = "north"
 			case d.Y < 0:
 				direction = "south"
+			case d.Z > 0:
+				direction = "north"
+			case d.Z < 0:
+				direction = "south"
 			}
 		}
 		walk := []string{"walk_" + direction, "walk", "idle_" + direction}
@@ -946,13 +986,14 @@ func buildBackdrop(f *view.Frame, p camera.Projector, sp view.Space, climb bool)
 	var marks []portalMark
 	for _, pt := range f.Portals {
 		for _, end := range [2]struct {
-			sp  ids.ID
-			pos units.Vec3
-		}{{pt.ASpace, pt.A}, {pt.BSpace, pt.B}} {
+			sp    ids.ID
+			pos   units.Vec3
+			local units.Vec2
+		}{{pt.ASpace, pt.A, pt.ALocal}, {pt.BSpace, pt.B, pt.BLocal}} {
 			if end.sp != sp.ID {
 				continue
 			}
-			sx, sy := p.ToScreen(end.pos)
+			sx, sy := p.ToScreen(sp.MicroPos(end.pos, units.V3(end.local.X, end.local.Y, 0)))
 			marks = append(marks, portalMark{
 				at:       image.Pt(int(math.Round(float64(sx))), int(math.Round(float64(sy)))),
 				disabled: pt.Disabled,

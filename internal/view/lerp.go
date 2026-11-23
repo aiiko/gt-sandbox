@@ -30,6 +30,13 @@ func Interpolate(prev, cur *Frame, alpha float64) *Frame {
 			t := &out.Things[i]
 			d := t.Pose.Pos.Sub(p.Pose.Pos)
 			t.Pose = lerpPose(p.Pose, t.Pose, alpha)
+			if p.Space == t.Space {
+				dl := t.LocalPos.Sub(p.LocalPos)
+				if dl.LengthSq() <= int64(MaxLerp)*int64(MaxLerp) {
+					l := func(x units.Length) units.Length { return units.Length(float64(x) * alpha) }
+					t.LocalPos = p.LocalPos.Add(units.V3(l(dl.X), l(dl.Y), l(dl.Z)))
+				}
+			}
 			if t.Mover != nil && len(t.Mover.Route) > 0 && d.LengthSq() <= int64(MaxLerp)*int64(MaxLerp) {
 				m := *t.Mover
 				m.Route = append([]units.Vec3{t.Pose.Pos}, m.Route[1:]...)

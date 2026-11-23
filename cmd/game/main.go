@@ -388,6 +388,12 @@ func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 				if t, ok := render.FlattenClimbs(f, g.visuals).ThingByID(g.follow); ok {
 					p = t.Pose
 				}
+			} else if g.art != nil && g.artScale(f) == render.Micro {
+				if t, ok := f.ThingByID(g.follow); ok {
+					if sp, ok := f.SpaceByID(t.Space); ok && sp.Projected {
+						p.Pos = sp.MicroPos(t.Pose.Pos, t.LocalPos)
+					}
+				}
 			}
 			return fixedmath.Transform{Pos: p.Pos}
 		}

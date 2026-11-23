@@ -155,10 +155,15 @@ const (
 // cuántos tiene (0 si no hay tinies). A igual cantidad gana el primero en el
 // orden del Frame.
 func tinyCluster(f *view.Frame, s ids.ID) (units.Vec2, int) {
+	sp, hasSp := f.SpaceByID(s)
 	var pts []units.Vec2
 	for _, t := range f.Things {
 		if isTiny(t) && t.Space == s {
-			pts = append(pts, t.Pose.Pos.XY())
+			pos := t.Pose.Pos
+			if hasSp && sp.Projected {
+				pos = sp.MicroPos(t.Pose.Pos, t.LocalPos)
+			}
+			pts = append(pts, pos.XY())
 		}
 	}
 	var best units.Vec2

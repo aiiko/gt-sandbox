@@ -3433,6 +3433,7 @@
     },
     {
       "ref": "futon",
+      "visual": "futon",
       "spawn": {
         "name": "futón",
         "space": {
@@ -3493,6 +3494,7 @@
     },
     {
       "ref": "pillow",
+      "visual": "pillow",
       "spawn": {
         "name": "almohada",
         "space": {
@@ -3684,7 +3686,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_hair"
     },
     {
       "ref": "body_neck",
@@ -3757,7 +3760,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_skin"
     },
     {
       "ref": "body_shoulder_r",
@@ -3816,7 +3820,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_cardigan"
     },
     {
       "ref": "body_shoulder_l",
@@ -3875,7 +3880,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_cardigan"
     },
     {
       "ref": "body_chest",
@@ -3951,7 +3957,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_chest"
     },
     {
       "ref": "body_back",
@@ -4045,7 +4052,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_cardigan"
     },
     {
       "ref": "body_side_r",
@@ -4129,7 +4137,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_cardigan"
     },
     {
       "ref": "body_side_l",
@@ -4227,7 +4236,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_cardigan"
     },
     {
       "ref": "body_hips",
@@ -4285,7 +4295,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_skirt"
     },
     {
       "ref": "body_hand_r_back",
@@ -4335,7 +4346,8 @@
             "region": "mano derecha"
           }
         }
-      }
+      },
+      "visual": "body_hand"
     },
     {
       "ref": "body_forearm_r",
@@ -4423,7 +4435,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_sleeve"
     },
     {
       "ref": "body_upper_arm_r",
@@ -4496,7 +4509,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_sleeve"
     },
     {
       "ref": "body_hand_l",
@@ -4561,7 +4575,8 @@
             "self_contact": true
           }
         }
-      }
+      },
+      "visual": "body_hand"
     },
     {
       "ref": "body_forearm_l",
@@ -4649,7 +4664,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_sleeve"
     },
     {
       "ref": "body_upper_arm_l",
@@ -4722,7 +4738,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_sleeve"
     },
     {
       "ref": "body_thigh_l",
@@ -4825,7 +4842,8 @@
             "self_contact": true
           }
         }
-      }
+      },
+      "visual": "body_thigh"
     },
     {
       "ref": "body_calf_l",
@@ -4900,7 +4918,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_sock"
     },
     {
       "ref": "body_foot_l",
@@ -4980,7 +4999,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_shoe"
     },
     {
       "ref": "body_thigh_r",
@@ -5083,7 +5103,8 @@
             "self_contact": true
           }
         }
-      }
+      },
+      "visual": "body_thigh"
     },
     {
       "ref": "body_calf_r",
@@ -5158,7 +5179,8 @@
             ]
           }
         }
-      }
+      },
+      "visual": "body_sock"
     },
     {
       "ref": "body_foot_r",
@@ -5238,7 +5260,8 @@
             "body": "$giantess"
           }
         }
-      }
+      },
+      "visual": "body_shoe"
     },
     {
       "ref": "joint_hand_r_edge",

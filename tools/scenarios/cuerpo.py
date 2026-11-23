@@ -94,6 +94,7 @@ def futon_entities():
     return [
         {
             'ref': 'futon',
+            'visual': 'futon',
             'spawn': {
                 'name': 'futón',
                 'space': {'kind': 'elevated', 'extent': _rect(120, 180)},
@@ -106,6 +107,7 @@ def futon_entities():
         },
         {
             'ref': 'pillow',
+            'visual': 'pillow',
             'spawn': {
                 'name': 'almohada',
                 'space': {'kind': 'elevated', 'extent': _rect(60, 40)},
@@ -119,6 +121,31 @@ def futon_entities():
         _portal('futon_step', 'borde del futón', '$bedroom', (350000, 1200000), '$futon', (100000, 100000)),
         _portal('pillow_step', 'borde de la almohada', '$futon', (500000, 1500000), '$pillow', (200000, 100000)),
     ]
+
+
+BODY_VISUALS = {
+    'body_head': 'body_hair',
+    'body_neck': 'body_skin',
+    'body_shoulder_r': 'body_cardigan',
+    'body_shoulder_l': 'body_cardigan',
+    'body_chest': 'body_chest',
+    'body_back': 'body_cardigan',
+    'body_side_r': 'body_cardigan',
+    'body_side_l': 'body_cardigan',
+    'body_hips': 'body_skirt',
+    'body_hand_r_back': 'body_hand',
+    'body_forearm_r': 'body_sleeve',
+    'body_upper_arm_r': 'body_sleeve',
+    'body_hand_l': 'body_hand',
+    'body_forearm_l': 'body_sleeve',
+    'body_upper_arm_l': 'body_sleeve',
+    'body_thigh_l': 'body_thigh',
+    'body_calf_l': 'body_sock',
+    'body_foot_l': 'body_shoe',
+    'body_thigh_r': 'body_thigh',
+    'body_calf_r': 'body_sock',
+    'body_foot_r': 'body_shoe',
+}
 
 
 def body_entities(giantess_ref='$giantess', palm_ref='$palm'):
@@ -581,6 +608,9 @@ def body_entities(giantess_ref='$giantess', palm_ref='$palm'):
         _portal('joint_knee_r', 'rodilla derecha', '$body_thigh_r', (70000, 20000), '$body_calf_r', (40000, 140000)),
         _portal('joint_ankle_r', 'tobillo derecho', '$body_calf_r', (40000, 20000), '$body_foot_r', (50000, 120000)),
     ]
+    for e in ents:
+        if e['ref'] in BODY_VISUALS:
+            e['visual'] = BODY_VISUALS[e['ref']]
     return ents + joints
 
 
@@ -725,6 +755,7 @@ def desk_to_pillow_scenario():
     con regreso al cambiar el apoyo (bajada por costado al futón)."""
     palm_ent = {
         'ref': 'palm',
+        'visual': 'palm',
         'spawn': {
             'name': 'palma',
             'space': {'kind': 'articulated', 'extent': {'min': {'x': -50000, 'y': -90000}, 'max': {'x': 50000, 'y': 90000}}},
@@ -747,6 +778,7 @@ def desk_to_pillow_scenario():
     }
     return {
         'name': 'body_desk_to_pillow',
+        'atlas': '../../content/art/casa.json',
         'seed': 191,
         'ticks': 1400,
         'notes': (
@@ -755,20 +787,20 @@ def desk_to_pillow_scenario():
         ),
         'entities': [
             {'ref': 'house', 'spawn': {'name': 'house', 'space': {'kind': 'static', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 0, 'y': 0}}}}},
-            {'ref': 'bedroom', 'spawn': {
+            {'ref': 'bedroom', 'visual': 'bedroom', 'spawn': {
                 'name': 'dormitorio',
                 'space': {'kind': 'static', 'extent': _rect(300, 300)},
                 'location': {'space': '$house', 'pos': {'x': 0, 'y': 0, 'z': 0}},
                 'components': {'nav_grid': _grid(300, 300, cell_cm=10), 'contact_surface': {'tolerance': 40000}},
             }},
-            {'ref': 'desk1', 'spawn': {
+            {'ref': 'desk1', 'visual': 'desk', 'spawn': {
                 'name': 'escritorio',
                 'space': {'kind': 'elevated', 'extent': _rect(80, 60)},
                 'location': {'space': '$bedroom', 'pos': {'x': 1500000, 'y': 1000000, 'z': 750000}},
                 'components': {'nav_grid': _grid(80, 60, cell_cm=5), 'contact_surface': {'tolerance': 40000}},
             }},
             *futon_entities(),
-            {'ref': 'giantess', 'spawn': {
+            {'ref': 'giantess', 'visual': 'giantess', 'spawn': {
                 'name': 'giantess',
                 'space': {'kind': 'body', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 0, 'y': 0}}},
                 'location': {'space': '$bedroom', 'pos': {'x': 1400000, 'y': 1200000, 'z': 0}},
@@ -776,7 +808,7 @@ def desk_to_pillow_scenario():
             }},
             palm_ent,
             *body_entities(),
-            {'ref': 'tiny1', 'spawn': {
+            {'ref': 'tiny1', 'visual': 'tiny', 'spawn': {
                 'name': 'Tiny 01',
                 'location': {'space': '$desk1', 'pos': {'x': 300000, 'y': 200000, 'z': 0}},
                 'body': {'radius': 2000, 'height': 8000, 'mass': 1},
@@ -815,6 +847,7 @@ def floor_to_sofa_scenario():
     más una caída que aterriza en un soporte visible (el sofá)."""
     palm_ent = {
         'ref': 'palm',
+        'visual': 'palm',
         'spawn': {
             'name': 'palma',
             'space': {'kind': 'articulated', 'extent': {'min': {'x': -50000, 'y': -90000}, 'max': {'x': 50000, 'y': 90000}}},
@@ -834,6 +867,7 @@ def floor_to_sofa_scenario():
     }
     return {
         'name': 'body_floor_to_sofa',
+        'atlas': '../../content/art/casa.json',
         'seed': 192,
         'ticks': 1200,
         'notes': (
@@ -842,19 +876,19 @@ def floor_to_sofa_scenario():
         ),
         'entities': [
             {'ref': 'house', 'spawn': {'name': 'house', 'space': {'kind': 'static', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 0, 'y': 0}}}}},
-            {'ref': 'living', 'spawn': {
+            {'ref': 'living', 'visual': 'living', 'spawn': {
                 'name': 'living',
                 'space': {'kind': 'static', 'extent': _rect(300, 300)},
                 'location': {'space': '$house', 'pos': {'x': 0, 'y': 0, 'z': 0}},
                 'components': {'nav_grid': _grid(300, 300, cell_cm=10), 'contact_surface': {'tolerance': 40000}},
             }},
-            {'ref': 'sofa', 'spawn': {
+            {'ref': 'sofa', 'visual': 'sofa', 'spawn': {
                 'name': 'sofá',
                 'space': {'kind': 'elevated', 'extent': _rect(140, 70)},
                 'location': {'space': '$living', 'pos': {'x': 1000000, 'y': 400000, 'z': 450000}},
                 'components': {'nav_grid': _grid(140, 70, cell_cm=5), 'contact_surface': {'tolerance': 60000}},
             }},
-            {'ref': 'giantess', 'spawn': {
+            {'ref': 'giantess', 'visual': 'giantess', 'spawn': {
                 'name': 'giantess',
                 'space': {'kind': 'body', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 0, 'y': 0}}},
                 'location': {'space': '$living', 'pos': {'x': 1500000, 'y': 1500000, 'z': 0}},
@@ -862,14 +896,14 @@ def floor_to_sofa_scenario():
             }},
             palm_ent,
             *body_entities(),
-            {'ref': 'tiny1', 'spawn': {
+            {'ref': 'tiny1', 'visual': 'tiny', 'spawn': {
                 'name': 'Tiny 01',
                 'location': {'space': '$living', 'pos': {'x': 1300000, 'y': 1500000, 'z': 0}},
                 'body': {'radius': 2000, 'height': 8000, 'mass': 1},
                 'components': {'mover': {'speed': 150000, 'scale': 'tiny'}},
             }},
             # Segundo tiny en el muslo derecho, lejos del agarre, para probar caída al sofá.
-            {'ref': 'tiny2', 'spawn': {
+            {'ref': 'tiny2', 'visual': 'tiny_lavender', 'spawn': {
                 'name': 'Tiny 02',
                 'location': {'space': '$body_thigh_r', 'pos': {'x': 120000, 'y': 300000, 'z': 0}},
                 'body': {'radius': 2000, 'height': 8000, 'mass': 1},

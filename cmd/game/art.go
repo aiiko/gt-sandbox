@@ -297,8 +297,9 @@ func (g *game) toggleArtMicro() {
 		}
 		g.fitArt()
 		if t, ok := f.ThingByID(g.sel); ok && t.Space == s.ID && !g.followsInView(f) {
-			g.cam.X = float64(t.Pose.Pos.X - s.Pose.Pos.X)
-			g.cam.Y = float64(t.Pose.Pos.Y - s.Pose.Pos.Y)
+			pos := s.MicroPos(t.Pose.Pos, t.LocalPos)
+			g.cam.X = float64(pos.X - s.Pose.Pos.X)
+			g.cam.Y = float64(pos.Y - s.Pose.Pos.Y)
 		}
 		g.startArtFade()
 	}

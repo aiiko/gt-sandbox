@@ -22,6 +22,8 @@ func TestMenuListsPlayableScenarios(t *testing.T) {
 		}
 	}
 	want := []string{
+		"tests/scenarios/body_desk_to_pillow.json",
+		"tests/scenarios/body_floor_to_sofa.json",
 		"tests/scenarios/tiny_cae_de_la_palma.json",
 		"tests/scenarios/un_descuido_cuidadosa.json",
 		"tests/scenarios/un_descuido_en_el_escritorio.json",
