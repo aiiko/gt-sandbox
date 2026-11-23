@@ -188,6 +188,17 @@
         {"wave": "sine", "f0": 68, "dur": 0.24, "f1": 46, "attack": 0.012, "decay": 0.08, "gain": 0.3}
       ]
     },
+    "sit_thud_micro": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 400,
+      "volume": 0.95,
+      "layers": [
+        {"wave": "sine", "f0": 52, "dur": 0.65, "f1": 28, "attack": 0.008, "decay": 0.24, "gain": 0.65},
+        {"wave": "triangle", "f0": 96, "dur": 0.32, "f1": 54, "attack": 0.006, "decay": 0.11, "gain": 0.22},
+        {"wave": "noise", "f0": 380, "dur": 0.36, "f1": 90, "attack": 0.01, "decay": 0.12, "gain": 0.32, "lp": 280}
+      ]
+    },
     "tv_on": {
       "category": "efectos",
       "voices": 1,

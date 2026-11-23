@@ -467,6 +467,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 				lk.over = a.placeOf(f, visuals, s)
 			}
 		}
+		if scale == Micro && s.ID != focus && visuals[s.ID] == "body_rear" {
+			add(s.ID, focus, ids.Nil, s.Pose.Pos, []string{"shadow_" + compass(s.Pose.Rot)}, false, image.Pt(3, 4),
+				look{ghost: true, layer: layerGround, alpha: 0.32})
+		}
 		add(s.ID, support, ids.Nil, s.Pose.Pos, names, true, image.Point{}, lk)
 	}
 	if scale == Macro {
@@ -601,7 +605,16 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 					continue
 				}
 				if lk, offset, ok := handShadow(fs, s); ok {
-					add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{shadowClip}, false, offset, lk)
+					if visuals[s.ID] == "body_rear" && s.Pose.Pos.Z-fs.Pose.Pos.Z <= 3*units.Centimeter {
+						// Ya está sentada sobre la silla/sofá: mostrar su cuerpo sentado
+						// (falda y caderas) con una sombra suave de contacto debajo.
+						add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{shadowClip}, false, image.Pt(3, 4),
+							look{ghost: true, layer: layerGround, alpha: 0.32})
+						add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{"idle"}, false, image.Point{},
+							look{layer: layerForeground})
+					} else {
+						add(s.ID, fs.ID, ids.Nil, s.Pose.Pos, []string{shadowClip}, false, offset, lk)
+					}
 				}
 			}
 		}

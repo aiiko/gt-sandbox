@@ -311,6 +311,14 @@
       "cooldown_ms": 200
     },
     {
+      "id": "sit_thud_micro",
+      "file": "sit_thud_micro.wav",
+      "category": "efectos",
+      "ms": 650,
+      "voices": 1,
+      "cooldown_ms": 400
+    },
+    {
       "id": "sofa_sit",
       "file": "sofa_sit.wav",
       "category": "efectos",

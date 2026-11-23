@@ -93,7 +93,7 @@
             ]
           },
           "contact_surface": {
-            "tolerance": 40000
+            "tolerance": 50000
           }
         }
       }
@@ -166,7 +166,7 @@
             ]
           },
           "contact_surface": {
-            "tolerance": 40000
+            "tolerance": 50000
           }
         }
       }
@@ -506,7 +506,11 @@
             "z": 450000
           }
         },
-        "components": {}
+        "components": {
+          "contact_surface": {
+            "tolerance": 50000
+          }
+        }
       }
     },
     {
@@ -774,7 +778,11 @@
             "z": 450000
           }
         },
-        "components": {}
+        "components": {
+          "contact_surface": {
+            "tolerance": 50000
+          }
+        }
       }
     },
     {
@@ -1700,10 +1708,10 @@
       }
     },
     {
-      "ref": "seat",
-      "visual": "seat",
+      "ref": "body_rear",
+      "visual": "body_rear",
       "spawn": {
-        "name": "asiento",
+        "name": "trasero",
         "space": {
           "kind": "articulated",
           "extent": {
@@ -1730,6 +1738,57 @@
             "source": "seat",
             "force": 450,
             "thickness": 20000
+          },
+          "nav_grid": {
+            "origin": {
+              "x": -180000,
+              "y": -180000
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              ".........",
+              ".........",
+              ".........",
+              ".........",
+              ".........",
+              ".........",
+              ".........",
+              ".........",
+              "........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "trasero",
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 0
+                },
+                "radius": 60000,
+                "label": "pliegue de la falda"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": -90000,
+                "y": 0
+              },
+              {
+                "x": 90000,
+                "y": 0
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
           }
         }
       }
@@ -6018,6 +6077,114 @@
           }
         }
       }
+    },
+    {
+      "ref": "joint_hips_rear",
+      "spawn": {
+        "name": "caderas a trasero",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 160000,
+                "y": 40000
+              }
+            },
+            "b": {
+              "space": "$body_rear",
+              "pos": {
+                "x": 0,
+                "y": 80000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_rear_back",
+      "spawn": {
+        "name": "trasero a espalda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_rear",
+              "pos": {
+                "x": 0,
+                "y": 90000
+              }
+            },
+            "b": {
+              "space": "$body_back",
+              "pos": {
+                "x": 140000,
+                "y": 40000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_rear_thigh_l",
+      "spawn": {
+        "name": "trasero a muslo izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_rear",
+              "pos": {
+                "x": -60000,
+                "y": -80000
+              }
+            },
+            "b": {
+              "space": "$body_thigh_l",
+              "pos": {
+                "x": 70000,
+                "y": 300000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_rear_thigh_r",
+      "spawn": {
+        "name": "trasero a muslo derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_rear",
+              "pos": {
+                "x": 60000,
+                "y": -80000
+              }
+            },
+            "b": {
+              "space": "$body_thigh_r",
+              "pos": {
+                "x": 70000,
+                "y": 300000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
     }
   ],
   "commands": [
@@ -6039,7 +6206,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -6302,7 +6469,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -6565,7 +6732,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -6828,7 +6995,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -7091,7 +7258,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -7354,7 +7521,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -7541,7 +7708,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -7728,7 +7895,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -7915,7 +8082,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -8102,7 +8269,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -8289,7 +8456,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -8552,7 +8719,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,

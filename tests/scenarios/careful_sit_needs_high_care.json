@@ -824,10 +824,10 @@
       }
     },
     {
-      "ref": "seat",
-      "visual": "seat",
+      "ref": "body_rear",
+      "visual": "body_rear",
       "spawn": {
-        "name": "asiento",
+        "name": "trasero",
         "space": {
           "kind": "articulated",
           "extent": {
@@ -995,7 +995,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1015,7 +1015,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1035,7 +1035,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1055,7 +1055,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1075,7 +1075,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1095,7 +1095,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1115,7 +1115,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1135,7 +1135,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1155,7 +1155,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1175,7 +1175,7 @@
                 "facing": 0
               },
               {
-                "part": "$seat",
+                "part": "$body_rear",
                 "pos": {
                   "x": 0,
                   "y": 0,
@@ -1209,7 +1209,7 @@
     {
       "event": "pressed",
       "match": {
-        "by": "$seat",
+        "by": "$body_rear",
         "source": "seat",
         "surface": "$chair"
       }

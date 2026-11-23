@@ -25,9 +25,9 @@ func TestSeatsAcceptance(t *testing.T) {
 			t.Fatalf("seed %d: %v", seed, err)
 		}
 		g := in.Refs["giantess"]
-		chair, sofa, seat := in.Refs["chair"], in.Refs["sofa"], in.Refs["seat"]
-		if chair.IsNil() || sofa.IsNil() || seat.IsNil() {
-			t.Fatalf("seed %d: falta chair/sofa/seat en casa.json", seed)
+		chair, sofa, rear := in.Refs["chair"], in.Refs["sofa"], in.Refs["body_rear"]
+		if chair.IsNil() || sofa.IsNil() || rear.IsNil() {
+			t.Fatalf("seed %d: falta chair/sofa/body_rear en casa.json", seed)
 		}
 		for _, e := range in.Events {
 			switch ev := e.Event.(type) {

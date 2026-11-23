@@ -31,15 +31,15 @@ func clockAt(t clock.Tick) string { return view.ClockAt(t) }
 
 // displayNames traduce los nombres internos que no están en castellano.
 var displayNames = map[string]string{
-	"house":    "Casa",
-	"giantess": "Giantess",
-	"cup":      "la taza",
-	"plate":    "el plato",
-	"crumb":    "una migaja",
-	"chair":    "silla",
-	"sofa":     "sofá",
-	"seat":     "asiento",
-	"fiber":    "una fibra",
+	"house":     "Casa",
+	"giantess":  "Giantess",
+	"cup":       "la taza",
+	"plate":     "el plato",
+	"crumb":     "una migaja",
+	"chair":     "silla",
+	"sofa":      "sofá",
+	"body_rear": "trasero",
+	"fiber":     "una fibra",
 }
 
 // display devuelve el nombre de una entidad para la interfaz de partida.

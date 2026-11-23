@@ -275,6 +275,46 @@
         }
       }
     },
+    "body_rear": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [192, 192],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [369, 5304, 384, 384]
+            ]
+          },
+          "shadow_east": {
+            "frame_ticks": 1,
+            "frames": [
+              [754, 5304, 384, 384]
+            ]
+          },
+          "shadow_north": {
+            "frame_ticks": 1,
+            "frames": [
+              [754, 5304, 384, 384]
+            ]
+          },
+          "shadow_south": {
+            "frame_ticks": 1,
+            "frames": [
+              [754, 5304, 384, 384]
+            ]
+          },
+          "shadow_west": {
+            "frame_ticks": 1,
+            "frames": [
+              [754, 5304, 384, 384]
+            ]
+          }
+        }
+      }
+    },
     "body_shoulder_l": {
       "macro": {
         "hidden": true
@@ -763,55 +803,55 @@
           "foot_east": {
             "frame_ticks": 1,
             "frames": [
-              [369, 5304, 384, 384]
+              [1139, 5304, 384, 384]
             ]
           },
           "foot_north": {
             "frame_ticks": 1,
             "frames": [
-              [754, 5304, 384, 384]
+              [1524, 5304, 384, 384]
             ]
           },
           "foot_south": {
             "frame_ticks": 1,
             "frames": [
-              [1139, 5304, 384, 384]
+              [0, 5705, 384, 384]
             ]
           },
           "foot_west": {
             "frame_ticks": 1,
             "frames": [
-              [1524, 5304, 384, 384]
+              [385, 5705, 384, 384]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [369, 5304, 384, 384]
+              [1139, 5304, 384, 384]
             ]
           },
           "shadow_east": {
             "frame_ticks": 1,
             "frames": [
-              [0, 5705, 384, 384]
+              [770, 5705, 384, 384]
             ]
           },
           "shadow_north": {
             "frame_ticks": 1,
             "frames": [
-              [385, 5705, 384, 384]
+              [1155, 5705, 384, 384]
             ]
           },
           "shadow_south": {
             "frame_ticks": 1,
             "frames": [
-              [770, 5705, 384, 384]
+              [1540, 5705, 384, 384]
             ]
           },
           "shadow_west": {
             "frame_ticks": 1,
             "frames": [
-              [1155, 5705, 384, 384]
+              [0, 6090, 384, 384]
             ]
           }
         }
@@ -1440,46 +1480,6 @@
             "frame_ticks": 1,
             "frames": [
               [534, 7117, 18, 8]
-            ]
-          }
-        }
-      }
-    },
-    "seat": {
-      "macro": {
-        "hidden": true
-      },
-      "micro": {
-        "pivot": [192, 192],
-        "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              [1540, 5705, 384, 384]
-            ]
-          },
-          "shadow_east": {
-            "frame_ticks": 1,
-            "frames": [
-              [0, 6090, 384, 384]
-            ]
-          },
-          "shadow_north": {
-            "frame_ticks": 1,
-            "frames": [
-              [0, 6090, 384, 384]
-            ]
-          },
-          "shadow_south": {
-            "frame_ticks": 1,
-            "frames": [
-              [0, 6090, 384, 384]
-            ]
-          },
-          "shadow_west": {
-            "frame_ticks": 1,
-            "frames": [
-              [0, 6090, 384, 384]
             ]
           }
         }

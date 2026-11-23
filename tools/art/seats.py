@@ -147,7 +147,7 @@ def seat_idle():
                 else:
                     continue
                 break
-    path = os.path.join(SRC, 'seat/micro_idle.png')
+    path = os.path.join(SRC, 'body_rear/micro_idle.png')
     os.makedirs(os.path.dirname(path), exist_ok=True)
     out.save(path)
 
@@ -166,7 +166,7 @@ def seat_shadows():
             if dx * dx + dy * dy <= 1.0:
                 px[x, y] = col
     for d in ('north', 'east', 'south', 'west'):
-        save(c, f'seat/micro_shadow_{d}.png')
+        save(c, f'body_rear/micro_shadow_{d}.png')
 
 
 def main(src):

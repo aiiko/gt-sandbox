@@ -43,6 +43,7 @@ BODY_REFS = [
     'joint_back_side_l', 'joint_back_side_r',
     'joint_side_l_hips', 'joint_side_r_hips',
     'joint_chest_hips', 'joint_back_hips',
+    'joint_hips_rear', 'joint_rear_back', 'joint_rear_thigh_l', 'joint_rear_thigh_r',
     'joint_hip_l', 'joint_knee_l', 'joint_ankle_l',
     'joint_hip_r', 'joint_knee_r', 'joint_ankle_r',
 ]
@@ -697,23 +698,54 @@ def body_pose_parts(mode):
 def with_body_map(d):
     """Integra idempotentemente el mapa corporal completo y futón/almohada en casa.json."""
     d['entities'] = [e for e in d['entities'] if e['ref'] not in BODY_REFS]
-    # Agregar contact_surface a bedroom y living para que los pies puedan conectar con el piso.
-    for ref in ('bedroom', 'living'):
+    # Agregar contact_surface a bedroom, living, chair y sofa para apoyos corporales.
+    for ref in ('bedroom', 'living', 'chair', 'sofa'):
         for e in d['entities']:
             if e['ref'] == ref:
-                e['spawn'].setdefault('components', {}).setdefault('contact_surface', {'tolerance': 40000})
+                e['spawn'].setdefault('components', {}).setdefault('contact_surface', {'tolerance': 50000})
+    # Integrar $body_rear (trasero) al mapa corporal: grilla navegable, agarre y borde de acceso.
+    has_rear = False
+    for e in d['entities']:
+        if e['ref'] == 'body_rear':
+            has_rear = True
+            sc = e['spawn'].setdefault('components', {})
+            sc['nav_grid'] = {
+                'origin': {'x': -180000, 'y': -180000},
+                'cell': 40000,
+                'version': 0,
+                'rows': ['.' * 9] * 9,
+            }
+            sc['body_zone'] = {
+                'body': '$giantess',
+                'region': 'trasero',
+                'grips': [{'pos': {'x': 0, 'y': 0}, 'radius': 60000, 'label': 'pliegue de la falda'}],
+            }
+            sc['contact_surface'] = {
+                'tolerance': 50000, 'scale': 'tiny', 'stable_ticks': 2,
+                'support_offset': -20000,
+                'access': [{'x': -90000, 'y': 0}, {'x': 90000, 'y': 0}],
+                'access_reach': 80000, 'body': '$giantess',
+            }
+            break
     # Agregar futón, almohada y el mapa corporal al final para conservar los IDs
     # de las entidades existentes de la casa y la colonia.
     d['entities'].extend(futon_entities())
     d['entities'].extend(body_entities())
+    if has_rear:
+        d['entities'].extend([
+            _portal('joint_hips_rear', 'caderas a trasero', '$body_hips', (160000, 40000), '$body_rear', (0, 80000)),
+            _portal('joint_rear_back', 'trasero a espalda', '$body_rear', (0, 90000), '$body_back', (140000, 40000)),
+            _portal('joint_rear_thigh_l', 'trasero a muslo izquierdo', '$body_rear', (-60000, -80000), '$body_thigh_l', (70000, 300000)),
+            _portal('joint_rear_thigh_r', 'trasero a muslo derecho', '$body_rear', (60000, -80000), '$body_thigh_r', (70000, 300000)),
+        ])
 
     # Actualizar poses y agregar body_joints + body_state en el comando de setup de giantess.
     setup = next(c for c in d['commands'] if c['kind'] == 'set_components' and c['data'].get('entity') == '$giantess')
     comps = setup['data']['components']
     poses = comps['poses']
     for name, parts in list(poses.items()):
-        # Quitar partes corporales viejas si se re-ejecuta el script.
-        base = [p for p in parts if not p['part'].startswith('$body_')]
+        # Quitar partes corporales viejas si se re-ejecuta el script (conservando $body_rear).
+        base = [p for p in parts if not p['part'].startswith('$body_') or p['part'] == '$body_rear']
         if name.startswith('sit') and name != 'sit_hover':
             poses[name] = base + body_pose_parts('sit')
         elif 'hand_rest' in name:
@@ -722,11 +754,11 @@ def with_body_map(d):
             poses[name] = base + body_pose_parts('stand')
     poses['elbow_bent'] = [
         {'part': '$palm', 'pos': {'x': 300000, 'y': 0, 'z': 1300000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
     ] + body_pose_parts('stand')
     poses['lie_down'] = [
         {'part': '$palm', 'pos': {'x': 300000, 'y': 0, 'z': 200000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 170000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 170000}, 'facing': 0},
     ] + body_pose_parts('lie_down')
 
     comps['body_joints'] = body_joints_component()

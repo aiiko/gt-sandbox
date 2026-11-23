@@ -1591,7 +1591,7 @@
         }
       }
     },
-    "seat": {
+    "body_rear": {
       "macro": {
         "hidden": true
       },
@@ -1604,31 +1604,31 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_idle.png"
+              "body_rear/micro_idle.png"
             ]
           },
           "shadow_north": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_shadow_north.png"
+              "body_rear/micro_shadow_north.png"
             ]
           },
           "shadow_east": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_shadow_east.png"
+              "body_rear/micro_shadow_east.png"
             ]
           },
           "shadow_south": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_shadow_south.png"
+              "body_rear/micro_shadow_south.png"
             ]
           },
           "shadow_west": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_shadow_west.png"
+              "body_rear/micro_shadow_west.png"
             ]
           }
         }

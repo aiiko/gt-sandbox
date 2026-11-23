@@ -23,57 +23,57 @@ DIR = os.path.join(ROOT, 'tests', 'scenarios')
 
 SEAT_CRUSHER = {'source': 'seat', 'force': 450, 'thickness': 20000}
 
-# Poses combinadas simples: mueven tanto la palma como el asiento ($seat).
+# Poses combinadas simples: mueven tanto la palma como el trasero ($body_rear).
 SEAT_POSES = {
     'idle': [
         {'part': '$palm', 'pos': {'x': 300000, 'y': 0, 'z': 1400000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
     ],
     'hand_hover': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 880000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
     ],
     'hand_rest': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 770000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
     ],
     'set_table': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 900000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 950000}, 'facing': 0},
     ],
     'sit_hover': [
         {'part': '$palm', 'pos': {'x': 300000, 'y': 0, 'z': 1400000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 600000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 600000}, 'facing': 0},
     ],
     'sit': [
         {'part': '$palm', 'pos': {'x': 300000, 'y': 0, 'z': 1400000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
     ],
     'sit_set_table': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 900000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
     ],
     'sit_hand_hover': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 880000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
     ],
     'sit_hand_rest': [
         {'part': '$palm', 'pos': {'x': 400000, 'y': 0, 'z': 770000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
     ],
     'sit_hand_sofa': [
         {'part': '$palm', 'pos': {'x': 0, 'y': -280000, 'z': 470000}, 'facing': 0},
-        {'part': '$seat', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
     ],
 }
 
 
 def seat_entity():
     return {
-        'ref': 'seat',
-        'visual': 'seat',
+        'ref': 'body_rear',
+        'visual': 'body_rear',
         'spawn': {
-            'name': 'asiento',
+            'name': 'trasero',
             'space': {'kind': 'articulated', 'extent': {'min': {'x': -180000, 'y': -180000}, 'max': {'x': 180000, 'y': 180000}}},
             'location': {'space': '$giantess', 'pos': {'x': 0, 'y': 0, 'z': 950000}},
             'components': {'crusher': dict(SEAT_CRUSHER)},
@@ -376,7 +376,7 @@ def main():
             {'event': 'action_started', 'match': {'entity': '$giantess', 'what': 'relax', 'target': '$sofa'}},
             {'event': 'pose_changed', 'match': {'entity': '$giantess', 'pose': 'sit_hover'}},
             {'event': 'pose_changed', 'match': {'entity': '$giantess', 'pose': 'sit'}},
-            {'event': 'pressed', 'match': {'by': '$seat', 'source': 'seat', 'surface': '$sofa'}},
+            {'event': 'pressed', 'match': {'by': '$body_rear', 'source': 'seat', 'surface': '$sofa'}},
             {'event': 'action_done', 'match': {'entity': '$giantess', 'what': 'relax', 'target': '$sofa'}},
             {'event': 'pose_changed', 'match': {'entity': '$giantess', 'pose': 'idle'}},
             {'no_event': 'command_rejected'},
@@ -422,10 +422,10 @@ def main():
         'expect': [
             {'event': 'alarmed', 'match': {'entity': '$tiny_center', 'source': 'seat', 'channel': 'shadow'}},
             {'event': 'alarmed', 'match': {'entity': '$tiny_edge', 'source': 'seat', 'channel': 'shadow'}},
-            {'event': 'pressed', 'match': {'by': '$seat', 'source': 'seat', 'surface': '$chair'}},
-            {'event': 'crushed', 'match': {'entity': '$tiny_center', 'by': '$seat', 'source': 'seat', 'space': '$chair'}},
+            {'event': 'pressed', 'match': {'by': '$body_rear', 'source': 'seat', 'surface': '$chair'}},
+            {'event': 'crushed', 'match': {'entity': '$tiny_center', 'by': '$body_rear', 'source': 'seat', 'space': '$chair'}},
             {'no_event': 'crushed', 'match': {'entity': '$tiny_edge'}},
-            {'event': 'near_miss', 'match': {'entity': '$tiny_edge', 'by': '$seat', 'source': 'seat'}},
+            {'event': 'near_miss', 'match': {'entity': '$tiny_edge', 'by': '$body_rear', 'source': 'seat'}},
             {'no_event': 'command_rejected'},
         ],
     }
@@ -448,8 +448,8 @@ def main():
         ],
         'commands': [giantess_setup_cmd(care=0)],
         'expect': [
-            {'event': 'pressed', 'match': {'by': '$seat', 'source': 'seat', 'surface': '$sofa'}},
-            {'event': 'crushed', 'match': {'entity': '$tiny_mid', 'by': '$seat', 'source': 'seat', 'space': '$sofa'}},
+            {'event': 'pressed', 'match': {'by': '$body_rear', 'source': 'seat', 'surface': '$sofa'}},
+            {'event': 'crushed', 'match': {'entity': '$tiny_mid', 'by': '$body_rear', 'source': 'seat', 'space': '$sofa'}},
             {'no_event': 'crushed', 'match': {'entity': '$tiny_far'}},
             {'no_event': 'near_miss', 'match': {'entity': '$tiny_far'}},
             {'no_event': 'command_rejected'},
@@ -476,7 +476,7 @@ def main():
         'commands': [giantess_setup_cmd(care=0.95)],
         'expect': [
             {'event': 'hesitated', 'match': {'entity': '$giantess', 'surface': '$chair', 'source': 'seat'}},
-            {'event': 'pressed', 'match': {'by': '$seat', 'source': 'seat', 'surface': '$chair'}},
+            {'event': 'pressed', 'match': {'by': '$body_rear', 'source': 'seat', 'surface': '$chair'}},
             {'no_event': 'crushed'},
             {'no_event': 'command_rejected'},
         ],

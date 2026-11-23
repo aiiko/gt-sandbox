@@ -28,10 +28,6 @@ func TestBodyZonesHaveMicroArtInCasa(t *testing.T) {
 		if s.Extent.Empty() {
 			continue
 		}
-		// seat es solo sombra al sentarse (no superficie caminable).
-		if g.visuals[s.ID] == "seat" {
-			continue
-		}
 		if g.visuals[s.ID] == "" {
 			t.Errorf("superficie %q (%v) no tiene visual asignado", s.Name, s.ID)
 			continue
@@ -234,8 +230,8 @@ func TestBodyMicroAlignmentWhenGiantessRotated(t *testing.T) {
 			if pl.Ghost && !pl.Dest.Overlaps(chestBounds) {
 				t.Fatalf("rot=%v: marca/portal %v en %v quedó fuera de pecho %v", rot, pl.ID, pl.Dest, chestBounds)
 			}
-			if pl.Ghost && g.visuals[pl.ID] == "seat" {
-				t.Fatalf("rot=%v: no debe dibujarse sombra de asiento sobre una zona corporal", rot)
+			if pl.Ghost && g.visuals[pl.ID] == "body_rear" {
+				t.Fatalf("rot=%v: no debe dibujarse sombra de trasero sobre una zona corporal", rot)
 			}
 		}
 	}
@@ -300,5 +296,55 @@ func TestMicroBothFeetVisibleAndAnimatedWhileWalking(t *testing.T) {
 	}
 	if !sawLift {
 		t.Fatal("nunca se observó un pie levantado y otro apoyado mientras la giantess camina")
+	}
+}
+
+// Verifica que cuando la giantess se sienta en la silla, en vista micro de la
+// silla se dibuja su cuerpo sentado (clip "idle" de seat) además de la sombra.
+func TestSeatedBodyVisibleOnChairInMicro(t *testing.T) {
+	g := artGame(t, randomBase)
+	g.w, g.h = 960, 540
+	g.run.StepOnce()
+
+	var giantessID, chairID, seatID ids.ID
+	for _, s := range g.run.Cur.Spaces {
+		switch s.Name {
+		case "giantess":
+			giantessID = s.ID
+		case "silla":
+			chairID = s.ID
+		case "trasero":
+			seatID = s.ID
+		}
+	}
+	if giantessID.IsNil() || chairID.IsNil() || seatID.IsNil() {
+		t.Fatalf("faltan entidades: giantess=%v chair=%v seat=%v", giantessID, chairID, seatID)
+	}
+
+	// Colocar la giantess sobre la silla en pose sentada (seat z = 47 cm, chair z = 45 cm).
+	locs := ecs.Get[comp.Location](g.run.World.ECS())
+	if cl, ok := locs.Get(chairID); ok {
+		if gl, ok := locs.Get(giantessID); ok {
+			gl.Space = cl.Space
+			gl.Pos = units.V3(cl.Pos.X+20*units.Centimeter, cl.Pos.Y+20*units.Centimeter, 0)
+			locs.Set(giantessID, gl)
+		}
+	}
+	if sl, ok := locs.Get(seatID); ok {
+		sl.Pos = units.V3(0, 0, 47*units.Centimeter)
+		locs.Set(seatID, sl)
+	}
+	g.run.StepOnce()
+	f := g.run.Cur
+
+	g.art.focus = chairID
+	g.fitArt()
+	proj := g.cam.Project(g.anchor(f), g.w, g.h)
+	scene := g.art.atlas.Arrange(f, proj, g.visuals, render.Micro, chairID)
+	if got := scene.Clip(seatID); got != "idle" {
+		t.Fatalf("al sentarse en la silla, seat debía dibujar clip 'idle' (cuerpo sentado), obtuvo %q", got)
+	}
+	if len(scene.Marks(seatID)) == 0 {
+		t.Fatal("al sentarse en la silla también debía incluir la sombra suave de contacto")
 	}
 }

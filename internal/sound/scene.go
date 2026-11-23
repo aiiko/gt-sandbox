@@ -28,6 +28,7 @@ const (
 	Zabuton       = "zabuton"
 	ChairCreak    = "chair_creak"
 	SofaSit       = "sofa_sit"
+	SitThudMicro  = "sit_thud_micro" // micro: retumbo grave al sentarse en silla o sofá
 	TVOn          = "tv_on"
 	HandNear      = "hand_near"  // micro: la mano se acerca
 	HandLand      = "hand_land"  // micro: la mano se apoya
@@ -282,10 +283,20 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 					} else {
 						c.add(ChairCreak, s.Pose.Pos, 0.8)
 					}
-				} else if v.Visual(v.Focus) == "chair" {
-					c.addNear(ChairCreak, s.Pose.Pos, 0.95)
-				} else if v.Visual(v.Focus) == "sofa" {
-					c.addNear(SofaSit, s.Pose.Pos, 1)
+				} else {
+					fv := v.Visual(v.Focus)
+					switch {
+					case fv == "chair":
+						c.addNear(ChairCreak, s.Pose.Pos, 0.95)
+						c.addNear(SitThudMicro, s.Pose.Pos, 1.0)
+					case fv == "sofa" || fv == "sofa_pocket":
+						c.addNear(SofaSit, s.Pose.Pos, 1.0)
+						c.addNear(SitThudMicro, s.Pose.Pos, 1.0)
+					case fv == "body_rear":
+						c.addNear(SitThudMicro, s.Pose.Pos, 1.0)
+					case sameRoom(cur, v.Focus, s.Parent):
+						c.addNear(SitThudMicro, s.Pose.Pos, 0.65)
+					}
 				}
 			}
 		}
