@@ -242,6 +242,8 @@ Por ejemplo, cuando coloca su mano sobre el escritorio, se habilita temporalment
 
 **Esto es muchísimo más flexible que teletransportar al tiny a un mapa especial mediante un evento.**
 
+La [propuesta de expansión del mapa corporal](#19-la-giantess-como-mapa-explorable) detalla las rutas por el cuerpo entero, los apoyos que abren accesos a la casa y el seguimiento en micro.
+
 ## 5. Sistemas de simulación: cuáles combinaría y cómo
 
 La clave es que los sistemas puedan interactuar entre sí sin que cada uno necesite conocer todos los detalles de los demás.
@@ -1272,3 +1274,83 @@ En la ficha de la expedición, cada compañero muestra dónde está y permite pa
 La silla permite validar primero una salida corta. El cruce al living y el sofá ponen a prueba la elección de ruta, el tiempo de viaje y el regreso en la misma iteración. Una ampliación puede usar la palma como transporte de ida con un retorno incierto, extender el mapa hacia la cocina o convertir el refugio del umbral en un depósito intermedio.
 
 **Estado.** Implementado ([spec de oficios y expediciones](specs/oficios.md)): oficios flexibles y suplencias (`colony/roles.go` + `ai.SetJobScorer`), puesto de vigía y avisos (`colony/lookout.go` + filtro de escala y penalización de portales en `nav`), provisiones con conservación atómica y expediciones solitarias o en compañía con recuperación de varados (`colony/provisions.go`, `colony/expedition.go`), mapa de aventuras entre dormitorio y living (`tools/scenarios/oficios.py`), cobertura micro en todo `Space` con vista básica para patas/respaldos/pasacables/bolsillo (`render/pixels.go`, `cmd/game/art.go`) y lectura en crónica, ficha y pestaña Colonia (`view`, `ui`, `cmd/game/hud.go`).
+
+## 19. La giantess como mapa explorable
+
+La palma ya puede recibir a un tiny, transportarlo mientras la giantess camina y conectarse con otro mueble al apoyarse. La expansión convierte ese viaje en una **red de recorridos sobre todo el exterior del cuerpo y la ropa**. Un tiny puede subir por la mano desde el escritorio, alcanzar el hombro y terminar en el pelo. Otro puede empezar en el piso, trepar por el calzado y salir al sofá cuando ella se sienta. Las entradas y salidas cambian con los apoyos reales de cada pose, así que conocer el camino de ida también implica saber dónde esperar para volver. [La idea original](#4-la-giantess-como-mapa-móvil) · [Contactos y poses actuales](specs/attach.md)
+
+### 19.1. El mapa corporal
+
+Cada zona que un tiny puede recorrer es un `Space` con una grilla local, bordes y puntos de paso. Las zonas cuelgan del segmento que las mueve. La palma y el dorso siguen a la mano, y la mano sigue al antebrazo. La jerarquía determina cómo se mueven juntos. Las conexiones para caminar o trepar forman su propio grafo y pueden cambiar con la pose. El pecho, la espalda y los costados se conectan por hombros y cintura para que haya recorridos de vuelta por otro lado.
+
+```mermaid
+flowchart TD
+    H["Cabello y rostro"] --- C["Cuello y nuca"]
+    C --- T["Hombros, pecho, espalda y costados"]
+    T --- A["Brazo izquierdo, codo y antebrazo"]
+    T --- B["Brazo derecho, codo y antebrazo"]
+    A --- I["Muñeca, palma, dorso y dedos izquierdos"]
+    B --- D["Muñeca, palma, dorso y dedos derechos"]
+    T --- P["Cintura y caderas"]
+    P --- L["Muslo, rodilla y pantorrilla izquierdos"]
+    P --- R["Muslo, rodilla y pantorrilla derechos"]
+    L --- F["Tobillo y pie izquierdos"]
+    R --- G["Tobillo y pie derechos"]
+```
+
+| Región | Cómo se recorre | Qué puede cambiar |
+| --- | --- | --- |
+| **Manos y brazos, ambos lados** | Dedos y dorso se alcanzan por el borde de la mano. La muñeca lleva al puño de la manga, y las costuras del antebrazo y brazo ofrecen agarre hasta el hombro. | Al doblar el codo o cerrar la mano, algunos pasos se estrechan. Una mano o un antebrazo apoyado pueden conectar con una mesa o un asiento. |
+| **Torso y caderas** | El frente de la ropa, la espalda y los costados forman rutas unidas por el cuello, los hombros y la cintura. El borde de un bolsillo o un pliegue abierto sirve para esperar. | Sentarse abre una ruta hacia el regazo. Recostarse acerca un costado al futón y pone parte de la espalda bajo presión. |
+| **Piernas y pies, ambos lados** | Desde el lateral del calzado o el empeine se llega al tobillo. Una costura o un borde de tela permite trepar por la pantorrilla y pasar por la rodilla al muslo. | Un pie plantado abre acceso desde el suelo por el lateral. Doblar la rodilla cambia el paso hacia el muslo. La zona de la suela que carga peso queda bajo presión. |
+| **Cuello y cabeza** | El cuello de la ropa y la nuca llevan al pelo, las sienes y alrededor de las orejas. Un paso corto permite recorrer el rostro expuesto. | Un mechón apoyado puede conectar con el hombro o la almohada. Al girar la cabeza se cierra el lado que queda contra la almohada y cambia el acceso al pelo. |
+
+El cuerpo puede mapearse con pocas piezas por región. Una zona ancha usa una superficie bidimensional y una costura, un borde o una articulación pueden ser tramos angostos con longitud y tiempo de marcha, como las patas de los muebles. Para el arte y el contenido conviene reutilizar las piezas de cada lado, ajustando las uniones a la ropa y la pose. Con un mismo mapa corporal se prueban poses de pie, sentada y recostada. Cada región tiene una ruta alcanzable en al menos una de esas poses por la rutina de la casa. [Jerarquía de superficies](specs/space.md#modelo) · [Portales y tramos](specs/nav.md#portales-portal)
+
+### 19.2. Poses, agarre y pasos internos
+
+El modelo actual traslada cada parte y la gira sobre el eje vertical. Eso alcanza para una mano horizontal. Para un cuerpo explorable hace falta que la altura varíe a lo largo de una pendiente o trepada. Propongo conservar las grillas en dos dimensiones y dar a cada zona corporal **una proyección al mundo definida por su pose**. La pose describe un origen y dos ejes para una superficie, o dos anclajes y un ancho para un tramo angosto. Así, avanzar por una manga puede subir al tiny en la posición del mundo mientras su movimiento sigue siendo un recorrido por la grilla local. Las poses siguen siendo discretas, y el dibujo puede interpolarlas entre ticks. El motor calcula la altura, las posiciones de los portales y las caídas a partir de la misma proyección, con las unidades y el orden determinista que ya usa. [Transformaciones actuales](specs/space.md#matemática) · [Poses existentes](specs/attach.md#poses-poses-set_pose)
+
+**Conexiones internas.** Una articulación une puntos concretos a ambos lados. En cada pose se define qué pasos conservan un margen de cruce y cuáles se cierran. El tiny que llega a una muñeca cerrada puede esperar en el puño, dar media vuelta o buscar otro recorrido. Cerrarse un enlace cambia la ruta disponible. Quienes ya están en las superficies a sus lados conservan su punto de apoyo y sus coordenadas locales mientras la zona siga siendo estable.
+
+**Apoyo y caída.** Una superficie casi horizontal permite caminar. Una cara inclinada o vertical requiere agarre en lugares marcados, como costuras, bordes o mechones. Si la pose cambia o el soporte da una sacudida, los tinies en el tramo afectado pueden detenerse y agarrarse si tienen un punto al alcance. Si pierden apoyo, se comprueba qué superficie apta está debajo de su posición real. Eso puede dejarlos en el brazo, en un mueble o en el piso. Para el aterrizaje se consideran la cara que recibe la caída y su altura en ese punto. Un tramo vertical de trepada puede sostener a quien ya se agarró y queda fuera de los posibles aterrizajes. Se conserva la consecuencia actual de una caída, que interrumpe y reubica al tiny. [Caídas](specs/attach.md#caídas-spacefalls)
+
+### 19.3. Apoyos que abren rutas a la casa
+
+Hoy los contactos comparan altura y solapamiento de dos extensiones. Para un cuerpo articulado, una mano puede quedar cerca de un escritorio sin apoyarse, y un muslo puede rozar el sofá por una cara que queda bajo su peso. Propongo que las partes tengan **zonas de apoyo y bordes de acceso** declarados en el contenido. La zona de apoyo indica qué toca la superficie de la casa. El borde de acceso indica por dónde entra o sale un tiny y puede estar al costado de ese apoyo. [Regla actual de contacto](specs/attach.md#superficies-de-contacto-contact_surface) · [Presión y huella](specs/crush.md#cuándo-aplasta)
+
+| Apoyo real | Paso que puede abrir |
+| --- | --- |
+| Mano o antebrazo sobre el escritorio o la mesa | De la superficie del mueble al borde expuesto de la mano, al puño de la manga o a un costado del antebrazo. |
+| Pie plantado sobre el suelo | Del piso al borde lateral del calzado y hacia el tobillo. Cuando el pie se levanta o empieza a desplazarse, se corta ese acceso. |
+| Pierna junto al sofá o costado apoyado al sentarse | Del borde libre del asiento a la parte accesible del muslo o del costado de la ropa. El punto de cruce queda fuera de la huella de presión. |
+| Costado, hombro o pelo apoyado en el futón o la almohada | Del borde del apoyo a la ropa o el pelo expuestos. El futón y la almohada reciben superficie navegable propia donde haga falta. |
+| Mano que descansa sobre la rodilla | Del borde expuesto de la mano al muslo, si el hueco al costado del apoyo permite pasar. Ese atajo dura mientras conserva el apoyo. |
+
+Para abrir el portal se comprueba la pose física actual, la cercanía entre ambos puntos de cruce, espacio libre para un tiny, dos extremos transitables y estabilidad del apoyo. Se puede exigir que el apoyo sostenga esas condiciones durante unos ticks para evitar aperturas intermitentes por un roce. El filtro de escala de `nav.Portal` limita estos accesos a tinies. La regla se aplica entre superficies compatibles y permite varios apoyos simultáneos, como los pies en el suelo y un antebrazo en el escritorio. Una pisada durante la marcha conserva su huella de peligro. El portal del pie requiere una fase plantada que dure lo suficiente para cruzar.
+
+Al levantarse el apoyo, desaparecer el espacio libre o bloquearse un extremo, el portal se cierra. Mientras el mismo contacto siga abierto mantiene su ID. Si el cruce se desplaza lo suficiente para cambiar la ruta, se actualizan los extremos y su versión. **El cruce se valida otra vez al dar el paso**, con la pose y el movimiento del tick actual. Hoy `attach.contacts` corre después del movimiento. La implementación tiene que actualizar el movimiento de los soportes antes de que los tinies consuman los portales, o comprobar el cruce contra los soportes ya actualizados antes de aplicarlo. Así, si la giantess retira la mano en el tick de llegada, el tiny que todavía está en el escritorio se queda de ese lado y replantea su ruta. El que ya había cruzado viaja con ella. [Orden del tick](specs/nucleo.md#un-tick) · [Invalidación de rutas](specs/nav.md#mover)
+
+### 19.4. Qué aventura produce
+
+- **Hasta la nuca.** Una compañía sube por la palma y recorre la costura de la manga. La giantess dobla el codo para llevarse la taza después de que cruzaron los primeros. Los que quedaron del lado de la mano esperan en el puño y los demás en una costura del brazo. Al reabrirse el paso, se reúnen, siguen hasta la nuca y reconocen una posible salida al futón. Si esperan demasiado, la retirada usa el último apoyo conocido que siga disponible.
+- **Del piso al sofá.** Un explorador alcanza el lateral de un zapato mientras la giantess está parada. Al caminar se agarra al borde del calzado y pierde la salida al piso. Cuando ella se sienta, queda al alcance del asiento desde el muslo. Puede desembarcar por ese contacto o seguir por un costado de la ropa hacia la espalda. Si se separa del grupo, cada compañero conserva su ubicación y decide dónde esperar o regresar.
+
+El explorador puede reconocer una zona nueva o esperar en un punto de agarre desde el que ya conoce una salida. Al regresar al nido, informa lo que encontró y en qué situación, por ejemplo «Desde el pelo pudimos bajar a la almohada cuando se recostó». Esa información ayuda a planear otra salida. Antes de avanzar, la compañía comprueba qué apoyos conoce y cuáles puede usar en ese momento. Si se queda aislada, puede reagruparse en un punto de agarre y esperar un apoyo para bajar. Las necesidades y provisiones siguen corriendo durante la espera. La giantess puede abrir accesos con las acciones que ya hace, como sentarse, apoyarse y acostarse. [Oficios y expediciones](specs/oficios.md) · [Acción de ofrecer la palma](specs/encuentros.md#ofrecer-la-palma-m32)
+
+### 19.5. Impacto en el motor y en la vista micro
+
+| Sistema | Qué hay que ampliar |
+| --- | --- |
+| **`space` y `attach`** | Dar proyección física a las zonas corporales, componerla con el movimiento del cuerpo y validar poses completas con anclajes coherentes. Derivar los portales de los apoyos y de las articulaciones sin recrearlos cada tick. Las superficies planas de la casa pueden seguir usando su proyección actual. |
+| **`nav` y percepción** | Mantener A* local y los portales para unir zonas. Usar la longitud real de una trepada para estimar el tiempo. Invalidar rutas ante cambios de pose o apoyo y mantener memoria de la unión conocida con un estado actual de paso. Medir el costo de planificación al multiplicar las partes y considerar primero los apoyos cercanos en orden estable. |
+| **`space.falls` y `crush`** | Distinguir el lado transitable de la cara que apoya y ejerce presión. Usar la geometría de esa cara al resolver amenazas y apoyos. Quien va encima de una parte viaja con ella al apoyarse. Si otra parte se acerca y le quita espacio, el peligro se evalúa sobre la zona que ocupa. |
+| **`view`, cámara y arte** | Extender la [cobertura micro](#187-vista-micro-en-todo-el-recorrido) a todas las regiones y a cada tramo de unión. Mostrar de costado las trepadas, recortar ropa o pelo que oculte al tiny y mantener el mismo seguimiento cuando cambia de parte, cruza un apoyo o cae. El rótulo ubica al tiny, por ejemplo «Giantess › Brazo izquierdo › Puño de la manga». En macro, su marcador se mueve con la giantess. |
+| **Contenido y guardado** | Declarar regiones, uniones, apoyos, agarres y poses para la giantess y sus rutinas. Validar que toda zona tenga vista micro, aunque sea la básica, y una salida alcanzable en alguna pose. Guardar los datos de pose y agarre que afecten al juego, y comparar hash y eventos tras cargar a mitad de una trepada o un traslado. |
+
+### 19.6. Orden y criterios de aceptación
+
+1. **De la mano al hombro.** Aprovechar la palma existente para probar mano, antebrazo, brazo y hombro. Un tiny recorre la ruta midiendo el avance real de la trepada y mantiene su posición local cuando la giantess mueve el brazo. Doblar el codo cierra su paso. Al volver a extenderlo, el mismo tiny puede continuar. La cámara lo muestra en micro durante todo el trayecto.
+2. **Accesos por apoyos.** Validar al menos mano a escritorio, pie a piso y antebrazo a sofá. Verificar apoyos simultáneos, un roce sin paso, un extremo bloqueado y un apoyo retirado justo antes de cruzar. El pasajero que cruzó antes del cierre permanece sobre el soporte. Probar que el apoyo de la mano conserva la protección del pasajero y el peligro para quien queda debajo.
+3. **Mapa corporal completo.** Completar los dos lados, el torso por frente y espalda, las caderas, las piernas, los pies, el cuello y la cabeza. Integrar el futón y la almohada a la pose recostada. Probar en conjunto las rutas escritorio → hombro → cabeza → almohada y piso → tobillo → muslo → sofá, incluyendo la vuelta cuando cambia un apoyo y una caída que aterrice en un soporte visible.
+4. **Partida libre y continuidad.** Una compañía debe poder iniciar una salida, aguardar un cambio de pose o retirarse por una alternativa conocida y comunicar sus hallazgos. Al guardar y cargar cerca de un cambio de pose o de un cierre de portal, el log y el hash deben coincidir con la ejecución continua. Los escenarios de la palma sirven de regresión para embarque, transporte, desembarco y caída.
