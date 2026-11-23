@@ -95,6 +95,7 @@ def chair_entities():
         },
         {
             'ref': 'chair_leg',
+            'visual': 'climb',  # se trepa: su Y local es la altura
             'spawn': {
                 'name': 'pata de la silla',
                 'space': {'kind': 'elevated', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 20000, 'y': 450000}}},
@@ -120,6 +121,7 @@ def chair_entities():
         },
         {
             'ref': 'chair_bridge',
+            'visual': 'climb',  # se trepa: su Y local es la altura
             'spawn': {
                 'name': 'respaldo de la silla',
                 'space': {'kind': 'elevated', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 20000, 'y': 300000}}},
@@ -160,6 +162,7 @@ def sofa_entities():
         },
         {
             'ref': 'sofa_leg',
+            'visual': 'climb',  # se trepa: su Y local es la altura
             'spawn': {
                 'name': 'pata del sofá',
                 'space': {'kind': 'elevated', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 20000, 'y': 450000}}},
@@ -185,6 +188,7 @@ def sofa_entities():
         },
         {
             'ref': 'sofa_bridge',
+            'visual': 'climb',  # se trepa: su Y local es la altura
             'spawn': {
                 'name': 'borde del sofá',
                 'space': {'kind': 'elevated', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 20000, 'y': 300000}}},

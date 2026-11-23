@@ -308,6 +308,7 @@
     },
     {
       "ref": "leg1",
+      "visual": "climb",
       "spawn": {
         "name": "pata del escritorio",
         "space": {

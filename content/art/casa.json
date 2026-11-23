@@ -81,6 +81,14 @@
         }
       }
     },
+    "climb": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
     "crumb": {
       "macro": {
         "hidden": true

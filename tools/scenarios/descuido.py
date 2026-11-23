@@ -22,7 +22,7 @@ REFLEX = 4
 # La pata delantera izquierda del escritorio: en el dormitorio, el escritorio
 # está en (1,5 m, 1 m) y mide 60 × 40 cm.
 DESK = (1500000, 1000000)
-LEG = {'ref': 'leg1', 'spawn': {
+LEG = {'ref': 'leg1', 'visual': 'climb', 'spawn': {
     'name': 'pata del escritorio',
     'space': {'kind': 'elevated', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 20000, 'y': 740000}}},
     'location': {'space': '$bedroom', 'pos': {'x': DESK[0], 'y': DESK[1], 'z': 0}},

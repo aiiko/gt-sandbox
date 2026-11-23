@@ -359,6 +359,7 @@
     },
     {
       "ref": "leg1",
+      "visual": "climb",
       "spawn": {
         "name": "pata del escritorio",
         "space": {
@@ -504,6 +505,7 @@
     },
     {
       "ref": "chair_leg",
+      "visual": "climb",
       "spawn": {
         "name": "pata de la silla",
         "space": {
@@ -618,6 +620,7 @@
     },
     {
       "ref": "chair_bridge",
+      "visual": "climb",
       "spawn": {
         "name": "respaldo de la silla",
         "space": {
@@ -770,6 +773,7 @@
     },
     {
       "ref": "sofa_leg",
+      "visual": "climb",
       "spawn": {
         "name": "pata del sofá",
         "space": {
@@ -884,6 +888,7 @@
     },
     {
       "ref": "sofa_bridge",
+      "visual": "climb",
       "spawn": {
         "name": "borde del sofá",
         "space": {

@@ -2,6 +2,8 @@ package main
 
 import (
 	"image"
+
+	"gtsandbox/internal/core/ids"
 	"testing"
 
 	"gtsandbox/internal/camera"
@@ -85,5 +87,54 @@ func TestWheelZoomSteps(t *testing.T) {
 	delete(g.art.factor, render.Macro) // lo que hace F
 	if got := g.art.sceneFactor(render.Macro); got != 2 {
 		t.Fatalf("después de F: factor %v", got)
+	}
+}
+
+// Siguiendo de cerca a un tiny que pasa a una superficie sin vista de cerca
+// (trepa una pata), la vista pasa a la casa centrada en él, y vuelve a la
+// de cerca cuando llega a otra que la tiene.
+func TestFollowLeavesMicroSurface(t *testing.T) {
+	g := artGame(t, randomBase)
+	f := g.run.Cur
+	climber, desk := ids.Nil, ids.Nil
+	for i := 0; i < 6000 && climber.IsNil(); i++ {
+		g.run.StepOnce()
+		f = g.run.Cur
+		for _, th := range f.Things {
+			if isTiny(th) && g.visuals[th.Space] == render.ClimbVisual {
+				climber = th.ID
+			}
+		}
+	}
+	for _, s := range f.Spaces {
+		if s.Name == "escritorio" {
+			desk = s.ID
+		}
+	}
+	if climber.IsNil() || desk.IsNil() {
+		t.Fatal("ningún tiny trepó una pata")
+	}
+	g.art.focus, g.sel = desk, climber
+	g.toggleFollow()
+	if got := g.artFocus(f); !got.IsNil() {
+		t.Fatalf("trepando: vista de cerca de %s", g.name(got))
+	}
+	if !g.followsInView(f) || g.art.focus.IsNil() {
+		t.Fatal("la cámara dejó de acompañar al tiny o se olvidó de la vista de cerca")
+	}
+	th, _ := f.ThingByID(climber)
+	flat, _ := render.FlattenClimbs(f, g.visuals).ThingByID(climber)
+	proj := g.cam.Project(g.anchor(f), g.w, g.h)
+	if x, y := proj.ToScreen(flat.Pose.Pos); x != float32(g.w)/2 || y != float32(g.h)/2 {
+		t.Fatalf("el tiny no está en el centro: %v,%v", x, y)
+	}
+	if flat.Pose.Pos.Y == th.Pose.Pos.Y {
+		t.Fatal("en macro el tiny sigue corrido en la pata")
+	}
+	for i := 0; i < 2000 && g.microSurface(g.run.Cur, climber).IsNil(); i++ {
+		g.run.StepOnce()
+	}
+	if s := g.microSurface(g.run.Cur, climber); s.IsNil() || g.artFocus(g.run.Cur) != s {
+		t.Fatalf("al llegar arriba no volvió a la vista de cerca (%s)", g.name(g.artFocus(g.run.Cur)))
 	}
 }

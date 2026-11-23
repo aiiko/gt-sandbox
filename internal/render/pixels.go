@@ -150,6 +150,36 @@ type sprite struct {
 	space bool
 }
 
+// FlattenClimbs devuelve el frame para la vista macro: lo que está en un
+// Space que se trepa (ClimbVisual) pasa a la base de la tira, porque su Y
+// local es la altura y la vista macro no dibuja la altura. Sin tiras que
+// trepar devuelve el mismo frame.
+func FlattenClimbs(f *view.Frame, visuals map[ids.ID]string) *view.Frame {
+	var out *view.Frame
+	for i, t := range f.Things {
+		if visuals[t.Space] != ClimbVisual {
+			continue
+		}
+		s, ok := f.SpaceByID(t.Space)
+		if !ok {
+			continue
+		}
+		if out == nil {
+			c := *f
+			c.Things = slices.Clone(f.Things)
+			out = &c
+		}
+		tr := s.Pose.Transform()
+		local := tr.ApplyInv(t.Pose.Pos)
+		local.Y = 0
+		out.Things[i].Pose.Pos = tr.Apply(local)
+	}
+	if out == nil {
+		return f
+	}
+	return out
+}
+
 // look ajusta cómo se dibuja una colocación.
 type look struct {
 	visual string  // "" = el visual de la entidad
@@ -165,6 +195,11 @@ const (
 	PassVisual = "pass"
 	// FootprintVisual es el visual de la sombra de la próxima pisada (macro).
 	FootprintVisual = "footprint"
+	// ClimbVisual marca un Space que se trepa (una pata, un respaldo): la
+	// simulación lo modela como una tira cuyo eje Y local es la altura. No
+	// se dibuja, y en macro lo que está en él se ve en la base de la tira
+	// (FlattenClimbs), no corrido hacia el norte.
+	ClimbVisual = "climb"
 	// FootVisual es el pie de la giantess visto de cerca: su sombra antes de
 	// bajar (shadow_<dir>) y el pie apoyado (foot_<dir>).
 	FootVisual = "foot"
@@ -204,6 +239,9 @@ func (s ArtScene) Lift(id ids.ID) int { return s.lifts[id] }
 // Arrange proyecta un frame ya interpolado y alinea los pivotes al píxel.
 // El foco micro incluye su superficie y los descendientes de esa superficie.
 func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]string, scale Scale, focus ids.ID, featured ...ids.ID) ArtScene {
+	if scale == Macro {
+		f = FlattenClimbs(f, visuals)
+	}
 	canvas := p.Bounds()
 	scope := map[ids.ID]bool{focus: true}
 	for _, c := range f.Contacts {

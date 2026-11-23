@@ -1117,6 +1117,14 @@
         "hidden": true
       }
     },
+    "climb": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
     "pass": {
       "macro": {
         "hidden": true

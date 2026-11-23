@@ -414,3 +414,26 @@ func TestMacroSleeperDrawsOverBed(t *testing.T) {
 		t.Fatalf("tiny en el mismo punto: se eligió %s, quería el tiny", id)
 	}
 }
+
+// En macro, lo que trepa una tira (ClimbVisual) se ve en su base: la Y local
+// de la tira es la altura, no un desplazamiento hacia el norte.
+func TestFlattenClimbs(t *testing.T) {
+	leg := view.Space{ID: 1, Pose: view.Pose{Pos: units.V3(units.Meter, 2*units.Meter, 0)}}
+	frame := &view.Frame{
+		Spaces: []view.Space{leg, {ID: 2}},
+		Things: []view.Thing{
+			{ID: 3, Space: 1, Pose: view.Pose{Pos: units.V3(units.Meter+units.Centimeter, 2*units.Meter+50*units.Centimeter, 0)}},
+			{ID: 4, Space: 2, Pose: view.Pose{Pos: units.V3(0, 70*units.Centimeter, 0)}},
+		},
+	}
+	if FlattenClimbs(frame, map[ids.ID]string{1: "desk"}) != frame {
+		t.Fatal("sin tiras se copió el frame")
+	}
+	flat := FlattenClimbs(frame, map[ids.ID]string{1: ClimbVisual})
+	if got := flat.Things[0].Pose.Pos; got != units.V3(units.Meter+units.Centimeter, 2*units.Meter, 0) {
+		t.Fatalf("en la pata: %v, quería la base", got)
+	}
+	if flat.Things[1].Pose.Pos != frame.Things[1].Pose.Pos || frame.Things[0].Pose.Pos.Y != 2*units.Meter+50*units.Centimeter {
+		t.Fatal("cambió algo fuera de la tira o el frame original")
+	}
+}

@@ -251,19 +251,23 @@ func (g *game) microSurface(f *view.Frame, id ids.ID) ids.ID {
 	return ids.Nil
 }
 
+// artFocus es la superficie que se ve de cerca (Nil: la casa). De cerca, lo
+// seguido manda: se ve su superficie y, mientras está en una sin vista de
+// cerca (trepando una pata), la casa; al llegar a otra con vista de cerca se
+// vuelve a ella.
 func (g *game) artFocus(f *view.Frame) ids.ID {
 	if g.art.focus.IsNil() {
 		return ids.Nil
 	}
-	if id := g.microSurface(f, g.follow); !id.IsNil() {
-		return id
+	if _, ok := entityPose(f, g.follow); ok && !g.follow.IsNil() {
+		return g.microSurface(f, g.follow)
 	}
 	return g.art.focus
 }
 
-func (g *game) followsInView(f *view.Frame) bool {
-	return !g.follow.IsNil() && (g.art == nil || g.art.focus.IsNil() || !g.microSurface(f, g.follow).IsNil())
-}
+// followsInView dice si la cámara acompaña a lo seguido: siempre que haya
+// algo seguido, porque artFocus muestra la vista donde está.
+func (g *game) followsInView(*view.Frame) bool { return !g.follow.IsNil() }
 
 func (g *game) toggleArtMicro() {
 	a := g.art

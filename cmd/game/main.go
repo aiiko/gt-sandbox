@@ -371,6 +371,12 @@ func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 		if p, ok := entityPose(f, g.follow); !ok {
 			g.stopFollowing()
 		} else if g.followsInView(f) {
+			if g.art != nil && g.artScale(f) == render.Macro {
+				// en macro, quien trepa una pata se ve en su base
+				if t, ok := render.FlattenClimbs(f, g.visuals).ThingByID(g.follow); ok {
+					p = t.Pose
+				}
+			}
 			return fixedmath.Transform{Pos: p.Pos}
 		}
 	}
