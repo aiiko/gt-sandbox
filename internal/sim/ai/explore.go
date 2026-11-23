@@ -100,6 +100,8 @@ func (explore) Options(c *Ctx) []Option {
 		return nil
 	}
 	portals := ecs.Get[nav.Portal](r)
+	spaces := ecs.Get[space.Space](r)
+	hereSp, _ := spaces.Get(l.Space)
 	g := space.Of(r)
 	var out []Option
 	for _, k := range a.Known {
@@ -109,6 +111,12 @@ func (explore) Options(c *Ctx) []Option {
 		}
 		mine, other, ok := side(p, l.Space)
 		if !ok || !g.IsSpace(other.Space) || InDanger(c.W, a.Scale, other.Space, other.Pos) {
+			continue
+		}
+		// La curiosidad casual sube a una palma apoyada y baja de ella, pero
+		// no encadena recorridos internos por el cuerpo entero (eso es asunto
+		// de exploradores y expediciones; propuesta 19.4).
+		if otherSp, ok := spaces.Get(other.Space); ok && hereSp.Kind == space.Articulated && otherSp.Kind == space.Articulated {
 			continue
 		}
 		u := a.curiosityFor(other.Space, c.W.Tick())

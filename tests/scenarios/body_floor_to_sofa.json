@@ -1,0 +1,3264 @@
+{
+  "name": "body_floor_to_sofa",
+  "seed": 192,
+  "ticks": 1200,
+  "notes": "19.6.3: ruta completa piso -> pie izquierdo -> pantorrilla -> muslo -> sofá al sentarse; y un segundo tiny sin agarre cae desde el muslo derecho y aterriza en el sofá.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "living",
+      "spawn": {
+        "name": "living",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "sofa",
+      "spawn": {
+        "name": "sofá",
+        "space": {
+          "kind": "elevated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 1400000,
+              "y": 700000
+            }
+          }
+        },
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1000000,
+            "y": 400000,
+            "z": 450000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 50000,
+            "version": 0,
+            "rows": [
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................",
+              "............................"
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000
+          }
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "spawn": {
+        "name": "giantess",
+        "space": {
+          "kind": "body",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1500000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "mover": {
+            "speed": 1000000,
+            "scale": "giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "palm",
+      "spawn": {
+        "name": "palma",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -90000
+            },
+            "max": {
+              "x": 50000,
+              "y": 90000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 300000,
+            "y": 0,
+            "z": 1400000
+          }
+        },
+        "components": {
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_head",
+      "spawn": {
+        "name": "cabello y rostro",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 200000,
+              "y": 220000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -100000,
+            "y": -100000,
+            "z": 1550000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "cabello y rostro",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 40000,
+                  "y": 100000
+                },
+                "radius": 50000,
+                "label": "mechón izquierdo"
+              },
+              {
+                "pos": {
+                  "x": 160000,
+                  "y": 100000
+                },
+                "radius": 50000,
+                "label": "mechón derecho"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 100000,
+                "y": 180000
+              },
+              {
+                "x": 40000,
+                "y": 100000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_neck",
+      "spawn": {
+        "name": "cuello y nuca",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 120000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 0,
+              "y": 0,
+              "z": 1420000
+            },
+            "anchor_b": {
+              "x": 0,
+              "y": 0,
+              "z": 1550000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "cuello y nuca",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 40000,
+                  "y": 60000
+                },
+                "radius": 50000,
+                "label": "cuello de la ropa"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_shoulder_r",
+      "spawn": {
+        "name": "hombro derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 120000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 140000,
+            "y": -60000,
+            "z": 1400000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "......",
+              "......",
+              "......",
+              "......",
+              "......",
+              "......"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "hombro derecho",
+            "grips": [
+              {
+                "pos": {
+                  "x": 60000,
+                  "y": 60000
+                },
+                "radius": 50000,
+                "label": "costura del hombro derecho"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_shoulder_l",
+      "spawn": {
+        "name": "hombro izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 120000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -260000,
+            "y": -60000,
+            "z": 1400000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "......",
+              "......",
+              "......",
+              "......",
+              "......",
+              "......"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "hombro izquierdo",
+            "grips": [
+              {
+                "pos": {
+                  "x": 60000,
+                  "y": 60000
+                },
+                "radius": 50000,
+                "label": "costura del hombro izquierdo"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_chest",
+      "spawn": {
+        "name": "pecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 280000,
+              "y": 360000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 0,
+              "y": 100000,
+              "z": 1040000
+            },
+            "anchor_b": {
+              "x": 0,
+              "y": 100000,
+              "z": 1400000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              "......."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pecho",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 140000,
+                  "y": 180000
+                },
+                "radius": 80000,
+                "label": "borde del bolsillo"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_back",
+      "spawn": {
+        "name": "espalda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 280000,
+              "y": 360000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 0,
+              "y": -100000,
+              "z": 1040000
+            },
+            "anchor_b": {
+              "x": 0,
+              "y": -100000,
+              "z": 1400000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              "......."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "espalda",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 140000,
+                  "y": 180000
+                },
+                "radius": 80000,
+                "label": "costura de la espalda"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 20000,
+                "y": 180000
+              },
+              {
+                "x": 260000,
+                "y": 180000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_side_r",
+      "spawn": {
+        "name": "costado derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 340000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 180000,
+              "y": 0,
+              "z": 1040000
+            },
+            "anchor_b": {
+              "x": 180000,
+              "y": 0,
+              "z": 1380000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "costado derecho",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 50000,
+                  "y": 160000
+                },
+                "radius": 60000,
+                "label": "costura lateral derecha"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_side_l",
+      "spawn": {
+        "name": "costado izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 340000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": -180000,
+              "y": 0,
+              "z": 1040000
+            },
+            "anchor_b": {
+              "x": -180000,
+              "y": 0,
+              "z": 1380000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "costado izquierdo",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 50000,
+                  "y": 160000
+                },
+                "radius": 60000,
+                "label": "costura lateral izquierda"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 50000,
+                "y": 160000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_hips",
+      "spawn": {
+        "name": "cintura y caderas",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 320000,
+              "y": 200000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -160000,
+            "y": -100000,
+            "z": 950000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              "........",
+              "........",
+              "........",
+              "........",
+              "........"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "cintura y caderas",
+            "grips": [
+              {
+                "pos": {
+                  "x": 160000,
+                  "y": 100000
+                },
+                "radius": 60000,
+                "label": "cintura"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_hand_r_back",
+      "spawn": {
+        "name": "dorso de mano derecha",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 140000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 300000,
+            "y": -70000,
+            "z": 1400000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "mano derecha"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_forearm_r",
+      "spawn": {
+        "name": "antebrazo derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 60000,
+              "y": 120000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 300000,
+              "y": 0,
+              "z": 1100000
+            },
+            "anchor_b": {
+              "x": 260000,
+              "y": 0,
+              "z": 1250000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "...",
+              "...",
+              "...",
+              "...",
+              "...",
+              "..."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "antebrazo derecho",
+            "require_grip": true,
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 30000,
+                  "y": 20000
+                },
+                "radius": 50000,
+                "label": "puño de la manga derecha"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 30000,
+                "y": 60000
+              }
+            ],
+            "access_reach": 70000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_upper_arm_r",
+      "spawn": {
+        "name": "brazo derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 60000,
+              "y": 120000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 260000,
+              "y": 0,
+              "z": 1250000
+            },
+            "anchor_b": {
+              "x": 200000,
+              "y": 0,
+              "z": 1400000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "...",
+              "...",
+              "...",
+              "...",
+              "...",
+              "..."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "brazo derecho",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 30000,
+                  "y": 60000
+                },
+                "radius": 50000,
+                "label": "costura del brazo derecho"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_hand_l",
+      "spawn": {
+        "name": "mano izquierda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 140000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -320000,
+            "y": -70000,
+            "z": 950000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "mano izquierda"
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 20000,
+                "y": 70000
+              }
+            ],
+            "access_reach": 70000,
+            "body": "$giantess",
+            "self_contact": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_forearm_l",
+      "spawn": {
+        "name": "antebrazo izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 60000,
+              "y": 120000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": -280000,
+              "y": 0,
+              "z": 950000
+            },
+            "anchor_b": {
+              "x": -260000,
+              "y": 0,
+              "z": 1180000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "...",
+              "...",
+              "...",
+              "...",
+              "...",
+              "..."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "antebrazo izquierdo",
+            "require_grip": true,
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 30000,
+                  "y": 20000
+                },
+                "radius": 50000,
+                "label": "puño de la manga izquierda"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 30000,
+                "y": 60000
+              }
+            ],
+            "access_reach": 70000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_upper_arm_l",
+      "spawn": {
+        "name": "brazo izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 60000,
+              "y": 120000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": -260000,
+              "y": 0,
+              "z": 1180000
+            },
+            "anchor_b": {
+              "x": -200000,
+              "y": 0,
+              "z": 1400000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "...",
+              "...",
+              "...",
+              "...",
+              "...",
+              "..."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "brazo izquierdo",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 30000,
+                  "y": 60000
+                },
+                "radius": 50000,
+                "label": "costura del brazo izquierdo"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_thigh_l",
+      "spawn": {
+        "name": "muslo izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 140000,
+              "y": 340000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": -100000,
+              "y": 0,
+              "z": 500000
+            },
+            "anchor_b": {
+              "x": -100000,
+              "y": 0,
+              "z": 950000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              "......."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "muslo izquierdo",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 70000,
+                  "y": 160000
+                },
+                "radius": 60000,
+                "label": "pliegue del muslo izquierdo"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 20000,
+                "y": 160000
+              },
+              {
+                "x": 120000,
+                "y": 160000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess",
+            "self_contact": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_calf_l",
+      "spawn": {
+        "name": "pantorrilla izquierda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 160000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": -100000,
+              "y": 0,
+              "z": 60000
+            },
+            "anchor_b": {
+              "x": -100000,
+              "y": 0,
+              "z": 500000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantorrilla izquierda",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 40000,
+                  "y": 80000
+                },
+                "radius": 50000,
+                "label": "costura de la pantorrilla izquierda"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_foot_l",
+      "spawn": {
+        "name": "pie izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -150000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pie izquierdo",
+            "grips": [
+              {
+                "pos": {
+                  "x": 20000,
+                  "y": 120000
+                },
+                "radius": 50000,
+                "label": "borde del calzado izquierdo"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 20000,
+                "y": 120000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_thigh_r",
+      "spawn": {
+        "name": "muslo derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 140000,
+              "y": 340000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 100000,
+              "y": 0,
+              "z": 500000
+            },
+            "anchor_b": {
+              "x": 100000,
+              "y": 0,
+              "z": 950000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              "......."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "muslo derecho",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 70000,
+                  "y": 160000
+                },
+                "radius": 60000,
+                "label": "pliegue del muslo derecho"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 60000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 20000,
+                "y": 160000
+              },
+              {
+                "x": 120000,
+                "y": 160000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess",
+            "self_contact": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_calf_r",
+      "spawn": {
+        "name": "pantorrilla derecha",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 160000
+            }
+          },
+          "projection": {
+            "anchor_a": {
+              "x": 100000,
+              "y": 0,
+              "z": 60000
+            },
+            "anchor_b": {
+              "x": 100000,
+              "y": 0,
+              "z": 500000
+            },
+            "climb": true
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantorrilla derecha",
+            "require_grip": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 40000,
+                  "y": 80000
+                },
+                "radius": 50000,
+                "label": "costura de la pantorrilla derecha"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_foot_r",
+      "spawn": {
+        "name": "pie derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 50000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pie derecho",
+            "grips": [
+              {
+                "pos": {
+                  "x": 80000,
+                  "y": 120000
+                },
+                "radius": 50000,
+                "label": "borde del calzado derecho"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "support_offset": -20000,
+            "access": [
+              {
+                "x": 80000,
+                "y": 120000
+              }
+            ],
+            "access_reach": 80000,
+            "body": "$giantess"
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_hand_r_edge",
+      "spawn": {
+        "name": "borde de mano derecha",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$palm",
+              "pos": {
+                "x": -10000,
+                "y": -70000
+              }
+            },
+            "b": {
+              "space": "$body_hand_r_back",
+              "pos": {
+                "x": 50000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_wrist_r",
+      "spawn": {
+        "name": "muñeca derecha",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$palm",
+              "pos": {
+                "x": -10000,
+                "y": -80000
+              }
+            },
+            "b": {
+              "space": "$body_forearm_r",
+              "pos": {
+                "x": 30000,
+                "y": 10000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_elbow_r",
+      "spawn": {
+        "name": "codo derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_forearm_r",
+              "pos": {
+                "x": 30000,
+                "y": 110000
+              }
+            },
+            "b": {
+              "space": "$body_upper_arm_r",
+              "pos": {
+                "x": 30000,
+                "y": 10000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_r",
+      "spawn": {
+        "name": "hombro derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_upper_arm_r",
+              "pos": {
+                "x": 30000,
+                "y": 110000
+              }
+            },
+            "b": {
+              "space": "$body_shoulder_r",
+              "pos": {
+                "x": 60000,
+                "y": 60000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_wrist_l",
+      "spawn": {
+        "name": "muñeca izquierda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_hand_l",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "b": {
+              "space": "$body_forearm_l",
+              "pos": {
+                "x": 30000,
+                "y": 10000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_elbow_l",
+      "spawn": {
+        "name": "codo izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_forearm_l",
+              "pos": {
+                "x": 30000,
+                "y": 110000
+              }
+            },
+            "b": {
+              "space": "$body_upper_arm_l",
+              "pos": {
+                "x": 30000,
+                "y": 10000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_l",
+      "spawn": {
+        "name": "hombro izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_upper_arm_l",
+              "pos": {
+                "x": 30000,
+                "y": 110000
+              }
+            },
+            "b": {
+              "space": "$body_shoulder_l",
+              "pos": {
+                "x": 60000,
+                "y": 60000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_r_chest",
+      "spawn": {
+        "name": "hombro derecho a pecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_shoulder_r",
+              "pos": {
+                "x": 20000,
+                "y": 60000
+              }
+            },
+            "b": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 240000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_l_chest",
+      "spawn": {
+        "name": "hombro izquierdo a pecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_shoulder_l",
+              "pos": {
+                "x": 100000,
+                "y": 60000
+              }
+            },
+            "b": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 40000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_r_back",
+      "spawn": {
+        "name": "hombro derecho a espalda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_shoulder_r",
+              "pos": {
+                "x": 20000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_back",
+              "pos": {
+                "x": 240000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_shoulder_l_back",
+      "spawn": {
+        "name": "hombro izquierdo a espalda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_shoulder_l",
+              "pos": {
+                "x": 100000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_back",
+              "pos": {
+                "x": 40000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_neck_chest",
+      "spawn": {
+        "name": "cuello a pecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 140000,
+                "y": 340000
+              }
+            },
+            "b": {
+              "space": "$body_neck",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_neck_back",
+      "spawn": {
+        "name": "nuca a espalda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_back",
+              "pos": {
+                "x": 140000,
+                "y": 340000
+              }
+            },
+            "b": {
+              "space": "$body_neck",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_neck_head",
+      "spawn": {
+        "name": "nuca a cabello",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_neck",
+              "pos": {
+                "x": 40000,
+                "y": 100000
+              }
+            },
+            "b": {
+              "space": "$body_head",
+              "pos": {
+                "x": 100000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_chest_side_l",
+      "spawn": {
+        "name": "pecho a costado izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 20000,
+                "y": 180000
+              }
+            },
+            "b": {
+              "space": "$body_side_l",
+              "pos": {
+                "x": 50000,
+                "y": 160000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_chest_side_r",
+      "spawn": {
+        "name": "pecho a costado derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 260000,
+                "y": 180000
+              }
+            },
+            "b": {
+              "space": "$body_side_r",
+              "pos": {
+                "x": 50000,
+                "y": 160000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_back_side_l",
+      "spawn": {
+        "name": "espalda a costado izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_back",
+              "pos": {
+                "x": 20000,
+                "y": 180000
+              }
+            },
+            "b": {
+              "space": "$body_side_l",
+              "pos": {
+                "x": 50000,
+                "y": 180000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_back_side_r",
+      "spawn": {
+        "name": "espalda a costado derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_back",
+              "pos": {
+                "x": 260000,
+                "y": 180000
+              }
+            },
+            "b": {
+              "space": "$body_side_r",
+              "pos": {
+                "x": 50000,
+                "y": 180000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_side_l_hips",
+      "spawn": {
+        "name": "costado izquierdo a cadera",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_side_l",
+              "pos": {
+                "x": 50000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 40000,
+                "y": 100000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_side_r_hips",
+      "spawn": {
+        "name": "costado derecho a cadera",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_side_r",
+              "pos": {
+                "x": 50000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 280000,
+                "y": 100000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_chest_hips",
+      "spawn": {
+        "name": "pecho a cintura",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 140000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 160000,
+                "y": 160000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_back_hips",
+      "spawn": {
+        "name": "espalda a cintura",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_back",
+              "pos": {
+                "x": 140000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 160000,
+                "y": 40000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_hip_l",
+      "spawn": {
+        "name": "cadera a muslo izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 60000,
+                "y": 100000
+              }
+            },
+            "b": {
+              "space": "$body_thigh_l",
+              "pos": {
+                "x": 70000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_knee_l",
+      "spawn": {
+        "name": "rodilla izquierda",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_thigh_l",
+              "pos": {
+                "x": 70000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_calf_l",
+              "pos": {
+                "x": 40000,
+                "y": 140000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_ankle_l",
+      "spawn": {
+        "name": "tobillo izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_calf_l",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_foot_l",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_hip_r",
+      "spawn": {
+        "name": "cadera a muslo derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_hips",
+              "pos": {
+                "x": 260000,
+                "y": 100000
+              }
+            },
+            "b": {
+              "space": "$body_thigh_r",
+              "pos": {
+                "x": 70000,
+                "y": 320000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_knee_r",
+      "spawn": {
+        "name": "rodilla derecha",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_thigh_r",
+              "pos": {
+                "x": 70000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_calf_r",
+              "pos": {
+                "x": 40000,
+                "y": 140000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "joint_ankle_r",
+      "spawn": {
+        "name": "tobillo derecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$body_calf_r",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "b": {
+              "space": "$body_foot_r",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny1",
+      "spawn": {
+        "name": "Tiny 01",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1300000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 150000,
+            "scale": "tiny"
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny2",
+      "spawn": {
+        "name": "Tiny 02",
+        "location": {
+          "space": "$body_thigh_r",
+          "pos": {
+            "x": 120000,
+            "y": 300000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$giantess",
+        "components": {
+          "poses": {
+            "idle": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 300000,
+                  "y": 0,
+                  "z": 1400000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_hips",
+                "pos": {
+                  "x": -160000,
+                  "y": -100000,
+                  "z": 950000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_thigh_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -100000,
+                    "y": 0,
+                    "z": 500000
+                  },
+                  "anchor_b": {
+                    "x": -100000,
+                    "y": 0,
+                    "z": 950000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_thigh_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 100000,
+                    "y": 0,
+                    "z": 500000
+                  },
+                  "anchor_b": {
+                    "x": 100000,
+                    "y": 0,
+                    "z": 950000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_calf_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -100000,
+                    "y": 0,
+                    "z": 60000
+                  },
+                  "anchor_b": {
+                    "x": -100000,
+                    "y": 0,
+                    "z": 500000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_calf_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 100000,
+                    "y": 0,
+                    "z": 60000
+                  },
+                  "anchor_b": {
+                    "x": 100000,
+                    "y": 0,
+                    "z": 500000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_foot_l",
+                "pos": {
+                  "x": -150000,
+                  "y": -80000,
+                  "z": 20000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_foot_r",
+                "pos": {
+                  "x": 50000,
+                  "y": -80000,
+                  "z": 20000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_forearm_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 300000,
+                    "y": 0,
+                    "z": 1100000
+                  },
+                  "anchor_b": {
+                    "x": 260000,
+                    "y": 0,
+                    "z": 1250000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_forearm_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -280000,
+                    "y": 0,
+                    "z": 950000
+                  },
+                  "anchor_b": {
+                    "x": -260000,
+                    "y": 0,
+                    "z": 1180000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_hand_l",
+                "pos": {
+                  "x": -320000,
+                  "y": -70000,
+                  "z": 950000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_back",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 0,
+                    "y": -100000,
+                    "z": 1040000
+                  },
+                  "anchor_b": {
+                    "x": 0,
+                    "y": -100000,
+                    "z": 1400000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_side_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -180000,
+                    "y": 0,
+                    "z": 1040000
+                  },
+                  "anchor_b": {
+                    "x": -180000,
+                    "y": 0,
+                    "z": 1380000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_head",
+                "pos": {
+                  "x": -100000,
+                  "y": -100000,
+                  "z": 1550000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_neck",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1420000
+                  },
+                  "anchor_b": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 1550000
+                  },
+                  "climb": true
+                }
+              }
+            ],
+            "sit": [
+              {
+                "part": "$palm",
+                "pos": {
+                  "x": 300000,
+                  "y": 0,
+                  "z": 1400000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_hips",
+                "pos": {
+                  "x": -160000,
+                  "y": -100000,
+                  "z": 470000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_thigh_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "origin": {
+                    "x": -170000,
+                    "y": -100000,
+                    "z": 470000
+                  },
+                  "axis_u": {
+                    "x": 1000000,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "axis_v": {
+                    "x": 0,
+                    "y": 1000000,
+                    "z": 0
+                  }
+                }
+              },
+              {
+                "part": "$body_thigh_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "origin": {
+                    "x": 30000,
+                    "y": -100000,
+                    "z": 470000
+                  },
+                  "axis_u": {
+                    "x": 1000000,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "axis_v": {
+                    "x": 0,
+                    "y": 1000000,
+                    "z": 0
+                  }
+                }
+              },
+              {
+                "part": "$body_calf_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": -100000,
+                    "y": 240000,
+                    "z": 60000
+                  },
+                  "anchor_b": {
+                    "x": -100000,
+                    "y": 240000,
+                    "z": 470000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_calf_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "anchor_a": {
+                    "x": 100000,
+                    "y": 240000,
+                    "z": 60000
+                  },
+                  "anchor_b": {
+                    "x": 100000,
+                    "y": 240000,
+                    "z": 470000
+                  },
+                  "climb": true
+                }
+              },
+              {
+                "part": "$body_foot_l",
+                "pos": {
+                  "x": -150000,
+                  "y": 160000,
+                  "z": 20000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_foot_r",
+                "pos": {
+                  "x": 50000,
+                  "y": 160000,
+                  "z": 20000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_forearm_l",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "origin": {
+                    "x": -280000,
+                    "y": -60000,
+                    "z": 470000
+                  },
+                  "axis_u": {
+                    "x": 1000000,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "axis_v": {
+                    "x": 0,
+                    "y": 1000000,
+                    "z": 0
+                  }
+                }
+              },
+              {
+                "part": "$body_hand_l",
+                "pos": {
+                  "x": -150000,
+                  "y": 120000,
+                  "z": 490000
+                },
+                "facing": 0
+              },
+              {
+                "part": "$body_head",
+                "pos": {
+                  "x": -100000,
+                  "y": -100000,
+                  "z": 1200000
+                },
+                "facing": 0
+              }
+            ],
+            "jolt_drop": [
+              {
+                "part": "$body_thigh_r",
+                "pos": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "facing": 0,
+                "projection": {
+                  "origin": {
+                    "x": 30000,
+                    "y": -100000,
+                    "z": 550000
+                  },
+                  "axis_u": {
+                    "x": 1000000,
+                    "y": 0,
+                    "z": 0
+                  },
+                  "axis_v": {
+                    "x": 0,
+                    "y": 1000000,
+                    "z": 0
+                  }
+                }
+              }
+            ]
+          },
+          "body_joints": [
+            {
+              "portal": "$joint_elbow_r",
+              "closed_poses": [
+                "elbow_bent"
+              ]
+            },
+            {
+              "portal": "$joint_elbow_l",
+              "closed_poses": [
+                "elbow_bent"
+              ]
+            }
+          ],
+          "body_state": {
+            "pose": "idle"
+          }
+        }
+      }
+    },
+    {
+      "tick": 10,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny1",
+        "space": "$body_thigh_l",
+        "goal": {
+          "x": 70000,
+          "y": 160000
+        }
+      }
+    },
+    {
+      "tick": 450,
+      "kind": "move_to",
+      "data": {
+        "entity": "$giantess",
+        "space": "$living",
+        "goal": {
+          "x": 1500000,
+          "y": 650000
+        }
+      }
+    },
+    {
+      "tick": 600,
+      "kind": "set_pose",
+      "data": {
+        "entity": "$giantess",
+        "pose": "sit"
+      }
+    },
+    {
+      "tick": 620,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny1",
+        "space": "$sofa",
+        "goal": {
+          "x": 200000,
+          "y": 300000
+        }
+      }
+    },
+    {
+      "tick": 700,
+      "kind": "set_pose",
+      "data": {
+        "entity": "$giantess",
+        "pose": "jolt_drop"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "no_event": "command_rejected"
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$body_foot_l"
+      }
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$body_calf_l"
+      }
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$body_thigh_l"
+      }
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$sofa"
+      }
+    },
+    {
+      "event": "entity_lost_grip",
+      "match": {
+        "entity": "$tiny2",
+        "space": "$body_thigh_r"
+      }
+    },
+    {
+      "event": "entity_fell",
+      "match": {
+        "entity": "$tiny2",
+        "to": "$sofa"
+      }
+    },
+    {
+      "at": "$tiny1",
+      "space": "$sofa",
+      "pos": {
+        "x": 200000,
+        "y": 300000
+      },
+      "tol": 30000
+    }
+  ]
+}

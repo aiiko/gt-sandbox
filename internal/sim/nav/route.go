@@ -23,7 +23,7 @@ type Leg struct {
 }
 
 // MaxSearches limita las búsquedas A* de una planificación.
-const MaxSearches = 32
+const MaxSearches = 128
 
 // Router planifica rutas entre Spaces: un grafo cuyos nodos son el origen,
 // el destino y los extremos de los portales habilitados. Las aristas dentro
