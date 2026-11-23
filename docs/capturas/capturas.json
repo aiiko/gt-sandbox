@@ -8,7 +8,7 @@
       "seed": 42,
       "tick": 30,
       "view": "macro",
-      "digest": "5c2f924e582bb7d8"
+      "digest": "ad8e780b9dcc3f10"
     },
     {
       "name": "escritorio",
@@ -22,7 +22,7 @@
         200,
         -90
       ],
-      "digest": "20a01b0901c2adff"
+      "digest": "0ccdf14bfee25765"
     },
     {
       "name": "mano-apoyada",
@@ -41,7 +41,7 @@
       "seed": 42,
       "tick": 530,
       "view": "macro",
-      "digest": "5a7737f3866d90e4"
+      "digest": "088646f01d25b5ac"
     },
     {
       "name": "viaje",
@@ -81,7 +81,7 @@
       "tick": 188,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "9a56c5d803b717e3"
+      "digest": "2df4f38ea1e60417"
     },
     {
       "name": "aplastado",
@@ -91,7 +91,7 @@
       "tick": 200,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "52080c2e2f48f80c"
+      "digest": "9afd3c1b3fb29f35"
     },
     {
       "name": "pisada",

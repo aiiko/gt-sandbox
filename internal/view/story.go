@@ -66,6 +66,14 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.Surface
 	case encounter.Skipped:
 		return ev.Entity, ev.Surface
+	case colony.Searched:
+		return ev.Entity, ids.Nil
+	case colony.FiberDelivered:
+		return ids.Nil, ev.Site
+	case colony.RefugeBuilt:
+		return ev.By, ev.Site
+	case colony.ChatDone:
+		return ev.A, ev.Gathering
 	}
 	return ids.Nil, ids.Nil
 }
@@ -158,6 +166,19 @@ func storyText(r *ecs.Registry, event world.Event) string {
 		}
 	case colony.Stored:
 		return fmt.Sprintf("El depósito de %s guarda %d porciones.", name(ev.Colony), ev.Total)
+	case colony.Searched:
+		// una búsqueda vacía no se cuenta
+		if ev.Found {
+			return fmt.Sprintf("%s encuentra comida en %s.", name(ev.Entity), name(ev.Spot))
+		}
+	case colony.FiberDelivered:
+		if b, ok := ecs.Get[colony.BuildSite](r).Get(ev.Site); ok {
+			return fmt.Sprintf("Una fibra más para %s (%d de %d).", name(ev.Site), ev.Total, b.Required)
+		}
+	case colony.RefugeBuilt:
+		return fmt.Sprintf("%s termina %s.", name(ev.By), name(ev.Site))
+	case colony.ChatDone:
+		return fmt.Sprintf("%s y %s conversan un rato.", name(ev.A), name(ev.B))
 	case attach.PoseChanged:
 		if a := ecs.Get[ai.Agent](r).Ptr(ev.Entity); a != nil && !a.Hand.IsNil() {
 			switch ev.Pose {

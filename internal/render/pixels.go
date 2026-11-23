@@ -322,7 +322,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 	for _, t := range f.Things {
 		if t.CarriedBy.IsNil() && inFocus(t.Space) {
 			names := actor{mover: t.Mover, facing: t.Pose.Rot, activity: t.Activity, step: t.Step,
-				carrying: carrying[t.ID]}.clips()
+				carrying: carrying[t.ID], built: t.Built}.clips()
 			var offset image.Point
 			if fl, ok := f.FallOf(t.ID); ok {
 				// Cae desde arriba con aceleración; su sombra lo espera en el apoyo.
@@ -491,6 +491,7 @@ type actor struct {
 	activity, step string
 	carrying       bool // lleva algo
 	resting        bool // tiene una parte apoyada en otra superficie
+	built          bool // una obra terminada (refugio auxiliar)
 }
 
 func compass(facing fixedmath.Angle) string {
@@ -501,6 +502,9 @@ func compass(facing fixedmath.Angle) string {
 
 // clips devuelve los clips candidatos, del más específico al más general.
 func (a actor) clips() []string {
+	if a.built {
+		return []string{"built", "idle"}
+	}
 	if a.mover == nil {
 		return []string{"idle"}
 	}

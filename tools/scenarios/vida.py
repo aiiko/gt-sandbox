@@ -407,20 +407,20 @@ def life_entities():
         return e
 
     return [
-        spot_on('desk1', 'spot_corner', 560000, 50000, 'rincón del escritorio'),
-        spot_on('desk1', 'spot_back', 80000, 350000, 'fondo del escritorio'),
-        spot_on('chair', 'spot_chair', 340000, 340000, 'borde de la silla'),
-        spot_on('bedroom', 'spot_floor', 1350000, 900000, 'piso junto al escritorio'),
+        spot_on('desk1', 'spot_corner', 560000, 50000, 'el rincón del escritorio'),
+        spot_on('desk1', 'spot_back', 80000, 350000, 'el fondo del escritorio'),
+        spot_on('chair', 'spot_chair', 340000, 340000, 'el borde de la silla'),
+        spot_on('bedroom', 'spot_floor', 1350000, 900000, 'el piso junto al escritorio'),
         chair_crumb('chair_crumb1', 330000, 330000),
         chair_crumb('chair_crumb2', 355000, 350000),
         chair_crumb('chair_crumb3', 340000, 365000),
         on('desk1', 'napkin', 200000, 300000, {'fiber_source': {'left': 12, 'item': 'fiber'}},
-           'servilleta', obj='napkin'),
+           'la servilleta', obj='napkin'),
         on('desk1', 'site', 60000, 60000, {'build_site': {
             'colony': '$nest', 'source': '$napkin', 'required': 4, 'radius': 15000,
-            'shelter': {'strength': 20, 'radius': 15000}}}, 'refugio', obj='refuge_site'),
+            'shelter': {'strength': 20, 'radius': 15000}}}, 'el refugio', obj='refuge_site'),
         on('desk1', 'meet', 400000, 330000, {
-            'gathering': {}, 'landmark': {'range': 1000000}}, 'punto de reunión'),
+            'gathering': {}, 'landmark': {'range': 1000000}}, 'el punto de reunión'),
     ]
 
 

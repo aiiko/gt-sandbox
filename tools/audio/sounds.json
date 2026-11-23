@@ -366,6 +366,24 @@
         {"wave": "sine", "f0": 620, "f1": 660, "dur": 0.12, "delay": 0.11, "attack": 0.004, "decay": 0.05, "gain": 0.18}
       ]
     },
+    "emote_chat": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "triangle", "f0": 880, "f1": 990, "dur": 0.06, "attack": 0.003, "decay": 0.025, "gain": 0.16},
+        {"wave": "triangle", "f0": 740, "f1": 660, "dur": 0.07, "delay": 0.09, "attack": 0.003, "decay": 0.03, "gain": 0.14},
+        {"wave": "triangle", "f0": 990, "f1": 1100, "dur": 0.05, "delay": 0.19, "attack": 0.003, "decay": 0.02, "gain": 0.12}
+      ]
+    },
+    "fiber_rustle": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 300,
+      "layers": [
+        {"wave": "noise", "f0": 6000, "dur": 0.18, "f1": 3500, "attack": 0.01, "decay": 0.07, "gain": 0.18, "lp": 7000}
+      ]
+    },
     "emote_spirit": {
       "category": "efectos",
       "voices": 2,

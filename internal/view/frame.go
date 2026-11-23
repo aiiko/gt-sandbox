@@ -16,6 +16,7 @@ import (
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
@@ -86,6 +87,14 @@ type Thing struct {
 	// Step es el paso en curso de una oferta de varios pasos ("goto", "pose", "use").
 	Step  string `json:"step,omitempty"`
 	Needs []Need `json:"needs,omitempty"`
+	// Goal es sobre qué actúa un agente: el objeto de la oferta, el punto
+	// que revisa, el punto de reunión o el objetivo de su trabajo (Job es el
+	// tipo de trabajo). With es con quién conversa.
+	Goal ids.ID `json:"goal,omitempty"`
+	Job  string `json:"job,omitempty"`
+	With ids.ID `json:"with,omitempty"`
+	// Built: la obra de un refugio auxiliar ya está terminada.
+	Built bool `json:"built,omitempty"`
 	// Remains es la causa ("hand", "foot", "object") si son los restos de un
 	// aplastado. Alarmed: un agente percibió una amenaza y todavía no huye o
 	// huye; Trapped: no encontró salida.
@@ -297,8 +306,12 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		if a, ok := agents.Get(id); ok {
 			t.Activity, t.Step = activity(r, a)
+			t.Goal, t.Job, t.With = purpose(r, id, a)
 			t.Alarmed = a.Reflex > 0 && a.Alarm > 0
 			t.Trapped = a.Trapped
+		}
+		if b, ok := ecs.Get[colony.BuildSite](r).Get(id); ok {
+			t.Built = b.Done
 		}
 		if m, ok := remains.Get(id); ok {
 			t.Remains = m.Source
@@ -390,6 +403,14 @@ func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 	if encounter.IsAction(d.Action) && d.Stage == 0 && suffix == "" {
 		step = "goto" // va hacia la superficie
 	}
+	if suffix == "" {
+		switch d.Action {
+		case colony.SearchAction:
+			step = [...]string{"goto", "look"}[min(d.Stage, 1)]
+		case colony.ChatAction:
+			step = [...]string{"goto", "wait", "talk"}[min(d.Stage, 2)]
+		}
+	}
 	if os, ok := ecs.Get[ai.Offers](r).Get(d.Target); ok && d.Action == "use" && d.Offer < len(os) {
 		o := os[d.Offer]
 		name += ":" + o.Action
@@ -398,6 +419,30 @@ func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 		}
 	}
 	return name + suffix, step
+}
+
+// purpose dice sobre qué actúa el agente id: el objetivo de su acción (o
+// de su trabajo, con el tipo de trabajo) y con quién conversa.
+func purpose(r *ecs.Registry, id ids.ID, a ai.Agent) (goal ids.ID, job string, with ids.ID) {
+	d := a.Doing
+	if d == nil {
+		d = a.Suspended
+	}
+	if d == nil {
+		return ids.Nil, "", ids.Nil
+	}
+	goal = d.Target
+	if j, ok := ecs.Get[jobs.Job](r).Get(d.Target); ok && d.Action == "work" {
+		goal, job = j.Target, j.Type
+	}
+	if g, ok := ecs.Get[colony.Gathering](r).Get(d.Target); ok && d.Action == colony.ChatAction {
+		for _, s := range g.Seats {
+			if s.By != id {
+				with = s.By
+			}
+		}
+	}
+	return goal, job, with
 }
 
 // route pasa los tramos pendientes a puntos de mundo.

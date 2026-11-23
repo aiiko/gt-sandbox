@@ -119,6 +119,14 @@
       "cooldown_ms": 400
     },
     {
+      "id": "emote_chat",
+      "file": "emote_chat.wav",
+      "category": "efectos",
+      "ms": 240,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
       "id": "emote_discover",
       "file": "emote_discover.wav",
       "category": "efectos",
@@ -181,6 +189,14 @@
       "ms": 220,
       "voices": 1,
       "cooldown_ms": 200
+    },
+    {
+      "id": "fiber_rustle",
+      "file": "fiber_rustle.wav",
+      "category": "efectos",
+      "ms": 180,
+      "voices": 2,
+      "cooldown_ms": 300
     },
     {
       "id": "fridge_close",

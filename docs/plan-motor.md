@@ -1,6 +1,6 @@
 # Plan de desarrollo
 
-Los slices anteriores están cerrados y documentados en sus specs: la mañana ([presentación](specs/presentacion.md), [sonido](specs/sonido.md)), el aplastamiento ([crush](specs/crush.md)), los encuentros ([encuentros](specs/encuentros.md)) y los asientos ([asientos](specs/asientos.md)). Este plan cubre el slice siguiente.
+Los slices anteriores están cerrados y documentados en sus specs: la mañana ([presentación](specs/presentacion.md), [sonido](specs/sonido.md)), el aplastamiento ([crush](specs/crush.md)), los encuentros ([encuentros](specs/encuentros.md)) y los asientos ([asientos](specs/asientos.md)). **Vida cotidiana de los tinies** (M39 a M44) también está cerrado: la [spec de vida](specs/vida.md) cubre lo implementado y su aceptación; el análisis y la justificación de cada hito siguen abajo.
 
 ## Hitos de Vida cotidiana de los tinies
 
@@ -13,7 +13,7 @@ El slice **Vida cotidiana de los tinies** (M39 a M44) les da a los tinies motivo
 | M41 Fibras y refugio auxiliar (hecho, [spec](specs/vida.md#fibras-y-refugio-auxiliar-m41)) | Servilleta (`fiber_source`), fibra (`material`) y obra (`build_site`). Tipos de trabajo `pluck` y `build`; el acarreo reutiliza `haul`. Sistema `colony.build` que cuenta recibidas, en viaje y sueltas antes de pedir otra. Al terminar, la obra recibe `shelter` con el mismo ID | `colony_builds_refuge`, `fiber_dropped_is_recovered`, `refuge_shelters_from_palm` |
 | M42 Reunión (hecho, [spec](specs/vida.md#reunión-m42)) | Necesidad `fun` en los tinies. Componente `gathering` (dos plazas, plazo y pausa) y acción `chat` | `tinies_chat`, `chat_partner_never_comes`, `chat_interrupted_by_threat` |
 | M43 Partida libre (hecho, [spec](specs/vida.md#partida-libre-m43)) | Puntos de búsqueda, servilleta, obra, punto de reunión y comida cerca de la silla en `content/partidas/casa.json`. `Randomize` sortea `fun` y la despensa inicial. Ajuste de utilidades sobre las semillas de referencia | Prueba de rutina y ocio (tres actividades distintas en 5 min por semilla) y continuidad desde snapshot a mitad de una búsqueda y de la obra |
-| M44 Presentación y cierre | Textos de actividad con motivo y destino en la ficha, símbolos en micro, arte de servilleta, fibra, obra y refugio, historia, sonidos y nota del menú | Prueba de aceptación de [16.4](propuesta.md#164-cierre-de-la-iteración). Capturas y mezcla de referencia sin cambios o actualizadas a propósito |
+| M44 Presentación y cierre (hecho, [spec](specs/vida.md#presentación-y-cierre-m44)) | Textos de actividad con motivo y destino en la ficha, símbolos en micro, arte de servilleta, fibra, obra y refugio, historia, sonidos y nota del menú | Prueba de aceptación de [16.4](propuesta.md#164-cierre-de-la-iteración). Capturas y mezcla de referencia sin cambios o actualizadas a propósito |
 
 El orden sigue las dependencias: la meta de la despensa (M39) es la entrada de la utilidad de `search` (M40) y de cuándo se pide material (M41). La reunión (M42) es independiente, pero necesita que las prioridades de M39 a M41 estén ajustadas para no tapar al resto. M43 es el primer hito que toca la partida libre.
 

@@ -24,6 +24,7 @@ const (
 	EmoteVein     = "vein"     // vena: le interrumpen una acción
 	EmoteSpirit   = "spirit"   // espíritu que sube: un tiny murió aplastado (sobre sus restos)
 	EmoteLook     = "look"     // ojo: la giantess se queda mirando a los tinies
+	EmoteChat     = "chat"     // globo de diálogo: dos tinies conversan
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -120,7 +121,8 @@ func (f *Frame) cue(id ids.ID, keep func(string) bool) (Cue, bool) {
 // Emote devuelve el símbolo que se dibuja sobre una entidad, o "". Huir o
 // estar atrapado da la gota antes que nada; si no, una señal reciente de un
 // evento tiene prioridad; si no hay, sale del estado: caer o viajar en una
-// mano levantada (gota), explorar («?»), descansar («zzz»), divertirse (nota).
+// mano levantada (gota), explorar o revisar un punto («?»), descansar
+// («zzz»), divertirse (nota), conversar (globo).
 func (f *Frame) Emote(id ids.ID) string {
 	// el susto manda: mientras huye o está atrapado, la gota
 	if t, ok := f.ThingByID(id); ok && (t.Trapped || t.Activity == ai.FleeAction) {
@@ -154,6 +156,12 @@ func (f *Frame) Emote(id ids.ID) string {
 		return EmoteNote
 	case activity == "observe" && step != "goto":
 		return EmoteLook
+	case activity == "search" && step == "look":
+		return EmoteExplore
+	case activity == "use:rest" && using:
+		return EmoteSleep
+	case activity == "chat" && step == "talk":
+		return EmoteChat
 	}
 	return ""
 }

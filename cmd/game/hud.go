@@ -45,6 +45,7 @@ var displayNames = map[string]string{
 	"chair":    "silla",
 	"sofa":     "sofá",
 	"seat":     "asiento",
+	"fiber":    "una fibra",
 }
 
 // display devuelve el nombre de una entidad para la interfaz de partida.
@@ -124,6 +125,7 @@ var activities = map[string][2]string{
 	"use:snack_living": {"Merienda en el living", "merendar en el living"},
 	"use:watch":        {"Mira televisión", "mirar televisión"},
 	"use:eat":          {"Come en el nido", "comer en el nido"},
+	"use:rest":         {"Descansa en el nido", "descansar en el nido"},
 	"use:nibble":       {"Mordisquea una migaja", "mordisquear una migaja"},
 	"use:shelter":      {"Descansa en la taza", "descansar en la taza"},
 	"use:sleep":        {"Duerme", "dormir"},
@@ -165,6 +167,58 @@ func activityText(activity, step string, carrying string) string {
 	return text
 }
 
+// lifeText dice el motivo y el destino de lo que hace un tiny de la
+// colonia: qué punto revisa, adónde lleva lo que carga, si vuelve al nido a
+// comer o a descansar, con quién conversa. "" si no aplica.
+func (g *game) lifeText(t view.Thing, carrying string) string {
+	if strings.HasSuffix(t.Activity, " (suspendida)") {
+		return ""
+	}
+	goal := g.display(t.Goal)
+	switch t.Activity {
+	case "search":
+		if t.Step == "goto" {
+			return "Va a revisar " + goal
+		}
+		return "Revisa " + goal
+	case "chat":
+		switch t.Step {
+		case "goto":
+			return "Va al punto de reunión"
+		case "wait":
+			return "Espera a alguien para conversar"
+		}
+		if t.With.IsNil() {
+			return "Conversa"
+		}
+		return "Conversa con " + g.display(t.With)
+	case "use:eat":
+		if t.Step == "goto" {
+			return "Vuelve al nido a comer"
+		}
+	case "use:rest":
+		if t.Step == "goto" || t.Step == "" && t.Mover != nil && t.Mover.Status == "moving" {
+			return "Vuelve al nido a descansar"
+		}
+	case "work":
+		switch t.Job {
+		case "pluck":
+			return "Desprende una fibra de " + goal
+		case "build":
+			return "Arma " + goal
+		case "haul":
+			if carrying == "" {
+				return "Va a buscar " + goal
+			}
+			if g.visuals[t.Goal] == "fiber" {
+				return "Lleva " + carrying + " al refugio"
+			}
+			return "Lleva " + carrying + " al nido"
+		}
+	}
+	return ""
+}
+
 var needLabels = map[string]string{"hunger": "Hambre", "energy": "Energía", "fun": "Diversión"}
 
 // card arma el inspector resumido de la entidad elegida.
@@ -193,6 +247,11 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 		}
 	}
 	c.Activity = activityText(activity, step, carrying)
+	if t, ok := f.ThingByID(id); ok {
+		if text := g.lifeText(*t, carrying); text != "" {
+			c.Activity = text
+		}
+	}
 	if cause != "" {
 		c.Activity = remainsCause[cause]
 	}

@@ -147,3 +147,32 @@ Los tinies del molde pasan a curiosidad 0,3 (con 0,8, explorar le ganaba a todo)
 - `TestPartidaTinyRoutine`: en los primeros cinco minutos de cada semilla de referencia (1, 7, 21, 42 y 99), los tinies completan al menos tres actividades distintas entre buscar, acarrear, comer, descansar, preparar el refugio y reunirse.
 - `TestPartidaLifeSnapshotContinuation`: la partida de la semilla 1, con snapshots cada 41 ticks, da el mismo log y el mismo hash que la ejecución continua, y algún snapshot cae a mitad de una búsqueda y otro a mitad de la obra.
 - Las aceptaciones de asientos y encuentros, que corren sobre la misma base, siguen pasando sin cambios.
+
+## Presentación y cierre (M44)
+
+### Frame
+
+`view.Thing` suma, para los agentes, `goal` (sobre qué actúan: el objeto de la oferta, el punto que revisan, el punto de reunión o el objetivo de su trabajo), `job` (el tipo de trabajo) y `with` (con quién conversan), y `built` para la obra terminada. `view.activity` da el paso de `search` (`goto`, `look`) y de `chat` (`goto`, `wait`, `talk`).
+
+### Ficha, símbolos y arte
+
+- La ficha (`cmd/game/hud.go`, `lifeText`) dice el motivo y el destino: «Va a revisar el rincón del escritorio», «Revisa…», «Va a buscar una migaja», «Lleva una fibra al refugio», «Lleva una migaja al nido», «Desprende una fibra de la servilleta», «Arma el refugio», «Vuelve al nido a comer», «Vuelve al nido a descansar», «Espera a alguien para conversar», «Conversa con Tiny 04». Los nombres con artículo salen del contenido (`vida.py`).
+- Símbolos en micro: «?» mientras revisa un punto, «zzz» al descansar en el nido y un globo de diálogo (`chat`, nuevo en `tools/art/ui.py`) mientras conversa.
+- La obra usa el clip `built` al terminar (`render`: una entidad con `Built` pide `built` antes que `idle`). Arte en `tools/art/vida.py`.
+
+### Historia y sonido
+
+- `view.storyText`: «Tiny 03 encuentra comida en el borde de la silla.» (una búsqueda vacía no se cuenta), «Una fibra más para el refugio (2 de 4).», «Tiny 05 termina el refugio.» y «Tiny 02 y Tiny 07 conversan un rato.».
+- Sonidos nuevos en `tools/audio/sounds.json`: `emote_chat` (al aparecer el globo) y `fiber_rustle` (roce de papel en micro al desprender o entregar una fibra). Los dos son menores (se omiten a x4 y x16). La mezcla de referencia no cambia.
+- La nota de «Nueva partida» menciona la vida del nido.
+- Las capturas de referencia no cambian de píxeles; sus resúmenes sí, porque incluyen los rectángulos del atlas rearmado.
+
+### Aceptación
+
+- `TestLifeAcceptance` recorre los primeros cinco minutos de cada semilla de referencia: nadie revisa un punto ni toma un trabajo que ya tiene otro, toda reserva es de alguien que la está usando (las tareas abandonadas la liberaron) y cada fibra cuenta una vez.
+- `TestPartidaLifeReadable` (en `cmd/game`) sigue a los tinies en la interfaz de dos semillas: las fichas distinguen búsqueda, acarreo con destino, regreso al nido por hambre o cansancio y reunión, se ven sus símbolos, y la historia cuenta hallazgos, fibras entregadas y conversaciones.
+- El resto de los criterios de [16.4](../propuesta.md#164-cierre-de-la-iteración) los cubren las pruebas y escenarios de M39 a M43: abastecimiento (`colony_searches_spots`, `TestStockedColonySearchesLess`), rutina y ocio (`TestPartidaTinyRoutine`, `TestRestRaisesEnergy`, `TestChatRaisesFun`, `chat_partner_never_comes`), coordinación y progreso (`TestSearchSpotReservedOnce`, `TestColonyBuildsRefuge`, `refuge_shelters_from_palm`), interrupciones (`fiber_dropped_is_recovered`, `chat_interrupted_by_threat`, `search_portal_closed`) y continuidad (`TestPartidaLifeSnapshotContinuation`).
+
+### Fuera de alcance
+
+Los puntos de búsqueda y el punto de reunión no tienen dibujo propio. Quedan para después, como dice la propuesta, la guardia y los avisos entre tinies, los depósitos en otras habitaciones, las expediciones en la palma y las gotas junto a la taza.

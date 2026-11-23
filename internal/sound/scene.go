@@ -36,6 +36,7 @@ const (
 	CrumbPop    = "crumb_pop"  // un tiny levanta una migaja
 	CrumbTick   = "crumb_tick" // una migaja cae sobre una superficie
 	NestStore   = "nest_store"
+	FiberRustle = "fiber_rustle" // micro: se desprende o se entrega una fibra
 	TinyHop     = "tiny_hop"
 	TinyFall    = "tiny_fall"
 	TinyLand    = "tiny_land"
@@ -61,7 +62,7 @@ var minor = map[string]bool{
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
-	Emote + view.EmoteLook: true,
+	Emote + view.EmoteLook: true, Emote + view.EmoteChat: true, FiberRustle: true,
 }
 
 // floors da el sonido de los pasos de la giantess según la habitación.
@@ -347,6 +348,14 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 	case colony.Stored:
 		if p, ok := pos(ev.Colony, cur); ok && v.Micro {
 			c.add(NestStore, p, 0.9)
+		}
+	case colony.FiberPlucked:
+		if p, ok := pos(ev.Source, cur); ok && v.Micro {
+			c.add(FiberRustle, p, 0.7)
+		}
+	case colony.FiberDelivered:
+		if p, ok := pos(ev.Site, cur); ok && v.Micro {
+			c.add(FiberRustle, p, 0.8)
 		}
 	}
 }

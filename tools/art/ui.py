@@ -343,6 +343,18 @@ XhooXXXoosX
 .XoX...XoX.
 .XXX...XXX.
 ...........''', RED, (0xFF, 0xC8, 0xD2), (0xB0, 0x40, 0x58)),
+    'chat': ('''
+...........
+.XXXXXXXXX.
+XhooooooooX
+XoXoXoXoosX
+XoooooooosX
+.XXXoosXXX.
+...XosX....
+...XsX.....
+...XX......
+...........
+...........''', IVORY, (0xFF, 0xFF, 0xFF), (0xD8, 0xC8, 0xB0)),
 }
 
 
