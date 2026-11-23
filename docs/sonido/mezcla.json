@@ -30,7 +30,7 @@
     }
   ],
   "frames": 4801,
-  "digest": "efb7b925622a10ee",
+  "digest": "d693550b5fdf6929",
   "counts": {
     "crumb_pop": 2,
     "crumb_tick": 1,
@@ -44,6 +44,7 @@
     "emote_spirit": 1,
     "emote_sweat": 6,
     "emote_vein": 1,
+    "foot_step_micro": 2,
     "fridge_close": 1,
     "fridge_open": 1,
     "giantess_step_tatami": 6,

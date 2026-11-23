@@ -199,6 +199,14 @@
       "cooldown_ms": 300
     },
     {
+      "id": "foot_step_micro",
+      "file": "foot_step_micro.wav",
+      "category": "efectos",
+      "ms": 520,
+      "voices": 2,
+      "cooldown_ms": 180
+    },
+    {
       "id": "fridge_close",
       "file": "fridge_close.wav",
       "category": "efectos",

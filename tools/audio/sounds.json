@@ -92,6 +92,17 @@
         {"wave": "sine", "f0": 210, "dur": 0.08, "f1": 180, "attack": 0.001, "decay": 0.025, "gain": 0.25}
       ]
     },
+    "foot_step_micro": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 180,
+      "volume": 0.95,
+      "layers": [
+        {"wave": "sine", "f0": 58, "dur": 0.52, "f1": 34, "attack": 0.004, "decay": 0.19, "gain": 0.62},
+        {"wave": "noise", "f0": 420, "dur": 0.28, "f1": 110, "attack": 0.003, "decay": 0.08, "gain": 0.34, "lp": 320},
+        {"wave": "triangle", "f0": 116, "dur": 0.16, "f1": 74, "attack": 0.002, "decay": 0.045, "gain": 0.16}
+      ]
+    },
     "door_fusuma": {
       "category": "efectos",
       "voices": 1,

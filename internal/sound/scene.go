@@ -15,37 +15,38 @@ import (
 
 // Sonidos de la escena.
 const (
-	StepTatami  = "giantess_step_tatami"
-	StepWood    = "giantess_step_wood"
-	StepTile    = "giantess_step_tile"
-	DoorFusuma  = "door_fusuma"
-	DoorNoren   = "door_noren"
-	FridgeOpen  = "fridge_open"
-	FridgeClose = "fridge_close"
-	CupClink    = "cup_clink"
-	Bite        = "giantess_bite"
-	Zabuton     = "zabuton"
-	ChairCreak  = "chair_creak"
-	SofaSit     = "sofa_sit"
-	TVOn        = "tv_on"
-	HandNear    = "hand_near"  // micro: la mano se acerca
-	HandLand    = "hand_land"  // micro: la mano se apoya
-	HandLift    = "hand_lift"  // micro: la mano se levanta
-	HandTap     = "hand_tap"   // macro: la mano se apoya
-	TinyStep    = "tiny_step_" // + 1, 2 o 3 según la paleta
-	CrumbPop    = "crumb_pop"  // un tiny levanta una migaja
-	CrumbTick   = "crumb_tick" // una migaja cae sobre una superficie
-	NestStore   = "nest_store"
-	FiberRustle = "fiber_rustle" // micro: se desprende o se entrega una fibra
-	TinyHop     = "tiny_hop"
-	TinyFall    = "tiny_fall"
-	TinyLand    = "tiny_land"
-	CrushPlaf   = "crush_plaf" // micro: la palma o un objeto aplasta a un tiny
-	CrushTum    = "crush_tum"  // micro: una pisada aplasta a un tiny
-	CrushFar    = "crush_far"  // macro: un golpe sordo donde murió un tiny
-	PassOpen    = "pass_open"
-	PassClose   = "pass_close"
-	Emote       = "emote_" // + el símbolo (view.Emote*)
+	StepTatami    = "giantess_step_tatami"
+	StepWood      = "giantess_step_wood"
+	StepTile      = "giantess_step_tile"
+	FootStepMicro = "foot_step_micro" // micro: retumbo grave de cada pisada de la giantess
+	DoorFusuma    = "door_fusuma"
+	DoorNoren     = "door_noren"
+	FridgeOpen    = "fridge_open"
+	FridgeClose   = "fridge_close"
+	CupClink      = "cup_clink"
+	Bite          = "giantess_bite"
+	Zabuton       = "zabuton"
+	ChairCreak    = "chair_creak"
+	SofaSit       = "sofa_sit"
+	TVOn          = "tv_on"
+	HandNear      = "hand_near"  // micro: la mano se acerca
+	HandLand      = "hand_land"  // micro: la mano se apoya
+	HandLift      = "hand_lift"  // micro: la mano se levanta
+	HandTap       = "hand_tap"   // macro: la mano se apoya
+	TinyStep      = "tiny_step_" // + 1, 2 o 3 según la paleta
+	CrumbPop      = "crumb_pop"  // un tiny levanta una migaja
+	CrumbTick     = "crumb_tick" // una migaja cae sobre una superficie
+	NestStore     = "nest_store"
+	FiberRustle   = "fiber_rustle" // micro: se desprende o se entrega una fibra
+	TinyHop       = "tiny_hop"
+	TinyFall      = "tiny_fall"
+	TinyLand      = "tiny_land"
+	CrushPlaf     = "crush_plaf" // micro: la palma o un objeto aplasta a un tiny
+	CrushTum      = "crush_tum"  // micro: una pisada aplasta a un tiny
+	CrushFar      = "crush_far"  // macro: un golpe sordo donde murió un tiny
+	PassOpen      = "pass_open"
+	PassClose     = "pass_close"
+	Emote         = "emote_" // + el símbolo (view.Emote*)
 )
 
 // Cadencias de los sonidos que salen del estado (en ticks).
@@ -58,7 +59,7 @@ const (
 // minor son los sonidos que se omiten a x4 y x16: los que se repiten. Quedan
 // los que cuentan algo (la mano, las caídas, los descubrimientos).
 var minor = map[string]bool{
-	StepTatami: true, StepWood: true, StepTile: true, Bite: true,
+	StepTatami: true, StepWood: true, StepTile: true, FootStepMicro: true, Bite: true,
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
@@ -190,6 +191,22 @@ func over(f *view.Frame, h, focus ids.ID) bool {
 	}
 	local := units.V2(hs.Pose.Pos.X-fs.Pose.Pos.X, hs.Pose.Pos.Y-fs.Pose.Pos.Y)
 	return fs.Extent.Contains(local)
+}
+
+// sameRoom dice si focus está contenido dentro del Space ancestor (p. ej. un
+// mueble o zona corporal dentro de la habitación donde ocurre la pisada).
+func sameRoom(f *view.Frame, focus, ancestor ids.ID) bool {
+	for id := focus; !id.IsNil(); {
+		if id == ancestor {
+			return true
+		}
+		s, ok := f.SpaceByID(id)
+		if !ok {
+			return false
+		}
+		id = s.Parent
+	}
+	return false
 }
 
 // pos es la posición de mundo de una entidad en el frame más reciente que la
@@ -331,6 +348,24 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 			c.add(TinyFall, p, 1)
 		case v.Visual(ev.Entity) == "crumb":
 			c.add(CrumbTick, p, 0.7)
+		}
+	case crush.Footstep:
+		if !v.Micro {
+			return
+		}
+		sp, ok := cur.SpaceByID(ev.Space)
+		if !ok {
+			return
+		}
+		vol := 0.0
+		if v.Focus == ev.Space {
+			vol = 1.0
+		} else if sameRoom(cur, v.Focus, ev.Space) {
+			vol = 0.55
+		}
+		if vol > 0 {
+			at := sp.Pose.Transform().Apply(units.V3(ev.Pos.X, ev.Pos.Y, 0))
+			c.addNear(FootStepMicro, at, vol)
 		}
 	case crush.Crushed:
 		at, ok := pos(ev.Remains, cur)
