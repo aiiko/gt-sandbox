@@ -7,6 +7,7 @@ import (
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/nav"
@@ -113,17 +114,28 @@ func over(r *ecs.Registry, g space.Graph, e ids.ID, c Crusher, lo, hi units.Leng
 	if !ok || sp.Extent.Empty() {
 		return nil
 	}
-	t, err := g.Frame(e)
-	root, err2 := g.Root(e)
-	if err != nil || err2 != nil {
+	root, err := g.Root(e)
+	if err != nil {
 		return nil
 	}
-	bottom := t.Pos.Z - c.Thickness
-	bounds := worldBounds(t.Apply, sp.Extent)
+	faceRect := sp.Extent
+	faceZOff := -c.Thickness
+	if sf, ok := ecs.Get[attach.Surface](r).Get(e); ok {
+		if sf.Support != nil && !sf.Support.Empty() {
+			faceRect = *sf.Support
+		}
+		if sf.SupportOffset != 0 {
+			faceZOff = sf.SupportOffset
+		}
+	}
+	bounds, bottom, ok := faceWorldBounds(g, e, faceRect, faceZOff)
+	if !ok {
+		return nil
+	}
 	grid := ecs.Get[nav.Grid](r).Ptr(e)
 	inside := func(p units.Vec3) bool {
 		l, err := g.FromWorld(e, p)
-		return err == nil && sp.Extent.Contains(l.XY()) && (grid == nil || grid.Walkable(l.XY()))
+		return err == nil && faceRect.Contains(l.XY()) && (grid == nil || grid.Walkable(l.XY()))
 	}
 	var out []impact
 	spaces.Each(func(s ids.ID, ssp *space.Space) {
@@ -133,18 +145,34 @@ func over(r *ecs.Registry, g space.Graph, e ids.ID, c Crusher, lo, hi units.Leng
 		if rs, err := g.Root(s); err != nil || rs != root {
 			return
 		}
-		st, err := g.Frame(s)
-		if err != nil {
+		sBounds, sTop, ok := faceWorldBounds(g, s, ssp.Extent, 0)
+		if !ok {
 			return
 		}
-		gap := bottom - st.Pos.Z
-		if gap < lo || gap > hi || !bounds.Overlaps(worldBounds(st.Apply, ssp.Extent)) {
+		gap := bottom - sTop
+		if gap < lo || gap > hi || !bounds.Overlaps(sBounds) {
 			return
 		}
 		out = append(out, impact{by: e, c: c, surface: s, gap: max(gap, 0), inside: inside})
 	})
 	slices.SortFunc(out, func(a, b impact) int { return cmp.Compare(a.surface, b.surface) })
 	return out
+}
+
+func faceWorldBounds(g space.Graph, id ids.ID, rc units.Rect, zOff units.Length) (units.Rect, units.Length, bool) {
+	corners := [4]units.Vec2{rc.Min, {X: rc.Max.X, Y: rc.Min.Y}, rc.Max, {X: rc.Min.X, Y: rc.Max.Y}}
+	out := units.Rect{Min: units.V2(1<<62, 1<<62), Max: units.V2(-1<<62, -1<<62)}
+	zMin := units.Length(1 << 62)
+	for _, c := range corners {
+		p, err := g.ToWorld(id, units.V3(c.X, c.Y, zOff))
+		if err != nil {
+			return units.Rect{}, 0, false
+		}
+		out.Min.X, out.Min.Y = min(out.Min.X, p.X), min(out.Min.Y, p.Y)
+		out.Max.X, out.Max.Y = max(out.Max.X, p.X), max(out.Max.Y, p.Y)
+		zMin = min(zMin, p.Z)
+	}
+	return out, zMin, true
 }
 
 // victims devuelve, en orden de store, las entidades frágiles apoyadas en la
@@ -206,15 +234,4 @@ func kill(w *world.World, g space.Graph, v ids.ID, im impact) {
 	ecs.Get[Remains](r).Set(rem, Remains{Name: name, Of: v, By: im.by, Source: im.c.Source, Tick: w.Tick()})
 	r.Despawn(v)
 	w.Emit(Crushed{Entity: v, By: im.by, Source: im.c.Source, Space: l.Space, Pos: l.Pos.XY(), Remains: rem})
-}
-
-func worldBounds(apply func(units.Vec3) units.Vec3, rc units.Rect) units.Rect {
-	corners := [4]units.Vec2{rc.Min, {X: rc.Max.X, Y: rc.Min.Y}, rc.Max, {X: rc.Min.X, Y: rc.Max.Y}}
-	out := units.Rect{Min: units.V2(1<<62, 1<<62), Max: units.V2(-1<<62, -1<<62)}
-	for _, c := range corners {
-		p := apply(units.V3(c.X, c.Y, 0))
-		out.Min.X, out.Min.Y = min(out.Min.X, p.X), min(out.Min.Y, p.Y)
-		out.Max.X, out.Max.Y = max(out.Max.X, p.X), max(out.Max.Y, p.Y)
-	}
-	return out
 }

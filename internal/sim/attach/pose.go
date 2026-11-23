@@ -10,6 +10,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
@@ -129,6 +130,7 @@ func Install(w *world.World) error {
 		return err
 	}
 	w.AddInvariant("attach.contact", checkContacts)
+	nav.SetPortalValidator(w, PortalCrossingValid)
 	return errors.Join(
 		world.RegisterCommand[SetPose](w),
 		world.RegisterEvent[PoseChanged](w),
