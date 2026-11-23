@@ -122,3 +122,28 @@ Store nuevo (`gathering`): `HashVersion` 11 y `SnapshotSchema` 14.
 - `tinies_chat`: dos tinies aburridos conversan y vuelven a reunirse cuando vence la pausa. `TestChatRaisesFun` verifica que la diversión de los dos sube en `gain` al completar.
 - `chat_partner_never_comes`: el otro no tiene ganas; el primero espera solo, vence el plazo y se retira.
 - `chat_interrupted_by_threat`: la sombra de la palma corta la conversación, los dos huyen y nadie gana diversión.
+
+## Partida libre (M43)
+
+### Contenido
+
+`python tools/scenarios/vida.py`, después de `partida.py`, suma a `content/partidas/casa.json` (es idempotente):
+
+- el nido con meta de 2 porciones por miembro (`colony.stock`) y el depósito vacío;
+- cuatro puntos de búsqueda: el rincón y el fondo del escritorio, el borde de la silla y el piso junto al escritorio;
+- tres migajas (`food`) en la silla, junto a su punto de búsqueda, que nadie conoce al empezar;
+- la servilleta (12 fibras) en el escritorio;
+- la obra del refugio (4 fibras) junto a la pata del escritorio, la ruta de salida, fuera del radio del nido;
+- el punto de reunión junto al nido.
+
+Los tinies del molde pasan a curiosidad 0,3 (con 0,8, explorar le ganaba a todo), `member.search` 0,15 y la necesidad `fun` (700, decae 2/s).
+
+### Sorteo
+
+`Randomize` sortea, después de todo lo demás, la diversión de cada tiny (como las otras necesidades, entre 0,6 y 1,1 del molde) y la despensa inicial (de 0 a una porción por tiny, siempre por debajo de la meta). La diversión queda fuera del primer sorteo de necesidades: lo ya sorteado de las partidas no cambia.
+
+### Aceptación
+
+- `TestPartidaTinyRoutine`: en los primeros cinco minutos de cada semilla de referencia (1, 7, 21, 42 y 99), los tinies completan al menos tres actividades distintas entre buscar, acarrear, comer, descansar, preparar el refugio y reunirse.
+- `TestPartidaLifeSnapshotContinuation`: la partida de la semilla 1, con snapshots cada 41 ticks, da el mismo log y el mismo hash que la ejecución continua, y algún snapshot cae a mitad de una búsqueda y otro a mitad de la obra.
+- Las aceptaciones de asientos y encuentros, que corren sobre la misma base, siguen pasando sin cambios.

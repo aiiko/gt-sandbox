@@ -3,7 +3,7 @@
   "seed": 42,
   "atlas": "../art/casa.json",
   "ticks": 1600,
-  "notes": "Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil.",
+  "notes": "Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py).",
   "entities": [
     {
       "ref": "house",
@@ -498,7 +498,8 @@
             "y": 550000,
             "z": 450000
           }
-        }
+        },
+        "components": {}
       }
     },
     {
@@ -763,7 +764,8 @@
             "y": 450000,
             "z": 450000
           }
-        }
+        },
+        "components": {}
       }
     },
     {
@@ -1460,7 +1462,208 @@
             "z": 0
           }
         },
-        "components": {}
+        "components": {
+          "colony": {
+            "radius": 30000,
+            "stock": 2
+          },
+          "portions": {
+            "left": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_corner",
+      "spawn": {
+        "name": "rincón del escritorio",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 560000,
+            "y": 50000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 1000000
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_back",
+      "spawn": {
+        "name": "fondo del escritorio",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 80000,
+            "y": 350000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 1000000
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_chair",
+      "spawn": {
+        "name": "borde de la silla",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 340000,
+            "y": 340000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 1000000
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_floor",
+      "spawn": {
+        "name": "piso junto al escritorio",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1350000,
+            "y": 900000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 1000000
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair_crumb1",
+      "spawn": {
+        "name": "crumb",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 330000,
+            "y": 330000,
+            "z": 0
+          }
+        }
+      },
+      "object": "crumb"
+    },
+    {
+      "ref": "chair_crumb2",
+      "spawn": {
+        "name": "crumb",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 355000,
+            "y": 350000,
+            "z": 0
+          }
+        }
+      },
+      "object": "crumb"
+    },
+    {
+      "ref": "chair_crumb3",
+      "spawn": {
+        "name": "crumb",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 340000,
+            "y": 365000,
+            "z": 0
+          }
+        }
+      },
+      "object": "crumb"
+    },
+    {
+      "ref": "napkin",
+      "spawn": {
+        "name": "servilleta",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 200000,
+            "y": 300000,
+            "z": 0
+          }
+        },
+        "components": {
+          "fiber_source": {
+            "left": 12,
+            "item": "fiber"
+          }
+        }
+      },
+      "object": "napkin"
+    },
+    {
+      "ref": "site",
+      "spawn": {
+        "name": "refugio",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 60000,
+            "y": 60000,
+            "z": 0
+          }
+        },
+        "components": {
+          "build_site": {
+            "colony": "$nest",
+            "source": "$napkin",
+            "required": 4,
+            "radius": 15000,
+            "shelter": {
+              "strength": 20,
+              "radius": 15000
+            }
+          }
+        }
+      },
+      "object": "refuge_site"
+    },
+    {
+      "ref": "meet",
+      "spawn": {
+        "name": "punto de reunión",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 400000,
+            "y": 330000,
+            "z": 0
+          }
+        },
+        "components": {
+          "gathering": {},
+          "landmark": {
+            "range": 1000000
+          }
+        }
       }
     },
     {
@@ -1637,13 +1840,14 @@
             "work": 0.2,
             "distance_cost": 0.2,
             "sight": 200000,
-            "curiosity": 0.8,
+            "curiosity": 0.3,
             "reflex": 4,
             "revisit": 1800
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1655,6 +1859,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1688,13 +1897,14 @@
             "work": 0.2,
             "distance_cost": 0.2,
             "sight": 200000,
-            "curiosity": 0.8,
+            "curiosity": 0.3,
             "reflex": 4,
             "revisit": 1800
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1706,6 +1916,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1739,13 +1954,14 @@
             "work": 0.2,
             "distance_cost": 0.2,
             "sight": 200000,
-            "curiosity": 0.8,
+            "curiosity": 0.3,
             "reflex": 4,
             "revisit": 1800
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1757,6 +1973,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1791,11 +2012,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1807,6 +2030,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1841,11 +2069,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1857,6 +2087,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1891,11 +2126,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1907,6 +2144,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1941,11 +2183,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -1957,6 +2201,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -1991,11 +2240,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2007,6 +2258,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2041,11 +2297,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2057,6 +2315,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2091,11 +2354,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2107,6 +2372,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2141,11 +2411,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2157,6 +2429,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2191,11 +2468,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2207,6 +2486,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2241,11 +2525,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2257,6 +2543,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2291,11 +2582,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2307,6 +2600,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2341,11 +2639,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2357,6 +2657,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2391,11 +2696,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2407,6 +2714,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2441,11 +2753,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2457,6 +2771,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2491,11 +2810,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2507,6 +2828,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2541,11 +2867,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2557,6 +2885,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2591,11 +2924,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2607,6 +2942,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}
@@ -2641,11 +2981,13 @@
             "distance_cost": 0.2,
             "sight": 200000,
             "reflex": 4,
-            "revisit": 1800
+            "revisit": 1800,
+            "curiosity": 0.3
           },
           "member": {
             "colony": "$nest",
-            "forage": 0.02
+            "forage": 0.02,
+            "search": 0.15
           },
           "needs": [
             {
@@ -2657,6 +2999,11 @@
               "name": "energy",
               "value": 900,
               "decay": 1
+            },
+            {
+              "name": "fun",
+              "value": 700,
+              "decay": 2
             }
           ],
           "fragile": {}

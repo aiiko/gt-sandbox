@@ -33,7 +33,8 @@ const (
 // Si el base le fija a un agente su cuidado (agent.care, la giantess que mira
 // antes de apoyar la mano), también se sortea. La semilla del mundo pasa a ser
 // seed y se quitan las expectativas: una partida no tiene veredicto. Con la
-// misma semilla, la misma partida.
+// misma semilla, la misma partida. Al final sortea la diversión de los
+// tinies y la despensa inicial (ver randomLife).
 func Randomize(base *Spec, seed uint64) (*Spec, error) {
 	return RandomizeCount(base, seed, 0)
 }
@@ -140,7 +141,7 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 		c := spawn["components"].(map[string]any)
 		if needs, ok := c["needs"].([]any); ok {
 			for _, need := range needs {
-				if nd, ok := need.(map[string]any); ok {
+				if nd, ok := need.(map[string]any); ok && nd["name"] != lateNeed {
 					if v, ok := nd["value"].(float64); ok {
 						nd["value"] = min(1000, int64(v*(0.6+0.5*rnd.Float64())))
 					}
@@ -176,8 +177,67 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 		}
 		out.Profile = start.Name
 	}
+	if err := randomLife(out.Entities[len(rest):], out.Entities, strings.TrimPrefix(colony, "$"), rnd); err != nil {
+		return nil, err
+	}
 	out.Random = nil
 	return &out, nil
+}
+
+// lateNeed es la necesidad de los tinies que se sortea al final (la
+// diversión llegó después que el resto: así no cambia lo ya sorteado).
+const lateNeed = "fun"
+
+// randomLife sortea, después de todo lo demás, la diversión de los tinies
+// y la despensa inicial del nido (de 0 a una porción por tiny, por debajo
+// de su meta si tiene stock).
+func randomLife(tinies, entities []EntitySpec, nest string, rnd *rng.Stream) error {
+	for i, e := range tinies {
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		list, _ := c["needs"].([]any)
+		changed := false
+		for _, need := range list {
+			if nd, ok := need.(map[string]any); ok && nd["name"] == lateNeed {
+				if v, ok := nd["value"].(float64); ok {
+					nd["value"] = min(1000, int64(v*(0.6+0.5*rnd.Float64())))
+					changed = true
+				}
+			}
+		}
+		if changed {
+			raw, err := json.Marshal(spawn)
+			if err != nil {
+				return err
+			}
+			tinies[i].Spawn = raw
+		}
+	}
+	for i, e := range entities {
+		if e.Ref != nest {
+			continue
+		}
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		col, _ := c["colony"].(map[string]any)
+		portions, _ := c["portions"].(map[string]any)
+		if stock, ok := col["stock"].(float64); !ok || stock <= 0 || portions == nil {
+			return nil
+		}
+		portions["left"] = rnd.IntN(len(tinies) + 1)
+		raw, err := json.Marshal(spawn)
+		if err != nil {
+			return err
+		}
+		entities[i].Spawn = raw
+	}
+	return nil
 }
 
 // RandomSpec son los perfiles de arranque de un agente (la giantess) entre

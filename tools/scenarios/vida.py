@@ -1,6 +1,12 @@
 """Genera los escenarios de Vida cotidiana de los tinies (M39 a M44).
 
+    python tools/scenarios/partida.py   # antes: rehace content/partidas/casa.json
     python tools/scenarios/vida.py
+
+Además suma a content/partidas/casa.json (la base de «Nueva partida») la vida
+del nido: meta de la despensa, puntos de búsqueda, migajas por descubrir en
+la silla, la servilleta, la obra del refugio junto a la pata del escritorio
+y el punto de reunión, y ajusta el carácter de los tinies. Es idempotente.
 
 Parte de la base de aplastamiento (aplastamiento.py: dormitorio, escritorio
 de 60 x 40 cm a 75 cm, giantess y palma) y le suma una pata con portales
@@ -371,7 +377,78 @@ def chat_interrupted_by_threat():
     return d
 
 
+# --- M43: partida libre ---
+
+CASA = os.path.join(ROOT, 'content', 'partidas', 'casa.json')
+LIFE_REFS = ['spot_corner', 'spot_back', 'spot_chair', 'spot_floor', 'chair_crumb1', 'chair_crumb2',
+             'chair_crumb3', 'napkin', 'site', 'meet']
+# Carácter de los tinies en la partida libre (los demás campos quedan).
+TINY_AGENT = {'curiosity': 0.3}
+TINY_MEMBER = {'search': 0.15}
+TINY_FUN = {'name': 'fun', 'value': 700, 'decay': 2}
+
+
+def on(space, ref, x, y, comps, name=None, obj=None):
+    e = {'ref': ref, 'spawn': {'name': name or ref,
+                               'location': {'space': '$' + space, 'pos': {'x': x, 'y': y, 'z': 0}},
+                               'components': comps}}
+    if obj:
+        e['object'] = obj
+    return e
+
+
+def life_entities():
+    def spot_on(space, ref, x, y, name):
+        return on(space, ref, x, y, {'search_spot': {}, 'landmark': {'range': 1000000}}, name)
+
+    def chair_crumb(ref, x, y):
+        e = on('chair', ref, x, y, {}, 'crumb', obj='crumb')
+        del e['spawn']['components']
+        return e
+
+    return [
+        spot_on('desk1', 'spot_corner', 560000, 50000, 'rincón del escritorio'),
+        spot_on('desk1', 'spot_back', 80000, 350000, 'fondo del escritorio'),
+        spot_on('chair', 'spot_chair', 340000, 340000, 'borde de la silla'),
+        spot_on('bedroom', 'spot_floor', 1350000, 900000, 'piso junto al escritorio'),
+        chair_crumb('chair_crumb1', 330000, 330000),
+        chair_crumb('chair_crumb2', 355000, 350000),
+        chair_crumb('chair_crumb3', 340000, 365000),
+        on('desk1', 'napkin', 200000, 300000, {'fiber_source': {'left': 12, 'item': 'fiber'}},
+           'servilleta', obj='napkin'),
+        on('desk1', 'site', 60000, 60000, {'build_site': {
+            'colony': '$nest', 'source': '$napkin', 'required': 4, 'radius': 15000,
+            'shelter': {'strength': 20, 'radius': 15000}}}, 'refugio', obj='refuge_site'),
+        on('desk1', 'meet', 400000, 330000, {
+            'gathering': {}, 'landmark': {'range': 1000000}}, 'punto de reunión'),
+    ]
+
+
+def with_life(d):
+    d['entities'] = [e for e in d['entities'] if e['ref'] not in LIFE_REFS]
+    for e in d['entities']:
+        c = e['spawn'].setdefault('components', {})
+        if e['ref'] == 'nest':
+            c['colony'] = {'radius': 30000, 'stock': 2}
+            c['portions'] = {'left': 0}
+        if 'member' in c:
+            c['agent'].update(TINY_AGENT)
+            c['member'].update(TINY_MEMBER)
+            c['needs'] = [n for n in c['needs'] if n['name'] != 'fun'] + [dict(TINY_FUN)]
+    # la servilleta antes que la obra (la obra la nombra)
+    i = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'nest') + 1
+    d['entities'][i:i] = life_entities()
+    d['notes'] = d['notes'].split(' Vida del nido:')[0] + (
+        ' Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, '
+        'refugio por armar y punto de reunión (tools/scenarios/vida.py).')
+
+
 def main():
+    d = json.load(open(CASA, encoding='utf-8'))
+    with_life(d)
+    with open(CASA, 'w', encoding='utf-8', newline='\n') as out:
+        out.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')
+
     for f in [tiny_returns_to_eat, tiny_rests_at_nest, nest_unreachable_eats_crumb,
               colony_searches_spots, search_portal_closed,
               colony_builds_refuge, fiber_dropped_is_recovered, refuge_shelters_from_palm,
