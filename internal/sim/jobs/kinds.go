@@ -23,8 +23,18 @@ const (
 // estado de nav.Approach del que ejecuta (vive en su acción, no en el job).
 type Executor func(w *world.World, j *Job, actor ids.ID, moving *bool) Result
 
-// Kinds son los tipos de trabajo conocidos.
+// Kinds son los tipos de trabajo conocidos. Otros paquetes agregan los
+// suyos con RegisterKind (desde init).
 var Kinds = map[string]Executor{"haul": haul}
+
+// RegisterKind agrega un tipo de trabajo. Se llama desde init: Kinds no se
+// modifica mientras corre la simulación.
+func RegisterKind(name string, x Executor) {
+	if _, dup := Kinds[name]; dup {
+		panic("jobs: tipo de trabajo repetido " + name)
+	}
+	Kinds[name] = x
+}
 
 // HandleTicks es lo que tarda levantar o dejar algo (1 s).
 const HandleTicks clock.Tick = clock.TPS

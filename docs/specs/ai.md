@@ -112,7 +112,7 @@ Hay eventos que interrumpen: `entity_fell` y `near_miss`. Cuando le pasa a un ag
   - Si el objetivo desaparece, el trabajo se cancela (`job_canceled`).
   - Si el asignado muere o pierde la reserva, el trabajo vuelve a la cola (`job_unassigned`), soltando lo que llevaba.
   - Otros eventos: `job_posted`, `job_assigned` y `job_done`.
-- **Tipos de trabajo:** son `Executor` registrados en `jobs.Kinds`. `haul` va al objetivo, lo levanta (1 s), lo lleva al destino y lo deja (1 s).
+- **Tipos de trabajo:** son `Executor` registrados en `jobs.Kinds` (otros paquetes usan `jobs.RegisterKind` desde `init`). `haul` va al objetivo, lo levanta (1 s), lo lleva al destino y lo deja (1 s). `colony` agrega `pluck` y `build` (ver [vida](vida.md#trabajos)).
 - **Carga:** `carried {by}` hace que el objeto viaje con quien lo lleva (`jobs.carry`, al final de Move).
 
 ## Invariantes

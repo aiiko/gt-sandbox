@@ -49,3 +49,44 @@ Stores nuevos (`landmark`, `search_spot`): `HashVersion` 9 y `SnapshotSchema` 12
 
 - `colony_searches_spots`: tres tinies, nido vacío con meta 2. Uno revisa el borde vacío y otro el rincón con migajas; los acarreos llevan la comida al nido y se come. `TestSearchSpotReservedOnce` verifica en cada tick que dos tinies no revisan el mismo punto, y `TestStockedColonySearchesLess` que con el depósito en la meta se inician menos búsquedas.
 - `search_portal_closed`: la pata se cierra abajo mientras el tiny baja a un punto del piso; la búsqueda falla, libera el punto y no se reintenta antes de 30 s.
+
+## Fibras y refugio auxiliar (M41)
+
+### Entidades
+
+| Entidad | Componentes | Objeto |
+| --- | --- | --- |
+| Servilleta | `fiber_source {left, item}` y `landmark` | `content/objects/napkin.json` (`item: "fiber"` se expande como en los pasos `spawn`) |
+| Fibra | `material {site}`, `landmark` y un cuerpo chato | `content/objects/fiber.json` |
+| Obra | `build_site {colony, source, required, delivered, radius, shelter, done}` y `landmark` | `content/objects/refuge_site.json` |
+
+`build_site.shelter` es el `crush.Shelter` que la obra recibe al terminar (por defecto fuerza 20, más que la palma, y el radio de la obra).
+
+### Trabajos
+
+`jobs.RegisterKind` agrega tipos de trabajo desde otros paquetes (en `init`, así el mapa no cambia durante la simulación). `colony` registra:
+
+- `pluck` (objetivo: la servilleta): ir, esperar `PluckTicks` (2 s), crear una fibra a los pies del tiny en el mismo paso, con `material.site` de la obra que saca de esa servilleta, y gastar una unidad. El tiny la aprende. Emite `fiber_plucked {entity, source, fiber, left}`.
+- `build` (objetivo: la obra): con todas las fibras, ir, esperar `BuildTicks` (5 s), marcar `done`, poner `shelter` en la obra (el mismo ID) y emitir `refuge_built {site, by}`. Desde ahí la huida (`escape`) y el aplastamiento la usan como cualquier refugio.
+- El acarreo de una fibra es un `haul` con destino en la obra, así que hereda la carga que cae al huir y la vuelta a la cola.
+
+### `colony.site` y la entrega
+
+`colony.site` (fase Decide, después de `colony.share`) revisa cada obra sin terminar, en orden de store:
+
+1. publica un `haul` para cada fibra suya que esté suelta, lejos de la obra y sin trabajo;
+2. con `delivered == required`, publica un `build` si no hay uno;
+3. si no, y la despensa de su colonia está en la meta (`Deficit == 0`) y algún miembro conoce la servilleta, publica un `pluck` cuando `required − delivered − fibras existentes > 0` y no hay otro `pluck` abierto (la servilleta se reserva, así que se desprende de a una);
+4. con la servilleta agotada, cancela el `pluck` abierto.
+
+`colony.deliver` (fase Consequences, junto a `colony.store`): una fibra suelta, sin reserva y a menos de `radius` de su obra suma 1 a `delivered`, desaparece y emite `fiber_delivered {site, item, total}`. Contar al desaparecer hace que cada fibra cuente una vez, la lleve quien la lleve; contar las existentes antes de pedir otra recupera las que quedaron en el piso.
+
+Invariantes: `0 ≤ delivered ≤ required` y una obra con `done` tiene `shelter`.
+
+Stores nuevos (`fiber_source`, `material`, `build_site`): `HashVersion` 10 y `SnapshotSchema` 13.
+
+### Escenarios
+
+- `colony_builds_refuge`: con la despensa en la meta, dos tinies desprenden tres fibras, las llevan y uno arma el refugio. `TestColonyBuildsRefuge` verifica que cada fibra cuenta una vez, que la obra conserva su ID y recibe `shelter`, y la continuidad desde snapshots (uno a mitad de la obra).
+- `fiber_dropped_is_recovered`: la sombra de la palma hace huir al que lleva la fibra y la suelta; otro miembro la entrega y el total es 1.
+- `refuge_shelters_from_palm`: un tiny arma el refugio y la palma se apoya encima: los de dentro emiten `sheltered` y el de afuera muere.

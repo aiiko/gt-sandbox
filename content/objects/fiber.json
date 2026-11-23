@@ -1,0 +1,9 @@
+{
+  "name": "fiber",
+  "visual": "fiber",
+  "body": {"radius": 1500, "height": 300, "mass": 0},
+  "components": {
+    "material": {},
+    "landmark": {}
+  }
+}

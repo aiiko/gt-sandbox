@@ -1,0 +1,8 @@
+{
+  "name": "napkin",
+  "visual": "napkin",
+  "components": {
+    "fiber_source": {"left": 12, "item": "fiber"},
+    "landmark": {"range": 1000000}
+  }
+}

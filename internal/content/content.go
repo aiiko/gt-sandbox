@@ -89,8 +89,8 @@ func (l *Library) resolve(raws map[string]json.RawMessage, name string, stack []
 	return out, nil
 }
 
-// expand reemplaza cada components.offers[].steps[].item que sea un string
-// por lo que devuelva lookup.
+// expand reemplaza cada components.offers[].steps[].item (y
+// components.fiber_source.item) que sea un string por lo que devuelva lookup.
 func expand(raw json.RawMessage, lookup func(string) (json.RawMessage, error)) (json.RawMessage, error) {
 	var v map[string]any
 	d := json.NewDecoder(bytes.NewReader(raw))
@@ -99,6 +99,15 @@ func expand(raw json.RawMessage, lookup func(string) (json.RawMessage, error)) (
 		return nil, err
 	}
 	comps, _ := v["components"].(map[string]any)
+	if src, ok := comps["fiber_source"].(map[string]any); ok {
+		if name, ok := src["item"].(string); ok {
+			def, err := lookup(name)
+			if err != nil {
+				return nil, err
+			}
+			src["item"] = def
+		}
+	}
 	offers, _ := comps["offers"].([]any)
 	for _, o := range offers {
 		om, _ := o.(map[string]any)

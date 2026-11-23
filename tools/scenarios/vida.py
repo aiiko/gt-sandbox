@@ -201,9 +201,109 @@ def search_portal_closed():
     return d
 
 
+# --- M41: fibras y refugio auxiliar ---
+
+def napkin(x, y, left=12):
+    return {'ref': 'napkin', 'object': 'napkin', 'spawn': {
+        'name': 'servilleta', 'location': {'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}},
+        'components': {'fiber_source': {'left': left, 'item': 'fiber'}}}}
+
+
+def site(x, y, required=3, delivered=0):
+    return {'ref': 'site', 'object': 'refuge_site', 'spawn': {
+        'name': 'obra', 'location': {'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}},
+        'components': {'build_site': {
+            'colony': '$nest', 'source': '$napkin', 'required': required, 'delivered': delivered,
+            'radius': 15000, 'shelter': {'strength': 20, 'radius': 15000}}}}}
+
+
+def fiber(ref, x, y):
+    return {'ref': ref, 'object': 'fiber', 'spawn': {
+        'name': ref, 'location': {'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}},
+        'components': {'material': {'site': '$site'}}}}
+
+
+def colony_builds_refuge():
+    d = world('colony_builds_refuge', 5000,
+              'M41: la despensa está en la meta, así que la colonia arma el refugio auxiliar junto a la '
+              'salida del escritorio. Los tinies desprenden fibras de la servilleta de a una, las llevan a la '
+              'obra y, con las tres, uno la arma: la obra conserva su ID y recibe shelter.')
+    d['entities'] += [
+        nest(450000, 300000, portions=10, stock=1),
+        napkin(350000, 100000),
+        site(60000, 40000),
+        tiny('t0', 'desk1', 400000, 280000, sight=60000),
+        tiny('t1', 'desk1', 420000, 280000, sight=60000),
+    ]
+    d['expect'] = [
+        {'event': 'job_posted', 'match': {'type': 'pluck', 'target': '$napkin'}, 'by': 20},
+        {'event': 'fiber_plucked', 'match': {'source': '$napkin'}, 'count': 3},
+        {'event': 'fiber_delivered', 'match': {'site': '$site', 'total': 3}, 'count': 1},
+        {'event': 'job_posted', 'match': {'type': 'build', 'target': '$site'}, 'count': 1},
+        {'event': 'refuge_built', 'match': {'site': '$site'}, 'count': 1},
+        {'no_event': 'entity_despawned', 'match': {'entity': '$site'}},
+    ] + COMMON
+    return d
+
+
+def fiber_dropped_is_recovered():
+    d = world('fiber_dropped_is_recovered', 1600,
+              'M41: un tiny lleva una fibra a la obra y la sombra de la palma lo hace huir: suelta la fibra. '
+              'Otro miembro (que no huye de sombras) la recoge y la entrega; cuenta una sola vez.')
+    d['entities'] += [
+        nest(500000, 350000, portions=10, stock=1),
+        napkin(550000, 50000, left=0),
+        site(50000, 200000, required=1),
+        fiber('f', 280000, 200000),
+        tiny('t0', 'desk1', 300000, 200000, sight=60000, agent={'reflex': 4}),
+        tiny('t1', 'desk1', 490000, 340000, hunger=300, sight=60000),
+    ]
+    d['commands'] += [pose(150, 'hover'), pose(700, 'raised')]
+    d['expect'] = [
+        {'event': 'job_assigned', 'match': {'by': '$t0'}, 'by': 20},
+        {'event': 'alarmed', 'match': {'entity': '$t0'}},
+        {'event': 'job_unassigned', 'match': {'by': '$t0', 'reason': 'stopped'}},
+        {'event': 'job_assigned', 'match': {'by': '$t1'}},
+        {'event': 'fiber_delivered', 'match': {'site': '$site', 'item': '$f', 'total': 1}, 'count': 1},
+        {'event': 'refuge_built', 'match': {'site': '$site'}},
+    ] + COMMON
+    return d
+
+
+def fragile_tiny(ref, x, y):
+    return {'ref': ref, 'spawn': {
+        'name': ref, 'location': {'space': '$desk1', 'pos': {'x': x, 'y': y, 'z': 0}},
+        'body': {'radius': 2000, 'height': 8000, 'mass': 0}, 'components': {'fragile': {}}}}
+
+
+def refuge_shelters_from_palm():
+    d = world('refuge_shelters_from_palm', 400,
+              'M41: la obra ya tiene sus fibras y un tiny la arma bajo donde después se apoya la palma. El '
+              'refugio terminado (fuerza 20 contra la palma de 10) salva a quien está dentro; el que quedó '
+              'afuera, a 6 cm, muere.')
+    d['entities'] += [
+        nest(500000, 350000, portions=10, stock=1),
+        napkin(550000, 50000, left=0),
+        site(200000, 200000, required=3, delivered=3),
+        tiny('builder', 'desk1', 210000, 220000, sight=60000, extra={'fragile': {}}),
+        fragile_tiny('inside', 205000, 200000),
+        fragile_tiny('outside', 200000, 260000),
+    ]
+    d['commands'] += [pose(300, 'hover'), pose(330, 'rest')]
+    d['expect'] = [
+        {'event': 'refuge_built', 'match': {'site': '$site', 'by': '$builder'}, 'by': 300},
+        {'event': 'sheltered', 'match': {'entity': '$inside', 'shelter': '$site'}, 'after': 330, 'by': 331},
+        {'event': 'sheltered', 'match': {'entity': '$builder', 'shelter': '$site'}},
+        {'no_event': 'crushed', 'match': {'entity': '$inside'}},
+        {'event': 'crushed', 'match': {'entity': '$outside'}},
+    ] + COMMON
+    return d
+
+
 def main():
     for f in [tiny_returns_to_eat, tiny_rests_at_nest, nest_unreachable_eats_crumb,
-              colony_searches_spots, search_portal_closed]:
+              colony_searches_spots, search_portal_closed,
+              colony_builds_refuge, fiber_dropped_is_recovered, refuge_shelters_from_palm]:
         d = f()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as out:
             json.dump(d, out, ensure_ascii=False, indent=2)

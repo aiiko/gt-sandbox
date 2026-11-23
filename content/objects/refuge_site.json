@@ -1,0 +1,8 @@
+{
+  "name": "refuge_site",
+  "visual": "refuge_site",
+  "components": {
+    "build_site": {"required": 4, "radius": 15000, "shelter": {"strength": 20, "radius": 15000}},
+    "landmark": {"range": 1000000}
+  }
+}

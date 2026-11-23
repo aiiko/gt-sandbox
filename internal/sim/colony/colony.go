@@ -206,6 +206,7 @@ func Install(w *world.World) error {
 	w.AddInvariant("colony", check)
 	return errors.Join(
 		registerSearch(w),
+		registerBuild(w),
 		world.RegisterEvent[Stored](w),
 		world.RegisterEvent[MemberLost](w),
 		world.RegisterEvent[DangerExpired](w),
