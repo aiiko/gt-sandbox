@@ -123,31 +123,34 @@ def hair_back_front(s, dy, long=48):
 
 
 def eye(s, ex, ey, flick):
-    """Ojo de 4 × 6: pestañas curvas con la cola hacia afuera, iris en
-    degradé, pupila y dos brillos."""
-    s.hline(ex, ex + 3, ey, INK)
-    out = ex + 4 if flick > 0 else ex - 1
-    s.px(out, ey + 1, INK)                      # cola de la pestaña
-    s.rect(ex, ey + 1, ex + 3, ey + 5, EYE)
-    s.hline(ex, ex + 3, ey + 1, EYE_D)
-    s.rect(ex + 1, ey + 2, ex + 2, ey + 4, EYE_D)
-    s.rect(ex + 1, ey + 3, ex + 2, ey + 3, INK)
-    s.hline(ex, ex + 3, ey + 5, EYE_L)
-    s.px(ex + 1, ey + 5, '#B4F0E8')
-    s.rect(ex, ey + 1, ex, ey + 2, WHITE)       # brillo grande arriba
-    s.px(ex + 3, ey + 4, WHITE)
+    """Ojo de 5 × 7: pestaña gruesa con la cola hacia afuera, iris alto en
+    degradé, pupila y dos brillos (grande arriba a la izquierda, chico abajo)."""
+    s.hline(ex, ex + 4, ey - 1, INK)
+    s.px(ex + 5 if flick > 0 else ex - 1, ey - 1, INK)    # cola de la pestaña
+    s.px(ex + 5 if flick > 0 else ex - 1, ey, INK)
+    s.rect(ex, ey, ex + 4, ey + 5, EYE)
+    s.hline(ex, ex + 4, ey, EYE_D)
+    s.rect(ex + 1, ey + 1, ex + 3, ey + 3, EYE_D)
+    s.rect(ex + 2, ey + 1, ex + 3, ey + 3, INK)            # pupila
+    s.hline(ex + 1, ex + 3, ey + 5, EYE_L)
+    s.px(ex + 2, ey + 4, EYE_L)
+    s.rect(ex, ey + 1, ex + 1, ey + 2, WHITE)              # brillo grande
+    s.px(ex + 4, ey + 4, WHITE)                            # brillo chico
+    s.hline(ex + 1, ex + 3, ey + 6, SKIN_D)                # párpado inferior suave
 
 
 def face_front(s, dy, expression='calm'):
-    s.ell(18, 16 + dy, 42, 41 + dy, SKIN)
-    s.hline(24, 36, 41 + dy, SKIN_D)
-    s.hline(21, 39, 40 + dy, SKIN_D)
-    s.ell(19, 16 + dy, 41, 39 + dy, SKIN)
+    # cara redonda arriba y mentón en punta suave
+    s.ell(18, 16 + dy, 42, 37 + dy, SKIN)
+    s.poly([(18, 30 + dy), (42, 30 + dy), (38, 38 + dy), (33, 41 + dy), (27, 41 + dy), (22, 38 + dy)], SKIN)
+    s.line([(22, 38 + dy), (27, 41 + dy)], SKIN_D)
+    s.line([(38, 38 + dy), (33, 41 + dy)], SKIN_D)
+    s.hline(28, 32, 41 + dy, SKIN_D)
     eye(s, 22, 28 + dy, -1)
-    eye(s, 35, 28 + dy, 1)
+    eye(s, 34, 28 + dy, 1)
     # cejas finas y relajadas bajo el flequillo
-    s.hline(22, 24, 26 + dy, HAIR_D)
-    s.hline(36, 38, 26 + dy, HAIR_D)
+    s.hline(23, 25, 25 + dy, HAIR_D)
+    s.hline(35, 37, 25 + dy, HAIR_D)
     for bx in (20, 22, 38, 40):
         s.px(bx, 35 + dy, BLUSH)
     s.px(21, 36 + dy, BLUSH)
@@ -268,32 +271,32 @@ def east(dy=0, stride=(0, 0), arm=0, expression='calm', seated=False, hands=True
     s.line([(34, 39 + dy), (38, 46 + dy)], CARD_D)
     bow(s, 38, 43 + dy)
     # cara de tres cuartos hacia el este
-    s.ell(22, 16 + dy, 46, 41 + dy, SKIN)
-    s.hline(30, 42, 41 + dy, SKIN_D)
-    s.ell(24, 16 + dy, 46, 39 + dy, SKIN)
+    s.ell(22, 16 + dy, 46, 37 + dy, SKIN)
+    s.poly([(22, 30 + dy), (46, 30 + dy), (44, 37 + dy), (39, 41 + dy), (31, 41 + dy), (25, 37 + dy)], SKIN)
+    s.line([(44, 37 + dy), (39, 41 + dy)], SKIN_D)
+    s.hline(32, 38, 41 + dy, SKIN_D)
+    # los dos ojos del mismo tamaño, corridos hacia donde mira
+    eye(s, 28, 28 + dy, -1)
     eye(s, 38, 28 + dy, 1)
-    # ojo lejano, angosto
-    s.hline(29, 32, 28 + dy, INK)
-    s.rect(30, 29 + dy, 32, 32 + dy, EYE)
-    s.hline(30, 32, 29 + dy, EYE_D)
-    s.rect(31, 30 + dy, 32, 31 + dy, INK)
-    s.hline(30, 32, 32 + dy, EYE_L)
-    s.px(30, 30 + dy, WHITE)
-    for bx in (34, 36, 43):
+    s.hline(29, 31, 25 + dy, HAIR_D)
+    s.hline(39, 41, 25 + dy, HAIR_D)
+    for bx in (28, 30, 40, 42):
         s.px(bx, 35 + dy, BLUSH)
-    s.px(35, 36 + dy, BLUSH)
+    s.px(29, 36 + dy, BLUSH)
+    s.px(41, 36 + dy, BLUSH)
     if expression == 'eat':
-        s.ell(40, 36 + dy, 43, 39 + dy, MOUTH)
+        s.ell(34, 36 + dy, 37, 39 + dy, MOUTH)
     else:
-        s.hline(40, 42, 37 + dy, MOUTH)
+        s.hline(35, 37, 37 + dy, MOUTH)
+        s.px(36, 38 + dy, BOW_D)
     # flequillo hacia el este y mechón sobre la oreja
-    pts = [(14, 14), (47, 14), (47, 25), (45, 21), (42, 25), (39, 19), (36, 24), (33, 19),
-           (30, 24), (27, 20), (25, 28), (22, 34), (18, 30)]
+    pts = [(14, 14), (47, 14), (47, 26), (45, 21), (42, 24), (39, 19), (36, 23), (33, 18),
+           (30, 23), (27, 19), (25, 27), (22, 34), (18, 30)]
     s.poly([(x, y + dy) for x, y in pts], HAIR)
-    s.poly([(22, 24 + dy), (27, 26 + dy), (26, 42 + dy), (22, 46 + dy)], HAIR)
+    s.poly([(21, 24 + dy), (26, 26 + dy), (26, 42 + dy), (22, 46 + dy)], HAIR)
     for x0, x1 in ((33, 33), (39, 38)):
         s.line([(x0, 16 + dy), (x1, 19 + dy)], HAIR_D)
-    s.line([(24, 30 + dy), (24, 43 + dy)], HAIR_D)
+    s.line([(23, 30 + dy), (23, 43 + dy)], HAIR_D)
     hair_shine(s, dy, cx=28)
     ribbon(s, 14, 12 + dy)
     if seated:
@@ -317,9 +320,12 @@ def knees(s, hands, side=False):
     """Rodillas en seiza delante del torso (la falda tableada encima de las
     piernas plegadas), con las manos apoyadas."""
     if side:
-        s.rrect(20, 62, 50, 69, SKIRT, INK, r=3)
-        s.hline(22, 48, 63, SKIRT_L)
-        s.rrect(46, 64, 53, 69, SOCK, INK, r=2)          # pie que asoma
+        s.rrect(15, 64, 23, 70, SOCK, INK, r=2)          # pies bajo la cadera
+        s.hline(16, 22, 69, SOCK_D)
+        s.poly([(20, 61), (46, 61), (51, 64), (51, 67), (46, 70), (20, 70)], INK)
+        s.poly([(21, 62), (46, 62), (50, 65), (50, 66), (46, 69), (21, 69)], SKIRT)
+        s.hline(23, 46, 63, SKIRT_L)
+        s.hline(23, 45, 68, SKIRT_D)
     else:
         for x0 in (16, 31):                              # dos rodillas redondas
             s.ell(x0, 61, x0 + 14, 70, INK)
@@ -415,16 +421,16 @@ def eat(facing, frame):
         return finish(s, seated=True)
     if facing == 'south':
         s = south(d, expression='eat' if up else 'calm', seated=True, hands=True)
-        y = (33 if up else 42) + d
+        y = (38 if up else 44) + d
         s.rrect(33, y + 4, 40, y + 12, CARD)
         s.ell(33, y, 39, y + 6, SKIN)
-        onigiri(s, 36, y - 6)
+        onigiri(s, 34, y - 4)
         return finish(s, seated=True)
     s = east(d, expression='eat' if up else 'calm', seated=True, arm=None)
-    y = (32 if up else 42) + d
+    y = (38 if up else 44) + d
     s.rrect(34, y + 4, 41, y + 12, CARD)
     s.ell(38, y, 44, y + 6, SKIN)
-    onigiri(s, 44, y - 6)
+    onigiri(s, 44, y - 4)
     return finish(s, seated=True)
 
 
