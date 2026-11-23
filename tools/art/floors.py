@@ -14,7 +14,7 @@ presentación le da la transparencia).
 import math
 import os
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from px import Canvas, hexc
 
@@ -106,50 +106,85 @@ TURNS = {'east': 0, 'north': 90, 'west': 180, 'south': 270}
 
 
 def foot_shape(skin=True):
-    """Pie derecho visto desde arriba mirando al este: talón a la izquierda,
-    dedos a la derecha. Es una unión de elipses: talón, arco, planta y dedos."""
-    c = Canvas(FOOT, FOOT)
+    """Calzado violeta con media crema visto desde arriba mirando al este
+    (talón a la izquierda, puntera redondeada a la derecha), 384 × 384 px."""
     cy = FOOT // 2
-    body = [(74, cy + 14, 48, 42), (150, cy + 20, 64, 38), (236, cy + 2, 70, 64)]
-    toes = [(312, cy - 36, 30, 26), (328, cy - 2, 21, 18), (326, cy + 26, 18, 16), (316, cy + 48, 15, 13),
-            (300, cy + 64, 12, 11)]
+    ink = hexc(INK)
+    shoe, shoe_l, shoe_hi, shoe_d, shoe_d2 = (
+        hexc('#76659B'), hexc('#9A8AC2'), hexc('#B8AAD9'), hexc('#554675'), hexc('#3D3157')
+    )
+    sock, sock_d = hexc('#FFF1D8'), hexc('#DCCFE0')
+    buckle, white = hexc('#FFCA8A'), hexc('#FFFFFF')
 
-    def ell(x, y, e):
-        ex, ey, rx, ry = e
-        return ((x - ex) / rx) ** 2 + ((y - ey) / ry) ** 2 <= 1
+    im = Image.new('RGBA', (FOOT, FOOT), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    # Silueta del calzado mirando al este: talón a la izquierda, puntera redondeada a la derecha
+    shoe_pts = [
+        (42, cy - 42), (108, cy - 56), (206, cy - 58), (288, cy - 66),
+        (338, cy - 46), (354, cy - 16), (354, cy + 20), (336, cy + 50),
+        (284, cy + 68), (202, cy + 58), (108, cy + 60), (42, cy + 44),
+    ]
+    d.polygon(shoe_pts, fill=shoe)
+    d.ellipse([236, cy - 68, 360, cy + 68], fill=shoe)
+    d.ellipse([26, cy - 52, 128, cy + 56], fill=shoe)
 
-    shape = {}
+    if not skin:
+        px = im.load()
+        for y in range(FOOT):
+            for x in range(FOOT):
+                if px[x, y][3] > 0:
+                    px[x, y] = ink
+        return im
+
+    # Sombreado cel-shading (luz desde arriba a la izquierda)
+    px = im.load()
     for y in range(FOOT):
         for x in range(FOOT):
-            if any(ell(x, y, e) for e in body):
-                shape[x, y] = 'b'
-            for i, t in enumerate(toes):
-                if ell(x, y, t):
-                    shape[x, y] = i
-    if not skin:
-        for x, y in shape:
-            c.im.putpixel((x, y), hexc(INK))
-        return c.im
-    skin_c, shade, light, nail = hexc('#FFD8B9'), hexc('#F2B9A0'), hexc('#FFE9DA'), hexc('#FFF1E8')
-    for (x, y), part in shape.items():
-        col = skin_c
-        if part == 'b':
-            if (x, y + 12) not in shape:
-                col = shade  # lado de afuera, en sombra
-            elif (x, y - 8) not in shape and 100 < x < 290:
-                col = light  # empeine iluminado
-        c.im.putpixel((x, y), col)
-    ink = hexc(INK)
-    for (x, y), part in shape.items():
-        edge = any(shape.get((x + dx, y + dy)) is None for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        # surco entre cada dedo y lo demás
-        seam = isinstance(part, int) and any(
-            shape.get((x + dx, y + dy)) not in (None, part) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        if edge or seam:
-            c.im.putpixel((x, y), ink)
-    for tx, ty, rx, ry in toes:  # uñas
-        c.ellipse(tx + rx // 2 - 2, ty, max(rx // 3, 3), max(ry // 3, 3), nail)
-    return c.im
+            if px[x, y][3] == 0:
+                continue
+            v = (y - (cy - 68)) / 136.0
+            if v < 0.20:
+                px[x, y] = shoe_l
+            elif v > 0.80:
+                px[x, y] = shoe_d2
+            elif v > 0.62:
+                px[x, y] = shoe_d
+
+    # Brillo lustroso en la puntera derecha y pespunte perimetral
+    d.arc([240, cy - 62, 354, cy + 62], start=275, end=85, fill=shoe_hi, width=3)
+    d.ellipse([282, cy - 40, 336, cy - 2], fill=shoe_hi)
+    d.ellipse([296, cy - 30, 326, cy - 10], fill=white)
+
+    # Abertura del zapato mostrando la media crema acanalada
+    d.ellipse([66, cy - 42, 224, cy + 44], fill=sock, outline=ink, width=3)
+    d.arc([70, cy - 38, 220, cy + 40], start=20, end=170, fill=sock_d, width=8)
+    for y in range(cy - 30, cy + 34, 8):
+        d.line([(82, y), (208, y)], fill=sock_d, width=2)
+
+    # Correa Mary-Jane cruzando el empeine con hebilla dorada
+    d.rounded_rectangle([196, cy - 62, 224, cy + 64], radius=6, fill=shoe, outline=ink, width=2)
+    d.line([(202, cy - 56), (202, cy + 58)], fill=shoe_l, width=3)
+    d.rounded_rectangle([200, cy - 58, 220, cy - 42], radius=3, fill=buckle, outline=ink, width=2)
+
+    # Contorno exterior de 2 px
+    src = im.load()
+    out = im.copy()
+    dst = out.load()
+    for y in range(FOOT):
+        for x in range(FOOT):
+            if src[x, y][3] > 0:
+                continue
+            for dy in (-2, -1, 0, 1, 2):
+                for dx in (-2, -1, 0, 1, 2):
+                    if dx * dx + dy * dy <= 5:
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < FOOT and 0 <= ny < FOOT and src[nx, ny][3] > 200:
+                            dst[x, y] = ink
+                            break
+                else:
+                    continue
+                break
+    return out
 
 
 def foot():

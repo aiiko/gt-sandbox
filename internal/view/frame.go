@@ -8,6 +8,7 @@ package view
 
 import (
 	"cmp"
+	"math"
 	"slices"
 
 	"gtsandbox/internal/core/fixedmath"
@@ -214,6 +215,18 @@ type Step struct {
 // StepTicks es cuánto se ve un pie apoyado.
 const StepTicks clock.Tick = 8
 
+// Foot es la posición visual de uno de los dos pies (izquierdo o derecho) de
+// un caminante con Stride sobre el piso, con su elevación Lift en [0, 1]
+// (0 = apoyado en el piso, 1 = punto más alto del paso al caminar).
+type Foot struct {
+	Walker ids.ID     `json:"walker"`
+	Space  ids.ID     `json:"space"`
+	Pos    units.Vec3 `json:"pos"`
+	Dir    units.Vec2 `json:"dir"`
+	Right  bool       `json:"right,omitempty"`
+	Lift   float32    `json:"lift,omitempty"`
+}
+
 // Mover resume un nav.Mover. Route son los puntos de mundo que faltan
 // recorrer, empezando por la posición actual.
 type Mover struct {
@@ -271,6 +284,9 @@ type Frame struct {
 	Footprints []Footprint `json:"footprints,omitempty"`
 	// Steps son las pisadas recientes (el pie apoyado).
 	Steps []Step `json:"steps,omitempty"`
+	// Feet son ambos pies (izquierdo y derecho) de cada caminante con Stride,
+	// visibles todo el tiempo en micro y animados al levantarlos para caminar.
+	Feet []Foot `json:"feet,omitempty"`
 	// Colonies resume el estado de cada colonia (despensa y refugio).
 	Colonies []Colony `json:"colonies,omitempty"`
 	// Marks son pistas vistas y destinos confirmados para el miniplano en micro.
@@ -446,6 +462,70 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			}
 		}
 	}
+	// Ambos pies de cada caminante con Stride (plantados al estar quieto,
+	// alternando apoyo y elevación suave al caminar).
+	strides.Each(func(e ids.ID, st *crush.Stride) {
+		if r.Despawning(e) {
+			return
+		}
+		l, ok := cs.Location.Get(e)
+		if !ok || l.Space.IsNil() {
+			return
+		}
+		dir := st.Dir
+		moving := false
+		if mv, ok := movers.Get(e); ok && mv.Status == nav.Moving {
+			moving = true
+		}
+		if !moving || (dir.X == 0 && dir.Y == 0) {
+			rad := float64(l.Facing.Norm()) * 2 * math.Pi / float64(fixedmath.Turn)
+			dir = units.V2(units.Length(math.Round(math.Cos(rad)*10000)), units.Length(math.Round(math.Sin(rad)*10000)))
+		}
+		dlen := float64(dir.Len())
+		if dlen <= 0 {
+			dir = units.V2(10000, 0)
+			dlen = 10000
+		}
+		fx, fy := float64(dir.X)/dlen, float64(dir.Y)/dlen
+		rx, ry := fy, -fx // vector hacia la derecha de la marcha
+		side := float64(st.Side)
+		if side <= 0 {
+			side = float64(10 * units.Centimeter)
+		}
+		var phase float64
+		if moving && st.Length > 0 {
+			phase = max(0, min(1, float64(st.Travel)/float64(st.Length)))
+		}
+		for _, right := range [2]bool{false, true} {
+			sign := -1.0
+			if right {
+				sign = 1.0
+			}
+			var along float64
+			var lift float32
+			if moving && st.Length > 0 {
+				half := float64(st.Length) * 0.25
+				if right == st.Right {
+					// Pie que avanza en el aire hacia la próxima pisada.
+					along = (phase*2 - 1) * half
+					lift = float32(math.Sin(phase * math.Pi))
+				} else {
+					// Pie de apoyo plantado en el suelo mientras el cuerpo avanza.
+					along = (1 - phase*2) * half
+				}
+			}
+			lx := l.Pos.X + units.Length(math.Round(fx*along+rx*side*sign))
+			ly := l.Pos.Y + units.Length(math.Round(fy*along+ry*side*sign))
+			at, err1 := g.ToWorld(l.Space, units.V3(lx, ly, 0))
+			ahead, err2 := g.ToWorld(l.Space, units.V3(lx+dir.X, ly+dir.Y, 0))
+			if err1 == nil && err2 == nil {
+				f.Feet = append(f.Feet, Foot{
+					Walker: e, Space: l.Space, Pos: at,
+					Dir: ahead.Sub(at).XY(), Right: right, Lift: lift,
+				})
+			}
+		}
+	})
 
 	contacts := ecs.Get[attach.Contact](r)
 	ecs.Get[nav.Portal](r).Each(func(id ids.ID, p *nav.Portal) {

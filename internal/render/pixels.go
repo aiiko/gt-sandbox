@@ -424,6 +424,12 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		}
 		return worldPos
 	}
+	feetOnFocus := map[ids.ID]bool{}
+	for _, ft := range f.Feet {
+		if inFocus(ft.Space) {
+			feetOnFocus[ft.Walker] = true
+		}
+	}
 	for _, s := range f.Spaces {
 		if !inFocus(s.ID) {
 			continue
@@ -432,9 +438,13 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		// proyectadas en 3D solo dibujan su micro cuando son el foco. Las demás
 		// partes articuladas del cuerpo (salvo la palma) solo se dibujan cuando
 		// son el foco o están en contacto directo con él, para que la cabeza o
-		// las caderas no tapen el pie o el suelo en vista micro.
+		// las caderas no tapen el pie o el suelo en vista micro. Los pies ya
+		// animados por f.Feet sobre el piso tampoco se duplican.
 		if scale == Micro && s.ID != focus {
 			if visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket" || s.Projected {
+				continue
+			}
+			if (visuals[s.ID] == "body_foot_l" || visuals[s.ID] == "body_foot_r") && feetOnFocus[s.Parent] {
 				continue
 			}
 			if s.Kind == space.Articulated && visuals[s.ID] != "palm" && !scope[s.ID] {
@@ -516,8 +526,28 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			add(fp.Walker, fp.Space, ids.Nil, fp.Pos, []string{"shadow_" + heading(fp.Dir)}, false, image.Point{},
 				look{visual: FootVisual, ghost: true, layer: layerGround, alpha: 0.15 + 0.45*max(near, 0)})
 		}
+		// Ambos pies (izquierdo y derecho) visibles todo el tiempo en el piso,
+		// con sombra dinámica y elevación al levantarlos para caminar.
+		focusIsFoot := visuals[focus] == "body_foot_l" || visuals[focus] == "body_foot_r"
+		drawnFeet := map[ids.ID]bool{}
+		if !focusIsFoot {
+			for _, ft := range f.Feet {
+				if !inFocus(ft.Space) {
+					continue
+				}
+				drawnFeet[ft.Walker] = true
+				dir := heading(ft.Dir)
+				shOff := image.Pt(2+int(math.Round(8*float64(ft.Lift))), 3+int(math.Round(12*float64(ft.Lift))))
+				shAlpha := float32(0.32 - 0.14*ft.Lift)
+				add(ft.Walker, ft.Space, ids.Nil, ft.Pos, []string{"shadow_" + dir}, false, shOff,
+					look{visual: FootVisual, ghost: true, layer: layerGround, alpha: shAlpha})
+				liftPx := int(math.Round(float64(ft.Lift) * 34))
+				add(ft.Walker, ft.Space, ids.Nil, ft.Pos, []string{"foot_" + dir}, false, image.Pt(0, -liftPx),
+					look{visual: FootVisual, ghost: true, layer: layerForeground})
+			}
+		}
 		for _, st := range f.Steps {
-			if inFocus(st.Space) {
+			if inFocus(st.Space) && !drawnFeet[st.Walker] {
 				add(st.Walker, st.Space, ids.Nil, st.Pos, []string{"foot_" + heading(st.Dir)}, false, image.Point{},
 					look{visual: FootVisual, ghost: true, layer: layerForeground})
 			}

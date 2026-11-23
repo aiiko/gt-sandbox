@@ -240,3 +240,65 @@ func TestBodyMicroAlignmentWhenGiantessRotated(t *testing.T) {
 		}
 	}
 }
+
+// Verifica que en vista micro del piso se ven ambos pies (calzados) todo el
+// tiempo y que al caminar uno se levanta mientras el otro queda apoyado.
+func TestMicroBothFeetVisibleAndAnimatedWhileWalking(t *testing.T) {
+	g := artGame(t, randomBase)
+	g.w, g.h = 960, 540
+	g.run.StepOnce()
+	f := g.run.Cur
+
+	var giantessID, roomID ids.ID
+	for _, s := range f.Spaces {
+		if s.Name == "giantess" {
+			giantessID, roomID = s.ID, s.Parent
+			break
+		}
+	}
+	if giantessID.IsNil() || roomID.IsNil() {
+		t.Fatal("falta giantess o habitación")
+	}
+
+	// Quieta o caminando, siempre deben existir 2 pies en f.Feet.
+	if len(f.Feet) != 2 {
+		t.Fatalf("se esperaban 2 pies en Frame.Feet, hay %d", len(f.Feet))
+	}
+
+	// Avanzar hasta que la giantess camine y verificar que un pie se eleva (Lift > 0)
+	// mientras el otro permanece apoyado (Lift == 0) y ambos se dibujan en micro.
+	sawLift := false
+	for range 300 {
+		g.run.StepOnce()
+		f = g.run.Cur
+		if len(f.Feet) != 2 {
+			t.Fatalf("tick %d: se esperaban 2 pies, hay %d", f.Tick, len(f.Feet))
+		}
+		lifted, planted := 0, 0
+		for _, ft := range f.Feet {
+			if ft.Lift > 0.05 {
+				lifted++
+			} else {
+				planted++
+			}
+		}
+		if lifted == 1 && planted == 1 {
+			sawLift = true
+			roomID = f.Feet[0].Space
+			g.art.focus = roomID
+			g.cam.Anchor = ids.Nil
+			g.cam.X, g.cam.Y = float64(f.Feet[0].Pos.X), float64(f.Feet[0].Pos.Y)
+			g.syncArtZoom(f)
+			proj := g.cam.Project(g.anchor(f), g.w, g.h)
+			scene := g.art.atlas.Arrange(f, proj, g.visuals, render.Micro, roomID)
+			marks := scene.Marks(giantessID)
+			if len(marks) < 4 {
+				t.Fatalf("se esperaban al menos 2 pies + 2 sombras en micro, hubo %v", marks)
+			}
+			break
+		}
+	}
+	if !sawLift {
+		t.Fatal("nunca se observó un pie levantado y otro apoyado mientras la giantess camina")
+	}
+}

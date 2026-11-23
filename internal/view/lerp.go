@@ -20,6 +20,21 @@ func Interpolate(prev, cur *Frame, alpha float64) *Frame {
 	out := *cur
 	out.Spaces = append([]Space(nil), cur.Spaces...)
 	out.Things = append([]Thing(nil), cur.Things...)
+	out.Feet = append([]Foot(nil), cur.Feet...)
+	for i := range out.Feet {
+		ft := &out.Feet[i]
+		for _, p := range prev.Feet {
+			if p.Walker == ft.Walker && p.Space == ft.Space && p.Right == ft.Right {
+				d := ft.Pos.Sub(p.Pos)
+				if d.LengthSq() <= int64(MaxLerp)*int64(MaxLerp) {
+					l := func(x units.Length) units.Length { return units.Length(float64(x) * alpha) }
+					ft.Pos = p.Pos.Add(units.V3(l(d.X), l(d.Y), l(d.Z)))
+					ft.Lift = p.Lift + (ft.Lift-p.Lift)*float32(alpha)
+				}
+				break
+			}
+		}
+	}
 	for i := range out.Spaces {
 		if p, ok := prev.SpaceByID(out.Spaces[i].ID); ok {
 			out.Spaces[i].Pose = lerpPose(p.Pose, out.Spaces[i].Pose, alpha)
