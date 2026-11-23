@@ -718,6 +718,8 @@ El suelo se proyecta en planta ortográfica, con el norte arriba en ambas vistas
 
 La escena se dibuja en un lienzo lógico de **480 × 270 px**. La ventana de escritorio admite ese lienzo a partir de 1×. Se usa el mayor factor entero que entre, con muestreo por vecino más cercano (nearest-neighbor) y bandas centradas cuando sobra espacio. La posición se interpola primero y se alinea a la cuadrícula de píxeles al dibujar. Las densidades son parámetros para la primera prueba de arte y se ajustan con capturas de la casa y la palma. La cuadrícula visual es independiente de las celdas de navegación.
 
+> **Revisión prevista.** El lienzo fijo, la densidad macro y el zoom se replantean en la [sección 17](#17-interfaz-y-lectura-en-pc): lienzo que llena la ventana, escena e interfaz en capas con su propio factor, macro a 80 px/m y zoom con la rueda.
+
 Macro muestra a los tinies mediante un marcador del nido y un indicador para el tiny seleccionado. Micro muestra el sprite de cada tiny, su carga y suficiente textura para distinguir madera, cerámica, papel y piel. De la giantess se dibuja la parte relevante, como la palma y la manga que entran por un borde del encuadre. La taza conserva su color, el lado del asa y su posición de apoyo en las dos representaciones.
 
 Entrar en micro centra la superficie elegida o al actor en seguimiento. Al volver a macro se recupera el encuadre anterior, salvo que haya una entidad en seguimiento. En ese caso se conserva el seguimiento. Un corte con fundido breve de unos 180 ms confirma el cambio de escala en el rótulo de ubicación. La opción de movimiento reducido usa un corte directo. Mientras un tiny viaja sobre la palma se lo sigue en el mismo modo micro. Si baja a otra superficie, cambia el contexto de ubicación y el encuadre continúa siguiendo al actor.
@@ -1042,3 +1044,108 @@ El escenario de referencia parte de la casa existente. El nido tiene pocas porci
 - **Coordinación y progreso.** Dos tinies no se reservan el mismo punto, migaja o fibra. Cada fibra entregada cuenta una vez y el total se conserva si cambia el encargado. Al terminar el armado, la obra conserva su ID y recibe la protección. Un tiny dentro queda protegido ante un apoyo de palma que el refugio pueda resistir.
 - **Interrupciones.** Una amenaza interrumpe un acarreo o una conversación y el tiny intenta huir. Si un portal se cierra a mitad de una salida, el tiny vuelve a evaluar sus opciones sin insistir continuamente en la ruta cerrada. Las tareas abandonadas dejan sus reservas disponibles.
 - **Lectura y continuidad.** En micro se distinguen búsqueda, acarreo, regreso por hambre o cansancio y reunión. Al continuar desde un snapshot a mitad de una salida o de la preparación del refugio, se obtienen los mismos eventos y el mismo hash que en la ejecución continua.
+
+## 17. Interfaz y lectura en PC
+
+El juego corre en PC y todavía se ve como si fuera para una pantalla chica. La escena y la interfaz comparten un lienzo fijo de 480 × 270, la casa ocupa una franja angosta y la historia se llena de movimientos sin importancia. Esta iteración reorganiza la presentación para aprovechar la ventana y aclarar qué está pasando. Nada de esto cambia la simulación: el hash, los snapshots y los escenarios siguen iguales.
+
+### 17.1. Diagnóstico
+
+| Problema | Causa actual | Efecto |
+| --- | --- | --- |
+| La ventana es chica | El juego abre a 960 × 540 (lienzo 2×). Se usa el mayor factor entero que entra y el resto se rellena con bandas | En un monitor de 1920 × 1080 queda mucho escritorio sin usar. A pantalla completa el factor sube a 4 y todo crece por igual, incluida la interfaz, así que no se ve más mundo |
+| La casa se ve comprimida | Las tres habitaciones miden 9 × 3 m. A 40 px/m ocupan 360 × 120 px del lienzo | La casa usa menos de la mitad del alto. La giantess mide 31 × 38 px y se le distinguen pocos gestos |
+| No se puede hacer zoom sobre el arte | La rueda solo funciona en el visor vectorial. En pixel art, `fitArt` fija una densidad por escala | Entre la casa y el escritorio no hay niveles intermedios: la escala salta 40 veces |
+| La interfaz tapa la escena | Barras, paneles y rótulos se dibujan sobre el mismo lienzo que el mundo | El panel de historia tapa los rótulos de Cocina y Dormitorio (captura `casa.png`). A pantalla completa, la fuente de 12 px se ve a 48 px |
+| La historia no cuenta nada | `storyText` convierte cada evento suelto en una línea y el panel muestra las últimas seis | En 5 minutos de `casa.json` hay 63 `explored`, 81 cambios de Space, 15 cambios de pose y 9 acarreos asignados, contra 1 aplastamiento, 7 sustos y 1 palma ofrecida. A x4, un hito desaparece del panel en segundos |
+
+### 17.2. Un lienzo que llena la ventana
+
+La escena deja de tener tamaño fijo. Se elige un **factor de escena** entero *N* y el lienzo pasa a medir `ventana / N`, redondeado hacia arriba. Así la imagen llena la ventana sin bandas. El mínimo de 480 × 270 lógicos sigue siendo el tamaño más chico admitido. La proyección ya trabaja con un ancho y un alto cualesquiera (`camera.Project`), y `render.PixelViewport` pasa a calcular el factor y el tamaño del lienzo en lugar de centrar uno fijo.
+
+- **Ventana al arrancar.** El juego abre maximizado, o al 90 % del monitor si maximizar no está disponible. `F11` alterna pantalla completa. El tamaño y el modo se guardan en una configuración local de presentación, separada de las partidas y de la simulación.
+- **Factor por defecto.** Se usa el mayor *N* que permite ver la casa entera con margen para los paneles. Con la densidad del punto 17.3, eso da *N* = 2 en 1080p y *N* = 3 en 1440p.
+- **Capturas reproducibles.** `-shot`, `capturas.json` y `-bench` fijan el tamaño con `-size`, así que las referencias siguen siendo deterministas. Las capturas de referencia se regeneran una vez.
+
+### 17.3. Más detalle en la vista macro
+
+La casa es una sola zona, así que macro puede trabajar con el doble de píxeles. La densidad pasa de **16 px por 40 cm a 16 px por 20 cm (80 px/m)**. La casa ocupa 720 × 240 px, una proporción adecuada para un lienzo de 960 × 540 con paneles. La giantess de pie pasa a medir unos 62 × 76 px, suficiente para que se le lean la cara, las manos y lo que lleva. Micro mantiene 16 px por 10 mm.
+
+| Pieza macro | Qué gana con el doble de densidad |
+| --- | --- |
+| Giantess | Expresión en el sprite (no solo en el retrato), mano y objeto en la mano, poses de sentada y de mano apoyada distinguibles |
+| Muebles con uso | Escritorio, mesa, cama, televisor y anafe muestran su estado: taza encima, migajas, refugio, pantalla encendida |
+| Suelos y paredes | Tatami, azulejo y madera con textura propia. Puertas y noren se distinguen abiertos o cerrados |
+| Tinies | Siguen midiendo menos de un píxel a esta escala, así que se mantienen como marcadores y globos (punto 17.7) |
+
+**Migración sin cortar el juego.** El atlas declara su densidad por escala (`density` en el manifiesto) y deja de depender de la constante de `art.go`. Mientras una pieza no tenga su versión nueva, `artpack` arma la variante macro escalando la fuente actual 2× por vecino más cercano. El cambio de densidad funciona desde el primer commit y el arte se reemplaza de a una pieza, en este orden: giantess, muebles con uso y suelos y paredes. Las piezas de `tools/art/` ajustan su tamaño en el script.
+
+### 17.4. Zoom con la rueda: escena e interfaz en capas separadas
+
+**Sí se puede.** La condición es que la escena y la interfaz dejen de compartir lienzo. Se dibujan en dos imágenes y `DrawFinalScreen` las compone:
+
+- **Capa de escena**: sprites, sombras, señales de paso y símbolos. Se escala por el factor de escena *N*, que la rueda modifica.
+- **Capa de interfaz**: barras, paneles, ficha, avisos, rótulos de habitaciones, globos de tinies y marcadores. Usa un **factor de interfaz** *U* que no depende del zoom. Por defecto `U = max(1, alto / 450)` (2 en 1080p, 3 en 1440p, 4 en 4K) y se puede cambiar en Opciones con Automático o de 1 a 4.
+
+El costo es que los píxeles de la escena y los de la interfaz pueden tener tamaños distintos. Es una convención habitual en juegos de pixel art con zoom, y se acepta si *U* se mantiene fijo durante la partida. Los elementos que señalan algo del mundo, como rótulos, globos, marcadores de selección y colas de los globos de historia, se proyectan desde la escena y se dibujan en la capa de interfaz. Así mantienen un tamaño legible con cualquier zoom.
+
+| Regla | Decisión |
+| --- | --- |
+| Pasos de zoom | Solo enteros: *N* de 1 a 4 en macro y de 2 a 4 en micro. Cada paso mantiene fijo el punto bajo el cursor (`Camera.ZoomAt`). No se re-muestrea con filtro, así que el arte nunca se ve borroso. Un zoom fraccionario con filtro *sharp bilinear* queda como opción posterior |
+| Zoom semántico | Acercar más allá del máximo de macro sobre una superficie con vista micro entra en micro en ese punto, con el mismo fundido de 180 ms. Alejar más allá del mínimo de micro vuelve a la casa con el encuadre anterior. `Tab` mantiene su función |
+| Paneo | Se arrastra con el botón izquierdo a partir de 4 px de umbral, como en el visor vectorial, o con el del medio. WASD y las flechas siguen funcionando. Clic derecho sigue siendo la orden de destino |
+| Picking | El cursor se prueba primero contra la interfaz y después contra la escena, cada uno con su propia transformación. `ArtScene.Pick` sigue trabajando en píxeles de la escena |
+| Límites del encuadre | La cámara no deja que la casa o la superficie salgan por completo de la pantalla. `F` vuelve al encuadre general |
+
+La cámara es presentación pura. `Camera.Zoom` sigue en px/µm y el factor de escena es solo cómo se muestra.
+
+### 17.5. Historia: una crónica de hitos y un diario por entidad
+
+La historia tiene dos niveles. La **crónica** cuenta la partida solo con lo que importa. El **diario** de cada entidad conserva el detalle, porque «Tiny 07 explora la cocina» no aporta nada en la crónica general, pero sí sirve para ver qué hizo ese tiny en particular.
+
+| Nivel | Qué entra | Ejemplos |
+| --- | --- | --- |
+| **Hito** (crónica, con icono y, si es grave, aviso) | Muertes, sustos, tinies atrapados, encuentros, primeras veces y cambios de estado de la colonia | «Tiny 03 quedó bajo la palma en el escritorio». «La giantess ofrece la palma; suben 2 tinies». «Por primera vez un tiny llega a la cocina». «La despensa se vació». «Terminan el refugio» |
+| **Rutina de la giantess** (crónica, una línea por actividad) | Cada actividad en una sola línea que se completa al terminar | «07:00–07:24 Desayuna en la cocina» |
+| **Resumen de la colonia** (crónica, cada 30 minutos de reloj o cuando la giantess cambia de actividad) | Lo que hizo la colonia en ese período, en una sola línea | «07:00–07:30 · 6 migajas al nido · 2 fibras · 1 conversación». No se escribe si no pasó nada |
+| **Detalle** (solo en el diario de la entidad y del lugar) | Lo que hoy llena el panel | Explora, sube o baja, encargo asignado, entrega, búsqueda vacía, come, descansa, conversa |
+
+**Cómo se arma.** `view.Chronicle` reemplaza a `storyText`. Clasifica cada evento publicado como hito, rutina, aporte al resumen o detalle. Las primeras veces se registran por pareja de quién y dónde. Los detalles de un mismo tipo y lugar que llegan juntos se agrupan («3 tinies exploran la cocina»). Cada entrada guarda su actor y su lugar, como hoy, para poder enfocarlos. Cada diario conserva las últimas entradas de su entidad. Cuando muere un tiny, los restos heredan su diario y su nombre. La crónica sale de los eventos y no del estado, así que sigue siendo presentación. Al cargar una partida empieza vacía, salvo que más adelante se guarde junto al snapshot, en un archivo aparte que no se hashea.
+
+**Criterio de aceptación.** En los primeros 5 minutos de `casa.json` con la semilla de referencia, la crónica no tiene ninguna línea de «explora», «sube a» ni «asigna un acarreo». Muestra todos los aplastamientos, sustos y encuentros. La ficha de un tiny que exploró muestra esas exploraciones en su diario.
+
+### 17.6. Interfaz de partida y menú de pausa
+
+Con la capa de interfaz a 960 × 540 lógicos en 1080p hay espacio para paneles que no tapen la casa.
+
+| Zona | Contenido |
+| --- | --- |
+| **Barra superior** | Reloj, pausa y velocidad, ubicación jerárquica, población, despensa (icono y porciones sobre la meta), seguimiento y sonido |
+| **Panel lateral izquierdo** (se pliega con `H`) | Tres pestañas. **Crónica**: la lista completa con desplazamiento; cada hito lleva icono y color (ámbar para peligro, cian para encuentros) y se enfoca con un clic. **Colonia**: barra de la despensa, avance del refugio, cuántos tinies hacen cada actividad (un clic elige a uno) y la lista de tinies con su actividad y alertas de hambre o cansancio. **Giantess**: retrato, necesidades, actividad actual y destino |
+| **Ficha** (derecha, al elegir algo) | Nombre, ubicación, motivo y destino, carga, necesidades, las últimas entradas del diario y los botones Seguir e Ir allí |
+| **Avisos** (arriba a la derecha) | Decesos, como hoy, más amenazas a la colonia, palma ofrecida y refugio terminado. Un clic lleva al lugar |
+| **Barra inferior** | Solo tres o cuatro controles según el contexto. `F1` o `?` abre la ayuda completa con la leyenda de símbolos |
+
+**Menú de pausa (`Esc`).** Pausa la partida y ofrece: Continuar, Guardar partida, Cargar partida, Opciones (volumen, escala de interfaz, pantalla completa, movimiento reducido y pausa ante amenazas), Controles y Volver al menú principal. Reemplaza a la pregunta actual de volver al menú. `Esc` sigue soltando primero la selección y el seguimiento, como hoy. Guardar y cargar usan el snapshot existente de `-save`/`-load`.
+
+### 17.7. Otras mejoras para entender qué pasa
+
+| Mejora | Qué aclara |
+| --- | --- |
+| **Información al pasar el cursor** | Nombre y actividad de lo que está debajo, sin hacer clic. En macro, sobre un globo de tinies, la lista de quiénes están ahí y qué hacen |
+| **Intención de la giantess** | En macro, un globo con el icono de su actividad y una línea punteada hasta su destino mientras camina. Se entiende adónde va antes de que llegue |
+| **Amenazas visibles desde macro** | Si una mano o una pisada va a bajar sobre una superficie con tinies, el globo de esa superficie se pone ámbar y aparece un aviso. Con «pausa ante amenazas», el juego se pausa o baja a x1 |
+| **Globos de tinies con actividad** | El globo de cada superficie muestra la actividad dominante con un icono (comen, acarrean, descansan, huyen), además de la cantidad |
+| **Miniplano en micro** | Un recuadro chico de la casa con la superficie actual y la posición de la giantess, para no perder la orientación al seguir a un tiny |
+| **Rótulos que no se tapan** | Los rótulos de habitaciones se colocan en la capa de interfaz y evitan los paneles. Si una habitación queda tapada, el rótulo se pega al borde visible |
+| **Atajos de selección** | Doble clic sigue a la entidad. Al pasar el cursor por la etiqueta de `Tab`, se resalta la superficie a la que lleva |
+
+### 17.8. Orden y aceptación
+
+1. **Capas y lienzo variable.** Escena e interfaz separadas, ventana grande, `F11`, zoom entero con la rueda, paneo con arrastre y capturas regeneradas. Todavía sin arte nuevo.
+2. **Crónica y diarios.** `view.Chronicle`, resumen de la colonia y diario en la ficha.
+3. **Interfaz de partida.** Panel lateral con pestañas, ficha ampliada, avisos y menú de pausa con Opciones, Guardar y Cargar.
+4. **Macro a 80 px/m.** Densidad declarada en el atlas, arte provisorio escalado y repintado de la giantess y los muebles con uso.
+5. **Lectura.** Zoom semántico, intención de la giantess, amenazas en macro, miniplano e información al pasar el cursor.
+
+En todos los pasos, el hash y los eventos de los escenarios no cambian (`TestScenarios`, `hash_test`). En 1920 × 1080, la casa ocupa al menos el 60 % del ancho, sin bandas, y ningún panel tapa los rótulos de las habitaciones. El paso entre macro y micro con la rueda conserva el punto bajo el cursor. Los tests de `ui` verifican que el diseño de la interfaz entra en 1×, 2× y 3×. `-bench` mantiene los fps de referencia con dos capas.
