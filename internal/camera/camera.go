@@ -49,6 +49,14 @@ func (c Camera) Project(anchor fixedmath.Transform, w, h int) Projector {
 	}
 }
 
+// Resized es el mismo encuadre (ancla y centro) con otro zoom y otro
+// tamaño de pantalla: el centro de la cámara queda en el centro de la nueva.
+func (p Projector) Resized(zoom float64, w, h int) Projector {
+	p.cam.Zoom = zoom
+	p.hw, p.hh = float64(w)/2, float64(h)/2
+	return p
+}
+
 // Radians convierte un Angle a radianes (solo para dibujar).
 func Radians(a fixedmath.Angle) float64 {
 	return float64(a.Norm()) * 2 * math.Pi / float64(fixedmath.Turn)

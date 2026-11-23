@@ -54,7 +54,18 @@ type artMode struct {
 	badges           []tinyGroup // globos de tinies del último frame macro
 	clickOn          ids.ID      // lo que eligió el último clic sobre la escena
 	clickAt          units.Vec2  // y dónde, en el mundo
+	// Capa de escena (propuesta, 17.4): el arte se dibuja en su propia
+	// imagen con un factor entero que cambia la rueda, y la interfaz se
+	// compone encima con el factor del lienzo.
+	factor    map[render.Scale]int // factor elegido con la rueda (sin elegir: el del lienzo)
+	wheel     float64              // giro de la rueda que todavía no llega a un paso
+	scene     *ebiten.Image
+	sceneView render.Viewport // dónde cae la capa de escena en la pantalla final
 }
+
+// sceneFactors son los factores de escena a los que llega la rueda en cada
+// escala: enteros, para que el arte nunca se re-muestree.
+var sceneFactors = map[render.Scale][2]int{render.Macro: {1, 4}, render.Micro: {2, 4}}
 
 func (g *game) enableArt(path string) error {
 	if len(g.visuals) == 0 {
@@ -89,23 +100,105 @@ func (g pixelGame) DrawFinalScreen(screen ebiten.FinalScreen, canvas *ebiten.Ima
 	a := g.art
 	a.defaultTransform = defaultTransform
 	a.viewport = render.PixelViewport(screen.Bounds(), canvas.Bounds().Size())
-	a.viewport.Blit(screen, canvas)
 	if g.wantsShot() {
-		bounds := screen.Bounds()
-		shot := ebiten.NewImageWithOptions(bounds, nil)
+		shot := ebiten.NewImageWithOptions(screen.Bounds(), nil)
 		defer shot.Deallocate()
-		a.viewport.Blit(shot, canvas)
+		a.compose(shot, canvas)
 		g.shotDone, g.shotErr = true, savePNG(shot, g.shot)
 	}
+	if a.cut || g.shot != "" {
+		a.compose(screen, canvas)
+		return
+	}
+	a.blend(screen, canvas)
+}
+
+// compose arma la pantalla final: fondo, capa de escena con su factor y la
+// interfaz encima con el del lienzo.
+func (a *artMode) compose(dst interface {
+	Fill(color.Color)
+	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
+}, canvas *ebiten.Image) {
+	dst.Fill(render.Backdrop)
+	if a.scene != nil {
+		a.sceneView.Draw(dst, a.scene)
+	}
+	a.viewport.Draw(dst, canvas)
+}
+
+// uiFactor es el factor del lienzo de la interfaz (1 antes del primer frame
+// y en las pruebas, que no pasan por la pantalla final).
+func (a *artMode) uiFactor() int { return max(1, a.viewport.Factor) }
+
+// sceneFactor es el factor de la capa de escena de una escala: el elegido con
+// la rueda o, si no se eligió, el del lienzo (un píxel del arte por píxel
+// del lienzo).
+func (a *artMode) sceneFactor(scale render.Scale) int {
+	if n := a.factor[scale]; n > 0 {
+		return n
+	}
+	return a.uiFactor()
+}
+
+// artScale es la escala que se ve: micro con una superficie en foco.
+func (g *game) artScale(f *view.Frame) render.Scale {
+	if g.artFocus(f).IsNil() {
+		return render.Macro
+	}
+	return render.Micro
+}
+
+// sceneZoom es el zoom de la cámara (píxeles del lienzo por µm) con el que la
+// capa de escena muestra el arte de la escala a su factor.
+func (g *game) sceneZoom(scale render.Scale) float64 {
+	return g.artZoom(scale) * float64(g.art.sceneFactor(scale)) / float64(g.art.uiFactor())
+}
+
+// sceneLayer es dónde cae la capa de escena de la escala en la pantalla. Sin
+// pantalla final todavía (y en las pruebas) es el lienzo a 1×.
+func (g *game) sceneLayer(scale render.Scale) render.Viewport {
+	v := g.art.viewport
+	if v.Factor == 0 {
+		v = render.Viewport{Rect: image.Rect(0, 0, g.w, g.h), Factor: 1}
+	}
+	return v.Scene(g.art.sceneFactor(scale))
+}
+
+// wheelZoom cambia el factor de escena de a un paso entero por muesca de la
+// rueda, con el punto del lienzo bajo el cursor fijo (el centro si se sigue
+// a alguien). Un factor de arranque fuera del rango no se fuerza a entrar.
+func (g *game) wheelZoom(wy float64, cursor [2]float64) {
+	a := g.art
+	a.wheel += wy
+	steps := int(a.wheel)
+	if steps == 0 {
+		return
+	}
+	a.wheel -= float64(steps)
+	f := g.run.Cur
+	scale := g.artScale(f)
+	r := sceneFactors[scale]
+	old := a.sceneFactor(scale)
+	n := min(max(old+steps, min(r[0], old)), max(r[1], old))
+	if n == old {
+		a.wheel = 0
+		return
+	}
+	if a.factor == nil {
+		a.factor = map[render.Scale]int{}
+	}
+	a.factor[scale] = n
+	if g.followsInView(f) {
+		cursor = [2]float64{float64(g.w) / 2, float64(g.h) / 2}
+	}
+	g.cam.ZoomAt(g.proj, cursor[0], cursor[1], float64(n)/float64(old))
+	g.cam.Zoom = g.sceneZoom(scale)
 }
 
 func (g *game) fitArt() {
 	f := g.run.Cur
 	focus := g.artFocus(f)
-	g.cam.Zoom = g.artZoom(render.Macro)
-	if !focus.IsNil() {
-		g.cam.Zoom = g.artZoom(render.Micro)
-	}
+	g.cam.Zoom = g.sceneZoom(g.artScale(f))
 	if g.followsInView(f) {
 		g.cam.Anchor = ids.Nil
 		g.cam.X, g.cam.Y = 0, 0
@@ -117,14 +210,23 @@ func (g *game) fitArt() {
 		center := s.Pose.Transform().Apply(units.V3((s.Extent.Min.X+s.Extent.Max.X)/2, (s.Extent.Min.Y+s.Extent.Max.Y)/2, 0))
 		g.cam.X, g.cam.Y = float64(center.X-s.Pose.Pos.X), float64(center.Y-s.Pose.Pos.Y)
 		if offset, ok := g.art.atlas.MicroFocus(g.visuals[s.ID]); ok {
-			g.cam.X = float64(offset.X) / g.cam.Zoom
-			g.cam.Y = -float64(offset.Y) / g.cam.Zoom
+			g.cam.X = float64(offset.X) / g.artZoom(render.Micro)
+			g.cam.Y = -float64(offset.Y) / g.artZoom(render.Micro)
 		}
 		return
 	}
 	g.cam.Anchor = ids.Nil
 	g.cam.Fit(f.Bounds(), g.w, g.h)
-	g.cam.Zoom = g.artZoom(render.Macro)
+	g.cam.Zoom = g.sceneZoom(render.Macro)
+}
+
+// syncArtZoom ajusta el zoom de la cámara al factor de escena actual: cambia
+// si la ventana cambió de factor de lienzo o si Tab volvió a una escala con
+// otro factor. El centro de la vista no se mueve.
+func (g *game) syncArtZoom(f *view.Frame) {
+	if g.art != nil {
+		g.cam.Zoom = g.sceneZoom(g.artScale(f))
+	}
 }
 
 // artZoom es el zoom (px/µm) con el que un píxel del lienzo es un píxel del
@@ -219,10 +321,16 @@ func (g *game) startArtFade() {
 	}
 }
 
-func (a *artMode) blend(dst *ebiten.Image) {
-	size := dst.Bounds().Size()
+// blend presenta la pantalla compuesta con el fundido en curso encima.
+// presented guarda lo último que se vio, fundido incluido, para que un cambio
+// de escala en medio de otro funda desde lo que había en pantalla.
+func (a *artMode) blend(screen ebiten.FinalScreen, canvas *ebiten.Image) {
+	size := screen.Bounds().Size()
 	if a.presented == nil || a.presented.Bounds().Size() != size {
 		// la ventana cambió de tamaño: el fundido en curso ya no calza
+		if a.presented != nil {
+			a.presented.Deallocate()
+		}
 		a.presented, a.fadeFrom, a.fade = ebiten.NewImage(size.X, size.Y), nil, 0
 	}
 	if a.pendingFade {
@@ -233,13 +341,13 @@ func (a *artMode) blend(dst *ebiten.Image) {
 		a.fadeFrom.DrawImage(a.presented, nil)
 		a.pendingFade = false
 	}
+	a.compose(a.presented, canvas)
 	if a.fade > 0 {
 		op := &ebiten.DrawImageOptions{}
 		op.ColorScale.ScaleAlpha(float32(a.fade) / float32(artFadeDuration))
-		dst.DrawImage(a.fadeFrom, op)
+		a.presented.DrawImage(a.fadeFrom, op)
 	}
-	a.presented.Clear()
-	a.presented.DrawImage(dst, nil)
+	screen.DrawImage(a.presented, nil)
 }
 
 func (g *game) artMouse() {
@@ -256,6 +364,13 @@ func (g *game) artMouse() {
 	if !ok || pixel.Y < top || pixel.Y >= foot {
 		return
 	}
+	if _, wy := ebiten.Wheel(); wy != 0 {
+		v := a.viewport
+		g.wheelZoom(wy, [2]float64{(x - float64(v.Rect.Min.X)) / float64(v.Factor), (y - float64(v.Rect.Min.Y)) / float64(v.Factor)})
+	}
+	// La escena se elige en sus propios píxeles; la interfaz, en los del lienzo.
+	at, onScene := a.sceneView.Point(x, y)
+	world := a.proj.ToWorld(float64(at.X)+0.5, float64(at.Y)+0.5)
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		for i, r := range a.layout.NoticeClose {
 			if pixel.In(r) {
@@ -282,26 +397,32 @@ func (g *game) artMouse() {
 		if g.clickTinyBadge(pixel) {
 			return
 		}
-		g.sel = a.last.Pick(pixel)
-		a.clickOn, a.clickAt = g.sel, a.proj.ToWorld(float64(pixel.X)+0.5, float64(pixel.Y)+0.5)
+		if !onScene {
+			return
+		}
+		g.sel = a.last.Pick(at)
+		a.clickOn, a.clickAt = g.sel, world
 	}
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
-		g.moveSelected(a.proj.ToWorld(float64(pixel.X)+0.5, float64(pixel.Y)+0.5))
+	if onScene && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
+		g.moveSelected(world)
 	}
 }
 
 func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) {
 	a := g.art
-	if !a.cut && g.shot == "" {
-		defer a.blend(dst)
-	}
 	focus := g.artFocus(f)
-	scale := render.Macro
-	if !focus.IsNil() {
-		scale = render.Micro
+	scale := g.artScale(f)
+	a.sceneView = g.sceneLayer(scale)
+	size := a.sceneView.Size()
+	if a.scene == nil || a.scene.Bounds().Size() != size {
+		if a.scene != nil {
+			a.scene.Deallocate()
+		}
+		a.scene = ebiten.NewImage(size.X, size.Y)
 	}
-	a.last, a.proj = a.atlas.Arrange(f, proj, g.visuals, scale, focus, g.sel, g.follow), proj
-	a.last.Draw(dst, g.sel)
+	sp := proj.Resized(g.artZoom(scale), size.X, size.Y)
+	a.last, a.proj = a.atlas.Arrange(f, sp, g.visuals, scale, focus, g.sel, g.follow), sp
+	a.last.Draw(a.scene, g.sel)
 
 	if house := g.artAtlas != ""; house {
 		if focus.IsNil() {
@@ -323,7 +444,7 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 		} else {
 			a.badges = nil
 		}
-		g.drawEmotes(dst, f, scale)
+		g.drawEmotes(a.scene, f, scale)
 		a.layout = g.partida(f, focus).Draw(dst, a.atlas)
 		if a.debug {
 			g.drawDebug(dst, f, proj, a.layout.Top+1)

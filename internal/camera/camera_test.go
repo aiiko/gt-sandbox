@@ -1,6 +1,7 @@
 package camera
 
 import (
+	"image"
 	"testing"
 
 	"gtsandbox/internal/core/fixedmath"
@@ -47,5 +48,19 @@ func TestZoomAtAndFollow(t *testing.T) {
 	c.Follow(7, anchor, p)
 	if got := c.Project(anchor, 800, 600).ToWorld(400, 300); !near(got, center, 2) {
 		t.Fatalf("follow movió el centro: %v → %v", center, got)
+	}
+}
+
+// Resized conserva el encuadre: el centro de una pantalla es el de la otra y
+// las distancias escalan con el zoom.
+func TestResizedKeepsCenter(t *testing.T) {
+	anchor := fixedmath.Transform{Pos: units.V3(3*units.Meter, -2*units.Meter, 0)}
+	p := Camera{X: 1500, Y: -800, Zoom: 0.0004}.Project(anchor, 960, 540)
+	q := p.Resized(0.0002, 1920, 1080)
+	if got, want := q.ToWorld(960, 540), p.ToWorld(480, 270); !near(got, want, 5) {
+		t.Fatalf("centro %v, quería %v", got, want)
+	}
+	if q.Bounds() != image.Rect(0, 0, 1920, 1080) || q.Pixels(units.Meter) != p.Pixels(units.Meter)/2 {
+		t.Fatalf("pantalla %v, %v px/m", q.Bounds(), q.Pixels(units.Meter))
 	}
 }

@@ -71,12 +71,20 @@ func (v Viewport) Point(x, y float64) (image.Point, bool) {
 	return p.Sub(v.Rect.Min).Div(v.Factor), true
 }
 
-// Blit presenta el lienzo sin mezclar los píxeles vecinos.
+// Blit presenta el lienzo sin mezclar los píxeles vecinos, sobre el fondo.
 func (v Viewport) Blit(screen interface {
 	Fill(color.Color)
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 }, canvas *ebiten.Image) {
-	screen.Fill(color.NRGBA{R: 16, G: 19, B: 24, A: 255})
+	screen.Fill(Backdrop)
+	v.Draw(screen, canvas)
+}
+
+// Draw presenta el lienzo sin mezclar los píxeles vecinos y sin fondo: así
+// la interfaz se compone sobre la capa de escena.
+func (v Viewport) Draw(screen interface {
+	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
+}, canvas *ebiten.Image) {
 	if v.Factor == 0 {
 		return
 	}
@@ -84,6 +92,32 @@ func (v Viewport) Blit(screen interface {
 	op.GeoM.Scale(float64(v.Factor), float64(v.Factor))
 	op.GeoM.Translate(float64(v.Rect.Min.X), float64(v.Rect.Min.Y))
 	screen.DrawImage(canvas, op)
+}
+
+// Backdrop es el fondo de la pantalla fuera del lienzo.
+var Backdrop = color.NRGBA{R: 16, G: 19, B: 24, A: 255}
+
+// Scene es la capa de escena que cubre el mismo rectángulo que el lienzo de
+// la interfaz con otro factor entero (el zoom de la rueda, propuesta 17.4):
+// mide lo justo para cubrirlo y queda centrada, a menos de un píxel físico
+// del centro del lienzo. Con el factor del lienzo es el lienzo mismo.
+func (v Viewport) Scene(factor int) Viewport {
+	if v.Factor == 0 || factor <= 0 {
+		return Viewport{}
+	}
+	size := v.Rect.Size()
+	cover := image.Pt((size.X+factor-1)/factor, (size.Y+factor-1)/factor)
+	extra := cover.Mul(factor).Sub(size)
+	origin := v.Rect.Min.Sub(extra.Div(2))
+	return Viewport{Rect: image.Rectangle{Min: origin, Max: origin.Add(cover.Mul(factor))}, Factor: factor}
+}
+
+// Size es el tamaño del lienzo en sus propios píxeles.
+func (v Viewport) Size() image.Point {
+	if v.Factor == 0 {
+		return image.Point{}
+	}
+	return v.Rect.Size().Div(v.Factor)
 }
 
 type sprite struct {

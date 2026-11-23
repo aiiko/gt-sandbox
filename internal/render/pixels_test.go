@@ -60,6 +60,33 @@ func TestPixelViewport(t *testing.T) {
 	}
 }
 
+// La capa de escena cubre el mismo rectángulo que el lienzo con otro factor
+// entero, centrada a menos de un píxel físico; con el factor del lienzo es
+// el lienzo mismo.
+func TestViewportScene(t *testing.T) {
+	for _, screen := range []image.Point{{1920, 1080}, {1922, 1009}, {2560, 1440}, {1366, 768}} {
+		cw, ch := CanvasSize(screen.X, screen.Y)
+		v := PixelViewport(image.Rectangle{Max: screen}, image.Pt(cw, ch))
+		if s := v.Scene(v.Factor); s != v {
+			t.Fatalf("%v: con el factor del lienzo %+v, quería %+v", screen, s, v)
+		}
+		for factor := 1; factor <= 4; factor++ {
+			s := v.Scene(factor)
+			if s.Factor != factor || s.Rect.Dx() != s.Size().X*factor || !v.Rect.In(s.Rect) ||
+				s.Rect.Dx()-v.Rect.Dx() >= factor || s.Rect.Dy()-v.Rect.Dy() >= factor {
+				t.Fatalf("%v ×%d: capa %+v sobre %+v", screen, factor, s, v)
+			}
+			if d := (s.Rect.Min.X + s.Rect.Max.X) - (v.Rect.Min.X + v.Rect.Max.X); d < -1 || d > 1 {
+				t.Fatalf("%v ×%d: descentrada %d medios píxeles", screen, factor, d)
+			}
+			at := s.Rect.Min.Add(image.Pt(7, 5).Mul(factor))
+			if p, ok := s.Point(float64(at.X+factor-1), float64(at.Y)); !ok || p != image.Pt(7, 5) {
+				t.Fatalf("%v ×%d: puntero %v", screen, factor, p)
+			}
+		}
+	}
+}
+
 const sampleVariant = `{"pivot":[1,1],"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
 
 func sampleAtlas(t *testing.T, manifest string) fstest.MapFS {

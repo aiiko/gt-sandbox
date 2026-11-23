@@ -1103,6 +1103,8 @@ El costo es que los píxeles de la escena y los de la interfaz pueden tener tama
 
 La cámara es presentación pura. `Camera.Zoom` sigue en px/µm y el factor de escena es solo cómo se muestra.
 
+**Estado.** Implementado en parte, con el foco en alejar: capas separadas, rueda con pasos enteros (1 a 4 en macro, 2 a 4 en micro) y punto fijo bajo el cursor, `F` vuelve al factor del lienzo. La interfaz sigue con el factor del lienzo *N* (todavía sin *U* configurable en Opciones). Faltan el zoom semántico, el paneo con arrastre y los límites del encuadre. [Presentación](specs/presentacion.md)
+
 ### 17.5. Historia: una crónica de hitos y un diario por entidad
 
 La historia tiene dos niveles. La **crónica** cuenta la partida solo con lo que importa. El **diario** de cada entidad conserva el detalle, porque «Tiny 07 explora la cocina» no aporta nada en la crónica general, pero sí sirve para ver qué hizo ese tiny en particular.

@@ -72,6 +72,7 @@ func main() {
 	atlas := flag.String("atlas", "", "reemplazar el manifiesto del escenario para el pixel art")
 	reducedMotion := flag.Bool("reduced-motion", false, "cambiar de escala con corte directo en pixel art")
 	debugArt := flag.Bool("debug", false, "arrancar con los overlays técnicos (F3) sobre el pixel art")
+	zoom := flag.Int("zoom", 0, "factor de escena inicial en pixel art, de 1 a 4 (0 = el del lienzo; la rueda lo cambia)")
 	pan := flag.String("pan", "", "desplazar el encuadre inicial dx,dy píxeles del lienzo (capturas)")
 	bench := flag.Duration("bench", 0, "medir simulación y dibujo durante esta duración (a x4, sin vsync) y salir")
 	size := flag.String("size", "", "tamaño de ventana, por ejemplo 960x540")
@@ -171,6 +172,9 @@ func main() {
 			fail(err)
 		}
 		g.art.cut, g.art.debug = *reducedMotion, *debugArt
+		if *zoom > 0 {
+			g.art.factor = map[render.Scale]int{render.Macro: *zoom, render.Micro: max(*zoom, sceneFactors[render.Micro][0])}
+		}
 		app = pixelGame{g}
 		ebiten.SetWindowSizeLimits(render.MinCanvasWidth, render.MinCanvasHeight, -1, -1)
 	} else if *size == "" {
@@ -487,6 +491,7 @@ func (g *game) Update() error {
 		return nil
 	}
 	f := g.frame()
+	g.syncArtZoom(f)
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
 	g.keys()
 	g.proj = g.cam.Project(g.anchor(f), g.w, g.h)
@@ -569,6 +574,9 @@ func (g *game) keys() {
 	case k(ebiten.KeyF):
 		if g.art != nil && g.artAtlas != "" && g.art.focus.IsNil() {
 			g.stopFollowing()
+		}
+		if g.art != nil {
+			delete(g.art.factor, g.artScale(g.run.Cur)) // F también deshace el zoom
 		}
 		g.fit()
 	case k(ebiten.KeyEscape):
@@ -707,6 +715,7 @@ func (g *game) Draw(screen *ebiten.Image) {
 	}
 	g.w, g.h = screen.Bounds().Dx(), screen.Bounds().Dy()
 	f := g.frame()
+	g.syncArtZoom(f)
 	proj := g.cam.Project(g.anchor(f), g.w, g.h)
 	if g.art != nil {
 		g.drawArt(screen, f, proj)
