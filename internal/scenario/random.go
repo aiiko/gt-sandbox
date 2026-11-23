@@ -129,9 +129,10 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 	out.Seed = seed
 	out.Expect = nil
 	out.Entities = rest
+	names := PickNames(DefaultTinyNames(), n, rng.NewStream(seed, "names"))
 	for i := range n {
 		spawn := deepCopy(mold).(map[string]any)
-		spawn["name"] = fmt.Sprintf("Tiny %02d", i+1)
+		spawn["name"] = names[i]
 		p := cells[order[i%len(cells)]]
 		if jitter > 0 {
 			p.X += units.Length(rnd.Int64N(2*jitter+1) - jitter)

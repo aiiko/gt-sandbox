@@ -208,3 +208,62 @@ func TestRandomizeCount(t *testing.T) {
 		}
 	}
 }
+
+// content/names.txt tiene al menos 200 nombres únicos; PickNames se adapta
+// al tamaño real de la lista, no repite hasta agotarla y agrega sufijo al superarla.
+func TestTinyNamesPoolAndSuffixes(t *testing.T) {
+	pool := DefaultTinyNames()
+	if len(pool) < 200 {
+		t.Fatalf("content/names.txt tiene %d nombres únicos, se esperaban al menos 200", len(pool))
+	}
+	for _, want := range []string{"Aiiko", "Daix", "Hiro", "Jessica"} {
+		found := false
+		for _, n := range pool {
+			if n == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("falta %q en content/names.txt", want)
+		}
+	}
+	// Al superar el largo actual de la lista en extra tinies, todos los nombres
+	// siguen siendo únicos y exactamente extra llevan sufijo « 2».
+	const extra = 50
+	total := len(pool) + extra
+	base, err := ReadFile(morning)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := RandomizeCount(base, 42, total)
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	suffixed := 0
+	for _, e := range s.Entities {
+		if len(e.Ref) < 5 || e.Ref[:4] != "tiny" {
+			continue
+		}
+		var sp struct {
+			Name string `json:"name"`
+		}
+		if err := json.Unmarshal(e.Spawn, &sp); err != nil {
+			t.Fatal(err)
+		}
+		if sp.Name == "" || seen[sp.Name] {
+			t.Fatalf("nombre vacío o repetido: %q", sp.Name)
+		}
+		seen[sp.Name] = true
+		if len(sp.Name) > 2 && sp.Name[len(sp.Name)-2:] == " 2" {
+			suffixed++
+		}
+	}
+	if len(seen) != total {
+		t.Fatalf("solo %d nombres únicos para %d tinies", len(seen), total)
+	}
+	if suffixed != extra {
+		t.Fatalf("%d nombres con sufijo « 2», se esperaban %d", suffixed, extra)
+	}
+}

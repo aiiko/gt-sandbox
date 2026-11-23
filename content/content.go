@@ -5,7 +5,7 @@ package content
 
 import "embed"
 
-// FS contiene objects/*.json.
+// FS contiene objects/*.json y names.txt.
 //
-//go:embed objects/*.json
+//go:embed objects/*.json names.txt
 var FS embed.FS
