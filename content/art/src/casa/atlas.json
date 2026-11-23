@@ -1604,7 +1604,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              "seat/micro_shadow_north.png"
+              "seat/micro_idle.png"
             ]
           },
           "shadow_north": {
