@@ -104,8 +104,9 @@ type look struct {
 	visual string  // "" = el visual de la entidad
 	alpha  float32 // 0 = opaco
 	ghost  bool
-	layer  int  // 0 = la capa de la variante
-	top    bool // encima de todo (el reflejo de lo seguido bajo una superficie más alta)
+	layer  int    // 0 = la capa de la variante
+	top    bool   // encima de todo (el reflejo de lo seguido bajo una superficie más alta)
+	over   ids.ID // macro: objeto cuyo lugar ocupa (la giantess en la cama)
 }
 
 const (
@@ -232,6 +233,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			}
 			if scale == Macro {
 				group, depth = a.depthGroup(f, p, visuals, support, group, depth)
+				if t, ok := f.ThingByID(lk.over); ok {
+					_, ty := p.ToScreen(t.Pose.Pos)
+					group, depth = t.ID, ty+float32(a.sprites[visuals[t.ID]][Macro].DepthOffset)+occupantDepth
+				}
 			}
 		}
 		if scale == Micro {
@@ -272,11 +277,14 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if s.Mover == nil && !s.Extent.Empty() {
 			names = surfaceClips(s.Pose.Rot, inContact[s.ID])
 		}
-		support := s.Parent
+		support, lk := s.Parent, look{}
 		if scale == Macro {
 			support = a.seatOf(f, visuals, s, support)
+			if support == s.Parent {
+				lk.over = a.placeOf(f, visuals, s)
+			}
 		}
-		add(s.ID, support, ids.Nil, s.Pose.Pos, names, true, image.Point{}, look{})
+		add(s.ID, support, ids.Nil, s.Pose.Pos, names, true, image.Point{}, lk)
 	}
 	if scale == Macro {
 		// Sombra de la próxima pisada de quien camina: más oscura cuanto más
@@ -504,6 +512,30 @@ func (a *Atlas) depthGroup(f *view.Frame, p camera.Projector, visuals map[ids.ID
 // occupantDepth deja al ocupante después del mueble con la misma profundidad.
 const occupantDepth = 0.01
 
+// placeOf devuelve el objeto con sprite macro cuyo lugar ocupa un agente
+// quieto (la giantess acostada en la cama, que no tiene extensión propia).
+func (a *Atlas) placeOf(f *view.Frame, visuals map[ids.ID]string, s view.Space) ids.ID {
+	if s.Mover == nil || s.Mover.Status == "moving" {
+		return ids.Nil
+	}
+	for _, t := range f.Things {
+		if t.Space != s.Parent || t.Mover != nil || !t.CarriedBy.IsNil() {
+			continue // un tiny o algo en la mano no es un lugar
+		}
+		if v, ok := a.sprites[visuals[t.ID]][Macro]; !ok || v.Layer != "" {
+			continue
+		}
+		d := t.Pose.Pos.Sub(s.Pose.Pos)
+		if d.X.Abs() <= placeRadius && d.Y.Abs() <= placeRadius {
+			return t.ID
+		}
+	}
+	return ids.Nil
+}
+
+// placeRadius es cuánto puede apartarse del punto del objeto quien ocupa su lugar.
+const placeRadius = 10 * units.Centimeter
+
 // seatOf devuelve el mueble sobre el que está quieto un agente que es un
 // Space (la giantess sentada en el sofá o la silla, o en la cama): el
 // hermano con sprite macro cuya extensión contiene su posición. Sin él,
@@ -537,6 +569,7 @@ var poseClips = map[string]string{
 	"nibble":       "eat",
 	"watch":        "sit",
 	"relax":        "sit",
+	"sleep":        "sleep",
 }
 
 // actor es el estado de una entidad del que sale su clip.

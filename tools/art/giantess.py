@@ -418,6 +418,62 @@ def eat(facing, frame):
     return finish(s, seated=True)
 
 
+def sleep(frame):
+    """Acostada en el futón, con la cabeza en la almohada y el edredón hasta
+    los hombros. Se dibuja con el pivote en el punto de la cama: el cuadro
+    calza sobre el futón (pivote [32, 70]) corrido (-2, -2)."""
+    s = Sprite(W, H)
+    rise = 1 if frame == 2 else 0                         # respira
+    # pelo desparramado sobre la almohada
+    s.ell(13, 5, 49, 31, HAIR_D)
+    s.ell(14, 4, 47, 30, HAIR)
+    s.poly([(14, 18), (8, 30), (16, 31)], HAIR)
+    s.poly([(47, 18), (53, 30), (45, 31)], HAIR_D)
+    hair_shine(s, -1, cx=31)
+    # cara dormida
+    s.ell(20, 12, 42, 33, SKIN)
+    s.hline(24, 38, 33, SKIN_D)
+    for ex, d in ((23, 1), (34, -1)):                     # ojos cerrados
+        s.hline(ex + 1, ex + 4, 24, INK)
+        s.px(ex, 23, INK)
+        s.px(ex + 5, 23, INK)
+        s.px(ex + (5 if d < 0 else 0), 25, HAIR_D)        # pestañas
+    for bx in (22, 24, 38, 40):
+        s.px(bx, 27, BLUSH)
+    s.px(23, 28, BLUSH)
+    s.px(39, 28, BLUSH)
+    s.hline(30, 32, 29, MOUTH)
+    # flequillo
+    pts = [(18, 12), (44, 12), (44, 21), (41, 17), (38, 20), (35, 15), (32, 19), (29, 15),
+           (26, 19), (23, 16), (19, 21)]
+    s.poly(pts, HAIR)
+    for x0, x1 in ((26, 27), (32, 32), (38, 37)):
+        s.line([(x0, 13), (x1, 16)], HAIR_D)
+    ribbon(s, 46, 11)
+    # edredón hasta los hombros (mismos colores que el futón)
+    top = 32 - rise
+    s.rrect(4, top, 57, 75, '#9A8BE3', r=2)
+    s.rect(6, top + 1, 55, top + 4, '#C3B9F0')            # borde doblado
+    s.hline(6, 55, top + 5, '#B3A7EC')
+    s.hline(4, 57, top, INK)
+    # pliegues que marcan el cuerpo debajo
+    s.line([(18, top + 8), (16, top + 40)], '#8A7BD6')
+    s.line([(44, top + 8), (46, top + 40)], '#8A7BD6')
+    s.line([(19, top + 8), (17, top + 40)], '#B3A7EC')
+    # flores del edredón, en el mismo lugar que en el futón
+    for y in range(42, 84, 12):
+        for x in range(13, 56, 12):
+            fx, fy = x + (6 if (y // 12) % 2 else 0) - 2, y - 2
+            if fx < 53 and fy > top + 6:
+                s.px(fx, fy, '#FF9CAD')
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1), (-2, 0), (2, 0), (0, -2), (0, 2)):
+                    s.px(fx + dx, fy + dy, '#FFC2CD')
+    s.rrect(40, top - 1, 46, top + 4, SKIN, INK, r=2)     # mano sobre el borde
+    s.vline(57, top + 6, 75, '#7F70C9')
+    s.outline(INK)
+    return s
+
+
 def frames():
     """Todos los cuadros: nombre de archivo → Sprite."""
     out = {}
@@ -429,6 +485,8 @@ def frames():
         out[f'reach_{facing}'] = reach(facing)
         for i in (1, 2):
             out[f'eat_{facing}_{i}'] = eat(facing, i)
+    for i in (1, 2):
+        out[f'sleep_{i}'] = sleep(i)
     for name in [n for n in out if n.endswith('east') or '_east_' in n]:
         out[name.replace('east', 'west')] = out[name].mirrored()
     return out

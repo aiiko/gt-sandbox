@@ -356,3 +356,31 @@ func TestMacroOccupantDrawsOverFurniture(t *testing.T) {
 		t.Fatalf("caminando detrás del sofá: se eligió %s, quería el sofá", id)
 	}
 }
+
+func TestMacroSleeperDrawsOverBed(t *testing.T) {
+	bed := `{"pivot":[1,1],"depth_offset":3,"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	manifest := `{"image":"atlas.png","scales":["macro"],"sprites":{"bed":{"macro":` + bed +
+		`},"giantess":{"macro":` + sampleVariant + `},"tiny":{"macro":` + bed + `}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	frame := &view.Frame{
+		Spaces: []view.Space{
+			{ID: 1},
+			{ID: 2, Parent: 1, Mover: &view.Mover{Status: "idle"}, Activity: "use:sleep"},
+		},
+		Things: []view.Thing{{ID: 3, Space: 1}},
+	}
+	visuals := map[ids.ID]string{2: "giantess", 3: "bed"}
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, 480, 270)
+	if id := a.Arrange(frame, proj, visuals, Macro, ids.Nil).Pick(image.Pt(240, 135)); id != 2 {
+		t.Fatalf("durmiendo en la cama: se eligió %s, quería la giantess", id)
+	}
+	// Un tiny parado en el mismo punto no es un lugar: lo tapa como siempre.
+	frame.Things[0].Mover = &view.Mover{Status: "idle"}
+	visuals[3] = "tiny"
+	if id := a.Arrange(frame, proj, visuals, Macro, ids.Nil).Pick(image.Pt(240, 135)); id != 3 {
+		t.Fatalf("tiny en el mismo punto: se eligió %s, quería el tiny", id)
+	}
+}

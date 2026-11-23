@@ -444,6 +444,13 @@
               "giantess/macro_eat_west_1.png",
               "giantess/macro_eat_west_2.png"
             ]
+          },
+          "sleep": {
+            "frame_ticks": 30,
+            "frames": [
+              "giantess/macro_sleep_1.png",
+              "giantess/macro_sleep_2.png"
+            ]
           }
         },
         "carry": [
