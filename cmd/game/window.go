@@ -38,6 +38,8 @@ type windowConfig struct {
 	UIScale       int      `json:"ui_scale,omitempty"`
 	ReducedMotion bool     `json:"reduced_motion,omitempty"`
 	PauseOnThreat bool     `json:"pause_on_threat,omitempty"`
+	PanelWidth    int      `json:"panel_width,omitempty"`
+	PanelHeight   int      `json:"panel_height,omitempty"`
 }
 
 // windowFile es dónde se guarda la ventana ("" si no hay carpeta de usuario).

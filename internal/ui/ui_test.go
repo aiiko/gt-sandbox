@@ -157,3 +157,27 @@ func TestHUDFitsAt1x2x3x(t *testing.T) {
 		}
 	}
 }
+
+// El panel lateral admite ancho y alto personalizados (al arrastrar bordes),
+// acotados al lienzo, y expone sus zonas de arrastre.
+func TestSidePanelResizeZonesAndClamp(t *testing.T) {
+	h := HUD{Panel: &SidePanel{Tab: TabChronicle, Width: 280, Height: 220}}
+	lay := h.LayoutFor(960, 540)
+	if lay.PanelRect.Dx() != 280 || lay.PanelRect.Dy() != 220 {
+		t.Fatalf("tamaño %v, quería 280×220", lay.PanelRect.Size())
+	}
+	if lay.PanelResizeR.Empty() || lay.PanelResizeB.Empty() || lay.PanelResizeBR.Empty() {
+		t.Fatalf("zonas de redimensionado vacías: R=%v B=%v BR=%v", lay.PanelResizeR, lay.PanelResizeB, lay.PanelResizeBR)
+	}
+	// Valores extremos quedan acotados dentro del lienzo.
+	hBig := HUD{Panel: &SidePanel{Tab: TabChronicle, Width: 9999, Height: 9999}}
+	lBig := hBig.LayoutFor(960, 540)
+	if lBig.PanelRect.Max.X > 960/2 || lBig.PanelRect.Max.Y > lBig.Foot {
+		t.Fatalf("tamaño máximo desbordado: %v", lBig.PanelRect)
+	}
+	hTiny := HUD{Panel: &SidePanel{Tab: TabChronicle, Width: 10, Height: 10}}
+	lTiny := hTiny.LayoutFor(960, 540)
+	if lTiny.PanelRect.Dx() < 152 || lTiny.PanelRect.Dy() < 88 {
+		t.Fatalf("tamaño mínimo demasiado chico: %v", lTiny.PanelRect)
+	}
+}

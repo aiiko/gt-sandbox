@@ -266,6 +266,8 @@ type game struct {
 
 	panelTab        ui.PanelTab // pestaña activa del panel lateral izquierdo
 	panelScroll     int         // desplazamiento del panel lateral
+	panelW, panelH  int         // tamaño elegido arrastrando los bordes (0 = por defecto)
+	panelResize     uint8       // 1 = borde derecho, 2 = inferior, 3 = esquina
 	panelActivities []ids.ID    // tiny representativo de cada actividad (pestaña Colonia)
 	panelTinies     []ids.ID    // IDs de la lista de tinies (pestaña Colonia)
 

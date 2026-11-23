@@ -580,7 +580,7 @@ func storyLine(f *view.Frame, g *game, e view.StoryEntry) ui.StoryLine {
 
 // sidePanel arma el panel lateral izquierdo con sus tres pestañas.
 func (g *game) sidePanel(f *view.Frame, face string) *ui.SidePanel {
-	p := &ui.SidePanel{Tab: g.panelTab, Scroll: g.panelScroll}
+	p := &ui.SidePanel{Tab: g.panelTab, Scroll: g.panelScroll, Width: g.panelW, Height: g.panelH}
 	for _, e := range g.run.Chronicle.Lines() {
 		p.Chronicle = append(p.Chronicle, storyLine(f, g, e))
 	}

@@ -357,6 +357,8 @@ func (g *game) syncPrefs() {
 	}
 	window.cfg.UIScale = uiScalePref
 	window.cfg.PauseOnThreat = g.pauseOnThreat
+	window.cfg.PanelWidth = g.panelW
+	window.cfg.PanelHeight = g.panelH
 	if g.art != nil {
 		window.cfg.ReducedMotion = g.art.cut
 	}
@@ -373,6 +375,7 @@ func (g *game) applySavedPrefs() {
 	c := window.cfg
 	uiScalePref = max(0, min(4, c.UIScale))
 	g.pauseOnThreat = c.PauseOnThreat
+	g.panelW, g.panelH = c.PanelWidth, c.PanelHeight
 	if g.art != nil && c.ReducedMotion {
 		g.art.cut = true
 	}

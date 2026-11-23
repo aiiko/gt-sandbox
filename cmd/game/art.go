@@ -372,6 +372,12 @@ func (g *game) artMouse() {
 		top, foot = a.layout.Top, a.layout.Foot
 	}
 	if !ok || pixel.Y < top || pixel.Y >= foot {
+		if g.panelResize == 0 {
+			ebiten.SetCursorShape(ebiten.CursorShapeDefault)
+			return
+		}
+	}
+	if g.handlePanelResize(pixel) {
 		return
 	}
 	if _, wy := ebiten.Wheel(); wy != 0 {
@@ -475,6 +481,69 @@ func (g *game) artMouse() {
 	if onScene && !pixel.In(a.layout.PanelRect) && !pixel.In(a.layout.CardRect) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonRight) {
 		g.moveSelected(world)
 	}
+}
+
+// handlePanelResize atiende el arrastre de los bordes derecho e inferior del
+// panel lateral izquierdo y ajusta la forma del cursor al pasar sobre ellos.
+func (g *game) handlePanelResize(pixel image.Point) bool {
+	lay := g.art.layout
+	const (
+		resizeRight  uint8 = 1
+		resizeBottom uint8 = 2
+	)
+	modeAt := func(p image.Point) uint8 {
+		switch {
+		case p.In(lay.PanelResizeBR):
+			return resizeRight | resizeBottom
+		case p.In(lay.PanelResizeR):
+			return resizeRight
+		case p.In(lay.PanelResizeB):
+			return resizeBottom
+		}
+		return 0
+	}
+	setCursor := func(m uint8) {
+		switch m {
+		case resizeRight:
+			ebiten.SetCursorShape(ebiten.CursorShapeEWResize)
+		case resizeBottom:
+			ebiten.SetCursorShape(ebiten.CursorShapeNSResize)
+		case resizeRight | resizeBottom:
+			ebiten.SetCursorShape(ebiten.CursorShapeNWSEResize)
+		default:
+			ebiten.SetCursorShape(ebiten.CursorShapeDefault)
+		}
+	}
+	if g.panelResize != 0 {
+		setCursor(g.panelResize)
+		if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			g.panelResize = 0
+			g.syncPrefs()
+			setCursor(modeAt(pixel))
+			return true
+		}
+		if g.panelResize&resizeRight != 0 {
+			g.panelW = max(1, pixel.X-lay.PanelRect.Min.X)
+		}
+		if g.panelResize&resizeBottom != 0 {
+			g.panelH = max(1, pixel.Y-lay.PanelRect.Min.Y)
+		}
+		return true
+	}
+	m := modeAt(pixel)
+	setCursor(m)
+	if m != 0 && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		g.panelResize = m
+		// Fijar la dimensión no arrastrada al tamaño actual para que no salte.
+		if g.panelW == 0 {
+			g.panelW = lay.PanelRect.Dx()
+		}
+		if g.panelH == 0 {
+			g.panelH = lay.PanelRect.Dy()
+		}
+		return true
+	}
+	return false
 }
 
 // scrollPanel desplaza el contenido de la pestaña activa (wy > 0 = arriba).

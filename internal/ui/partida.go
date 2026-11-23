@@ -257,6 +257,8 @@ type GiantessPanel struct {
 type SidePanel struct {
 	Tab       PanelTab
 	Scroll    int // desplazamiento (en filas desde el final en Crónica, desde el principio en Colonia)
+	Width     int // ancho elegido arrastrando el borde (0 = por defecto)
+	Height    int // alto elegido arrastrando el borde (0 = por defecto)
 	Chronicle []StoryLine
 	Colony    *ColonyPanel
 	Giantess  *GiantessPanel
@@ -297,6 +299,9 @@ const SoundWidth = 30
 type Layout struct {
 	PanelRect       image.Rectangle    // panel lateral izquierdo (vacío si está plegado)
 	PanelClose      image.Rectangle    // botón «×» para plegar el panel
+	PanelResizeR    image.Rectangle    // borde derecho arrastrable
+	PanelResizeB    image.Rectangle    // borde inferior arrastrable
+	PanelResizeBR   image.Rectangle    // esquina inferior derecha arrastrable
 	Tabs            [3]image.Rectangle // pestañas Crónica, Colonia, Giantess
 	Story           []image.Rectangle  // una por entrada de Panel.Chronicle
 	Activities      []image.Rectangle  // una por entrada de Panel.Colony.Activities
@@ -321,20 +326,41 @@ const (
 	footH = 18
 )
 
-// sidePanelRect ubica el panel lateral izquierdo según el tamaño del lienzo y
-// la pestaña activa, manteniendo un tamaño compacto que no tape media casa.
+// rect ubica el panel lateral izquierdo según el tamaño del lienzo, el
+// tamaño elegido arrastrando sus bordes y la pestaña activa.
 func (p *SidePanel) rect(W, H int) image.Rectangle {
-	w := min(204, max(172, W/4))
+	minW := min(152, max(120, W/2-12))
+	maxW := max(minW, min(380, W/2-8))
 	avail := H - topH - footH - 10
+	minH := min(88, max(64, avail))
+	maxH := max(minH, avail)
+
+	w := min(204, max(172, W/4))
+	if p != nil && p.Width > 0 {
+		w = p.Width
+	}
+	w = min(maxW, max(minW, w))
+
 	h := min(162, max(108, avail))
-	if p != nil && p.Tab == TabGiantess {
+	if p != nil && p.Height > 0 {
+		h = p.Height
+	} else if p != nil && p.Tab == TabGiantess {
 		needs := 0
 		if p.Giantess != nil {
 			needs = len(p.Giantess.Needs)
 		}
 		h = min(h, 82+needs*12)
 	}
+	h = min(maxH, max(minH, h))
 	return image.Rect(4, topH+5, 4+w, topH+5+h)
+}
+
+func sidePanelResizeZones(pr image.Rectangle) (right, bottom, corner image.Rectangle) {
+	const edge, grip = 5, 9
+	corner = image.Rect(pr.Max.X-grip, pr.Max.Y-grip, pr.Max.X+2, pr.Max.Y+2)
+	right = image.Rect(pr.Max.X-edge, pr.Min.Y+18, pr.Max.X+2, corner.Min.Y)
+	bottom = image.Rect(pr.Min.X, pr.Max.Y-edge, corner.Min.X, pr.Max.Y+2)
+	return right, bottom, corner
 }
 
 func sidePanelTabs(pr image.Rectangle) (tabs [3]image.Rectangle, closeBtn image.Rectangle) {
@@ -405,6 +431,7 @@ func (h HUD) LayoutFor(W, H int) Layout {
 		pr := h.Panel.rect(W, H)
 		lay.PanelRect = pr
 		lay.Tabs, lay.PanelClose = sidePanelTabs(pr)
+		lay.PanelResizeR, lay.PanelResizeB, lay.PanelResizeBR = sidePanelResizeZones(pr)
 	}
 	if h.Card != nil {
 		lay.CardRect, lay.CardFollow, lay.CardGo = h.Card.layout(W, H)
@@ -493,6 +520,7 @@ func (h HUD) drawSidePanel(dst *ebiten.Image, atlas *render.Atlas, lay *Layout, 
 	p := h.Panel
 	pr := p.rect(W, H)
 	lay.PanelRect = pr
+	lay.PanelResizeR, lay.PanelResizeB, lay.PanelResizeBR = sidePanelResizeZones(pr)
 	Box(dst, pr, IvoryPanel)
 
 	// Pestañas arriba: Crónica | Colonia | Giantess + botón «×» para plegar.
@@ -534,6 +562,14 @@ func (h HUD) drawSidePanel(dst *ebiten.Image, atlas *render.Atlas, lay *Layout, 
 		h.drawColonyTab(dst, lay, body)
 	case TabGiantess:
 		h.drawGiantessTab(dst, atlas, lay, body)
+	}
+	// Tirador sutil en la esquina inferior derecha para indicar que se puede redimensionar.
+	gx, gy := float32(pr.Max.X-7), float32(pr.Max.Y-7)
+	for i := range 4 {
+		vector.FillRect(dst, gx+float32(i+1), gy+float32(4-i), 1, 1, PlumSoft, false)
+	}
+	for i := range 2 {
+		vector.FillRect(dst, gx+float32(i+3), gy+float32(4-i), 1, 1, PlumSoft, false)
 	}
 }
 
@@ -739,12 +775,12 @@ func drawScrollBar(dst *ebiten.Image, body image.Rectangle, canUp, canDown bool,
 	}
 	by := body.Max.Y - 10
 	if canUp {
-		r := image.Rect(body.Max.X-24, by, body.Max.X-13, body.Max.Y)
+		r := image.Rect(body.Max.X-30, by, body.Max.X-19, body.Max.Y)
 		*upRect = r
 		drawArrow(dst, r.Min.X+5, r.Min.Y+4, -1)
 	}
 	if canDown {
-		r := image.Rect(body.Max.X-12, by, body.Max.X-1, body.Max.Y)
+		r := image.Rect(body.Max.X-18, by, body.Max.X-7, body.Max.Y)
 		*downRect = r
 		drawArrow(dst, r.Min.X+5, r.Min.Y+4, 1)
 	}
