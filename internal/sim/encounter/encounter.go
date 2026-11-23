@@ -124,9 +124,10 @@ type Skipped struct {
 
 func (Skipped) Kind() string { return "encounter_skipped" }
 
-// foraging: buscar comida es salir a buscar o acarrear (un trabajo).
+// foraging: buscar comida es salir a buscar, revisar un punto de búsqueda o
+// acarrear (un trabajo).
 func foraging(d *ai.Doing) bool {
-	return d != nil && (d.Action == "forage" || d.Action == "work")
+	return d != nil && (d.Action == "forage" || d.Action == "search" || d.Action == "work")
 }
 
 // look: cada ai.LookPeriod ticks, quien tiene "encounter" y Watch cuenta los

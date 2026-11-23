@@ -56,7 +56,7 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	if err := jobs.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: jobs: %w", err)
 	}
-	if err := ai.Install(w, append([]ai.Action{colony.Forage{}}, encounter.Actions()...)...); err != nil {
+	if err := ai.Install(w, append(colony.Actions(), encounter.Actions()...)...); err != nil {
 		return nil, fmt.Errorf("engine: ai: %w", err)
 	}
 	if err := colony.Install(w); err != nil {

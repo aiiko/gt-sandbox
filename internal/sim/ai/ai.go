@@ -470,6 +470,9 @@ func Install(w *world.World, extra ...Action) error {
 	if _, err := ecs.Register[Danger](r, "danger"); err != nil {
 		return err
 	}
+	if _, err := ecs.Register[Landmark](r, "landmark"); err != nil {
+		return err
+	}
 	if err := world.RegisterEvent[Hesitated](w); err != nil {
 		return err
 	}

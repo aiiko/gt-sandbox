@@ -61,6 +61,7 @@ Componente `agent`: `scale`, `weights` (importancia de cada necesidad, por defec
 
 - Un agente con `sight > 0` solo usa los smart objects que conoce (`agent.known`). Sin `sight` conoce todo (la giantess, por ahora).
 - `ai.look` (fase Decide, antes del selector) mira cada `LookPeriod` (10 ticks) con el índice espacial: los objetos con `offers` a distancia ≤ `sight` en su mismo Space. Algo nuevo se agrega con `noticed {entity, target}`. Olvida lo que ya no existe y, pasado `MaxKnown` (64), lo más viejo.
+- También aprende los lugares con `landmark` (puntos de búsqueda, servilleta, obra), a distancia ≤ `sight` o ≤ `landmark.range` si es mayor (ver [vida](vida.md#lugares-que-se-ven)).
 - `ai.Learn` hace que un agente conozca algo sin verlo (se lo contaron).
 - `ai.look` también registra el Space donde está el agente (`agent.visited`) y aprende los portales que tienen un extremo en su Space a distancia ≤ `sight`.
 - Un agente con `watch > 0` nota (`noticed`) a los agentes de otra escala a menos de `watch` en el mundo, aunque estén en otro Space. Para la giantess, que conoce todo, `known` funciona como registro de a quién vio; por ahora no cambia su plan.
@@ -95,6 +96,7 @@ Cuando una acción falla, el agente evita ese objetivo durante `RetryTicks` (30 
   - lo que un miembro notó en el tick anterior lo aprenden los demás;
   - si es comida (`food`), no está en el nido y nadie la lleva ni tiene un trabajo sobre ella, la colonia publica un `haul` al nido.
 - `colony.store` (fase Consequences): la comida suelta, sin reservar y a menos de `radius` del nido se guarda; suma sus porciones (o 1) al depósito y desaparece (`stored {colony, item, portions, total}`).
+- Acción `search` (de `colony`): revisar un punto de búsqueda conocido cuando falta comida en la despensa (ver [vida](vida.md#search_spot-y-la-acción-search)).
 - Acción `forage` (de `colony`, instalada como acción extra de `ai`): caminar a un punto transitable al azar a menos de `ForageRange` (30 cm), con el RNG `colony.forage`. Vale `member.forage`, así que solo gana cuando no hay nada mejor. Así se encuentran cosas fuera de la vista.
 
 ## Suspensión y reanudación

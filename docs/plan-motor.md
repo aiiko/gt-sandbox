@@ -8,8 +8,8 @@ El slice **Vida cotidiana de los tinies** (M39 a M44) les da a los tinies motivo
 
 | Hito | Contenido | Cierre |
 | --- | --- | --- |
-| M39 Despensa y rutina del nido | Meta de porciones por miembro en `colony` (`colony.Stocked`). Necesidades de los tinies ajustadas para que coman y descansen en momentos distintos. Hambre o cansancio urgentes que cortan un acarreo. Alternativa cuando el nido no está al alcance | `tiny_returns_to_eat`, `tiny_rests_at_nest`, `nest_unreachable_eats_crumb` |
-| M40 Puntos de búsqueda | Store `landmark` en `ai` (la percepción aprende cosas sin ofertas). Componente `search_spot` y acción `search` en `colony`, con reserva exclusiva y enfriamiento si el punto estaba vacío. Utilidad según el déficit de la despensa. `encounter` cuenta `search` como buscar comida | `colony_searches_spots` (búsqueda → hallazgo → acarreo → depósito → consumo), `stocked_colony_searches_less`, `search_spot_reserved_once`, `search_portal_closed` |
+| M39 Despensa y rutina del nido (hecho, [spec](specs/vida.md#despensa-y-rutina-del-nido-m39)) | Meta de porciones por miembro en `colony` (`colony.Stocked`). Necesidades de los tinies ajustadas para que coman y descansen en momentos distintos. Hambre o cansancio urgentes que cortan un acarreo. Alternativa cuando el nido no está al alcance | `tiny_returns_to_eat`, `tiny_rests_at_nest`, `nest_unreachable_eats_crumb` |
+| M40 Puntos de búsqueda (hecho, [spec](specs/vida.md#puntos-de-búsqueda-m40)) | Store `landmark` en `ai` (la percepción aprende cosas sin ofertas). Componente `search_spot` y acción `search` en `colony`, con reserva exclusiva y enfriamiento si el punto estaba vacío. Utilidad según el déficit de la despensa. `encounter` cuenta `search` como buscar comida | `colony_searches_spots` (búsqueda → hallazgo → acarreo → depósito → consumo), `stocked_colony_searches_less`, `search_spot_reserved_once`, `search_portal_closed` |
 | M41 Fibras y refugio auxiliar | Servilleta (`fiber_source`), fibra (`material`) y obra (`build_site`). Tipos de trabajo `pluck` y `build`; el acarreo reutiliza `haul`. Sistema `colony.build` que cuenta recibidas, en viaje y sueltas antes de pedir otra. Al terminar, la obra recibe `shelter` con el mismo ID | `colony_builds_refuge`, `fiber_dropped_is_recovered`, `refuge_shelters_from_palm` |
 | M42 Reunión | Necesidad `fun` en los tinies. Componente `gathering` (dos plazas, plazo y pausa) y acción `chat` | `tinies_chat`, `chat_partner_never_comes`, `chat_interrupted_by_threat` |
 | M43 Partida libre | Puntos de búsqueda, servilleta, obra, punto de reunión y comida cerca de la silla en `content/partidas/casa.json`. `Randomize` sortea `fun` y la despensa inicial. Ajuste de utilidades sobre las semillas de referencia | Prueba de rutina y ocio (tres actividades distintas en 5 min por semilla) y continuidad desde snapshot a mitad de una búsqueda y de la obra |
@@ -54,11 +54,11 @@ Los cambios salen de comparar la propuesta con lo que el motor hace hoy:
 **Acción `search`** (de `colony`, instalada como acción extra de `ai`, igual que `forage`):
 
 1. Opciones: los puntos conocidos, no reservados, fuera de `empty_until` y sin peligro. Utilidad `member.search × déficit − distance_cost × distancia`, con `member.search` por debajo de `work` (0,2). Así un acarreo conocido siempre gana, como pide la propuesta («si ninguna está al alcance»).
-2. `Start` reserva el punto (`jobs.Reserve`) y comprueba la ruta con el `Router`; si no hay ruta no empieza.
+2. `Start` reserva el punto (`jobs.Reserve`). Si no hay ruta, `nav.Approach` falla en el primer paso y el punto queda evitado 30 s.
 3. Camina al punto, renovando la reserva, y espera `look_ticks`.
 4. Termina al notar comida (`noticed` de algo con `food`, del propio actor, desde que empezó) o al acabar la espera. Emite `searched {entity, spot, found}`. Si no encontró nada, fija `empty_until`.
 
-*Por qué:* la reserva es la que ya existe para migajas, así que «solo un tiny revisa cada punto» queda cubierto por el invariante de reservas. El hallazgo genera el acarreo con `colony.share`, sin cambios. Comprobar la ruta solo en `Start` mantiene barato el selector (las opciones se calculan cada 10 ticks por tiny).
+*Por qué:* la reserva es la que ya existe para migajas, así que «solo un tiny revisa cada punto» queda cubierto por el invariante de reservas. El hallazgo genera el acarreo con `colony.share`, sin cambios. Dejar que falle `nav.Approach` en vez de buscar la ruta al calcular opciones mantiene barato el selector (las opciones se calculan cada 10 ticks por tiny).
 
 **Forrajeo.** `forage` sigue igual y con utilidad baja: es la exploración que descubre puntos nuevos. `encounter.foraging` cuenta también `search`, para que la giantess siga reconociendo a los tinies que buscan comida.
 

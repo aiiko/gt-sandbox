@@ -31,6 +31,14 @@ type Known struct {
 	Since  clock.Tick `json:"since"`
 }
 
+// Landmark marca un lugar que los agentes con vista aprenden aunque no
+// ofrezca nada (componente "landmark"): un punto de búsqueda, una
+// servilleta, una obra. Range es desde dónde se ve (en su mismo Space); si
+// es menor que la vista del agente, vale la vista.
+type Landmark struct {
+	Range units.Length `json:"range,omitempty"`
+}
+
 // Avoid es un objetivo que el agente no reintenta hasta Until.
 type Avoid struct {
 	Target ids.ID     `json:"target"`
@@ -114,6 +122,7 @@ func (look) Name() string { return "ai.look" }
 func (s look) Run(w *world.World) {
 	r := w.ECS()
 	offers := ecs.Get[Offers](r)
+	marks := ecs.Get[Landmark](r)
 	locs := comp.Of(r).Location
 	ix := spatial.Of(w)
 	s.it.each(w, func(c *Ctx) {
@@ -134,7 +143,17 @@ func (s look) Run(w *world.World) {
 		}
 		a.visit(l.Space, w.Tick())
 		ix.Near(l.Space, l.Pos.XY(), a.Sight, func(e ids.ID, _ units.Vec2) {
-			if e != c.Actor && offers.Has(e) && !r.Despawning(e) {
+			if e != c.Actor && (offers.Has(e) || marks.Has(e)) && !r.Despawning(e) {
+				Learn(w, a, c.Actor, e)
+			}
+		})
+		// los lugares que se ven de lejos
+		marks.Each(func(e ids.ID, m *Landmark) {
+			if m.Range <= a.Sight || a.known(e) || r.Despawning(e) {
+				return
+			}
+			if ml, ok := locs.Get(e); ok && ml.Space == l.Space &&
+				ml.Pos.XY().DistSq(l.Pos.XY()) <= int64(m.Range)*int64(m.Range) {
 				Learn(w, a, c.Actor, e)
 			}
 		})

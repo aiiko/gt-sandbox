@@ -39,6 +39,10 @@ func gain(c *Ctx, effects []Effect, frac float64) float64 {
 	return u
 }
 
+// Distance es la distancia de mundo, en metros, entre el actor y un punto
+// del Space sp (para restar DistanceCost en las opciones).
+func Distance(c *Ctx, sp ids.ID, p units.Vec2) float64 { return distance(c, sp, p) }
+
 // distance es la distancia de mundo, en metros, entre el actor y un punto.
 func distance(c *Ctx, sp ids.ID, p units.Vec2) float64 {
 	g := space.Of(c.W.ECS())

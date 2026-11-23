@@ -141,8 +141,69 @@ def nest_unreachable_eats_crumb():
     return d
 
 
+# --- M40: puntos de búsqueda ---
+
+def spot(ref, space, x, y, look=60, cooldown=2400, seen_from=1000000):
+    return {'ref': ref, 'spawn': {
+        'name': ref, 'location': {'space': '$' + space, 'pos': {'x': x, 'y': y, 'z': 0}},
+        'components': {'search_spot': {'look_ticks': look, 'cooldown': cooldown},
+                       'landmark': {'range': seen_from}}}}
+
+
+SEARCHER = {'search': 0.15}
+
+
+def colony_searches_spots():
+    d = world('colony_searches_spots', 3600,
+              'M40: el nido está vacío y su meta es 2 porciones por miembro. Tres tinies que no ven comida '
+              'eligen puntos de búsqueda que se ven de lejos: el borde vacío (queda sin ofrecerse un rato) y '
+              'el rincón, donde hay migajas. El hallazgo genera acarreos, la comida se guarda y se come. '
+              'Nunca dos revisan el mismo punto (TestSearchSpotReservedOnce); con la despensa llena no sale '
+              'nadie (TestStockedColonySearchesLess).')
+    d['entities'] += [
+        nest(50000, 50000, portions=0, stock=2),
+        spot('corner', 'desk1', 550000, 350000),
+        spot('edge', 'desk1', 550000, 50000),
+        crumb('c1', 'desk1', 540000, 340000),
+        crumb('c2', 'desk1', 560000, 360000),
+    ] + [tiny('t%d' % i, 'desk1', 70000 + 10000 * i, 50000, hunger=700, decay=(4, 0), sight=60000,
+              member=SEARCHER) for i in range(3)]
+    d['expect'] = [
+        {'event': 'searched', 'match': {'spot': '$edge', 'found': False}},
+        {'event': 'searched', 'match': {'spot': '$corner', 'found': True}},
+        {'event': 'job_posted', 'match': {'type': 'haul', 'target': '$c1'}},
+        {'event': 'stored', 'match': {'colony': '$nest'}},
+        {'event': 'action_done', 'match': {'what': 'eat', 'target': '$nest'}},
+    ] + COMMON
+    return d
+
+
+def search_portal_closed():
+    d = world('search_portal_closed', 1400,
+              'M40: un tiny baja por la pata a revisar un punto del piso y la pata se cierra abajo mientras '
+              'baja. Falla, libera el punto y no vuelve a intentarlo enseguida.')
+    d['entities'] += [
+        nest(300000, 200000, portions=0, stock=1),
+        spot('floor', 'roomA', 1300000, 900000),
+        tiny('t', 'desk1', 20000, 20000, sight=60000, member=SEARCHER,
+             agent={'known': [{'entity': '$floor', 'since': 0}]}),
+    ]
+    d['commands'] += [{'tick': 200, 'kind': 'set_portal', 'data': {'portal': '$leg1_bottom', 'enabled': False}}]
+    d['expect'] = [
+        {'event': 'action_started', 'match': {'entity': '$t', 'action': 'search', 'target': '$floor'},
+         'by': 20},
+        {'event': 'entity_reparented', 'match': {'entity': '$t', 'to': '$leg1'}, 'by': 200},
+        {'event': 'action_failed', 'match': {'entity': '$t', 'action': 'search', 'target': '$floor'}},
+        {'event': 'reservation_released', 'match': {'target': '$floor', 'by': '$t'}},
+        {'event': 'action_started', 'match': {'entity': '$t', 'action': 'search'}, 'by': 800, 'count': 1},
+        {'no_event': 'searched'},
+    ] + COMMON
+    return d
+
+
 def main():
-    for f in [tiny_returns_to_eat, tiny_rests_at_nest, nest_unreachable_eats_crumb]:
+    for f in [tiny_returns_to_eat, tiny_rests_at_nest, nest_unreachable_eats_crumb,
+              colony_searches_spots, search_portal_closed]:
         d = f()
         with open(os.path.join(SCEN, d['name'] + '.json'), 'w', encoding='utf-8', newline='\n') as out:
             json.dump(d, out, ensure_ascii=False, indent=2)

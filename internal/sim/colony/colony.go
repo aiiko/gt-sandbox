@@ -40,6 +40,9 @@ type Colony struct {
 type Member struct {
 	Colony ids.ID  `json:"colony"`
 	Forage float64 `json:"forage,omitempty"`
+	// Search es la utilidad de revisar un punto de búsqueda con la despensa
+	// vacía (se escala por Deficit). Ver la acción Search.
+	Search float64 `json:"search,omitempty"`
 }
 
 // Food marca algo que la colonia junta (componente "food"). Al guardarlo
@@ -190,7 +193,7 @@ func check(w *world.World) error {
 }
 
 // Install registra stores, eventos, sistemas e invariantes. Requiere ai y
-// jobs; la acción Forage se pasa a ai.Install.
+// jobs; las acciones de Actions se pasan a ai.Install.
 func Install(w *world.World) error {
 	r := w.ECS()
 	for _, err := range []error{
@@ -202,6 +205,7 @@ func Install(w *world.World) error {
 	}
 	w.AddInvariant("colony", check)
 	return errors.Join(
+		registerSearch(w),
 		world.RegisterEvent[Stored](w),
 		world.RegisterEvent[MemberLost](w),
 		world.RegisterEvent[DangerExpired](w),
@@ -213,6 +217,9 @@ func Install(w *world.World) error {
 		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences, Order: 1 << 21}, store{}),
 	)
 }
+
+// Actions son las acciones de la colonia, para ai.Install.
+func Actions() []ai.Action { return []ai.Action{Forage{}, Search{}} }
 
 func register[T any](r *ecs.Registry, name string) error {
 	_, err := ecs.Register[T](r, name)
