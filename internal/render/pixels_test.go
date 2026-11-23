@@ -327,3 +327,32 @@ func TestAtlasDensity(t *testing.T) {
 		}
 	}
 }
+
+func TestMacroOccupantDrawsOverFurniture(t *testing.T) {
+	// El sofá tiene un depth_offset grande: sin agrupar, quedaría delante de
+	// quien se sienta en el medio de su extensión.
+	sofa := `{"pivot":[1,1],"depth_offset":3,"clips":{"idle":{"frame_ticks":1,"frames":[[0,0,3,3]]}}}`
+	manifest := `{"image":"atlas.png","scales":["macro"],"sprites":{"sofa":{"macro":` + sofa +
+		`},"giantess":{"macro":` + sampleVariant + `}}}`
+	a, err := LoadAtlas(sampleAtlas(t, manifest), "props/atlas.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	frame := &view.Frame{Spaces: []view.Space{
+		{ID: 1},
+		{ID: 2, Parent: 1, Mover: &view.Mover{Status: "idle"}, Pose: view.Pose{Pos: units.V3(0, 1000, 0)}},
+		{ID: 3, Parent: 1, Extent: units.RectWH(-1000, 0, 2000, 2000), Pose: view.Pose{Pos: units.V3(0, 0, 0)}},
+	}}
+	visuals := map[ids.ID]string{2: "giantess", 3: "sofa"}
+	proj := (camera.Camera{Zoom: 0.001}).Project(fixedmath.Identity, 480, 270)
+	x, y := proj.ToScreen(frame.Spaces[1].Pose.Pos)
+	at := image.Pt(int(x), int(y))
+	if id := a.Arrange(frame, proj, visuals, Macro, ids.Nil).Pick(at); id != 2 {
+		t.Fatalf("sentada en el sofá: se eligió %s, quería la giantess", id)
+	}
+	// Caminando no se agrupa: el sofá, más adelante, la tapa.
+	frame.Spaces[1].Mover.Status = "moving"
+	if id := a.Arrange(frame, proj, visuals, Macro, ids.Nil).Pick(at); id != 3 {
+		t.Fatalf("caminando detrás del sofá: se eligió %s, quería el sofá", id)
+	}
+}

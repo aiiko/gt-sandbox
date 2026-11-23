@@ -272,7 +272,11 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if s.Mover == nil && !s.Extent.Empty() {
 			names = surfaceClips(s.Pose.Rot, inContact[s.ID])
 		}
-		add(s.ID, s.Parent, ids.Nil, s.Pose.Pos, names, true, image.Point{}, look{})
+		support := s.Parent
+		if scale == Macro {
+			support = a.seatOf(f, visuals, s, support)
+		}
+		add(s.ID, support, ids.Nil, s.Pose.Pos, names, true, image.Point{}, look{})
 	}
 	if scale == Macro {
 		// Sombra de la próxima pisada de quien camina: más oscura cuanto más
@@ -489,11 +493,39 @@ func (a *Atlas) depthGroup(f *view.Frame, p camera.Projector, visuals map[ids.ID
 		}
 		if v, ok := a.sprites[visuals[s.ID]][Macro]; ok && v.Layer == "" && !s.Extent.Empty() {
 			_, y := p.ToScreen(s.Pose.Pos)
-			group, depth = s.ID, y+float32(v.DepthOffset)
+			// el ocupante va justo encima de su mueble
+			group, depth = s.ID, y+float32(v.DepthOffset)+occupantDepth
 		}
 		support = s.Parent
 	}
 	return group, depth
+}
+
+// occupantDepth deja al ocupante después del mueble con la misma profundidad.
+const occupantDepth = 0.01
+
+// seatOf devuelve el mueble sobre el que está quieto un agente que es un
+// Space (la giantess sentada en el sofá o la silla, o en la cama): el
+// hermano con sprite macro cuya extensión contiene su posición. Sin él,
+// devuelve parent.
+func (a *Atlas) seatOf(f *view.Frame, visuals map[ids.ID]string, s view.Space, parent ids.ID) ids.ID {
+	if s.Mover == nil || s.Mover.Status == "moving" {
+		return parent
+	}
+	for _, o := range f.Spaces {
+		if o.ID == s.ID || o.Parent != parent || o.Mover != nil || o.Extent.Empty() {
+			continue
+		}
+		if v, ok := a.sprites[visuals[o.ID]][Macro]; !ok || v.Layer != "" {
+			continue
+		}
+		local := o.Pose.Transform().ApplyInv(s.Pose.Pos)
+		e := o.Extent
+		if local.X >= e.Min.X && local.X <= e.Max.X && local.Y >= e.Min.Y && local.Y <= e.Max.Y {
+			return o.ID
+		}
+	}
+	return parent
 }
 
 // poseClips relaciona la acción de una oferta en uso con la pose que la dibuja.
