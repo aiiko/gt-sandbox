@@ -419,7 +419,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if scale != Micro {
 			return worldPos
 		}
-		if sp, ok := f.SpaceByID(spaceID); ok && sp.Projected {
+		if sp, ok := f.SpaceByID(spaceID); ok && sp.UsesMicroLocal() {
 			return sp.MicroPos(worldPos, localPos)
 		}
 		return worldPos
@@ -526,7 +526,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		if fs, ok := f.SpaceByID(focus); ok {
 			focusArticulated = fs.Kind == space.Articulated
 			for _, gr := range fs.Grips {
-				pos := fs.Pose.Transform().Apply(units.V3(gr.Pos.X, gr.Pos.Y, 0))
+				pos := fs.MicroPos(fs.Pose.Transform().Apply(units.V3(gr.Pos.X, gr.Pos.Y, 0)), units.V3(gr.Pos.X, gr.Pos.Y, 0))
 				add(fs.ID, fs.ID, ids.Nil, pos, []string{"idle"}, false, image.Point{},
 					look{visual: GripVisual, ghost: true, layer: layerGround, alpha: 0.78})
 			}
@@ -555,8 +555,9 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			}
 		}
 		// Sombra anticipada de una superficie móvil que todavía no se apoya
-		// sobre la superficie enfocada (solo visuales con clip shadow_<dir>).
-		if fs, ok := f.SpaceByID(focus); ok {
+		// sobre la superficie enfocada (solo visuales con clip shadow_<dir>, y
+		// nunca sobre otra zona del mismo cuerpo).
+		if fs, ok := f.SpaceByID(focus); ok && !fs.BodyZone {
 			for _, s := range f.Spaces {
 				if s.Mover != nil || s.Extent.Empty() || inFocus(s.ID) {
 					continue
@@ -981,7 +982,7 @@ func buildBackdrop(f *view.Frame, p camera.Projector, sp view.Space, climb bool)
 	}
 	var rect image.Rectangle
 	for i, c := range corners {
-		sx, sy := p.ToScreen(tr.Apply(units.V3(c.X, c.Y, 0)))
+		sx, sy := p.ToScreen(sp.MicroPos(tr.Apply(units.V3(c.X, c.Y, 0)), units.V3(c.X, c.Y, 0)))
 		pt := image.Pt(int(math.Round(float64(sx))), int(math.Round(float64(sy))))
 		r := image.Rectangle{Min: pt, Max: pt.Add(image.Pt(1, 1))}
 		if i == 0 {

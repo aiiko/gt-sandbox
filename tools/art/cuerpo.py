@@ -423,44 +423,71 @@ def body_chest():
     d = ImageDraw.Draw(im)
     cx = w // 2
 
-    # Silueta femenina entallada del torso (hombros anchos, cintura afinada, cadera suave)
+    # Silueta femenina de joven adulta: busto prominente, cintura entallada, cadera suave
     torso = [
-        (36, 36), (146, 22), (w - 146, 22), (w - 36, 36),
-        (w - 22, 140), (w - 36, 290), (w - 64, 446), (w - 48, 566),
-        (w - 58, h - 22), (58, h - 22), (48, 566), (64, 446),
-        (36, 290), (22, 140),
+        (42, 34), (146, 22), (w - 146, 22), (w - 42, 34),
+        (w - 28, 118), (w - 14, 198), (w - 18, 276), (w - 42, 346),
+        (w - 76, 444), (w - 64, 520), (w - 48, 574), (w - 54, h - 22),
+        (54, h - 22), (48, 574), (64, 520), (76, 444),
+        (42, 346), (18, 276), (14, 198), (28, 118),
     ]
     d.polygon(torso, fill=CARD)
     shade_cylinder(im, CARD, CARD_L, CARD_D, CARD_D2, knit=True)
 
-    d = ImageDraw.Draw(im)
-    # Sombras suaves de volumen del busto
-    d.arc([74, 152, cx - 10, 286], start=20, end=165, fill=CARD_D, width=8)
-    d.arc([cx + 10, 152, w - 74, 286], start=15, end=160, fill=CARD_D2, width=8)
+    # Volumen 3D del busto sobre el tejido del cárdigan (cel-shading suave, sin cortes rectos)
+    bust = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    db = ImageDraw.Draw(bust)
+    # Sombra proyectada continua bajo la línea del busto (forma de W suave)
+    under_shadow = [
+        (36, 266), (72, 316), (138, 338), (cx - 24, 322), (cx, 298),
+        (cx + 24, 322), (w - 138, 338), (w - 72, 316), (w - 36, 266),
+        (w - 44, 344), (w - 92, 368), (cx + 28, 356), (cx, 336),
+        (cx - 28, 356), (92, 368), (44, 344),
+    ]
+    db.polygon(under_shadow, fill=(*CARD_D2[:3], 130))
+    for side in (-1, 1):
+        bx = cx + side * 96
+        # media luna suave en la cara inferior del busto
+        db.arc([bx - 88, 178, bx + 88, 322], start=18, end=162, fill=(*CARD_D[:3], 190), width=28)
+        db.arc([bx - 88, 186, bx + 88, 324], start=22, end=158, fill=(*CARD_D2[:3], 220), width=8)
+        # brillo suave en la pendiente superior (luz desde arriba a la izquierda)
+        hl_dx = -18 if side == -1 else -10
+        db.arc([bx - 76 + hl_dx, 166, bx + 68 + hl_dx, 260], start=205, end=330, fill=(*CARD_L[:3], 150), width=22)
+        db.arc([bx - 64 + hl_dx, 174, bx + 52 + hl_dx, 244], start=210, end=320, fill=(*CARD_L[:3], 200), width=10)
+    # valle central y pliegues de tensión de la tela hacia los botones
+    db.polygon([(cx - 22, 214), (cx + 22, 214), (cx + 16, 326), (cx - 16, 326)], fill=(*CARD_D2[:3], 110))
+    for dy, spread in ((240, 54), (266, 68), (290, 44)):
+        db.line([(cx - 16, dy), (cx - 16 - spread, dy + 10)], fill=(*CARD_D2[:3], 150), width=3)
+        db.line([(cx + 16, dy), (cx + 16 + spread, dy + 10)], fill=(*CARD_D2[:3], 150), width=3)
+    # recortar el busto a la silueta del torso
+    mask = im.getchannel('A')
+    bust.putalpha(Image.composite(bust.getchannel('A'), Image.new('L', (w, h), 0), mask))
+    im.alpha_composite(bust)
 
+    d = ImageDraw.Draw(im)
     # Escote en V con blusa crema y cuello
-    v_poly = [(cx - 104, 22), (cx + 104, 22), (cx, 226)]
+    v_poly = [(cx - 102, 22), (cx + 102, 22), (cx, 212)]
     d.polygon(v_poly, fill=BLOUSE)
-    d.polygon([(cx + 12, 22), (cx + 104, 22), (cx, 226)], fill=BLOUSE_D)
+    d.polygon([(cx + 12, 22), (cx + 102, 22), (cx, 212)], fill=BLOUSE_D)
     # Borde tejido del escote en V
-    d.line([(cx - 106, 22), (cx, 230), (cx + 106, 22)], fill=CARD_D2, width=10)
-    d.line([(cx - 98, 22), (cx, 218), (cx + 98, 22)], fill=CARD_L, width=3)
+    d.line([(cx - 104, 22), (cx, 216), (cx + 104, 22)], fill=CARD_D2, width=10)
+    d.line([(cx - 96, 22), (cx, 204), (cx + 96, 22)], fill=CARD_L, width=3)
 
     # Tapeta central de botones
-    d.rectangle([cx - 16, 226, cx + 16, 540], fill=CARD_D)
-    d.line([(cx - 16, 226), (cx - 16, 540)], fill=CARD_D2, width=3)
-    d.line([(cx + 16, 226), (cx + 16, 540)], fill=CARD_D2, width=3)
-    for by in (296, 392, 488):
+    d.rectangle([cx - 16, 212, cx + 16, 540], fill=CARD_D)
+    d.line([(cx - 16, 212), (cx - 16, 540)], fill=CARD_D2, width=3)
+    d.line([(cx + 16, 212), (cx + 16, 540)], fill=CARD_D2, width=3)
+    for by in (280, 386, 488):
         d.ellipse([cx - 12, by - 12, cx + 12, by + 12], fill=BTN, outline=INK, width=2)
         d.ellipse([cx - 6, by - 7, cx, by - 1], fill=BTN_HI)
 
-    # Bolsillo cosido en el frente (alrededor del agarre en y=18cm -> py=312)
-    pk = [cx + 42, 304, cx + 148, 412]
+    # Bolsillo cosido en el frente bajo el busto (alrededor del agarre)
+    pk = [cx + 42, 344, cx + 146, 444]
     d.rounded_rectangle(pk, radius=12, fill=CARD_D, outline=CARD_D2, width=4)
     d.line([(pk[0] + 6, pk[1] + 6), (pk[2] - 6, pk[1] + 6)], fill=CARD_L, width=3)
 
     # Moño rosa en el escote
-    draw_bow(d, cx, 134, scale=1.7)
+    draw_bow(d, cx, 128, scale=1.7)
 
     # Pretina acanalada inferior del cárdigan + borde de la falda violeta
     d.rectangle([52, 536, w - 52, 578], fill=CARD_D)
@@ -521,18 +548,26 @@ def body_sides():
     im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
 
-    # Perfil lateral entallado: pecho/sisa arriba, cintura en el medio, cadera abajo
+    # Perfil lateral de joven adulta: busto proyectado al frente (der), cintura marcada y cadera
     side_poly = [
-        (36, 24), (166, 28), (186, 150), (174, 260), (154, 386),
-        (178, 514), (174, h - 22), (34, h - 22), (28, 514),
-        (46, 386), (34, 240), (26, 130),
+        (42, 24), (154, 28), (186, 132), (198, 214), (188, 284), (152, 342),
+        (146, 412), (176, 514), (174, h - 22), (34, h - 22), (26, 514),
+        (46, 404), (34, 240), (28, 130),
     ]
     d.polygon(side_poly, fill=CARD)
-    shade_cylinder(im, CARD, CARD_L, CARD_D, CARD_D2, knit=True, seam_x=0.5)
+    shade_cylinder(im, CARD, CARD_L, CARD_D, CARD_D2, knit=True, seam_x=0.45)
+
+    # Detalles internos recortados a la silueta (sisa y sombra curva bajo el busto)
+    det = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    dd = ImageDraw.Draw(det)
+    dd.arc([44, 14, 156, 140], start=10, end=170, fill=(*CARD_D2[:3], 235), width=5)
+    dd.polygon([(112, 286), (186, 284), (154, 344), (146, 366), (108, 326)], fill=(*CARD_D2[:3], 145))
+    dd.arc([104, 224, 192, 322], start=35, end=145, fill=(*CARD_D2[:3], 220), width=6)
+    mask = im.getchannel('A')
+    det.putalpha(Image.composite(det.getchannel('A'), Image.new('L', (w, h), 0), mask))
+    im.alpha_composite(det)
 
     d = ImageDraw.Draw(im)
-    # Curva de la sisa arriba
-    d.arc([44, 14, 164, 140], start=10, end=170, fill=CARD_D2, width=5)
     # Pretina y borde de falda abajo
     d.rectangle([32, 512, 176, 548], fill=CARD_D)
     for x in range(36, 174, 8):

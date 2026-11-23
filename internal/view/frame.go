@@ -70,23 +70,30 @@ type Space struct {
 	Step     string `json:"step,omitempty"`
 	Goal     ids.ID `json:"goal,omitempty"`
 	Needs    []Need `json:"needs,omitempty"`
-	// Climb, Occluded, Projected y Grips informan a la vista micro sobre zonas
-	// corporales (trepadas de costado, ropa/pelo que tapan, proyección 3D y agarres).
+	// Climb, Occluded, Projected, BodyZone y Grips informan a la vista micro
+	// sobre zonas corporales (trepadas, ropa/pelo que tapan, proyección 3D y agarres).
 	Climb     bool   `json:"climb,omitempty"`
 	Occluded  bool   `json:"occluded,omitempty"`
 	Projected bool   `json:"projected,omitempty"`
+	BodyZone  bool   `json:"body_zone,omitempty"`
 	Grips     []Grip `json:"grips,omitempty"`
 }
 
-// MicroPos devuelve la posición sobre el plano micro del Space: en superficies
-// con proyección 3D (trepadas o planos inclinados del cuerpo) proyecta las
-// coordenadas locales 2D sobre la baldosa dibujada; en superficies planas
-// devuelve worldPos sin cambios.
+// UsesMicroLocal indica si la vista micro dibuja este Space derecho en su plano
+// local 2D (sin rotación ni proyección 3D), como las regiones corporales.
+func (s Space) UsesMicroLocal() bool {
+	return s.Projected || s.BodyZone
+}
+
+// MicroPos devuelve la posición sobre el plano micro del Space: en regiones
+// corporales o Spaces con proyección 3D coloca las coordenadas locales 2D
+// alineadas con el sprite derecho (sin rotar por s.Pose.Rot); en superficies
+// planas de la casa devuelve worldPos sin cambios.
 func (s Space) MicroPos(worldPos, localPos units.Vec3) units.Vec3 {
-	if !s.Projected {
+	if !s.UsesMicroLocal() {
 		return worldPos
 	}
-	return s.Pose.Transform().Apply(units.V3(localPos.X, localPos.Y, 0))
+	return s.Pose.Pos.Add(units.V3(localPos.X, localPos.Y, 0))
 }
 
 // Expedition resume una expedición activa de la colonia para la interfaz.
@@ -347,6 +354,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos),
 			Climb: sp.IsClimb(), Projected: sp.Projection != nil}
 		if z, ok := zones.Get(id); ok {
+			s.BodyZone = true
 			s.Occluded = z.Occluded
 			if len(z.Grips) > 0 {
 				s.Grips = make([]Grip, len(z.Grips))

@@ -3,8 +3,12 @@ package main
 import (
 	"testing"
 
+	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
+	"gtsandbox/internal/core/units"
 	"gtsandbox/internal/render"
+	"gtsandbox/internal/sim/comp"
+	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
 )
 
@@ -165,5 +169,74 @@ func TestBodyArticulatedPortalMarksVisible(t *testing.T) {
 	}
 	if portalMarks < 2 {
 		t.Fatalf("antebrazo derecho debía mostrar señales de paso de sus articulaciones (muñeca y codo), mostró %d", portalMarks)
+	}
+}
+
+// Regresión: cuando la giantess gira (90°, 180°, 270°), en vista micro de una
+// zona corporal (p. ej. pecho) el tiny, los agarres y los portales deben seguir
+// alineados dentro del sprite derecho de esa zona, y sin sombra de asiento encima.
+func TestBodyMicroAlignmentWhenGiantessRotated(t *testing.T) {
+	g := artGame(t, randomBase)
+	g.w, g.h = 960, 540
+	g.run.StepOnce()
+
+	var giantessID, chestID, tinyID ids.ID
+	for _, s := range g.run.Cur.Spaces {
+		switch s.Name {
+		case "giantess":
+			giantessID = s.ID
+		case "pecho":
+			chestID = s.ID
+		}
+	}
+	for _, th := range g.run.Cur.Things {
+		if isTiny(th) {
+			tinyID = th.ID
+			break
+		}
+	}
+	if giantessID.IsNil() || chestID.IsNil() || tinyID.IsNil() {
+		t.Fatalf("faltan entidades: giantess=%v chest=%v tiny=%v", giantessID, chestID, tinyID)
+	}
+
+	locs := ecs.Get[comp.Location](g.run.World.ECS())
+	if l, ok := locs.Get(tinyID); ok {
+		l.Space = chestID
+		l.Pos = units.V3(14*units.Centimeter, 18*units.Centimeter, 0)
+		locs.Set(tinyID, l)
+	}
+
+	for _, rot := range []fixedmath.Angle{fixedmath.QuarterTurn, fixedmath.HalfTurn, 3 * fixedmath.QuarterTurn} {
+		if l, ok := locs.Get(giantessID); ok {
+			l.Facing = rot
+			locs.Set(giantessID, l)
+		}
+		g.run.StepOnce()
+		f := g.run.Cur
+
+		g.art.focus = chestID
+		g.fitArt()
+		proj := g.cam.Project(g.anchor(f), g.w, g.h)
+		scene := g.art.atlas.Arrange(f, proj, g.visuals, render.Micro, chestID, tinyID)
+
+		chestBounds, ok := scene.Bounds(chestID)
+		if !ok {
+			t.Fatalf("rot=%v: pecho sin bounds", rot)
+		}
+		tinyBounds, ok := scene.Bounds(tinyID)
+		if !ok {
+			t.Fatalf("rot=%v: tiny sin bounds", rot)
+		}
+		if !tinyBounds.In(chestBounds) {
+			t.Fatalf("rot=%v: tiny %v quedó fuera del sprite de pecho %v", rot, tinyBounds, chestBounds)
+		}
+		for _, pl := range scene.Placements() {
+			if pl.Ghost && !pl.Dest.Overlaps(chestBounds) {
+				t.Fatalf("rot=%v: marca/portal %v en %v quedó fuera de pecho %v", rot, pl.ID, pl.Dest, chestBounds)
+			}
+			if pl.Ghost && g.visuals[pl.ID] == "seat" {
+				t.Fatalf("rot=%v: no debe dibujarse sombra de asiento sobre una zona corporal", rot)
+			}
+		}
 	}
 }

@@ -160,7 +160,7 @@ func tinyCluster(f *view.Frame, s ids.ID) (units.Vec2, int) {
 	for _, t := range f.Things {
 		if isTiny(t) && t.Space == s {
 			pos := t.Pose.Pos
-			if hasSp && sp.Projected {
+			if hasSp && sp.UsesMicroLocal() {
 				pos = sp.MicroPos(t.Pose.Pos, t.LocalPos)
 			}
 			pts = append(pts, pos.XY())

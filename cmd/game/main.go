@@ -390,7 +390,7 @@ func (g *game) anchor(f *view.Frame) fixedmath.Transform {
 				}
 			} else if g.art != nil && g.artScale(f) == render.Micro {
 				if t, ok := f.ThingByID(g.follow); ok {
-					if sp, ok := f.SpaceByID(t.Space); ok && sp.Projected {
+					if sp, ok := f.SpaceByID(t.Space); ok && sp.UsesMicroLocal() {
 						p.Pos = sp.MicroPos(t.Pose.Pos, t.LocalPos)
 					}
 				}
@@ -745,6 +745,13 @@ func (g *game) moveSelected(p units.Vec2) {
 	t, ok := g.run.Cur.ThingByID(g.sel)
 	if !ok || t.Mover == nil {
 		return
+	}
+	if g.art != nil {
+		if fs, ok := g.run.Cur.SpaceByID(g.artFocus(g.run.Cur)); ok && fs.UsesMicroLocal() {
+			l := p.Sub(fs.Pose.Pos.XY())
+			_ = g.run.Enqueue(nav.MoveTo{Entity: t.ID, Space: fs.ID, Goal: l})
+			return
+		}
 	}
 	if s, l, ok := g.run.Cur.SurfaceAt(p); ok {
 		_ = g.run.Enqueue(nav.MoveTo{Entity: t.ID, Space: s, Goal: l})

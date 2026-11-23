@@ -220,7 +220,8 @@ func (g *game) fitArt() {
 	if s, ok := f.SpaceByID(focus); ok {
 		g.cam.Anchor = s.ID
 		// El ancla sigue la traslación del Space con el norte arriba.
-		center := s.Pose.Transform().Apply(units.V3((s.Extent.Min.X+s.Extent.Max.X)/2, (s.Extent.Min.Y+s.Extent.Max.Y)/2, 0))
+		mid := units.V3((s.Extent.Min.X+s.Extent.Max.X)/2, (s.Extent.Min.Y+s.Extent.Max.Y)/2, 0)
+		center := s.MicroPos(s.Pose.Transform().Apply(mid), mid)
 		g.cam.X, g.cam.Y = float64(center.X-s.Pose.Pos.X), float64(center.Y-s.Pose.Pos.Y)
 		if offset, ok := g.art.atlas.MicroFocus(g.visuals[s.ID]); ok {
 			g.cam.X = float64(offset.X) / g.artZoom(render.Micro)
