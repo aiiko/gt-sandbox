@@ -27,7 +27,6 @@ SKIRT, SKIRT_D, SKIRT_L = '#67588F', '#544777', '#7969A4'
 SOCK, SOCK_D = '#FFF1D8', '#DCCFE0'
 SHOE, SHOE_L = '#76659B', '#9586BC'
 SHADOW = (0x91, 0x6B, 0x8F, 255)
-CUSHION, CUSHION_L, CUSHION_D = '#FF9CAD', '#FFC2CD', '#C66F86'
 RICE, NORI = '#FFFFFF', '#2F3B4C'
 
 # Cuánto baja el torso al sentarse en seiza.
@@ -203,9 +202,7 @@ def ribbon(s, cx, cy):
 def south(dy=0, legs=(0, 0), arms=(0, 0), expression='calm', seated=False, hands=True):
     s = Sprite(W, H)
     hair_back_front(s, dy)
-    if seated:
-        cushion(s)
-    else:
+    if not seated:  # sentada, el asiento lo pone el mueble
         legs_front(s, 0, *legs)
         skirt(s, dy)
     arm_side(s, 14, dy, arms[0], hands and not seated)
@@ -222,9 +219,7 @@ def south(dy=0, legs=(0, 0), arms=(0, 0), expression='calm', seated=False, hands
 
 def north(dy=0, legs=(0, 0), arms=(0, 0), seated=False):
     s = Sprite(W, H)
-    if seated:
-        cushion(s)
-    else:
+    if not seated:  # sentada, el asiento lo pone el mueble
         legs_front(s, 0, *legs)
         skirt(s, dy)
     arm_side(s, 14, dy, arms[0], not seated)
@@ -258,9 +253,7 @@ def east(dy=0, stride=(0, 0), arm=0, expression='calm', seated=False, hands=True
     s.poly([(10, 22 + dy), (28, 22 + dy), (26, 49 + dy), (20, 46 + dy), (12, 49 + dy)], HAIR)
     s.line([(16, 26 + dy), (15, 47 + dy)], HAIR_D)
     s.line([(22, 26 + dy), (22, 47 + dy)], HAIR_D)
-    if seated:
-        cushion(s)
-    else:
+    if not seated:  # sentada, el asiento lo pone el mueble
         legs_side(s, 0, *stride)
         skirt(s, dy, narrow=2)
     # torso de perfil
@@ -305,15 +298,6 @@ def east(dy=0, stride=(0, 0), arm=0, expression='calm', seated=False, hands=True
         # brazo cercano delante del cuerpo
         arm_side(s, 27 + arm, dy, 0, hands)
     return s
-
-
-def cushion(s):
-    """Zabuton detrás de quien se sienta."""
-    s.rrect(4, 58, 56, 73, CUSHION, r=3)
-    s.hline(7, 53, 59, CUSHION_L)
-    s.hline(6, 54, 72, CUSHION_D)
-    for x, y in ((8, 61), (52, 61), (8, 70), (52, 70)):
-        s.px(x, y, CUSHION_D)
 
 
 def knees(s, hands, side=False):
