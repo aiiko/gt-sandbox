@@ -18,6 +18,7 @@ const (
 	RolePorter     = "porter"
 	RoleBuilder    = "builder"
 	RoleLookout    = "lookout"
+	RoleScout      = "scout"
 )
 
 // Parámetros de afinidad y suplencias.
@@ -130,7 +131,8 @@ func specialistAvailable(w *world.World, col ids.ID, role string, exclude ids.ID
 		}
 		if a.Doing != nil && (a.Doing.Action == ai.FleeAction || a.Doing.Action == ExpeditionActionName ||
 			(role == RoleGatherer && a.Doing.Action == SearchAction) ||
-			(role == RoleLookout && a.Doing.Action == WatchAction)) {
+			(role == RoleLookout && a.Doing.Action == WatchAction) ||
+			(role == RoleScout && a.Doing.Action == ScoutAction)) {
 			return
 		}
 		if !jobs.AssignedTo(w, e).IsNil() {
@@ -255,6 +257,8 @@ func JobReason(w *world.World, actor ids.ID) string {
 		if Deficit(w, m.Colony) > 0 {
 			return "despensa baja"
 		}
+	case ScoutAction:
+		return "abre ruta"
 	}
 	return ""
 }

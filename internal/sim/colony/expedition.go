@@ -338,6 +338,18 @@ func appendUniqueID(list []ids.ID, id ids.ID) []ids.ID {
 	return append(list, id)
 }
 
+// pickGuide elige al guía entre los índices activos: prioriza a un miembro con
+// oficio RoleScout y desempata por orden de ID (D5).
+func pickGuide(w *world.World, members []ExpMember, active []int) ids.ID {
+	ms := ecs.Get[Member](w.ECS())
+	for _, i := range active {
+		if m, ok := ms.Get(members[i].Entity); ok && m.Role == RoleScout {
+			return members[i].Entity
+		}
+	}
+	return members[active[0]].Entity
+}
+
 func portalSignature(w *world.World) uint64 {
 	var sig uint64
 	ecs.Get[nav.Portal](w.ECS()).Each(func(id ids.ID, p *nav.Portal) {
@@ -461,7 +473,7 @@ func (expeditionSystem) Run(w *world.World) {
 		}
 		exp.Members = aliveMembers
 
-		// Verificar guía vivo y activo; si falta, elegir el menor ID activo (D5).
+		// Verificar guía vivo y activo; si falta, priorizar un explorador (RoleScout) y luego menor ID (D5).
 		guideOK := false
 		var active []int
 		for i, m := range exp.Members {
@@ -473,7 +485,7 @@ func (expeditionSystem) Run(w *world.World) {
 			}
 		}
 		if !guideOK && len(active) > 0 {
-			exp.Guide = exp.Members[active[0]].Entity
+			exp.Guide = pickGuide(w, exp.Members, active)
 			w.Emit(ExpeditionGuideChanged{Expedition: id, Guide: exp.Guide})
 		}
 
@@ -535,7 +547,11 @@ func runGathering(w *world.World, id ids.ID, exp *Expedition, target *Expedition
 		}
 	}
 	exp.Members = ready
-	exp.Guide = ready[0].Entity
+	allIdx := make([]int, len(ready))
+	for i := range ready {
+		allIdx[i] = i
+	}
+	exp.Guide = pickGuide(w, ready, allIdx)
 	exp.Phase = ExpTraveling
 	exp.DepartTick = w.Tick()
 	exp.MaxUntil = w.Tick() + target.maxDuration()
@@ -734,6 +750,9 @@ func (ExpeditionAction) Options(c *ai.Ctx) []ai.Option {
 		u := 0.22 * m.Adventure
 		if !t.Visited {
 			u += 0.06
+			if m.Role == RoleScout {
+				u += RoleBonus
+			}
 		}
 		out = append(out, ai.Option{Target: tid, Offer: 2, Utility: u})
 	})

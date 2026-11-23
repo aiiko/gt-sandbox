@@ -132,6 +132,7 @@ var activities = map[string][2]string{
 	"share":            {"Comparte migajas", "compartir migajas"},
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
 	"watch":            {"Vigila el paso", "vigilar el paso"},
+	"scout":            {"Explora el mapa", "explorar el mapa"},
 	"eat_ration":       {"Come una ración", "comer una ración"},
 	"expedition":       {"En expedición", "salir de expedición"},
 }
@@ -141,6 +142,7 @@ var roleLabels = map[string]string{
 	colony.RolePorter:   "Porteador",
 	colony.RoleBuilder:  "Constructor",
 	colony.RoleLookout:  "Vigía",
+	colony.RoleScout:    "Explorador",
 }
 
 // remainsCause dice qué aplastó a quien dejó unos restos.
@@ -682,7 +684,7 @@ func shortActivity(t view.Thing) string {
 		return "Descansa"
 	case "chat":
 		return "Conversa"
-	case "explore":
+	case "explore", "scout":
 		return "Explora"
 	case "watch":
 		return "Vigila"

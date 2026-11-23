@@ -231,7 +231,7 @@ func Install(w *world.World) error {
 
 // Actions son las acciones de la colonia, para ai.Install.
 func Actions() []ai.Action {
-	return []ai.Action{Forage{}, Search{}, Chat{}, Watch{}, EatRation{}, ExpeditionAction{}}
+	return []ai.Action{Forage{}, Search{}, Chat{}, Watch{}, Scout{}, EatRation{}, ExpeditionAction{}}
 }
 
 func register[T any](r *ecs.Registry, name string) error {

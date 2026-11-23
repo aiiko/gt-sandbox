@@ -258,7 +258,7 @@ func randomTrades(tinies, entities []EntitySpec, rnd *rng.Stream) error {
 	if !hasAdventureMap {
 		return nil
 	}
-	roles := []string{"gatherer", "porter", "builder", "lookout", "", ""}
+	roles := []string{"gatherer", "porter", "builder", "lookout", "scout", "", ""}
 	for i, e := range tinies {
 		var spawn map[string]any
 		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
@@ -269,7 +269,7 @@ func randomTrades(tinies, entities []EntitySpec, rnd *rng.Stream) error {
 		if m == nil {
 			continue
 		}
-		if i < 4 {
+		if i < 5 {
 			m["role"] = roles[i]
 		} else {
 			m["role"] = roles[rnd.IntN(len(roles))]

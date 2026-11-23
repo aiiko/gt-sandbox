@@ -763,3 +763,86 @@ func TestSofaPocketExpeditionEmptyAndWithCrumb(t *testing.T) {
 		}
 	}
 }
+
+// Explorador (RoleScout): cruza hacia un Space no visitado por la colonia,
+// descubre un hito oculto y es elegido como guía de expedición por encima de
+// otros miembros con ID menor.
+func TestScoutOpensUnvisitedMapAndGuidesExpedition(t *testing.T) {
+	w := engine.MustNew(world.Config{Seed: 20})
+	r := w.ECS()
+	root := r.Spawn()
+	ecs.Get[space.Space](r).Set(root, space.Space{Kind: space.Static})
+
+	roomA := r.Spawn()
+	roomB := r.Spawn()
+	for _, rm := range []ids.ID{roomA, roomB} {
+		ecs.Get[space.Space](r).Set(rm, space.Space{Kind: space.Static, Extent: units.Rect{Max: units.V2(40*units.Centimeter, 40*units.Centimeter)}})
+		comp.Of(r).Location.Set(rm, comp.Location{Space: root})
+		g, _ := nav.NewGrid(units.V2(0, 0), 2*units.Centimeter, 20, 20)
+		ecs.Get[nav.Grid](r).Set(rm, *g)
+	}
+	portal := r.Spawn()
+	ecs.Get[nav.Portal](r).Set(portal, nav.Portal{
+		A: nav.PortalEnd{Space: roomA, Pos: units.V2(35*units.Centimeter, 20*units.Centimeter)},
+		B: nav.PortalEnd{Space: roomB, Pos: units.V2(5*units.Centimeter, 20*units.Centimeter)},
+	})
+
+	nest := r.Spawn()
+	comp.Of(r).Location.Set(nest, comp.Location{Space: roomA, Pos: units.V3(10*units.Centimeter, 20*units.Centimeter, 0)})
+	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: 2})
+	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+
+	// Hito oculto en roomB cerca de la salida del portal.
+	hidden := r.Spawn()
+	comp.Of(r).Location.Set(hidden, comp.Location{Space: roomB, Pos: units.V3(12*units.Centimeter, 20*units.Centimeter, 0)})
+	ecs.Get[ai.Landmark](r).Set(hidden, ai.Landmark{Range: 15 * units.Centimeter})
+
+	// Generalista con ID menor + Explorador con ID mayor.
+	gen := spawnTiny(w, roomA, nest, 12*units.Centimeter, 20*units.Centimeter, colony.RoleGeneralist, 0.9, 900, 900)
+	scout := spawnTiny(w, roomA, nest, 14*units.Centimeter, 20*units.Centimeter, colony.RoleScout, 0.9, 900, 900)
+	spawnTiny(w, roomA, nest, 8*units.Centimeter, 18*units.Centimeter, colony.RoleGeneralist, 0, 900, 900)
+	spawnTiny(w, roomA, nest, 8*units.Centimeter, 22*units.Centimeter, colony.RoleGeneralist, 0, 900, 900)
+	// El explorador conoce el portal hacia roomB.
+	sa := ecs.Get[ai.Agent](r).Ptr(scout)
+	sa.Known = append(sa.Known, ai.Known{Entity: portal})
+
+	discovered := false
+	for range 800 {
+		w.Step()
+		if a, _ := ecs.Get[ai.Agent](r).Get(gen); a.Knows(hidden) {
+			discovered = true
+			break
+		}
+	}
+	if !discovered {
+		t.Fatal("el explorador no cruzó a roomB ni compartió el hito oculto con la colonia")
+	}
+
+	// Ahora proponer una expedición con gen (ID menor) y scout (ID mayor): el guía debe ser scout.
+	target := r.Spawn()
+	comp.Of(r).Location.Set(target, comp.Location{Space: roomB, Pos: units.V3(25*units.Centimeter, 20*units.Centimeter, 0)})
+	ecs.Get[colony.ExpeditionTarget](r).Set(target, colony.ExpeditionTarget{
+		Colony: nest, Clue: portal, MinMembers: 2, MaxMembers: 2, SurveyTicks: 20, MaxDuration: 2000,
+	})
+	// Devolver ambos cerca del nido y crear la convocatoria.
+	comp.Of(r).Location.Set(gen, comp.Location{Space: roomA, Pos: units.V3(10*units.Centimeter, 20*units.Centimeter, 0)})
+	comp.Of(r).Location.Set(scout, comp.Location{Space: roomA, Pos: units.V3(11*units.Centimeter, 20*units.Centimeter, 0)})
+	expID := r.Spawn()
+	ecs.Get[colony.Expedition](r).Set(expID, colony.Expedition{
+		Colony:     nest,
+		Target:     target,
+		Phase:      colony.ExpGathering,
+		Guide:      gen,
+		Members:    []colony.ExpMember{{Entity: gen, Arrived: true}, {Entity: scout, Arrived: true}},
+		Rendezvous: nest,
+		PhaseUntil: w.Tick(),
+	})
+	w.Step()
+	exp, ok := ecs.Get[colony.Expedition](r).Get(expID)
+	if !ok || exp.Phase != colony.ExpTraveling {
+		t.Fatalf("la expedición no partió: ok=%v phase=%v", ok, exp.Phase)
+	}
+	if exp.Guide != scout {
+		t.Fatalf("el guía debería ser el explorador (%v), fue %v", scout, exp.Guide)
+	}
+}
