@@ -13,6 +13,7 @@ import (
 	"gtsandbox/internal/camera"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/render"
 	"gtsandbox/internal/ui"
 	"gtsandbox/internal/view"
 )
@@ -33,8 +34,10 @@ type tinyGroup struct {
 func isTiny(t view.Thing) bool { return len(t.Needs) > 0 && t.Remains == "" }
 
 // tinyGroups agrupa los tinies por superficie, en orden de ID, y ubica cada
-// globo para que no pise a los anteriores.
-func tinyGroups(f *view.Frame, proj camera.Projector) []tinyGroup {
+// globo para que no pise a los anteriores. Quien trepa una pata se marca en
+// su base, como lo dibuja la vista macro (render.FlattenClimbs).
+func tinyGroups(f *view.Frame, proj camera.Projector, visuals map[ids.ID]string) []tinyGroup {
+	f = render.FlattenClimbs(f, visuals)
 	var out []tinyGroup
 	index := map[ids.ID]int{}
 	for _, t := range f.Things {

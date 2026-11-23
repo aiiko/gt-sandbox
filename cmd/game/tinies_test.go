@@ -1,10 +1,12 @@
 package main
 
 import (
+	"image"
 	"testing"
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/render"
 	"gtsandbox/internal/view"
 )
 
@@ -15,7 +17,7 @@ func TestTinyBadges(t *testing.T) {
 	desk := refOf(t, morningScenario, "desk1")
 	for _, tick := range []int{30, 300, 530} {
 		f := stepTo(t, g, tick)
-		groups := tinyGroups(f, g.cam.Project(g.anchor(f), g.w, g.h))
+		groups := tinyGroups(f, g.cam.Project(g.anchor(f), g.w, g.h), g.visuals)
 		want, got := 0, 0
 		for _, th := range f.Things {
 			if isTiny(th) {
@@ -43,7 +45,7 @@ func TestTinyBadges(t *testing.T) {
 
 	g = artGame(t, morningScenario)
 	f := stepTo(t, g, 30)
-	g.art.badges = tinyGroups(f, g.cam.Project(g.anchor(f), g.w, g.h))
+	g.art.badges = tinyGroups(f, g.cam.Project(g.anchor(f), g.w, g.h), g.visuals)
 	var deskBadge *tinyGroup
 	for i := range g.art.badges {
 		if g.art.badges[i].surface == desk {
@@ -171,4 +173,35 @@ func TestTabFromRoomFramesFloor(t *testing.T) {
 	if g.cam.X != float64(c.X-b.Pose.Pos.X) || g.cam.Y != float64(c.Y-b.Pose.Pos.Y) {
 		t.Fatal("con tinies en el piso, Tab los encuadra a ellos y no al clic")
 	}
+}
+
+// En macro, el punto y el globo de un tiny que trepa una pata quedan en la
+// base de la pata, no corridos hacia el norte tanto como subió.
+func TestTinyBadgeOnLegAtBase(t *testing.T) {
+	g := artGame(t, randomBase)
+	for i := 0; i < 6000; i++ {
+		g.run.StepOnce()
+		f := g.run.Cur
+		for _, th := range f.Things {
+			s, ok := f.SpaceByID(th.Space)
+			if !isTiny(th) || g.visuals[th.Space] != render.ClimbVisual || !ok || th.Pose.Pos.Y-s.Pose.Pos.Y < 10*units.Centimeter {
+				continue
+			}
+			proj := g.cam.Project(g.anchor(f), g.w, g.h)
+			bx, by := proj.ToScreen(s.Pose.Pos)
+			for _, gr := range tinyGroups(f, proj, g.visuals) {
+				for k, id := range gr.tinies {
+					if id != th.ID {
+						continue
+					}
+					if d := gr.dots[k].Sub(image.Pt(int(bx), int(by))); d.X < -2 || d.X > 2 || d.Y < -2 || d.Y > 2 {
+						t.Fatalf("%s a %v de la base de %s", th.Name, d, s.Name)
+					}
+					return
+				}
+			}
+			t.Fatalf("%s no tiene globo", th.Name)
+		}
+	}
+	t.Fatal("ningún tiny trepó más de 10 cm")
 }

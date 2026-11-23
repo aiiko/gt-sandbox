@@ -449,7 +449,7 @@ func (g *game) drawArt(dst *ebiten.Image, f *view.Frame, proj camera.Projector) 
 				ui.Box(dst, r, ui.Ivory)
 				ui.DrawText(dst, label, r.Min.X+4, r.Min.Y+1, ui.Plum)
 			}
-			a.badges = tinyGroups(f, proj)
+			a.badges = tinyGroups(f, proj, g.visuals)
 			g.drawTinyBadges(dst, a.badges)
 		} else {
 			a.badges = nil
