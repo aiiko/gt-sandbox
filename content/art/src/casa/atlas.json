@@ -1555,19 +1555,11 @@
         }
       },
       "micro": {
-        "pivot": [
-          0,
-          0
-        ],
+        "pivot": [20, 180],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              "chair/micro_tile.png"
-            ]
-          }
+          "idle": { "frame_ticks": 1, "frames": ["chair/micro_idle.png"] }
         }
       }
     },
@@ -1588,19 +1580,11 @@
         }
       },
       "micro": {
-        "pivot": [
-          0,
-          0
-        ],
+        "pivot": [40, 220],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              "sofa/micro_tile.png"
-            ]
-          }
+          "idle": { "frame_ticks": 1, "frames": ["sofa/micro_idle.png"] }
         }
       }
     },
@@ -1818,19 +1802,11 @@
         "hidden": true
       },
       "micro": {
-        "pivot": [
-          0,
-          0
-        ],
+        "pivot": [20, 740],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              "futon/micro_tile.png"
-            ]
-          }
+          "idle": { "frame_ticks": 1, "frames": ["apt_futon/micro_idle.png"] }
         }
       }
     },
@@ -1839,19 +1815,11 @@
         "hidden": true
       },
       "micro": {
-        "pivot": [
-          0,
-          0
-        ],
+        "pivot": [10, 170],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              "pillow/micro_tile.png"
-            ]
-          }
+          "idle": { "frame_ticks": 1, "frames": ["apt_pillow/micro_idle.png"] }
         }
       }
     },
@@ -2442,11 +2410,11 @@
         }
       },
       "micro": {
-        "pivot": [0, 0],
+        "pivot": [20, 740],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": { "frame_ticks": 1, "frames": ["futon/micro_tile.png"] }
+          "idle": { "frame_ticks": 1, "frames": ["apt_futon/micro_idle.png"] }
         }
       }
     },
@@ -2458,11 +2426,11 @@
         }
       },
       "micro": {
-        "pivot": [0, 0],
+        "pivot": [10, 170],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": { "frame_ticks": 1, "frames": ["pillow/micro_tile.png"] }
+          "idle": { "frame_ticks": 1, "frames": ["apt_pillow/micro_idle.png"] }
         }
       }
     },
@@ -2491,11 +2459,11 @@
         }
       },
       "micro": {
-        "pivot": [0, 0],
+        "pivot": [30, 230],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": { "frame_ticks": 1, "frames": ["sofa/micro_tile.png"] }
+          "idle": { "frame_ticks": 1, "frames": ["apt_sofa/micro_idle.png"] }
         }
       }
     },
@@ -2574,11 +2542,11 @@
         }
       },
       "micro": {
-        "pivot": [0, 0],
+        "pivot": [20, 980],
         "layer": "background",
-        "tile": true,
+        "scale": 4,
         "clips": {
-          "idle": { "frame_ticks": 1, "frames": ["counter/micro_tile.png"] }
+          "idle": { "frame_ticks": 1, "frames": ["counter/micro_idle.png"] }
         }
       }
     },

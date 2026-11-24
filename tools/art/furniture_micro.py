@@ -384,9 +384,202 @@ def shoe_rack():
     save(s, 'shoe_rack/micro_idle.png')
 
 
+# ------------------------------------------------------------ Muebles transitables (micro completo)
+
+def chair():
+    """Silla de madera con cojín capitoné y respaldo (200 × 240, pivote [20, 180])."""
+    s = Sprite(200, 240)
+    wood_d, wood, wood_l = '#8A5A44', '#B57B5A', '#D19B76'
+    seat_d, seat, seat_l = '#C48A6A', '#E2AA86', '#F2C5A4'
+    s.ell(10, 188, 190, 236, INK_SOFT)
+    # patas visibles abajo
+    for x in (30, 150):
+        s.rrect(x, 160, x + 16, 224, wood_d, INK, r=2)
+        s.rect(x + 3, 162, x + 7, 220, wood)
+    # asiento tapizado (160 × 160: x 20..179, y 20..179)
+    s.rrect(20, 20, 179, 179, seat, INK, r=10)
+    s.rect(28, 28, 171, 42, seat_l)
+    s.rect(28, 28, 38, 171, seat_l)
+    s.rect(28, 164, 171, 173, seat_d)
+    # trama tejida suave y costuras del tapizado
+    for y in range(44, 162, 16):
+        s.hline(32, 168, y, '#D69C78')
+    for x in range(44, 162, 16):
+        s.vline(x, 36, 164, '#D69C78')
+    # botones del capitoné
+    for bx, by in ((60, 68), (138, 68), (60, 128), (138, 128)):
+        s.ell(bx - 6, by - 6, bx + 6, by + 6, seat_d)
+        s.ell(bx - 3, by - 3, bx + 3, by + 3, '#A66F52')
+        s.px(bx - 1, by - 1, seat_l)
+    # respaldo de madera en el borde sur (mira al norte, hacia el escritorio)
+    s.rrect(18, 142, 181, 190, wood, INK, r=8)
+    s.rect(26, 148, 173, 156, wood_l)
+    s.rect(26, 178, 173, 184, wood_d)
+    for x in (56, 98, 140):
+        s.rrect(x, 154, x + 10, 178, wood_d, '#6E4532', r=2)
+    save(s, 'chair/micro_idle.png')
+
+
+def apt_sofa():
+    """Sofá de 3 cuerpos mirando al sur (540 × 280, pivote [30, 230]): asiento 480 × 200."""
+    s = Sprite(540, 280)
+    fab_d, fab, fab_l = '#5A8578', '#78A899', '#99C7B8'
+    s.ell(20, 212, 520, 272, INK_SOFT)
+    for x in (50, 470):
+        s.rrect(x, 228, x + 16, 258, '#8A5A44', INK, r=2)
+    # respaldo al norte (contra pared norte)
+    s.rrect(30, 10, 509, 78, fab_d, INK, r=12)
+    s.rect(42, 18, 496, 30, fab)
+    s.rect(42, 18, 496, 24, fab_l)
+    # asiento de 3 almohadones (480 × 200: x 30..509, y 30..229)
+    s.rrect(34, 58, 505, 229, fab, INK, r=12)
+    s.rect(46, 66, 494, 78, fab_l)
+    s.rect(44, 214, 496, 224, fab_d)
+    # textura textil diagonal sutil
+    for y in range(80, 214, 10):
+        s.hline(46, 494, y, '#6F9F90')
+    # divisiones de los 3 almohadones y botones
+    for x in (190, 348):
+        s.rect(x - 2, 66, x + 2, 222, fab_d)
+        s.vline(x + 3, 66, 222, fab_l)
+    for cx in (112, 270, 428):
+        s.ell(cx - 5, 140, cx + 5, 150, fab_d)
+        s.px(cx - 1, 143, fab_l)
+    # almohadones decorativos (rosa y crema)
+    s.rrect(62, 74, 138, 142, '#FF9CAD', '#C66F86', r=10)
+    s.rect(72, 82, 128, 92, '#FFC2CD')
+    s.rrect(396, 74, 472, 142, '#FFF1D8', '#C9B59E', r=10)
+    s.rect(406, 82, 462, 92, '#FFFFFF')
+    # apoyabrazos laterales
+    s.rrect(10, 36, 52, 232, fab_d, INK, r=10)
+    s.rect(18, 46, 28, 222, fab)
+    s.rrect(486, 36, 528, 232, fab_d, INK, r=10)
+    s.rect(494, 46, 504, 222, fab)
+    save(s, 'apt_sofa/micro_idle.png')
+
+
+def sofa_legacy():
+    """Sofá de 3 cuerpos legado mirando al norte (560 × 300, pivote [40, 220])."""
+    s = Sprite(560, 300)
+    fab_d, fab, fab_l = '#5A8578', '#78A899', '#99C7B8'
+    s.ell(20, 236, 540, 294, INK_SOFT)
+    for x in (52, 490):
+        s.rrect(x, 236, x + 16, 274, '#8A5A44', INK, r=2)
+    s.rrect(40, 20, 519, 220, fab, INK, r=12)
+    s.rect(52, 28, 506, 40, fab_l)
+    for x in (200, 360):
+        s.rect(x - 2, 28, x + 2, 210, fab_d)
+        s.vline(x + 3, 28, 210, fab_l)
+    for cx in (120, 280, 440):
+        s.ell(cx - 5, 114, cx + 5, 124, fab_d)
+    s.rrect(10, 46, 56, 236, fab_d, INK, r=10)
+    s.rect(18, 56, 28, 226, fab)
+    s.rrect(502, 46, 548, 236, fab_d, INK, r=10)
+    s.rect(510, 56, 520, 226, fab)
+    # respaldo al sur
+    s.rrect(30, 188, 529, 258, fab_d, INK, r=10)
+    s.rect(42, 196, 516, 208, fab)
+    s.rect(42, 196, 516, 202, fab_l)
+    save(s, 'sofa/micro_idle.png')
+
+
+def apt_futon():
+    """Futón completo sin almohada (520 × 760, pivote [20, 740]): 480 × 720."""
+    s = Sprite(520, 760)
+    s.rect(38, 38, 510, 750, (0x6E, 0x5F, 0x86, 75))
+    # shikibuton (colchón crema)
+    s.rrect(20, 20, 499, 739, '#FFF1D8', INK, r=14)
+    s.rect(30, 30, 488, 42, '#FFFBF2')
+    s.rect(484, 30, 494, 728, '#D9CBB9')
+    s.rect(30, 724, 488, 734, '#D9CBB9')
+    # costuras del colchón en cabecera
+    for x in range(80, 460, 80):
+        s.vline(x, 44, 204, '#E8DAC2')
+    # kakebuton (edredón lila con doblez superior y flores de cerezo)
+    s.rrect(34, 210, 484, 724, '#9A8BE3', INK, r=14)
+    s.rect(44, 220, 474, 260, '#C3B9F0')
+    s.rect(44, 258, 474, 266, '#B3A7EC')
+    s.rect(468, 266, 478, 714, '#7F70C9')
+    s.rect(44, 708, 474, 718, '#7F70C9')
+    # costuras acolchadas del edredón
+    for y in range(290, 700, 64):
+        s.hline(48, 466, y, '#8D7ED6')
+    for x in range(110, 450, 88):
+        s.vline(x, 268, 706, '#8D7ED6')
+    # flores de cerezo bordadas
+    for y in range(306, 680, 80):
+        for x in range(80, 440, 80):
+            ox = 40 if ((y - 306) // 80) % 2 else 0
+            fx, fy = x + ox, y
+            if fx < 440:
+                for dx, dy in ((-8, 0), (8, 0), (0, -8), (0, 8), (-6, -6), (6, 6)):
+                    s.ell(fx + dx - 4, fy + dy - 4, fx + dx + 4, fy + dy + 4, '#FFC2CD')
+                s.ell(fx - 4, fy - 4, fx + 4, fy + 4, '#FF9CAD')
+    save(s, 'apt_futon/micro_idle.png')
+
+
+def apt_pillow():
+    """Almohada makura independiente (260 × 180, pivote [10, 170]): 240 × 160."""
+    s = Sprite(260, 180)
+    s.rrect(18, 22, 252, 174, INK_SOFT, r=20)
+    s.rrect(10, 10, 249, 169, '#F7EEDD', INK, r=24)
+    s.rect(28, 18, 230, 30, '#FFFFFF')
+    s.rect(28, 152, 230, 162, '#DDCBB4')
+    # trama de lino sutil
+    for y in range(34, 150, 10):
+        s.hline(20, 238, y, '#EFE4D0')
+    # banda lila central del makura
+    s.rect(24, 66, 234, 104, '#9A8BE3')
+    s.rect(24, 70, 234, 76, '#B9ADEB')
+    s.rect(24, 98, 234, 104, '#7C6A95')
+    # costuras laterales
+    s.vline(34, 24, 154, '#D9CBB4')
+    s.vline(224, 24, 154, '#D9CBB4')
+    save(s, 'apt_pillow/micro_idle.png')
+
+
+def counter():
+    """Mesada completa de cocina (280 × 1020, pivote [20, 980]): 240 × 960."""
+    s = Sprite(280, 1020)
+    # sombra en el piso hacia el este y sur
+    s.rect(260, 36, 276, 1012, INK_SOFT)
+    s.rect(32, 990, 276, 1016, INK_SOFT)
+    # tablero de piedra clara (240 × 960: x 20..259, y 20..979)
+    s.rrect(20, 20, 259, 979, '#EFF3EE', INK, r=8)
+    s.rect(28, 28, 251, 971, '#EFF3EE')
+    s.rect(28, 28, 36, 971, '#FFFFFF')
+    s.rect(28, 28, 251, 36, '#FFFFFF')
+    s.rect(248, 28, 256, 971, '#D1DBD4')
+    # motas sutiles de granito claro
+    for y in range(40, 964, 12):
+        for x in range(40, 244, 12):
+            n = noise(x, y, 53)
+            if n < 24:
+                s.rect(x, y, x + 2, y + 2, '#DCE3DC')
+            elif n > 236:
+                s.rect(x, y, x + 2, y + 2, '#FFFFFF')
+    # frente del bajo mesada en el canto sur
+    s.rect(20, 979, 259, 1002, '#7FB0A8')
+    s.rrect(20, 979, 259, 1002, None, INK, r=1)
+    s.rect(24, 982, 255, 986, '#5E8E88')
+    # tiradores de cajones insinuados en el borde este
+    for y in range(140, 950, 160):
+        s.rect(236, y, 254, y + 8, '#BFD0C8')
+    # cable lateral en el borde norte (acceso tiny desde el zócalo)
+    s.rect(228, 0, 236, 22, '#5D566E')
+    s.vline(230, 0, 22, '#7A728F')
+    save(s, 'counter/micro_idle.png')
+
+
 def main(src):
     global SRC
     SRC = src
+    chair()
+    apt_sofa()
+    sofa_legacy()
+    apt_futon()
+    apt_pillow()
+    counter()
     low_closet()
     bed()
     rug()
