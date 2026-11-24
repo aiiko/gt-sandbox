@@ -8,7 +8,7 @@
       "seed": 42,
       "tick": 30,
       "view": "macro",
-      "digest": "429a56a73869f189"
+      "digest": "ff24ad2b752414c9"
     },
     {
       "name": "escritorio",
@@ -22,7 +22,7 @@
         200,
         -90
       ],
-      "digest": "d5633f2fa11d2395"
+      "digest": "5aeb6b041f15edfd"
     },
     {
       "name": "mano-apoyada",
@@ -32,7 +32,7 @@
       "tick": 300,
       "view": "micro",
       "micro": "palma",
-      "digest": "7ad1e780e44a6b84"
+      "digest": "1a5fe1a7d2f11a75"
     },
     {
       "name": "viaje-macro",
@@ -41,7 +41,7 @@
       "seed": 42,
       "tick": 530,
       "view": "macro",
-      "digest": "d66521ab70d5dc2c"
+      "digest": "d8aa5f79ee678e2e"
     },
     {
       "name": "viaje",
@@ -51,7 +51,7 @@
       "tick": 530,
       "view": "micro",
       "follow": "Tiny 01",
-      "digest": "c1d0c86a911aec9a"
+      "digest": "8cceaeb8f2452d6e"
     },
     {
       "name": "llegada-living",
@@ -61,7 +61,7 @@
       "tick": 600,
       "view": "micro",
       "micro": "mesa del living",
-      "digest": "53744c51536c925c"
+      "digest": "e7d6341f21caf2d4"
     },
     {
       "name": "caida",
@@ -71,7 +71,7 @@
       "tick": 17,
       "view": "micro",
       "follow": "Tiny 01",
-      "digest": "0e4d491ae61813ff"
+      "digest": "d48e7ffe1442c93c"
     },
     {
       "name": "sombra-de-la-mano",
@@ -81,7 +81,7 @@
       "tick": 188,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "2cb21a4e93bdc898"
+      "digest": "0fd27a411db09997"
     },
     {
       "name": "aplastado",
@@ -91,7 +91,7 @@
       "tick": 200,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "bee96c40688795c4"
+      "digest": "c83f3385255b6a47"
     },
     {
       "name": "pisada",
@@ -101,7 +101,7 @@
       "tick": 175,
       "view": "micro",
       "follow": "Tiny 21",
-      "digest": "869e1fade6309e9d"
+      "digest": "03dfc09da59f144a"
     }
   ]
 }

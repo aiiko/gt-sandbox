@@ -18,7 +18,17 @@ const (
 var Ambients = []string{AmbBedroom, AmbKitchen, AmbLiving, AmbTV, AmbMicro}
 
 // rooms da el bucle de cada habitación según su visual.
-var rooms = map[string]string{"bedroom": AmbBedroom, "kitchen": AmbKitchen, "living": AmbLiving}
+var rooms = map[string]string{
+	"bedroom":      AmbBedroom,
+	"kitchen":      AmbKitchen,
+	"living":       AmbLiving,
+	"apt_bedroom":  AmbBedroom,
+	"apt_kitchen":  AmbKitchen,
+	"apt_living":   AmbLiving,
+	"apt_hallway":  AmbLiving,
+	"apt_bathroom": AmbKitchen,
+	"apt_genkan":   AmbLiving,
+}
 
 const (
 	// FadeFrames es cuánto tarda el ambiente en pasar de silencio a pleno.
@@ -64,7 +74,7 @@ func AmbientTargets(f *view.Frame, v View, follow ids.ID, paused bool) map[strin
 	if id, ok := rooms[v.Visual(room)]; ok {
 		out[id] = level
 	}
-	if s, ok := f.SpaceByID(giantess); ok && v.Visual(room) == "living" && watching(s) {
+	if s, ok := f.SpaceByID(giantess); ok && (v.Visual(room) == "living" || v.Visual(room) == "apt_living") && watching(s) {
 		out[AmbTV] = 0.8 * level
 	}
 	if paused {

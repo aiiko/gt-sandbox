@@ -697,9 +697,13 @@ def body_pose_parts(mode):
 
 def with_body_map(d):
     """Integra idempotentemente el mapa corporal completo y futón/almohada en casa.json."""
-    d['entities'] = [e for e in d['entities'] if e['ref'] not in BODY_REFS]
-    # Agregar contact_surface a bedroom, living, chair y sofa para apoyos corporales.
-    for ref in ('bedroom', 'living', 'chair', 'sofa'):
+    # Si la planta nueva (propuesta 20) ya colocó futón y almohada con sus visuales,
+    # conservarlos en su ubicación real en lugar de sobreescribirlos con la planta vieja.
+    has_apt_futon = any(e['ref'] == 'futon' and e.get('visual') == 'apt_futon' for e in d['entities'])
+    drop_refs = [r for r in BODY_REFS if not (has_apt_futon and r in ('futon', 'pillow', 'futon_step', 'pillow_step'))]
+    d['entities'] = [e for e in d['entities'] if e['ref'] not in drop_refs]
+    # Agregar contact_surface a las habitaciones y asientos para apoyos corporales.
+    for ref in ('bedroom', 'living', 'kitchen', 'hallway', 'bathroom', 'genkan', 'chair', 'sofa'):
         for e in d['entities']:
             if e['ref'] == ref:
                 e['spawn'].setdefault('components', {}).setdefault('contact_surface', {'tolerance': 50000})
@@ -727,9 +731,9 @@ def with_body_map(d):
                 'access_reach': 80000, 'body': '$giantess',
             }
             break
-    # Agregar futón, almohada y el mapa corporal al final para conservar los IDs
-    # de las entidades existentes de la casa y la colonia.
-    d['entities'].extend(futon_entities())
+    # Agregar futón, almohada (si no estaban) y el mapa corporal al final.
+    if not has_apt_futon:
+        d['entities'].extend(futon_entities())
     d['entities'].extend(body_entities())
     if has_rear:
         d['entities'].extend([

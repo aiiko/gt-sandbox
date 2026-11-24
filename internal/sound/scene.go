@@ -68,7 +68,20 @@ var minor = map[string]bool{
 }
 
 // floors da el sonido de los pasos de la giantess según la habitación.
-var floors = map[string]string{"bedroom": StepTatami, "living": StepWood, "kitchen": StepTile}
+var floors = map[string]string{
+	"bedroom":      StepTatami,
+	"living":       StepWood,
+	"kitchen":      StepTile,
+	"apt_bedroom":  StepTatami,
+	"apt_living":   StepWood,
+	"apt_hallway":  StepWood,
+	"apt_kitchen":  StepTile,
+	"apt_bathroom": StepTile,
+	"apt_genkan":   StepTile,
+}
+
+func isLivingVisual(vis string) bool  { return vis == "living" || vis == "apt_living" }
+func isKitchenVisual(vis string) bool { return vis == "kitchen" || vis == "apt_kitchen" }
 
 // tinySteps da la variante de pasitos según la paleta del tiny.
 var tinySteps = map[string]string{"tiny": TinyStep + "1", "tiny_lavender": TinyStep + "2", "tiny_ochre": TinyStep + "3"}
@@ -278,7 +291,7 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		if ev.Pose == "sit" {
 			if s, ok := cur.SpaceByID(ev.Entity); ok {
 				if !v.Micro {
-					if v.Visual(s.Parent) == "living" {
+					if isLivingVisual(v.Visual(s.Parent)) {
 						c.add(SofaSit, s.Pose.Pos, 0.85)
 					} else {
 						c.add(ChairCreak, s.Pose.Pos, 0.8)
@@ -289,7 +302,7 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 					case fv == "chair":
 						c.addNear(ChairCreak, s.Pose.Pos, 0.95)
 						c.addNear(SitThudMicro, s.Pose.Pos, 1.0)
-					case fv == "sofa" || fv == "sofa_pocket":
+					case fv == "sofa" || fv == "apt_sofa" || fv == "sofa_pocket":
 						c.addNear(SofaSit, s.Pose.Pos, 1.0)
 						c.addNear(SitThudMicro, s.Pose.Pos, 1.0)
 					case fv == "body_rear":
@@ -314,11 +327,11 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		}
 		if _, isSpace := cur.SpaceByID(ev.Entity); isSpace && !v.Micro {
 			door := DoorFusuma
-			if v.Visual(ev.From) == "kitchen" || v.Visual(ev.To) == "kitchen" {
+			if isKitchenVisual(v.Visual(ev.From)) || isKitchenVisual(v.Visual(ev.To)) {
 				door = DoorNoren
 			}
 			c.add(door, p, 1)
-			if v.Visual(ev.From) == "kitchen" {
+			if isKitchenVisual(v.Visual(ev.From)) {
 				c.add(FridgeClose, p, 0.6)
 			}
 		}
@@ -330,13 +343,13 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		if !ok || v.Micro {
 			return
 		}
-		switch v.Visual(s.Parent) {
-		case "kitchen":
+		switch {
+		case isKitchenVisual(v.Visual(s.Parent)):
 			c.add(FridgeOpen, s.Pose.Pos, 1)
-		case "living":
+		case isLivingVisual(v.Visual(s.Parent)):
 			c.add(Zabuton, s.Pose.Pos, 0.8)
 			for _, t := range cur.Things {
-				if v.Visual(t.ID) == "tv" {
+				if v.Visual(t.ID) == "tv" || v.Visual(t.ID) == "apt_tv" {
 					c.add(TVOn, t.Pose.Pos, 0.7)
 				}
 			}

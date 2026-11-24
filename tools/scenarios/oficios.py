@@ -26,7 +26,33 @@ ADVENTURE_REFS = [
 ]
 
 
-def adventure_entities():
+def adventure_entities(d=None):
+    # Derivar posiciones del pasacables, refugio del umbral y vigía a partir de
+    # la geometría real de dormitorio, living y leg1_bottom (propuesta 20.4.3).
+    bed_w = 3000000
+    bed_ox, bed_oy = 3000000, 0
+    duct_local_y = 270000
+    refuge_x = 150000
+    watch_x, watch_y = 1475000, 975000
+    lookout_x, lookout_y = 1400000, 950000
+    if d is not None:
+        bed = next((e for e in d['entities'] if e['ref'] == 'bedroom'), None)
+        if bed is not None:
+            bed_ox = bed['spawn']['location']['pos']['x']
+            bed_oy = bed['spawn']['location']['pos']['y']
+            bed_w = bed['spawn']['space']['extent']['max']['x']
+            if bed_oy > 0:
+                # Nueva planta: pasacables cerca del sofá, lejos de la puerta del living.
+                duct_local_y = 2320000
+                refuge_x = 250000
+        leg_b = next((e for e in d['entities'] if e['ref'] == 'leg1_bottom'), None)
+        if leg_b is not None:
+            p = leg_b['spawn']['components']['portal']['a']['pos']
+            watch_x, watch_y = p['x'], p['y']
+            lookout_x, lookout_y = max(100000, watch_x - 80000), max(100000, watch_y - 30000)
+    shared_x = bed_ox + bed_w
+    duct_world_y = bed_oy + duct_local_y
+
     return [
         # Pasacables del zócalo entre dormitorio y living (solo tinies).
         {
@@ -35,7 +61,7 @@ def adventure_entities():
             'spawn': {
                 'name': 'pasacables del zócalo',
                 'space': {'kind': 'static', 'extent': {'min': {'x': 0, 'y': 0}, 'max': {'x': 200000, 'y': 40000}}},
-                'location': {'space': '$house', 'pos': {'x': 5900000, 'y': 250000, 'z': 0}},
+                'location': {'space': '$house', 'pos': {'x': shared_x - 100000, 'y': duct_world_y - 20000, 'z': 0}},
                 'components': {'nav_grid': {
                     'origin': {'x': 0, 'y': 0}, 'cell': 20000, 'version': 0,
                     'rows': ['.' * 10] * 2,
@@ -55,7 +81,7 @@ def adventure_entities():
             'spawn': {
                 'name': 'boca del pasacables (dormitorio)',
                 'components': {'portal': {
-                    'a': {'space': '$bedroom', 'pos': {'x': 2950000, 'y': 270000}},
+                    'a': {'space': '$bedroom', 'pos': {'x': bed_w - 50000, 'y': duct_local_y}},
                     'b': {'space': '$cable_duct', 'pos': {'x': 10000, 'y': 20000}},
                     'cost': 50000, 'scale': 'tiny', 'version': 0,
                 }},
@@ -67,7 +93,7 @@ def adventure_entities():
                 'name': 'boca del pasacables (living)',
                 'components': {'portal': {
                     'a': {'space': '$cable_duct', 'pos': {'x': 190000, 'y': 20000}},
-                    'b': {'space': '$living', 'pos': {'x': 50000, 'y': 270000}},
+                    'b': {'space': '$living', 'pos': {'x': 50000, 'y': duct_local_y}},
                     'cost': 0, 'scale': 'tiny', 'version': 0,
                 }},
             },
@@ -78,7 +104,7 @@ def adventure_entities():
             'visual': 'threshold_refuge',
             'spawn': {
                 'name': 'refugio del umbral',
-                'location': {'space': '$living', 'pos': {'x': 150000, 'y': 270000, 'z': 0}},
+                'location': {'space': '$living', 'pos': {'x': refuge_x, 'y': duct_local_y, 'z': 0}},
                 'components': {
                     'shelter': {'strength': 500, 'radius': 60000},
                     'landmark': {'range': 1000000},
@@ -129,12 +155,12 @@ def adventure_entities():
             'visual': 'lookout_post',
             'spawn': {
                 'name': 'puesto de vigía',
-                'location': {'space': '$bedroom', 'pos': {'x': 1400000, 'y': 950000, 'z': 0}},
+                'location': {'space': '$bedroom', 'pos': {'x': lookout_x, 'y': lookout_y, 'z': 0}},
                 'components': {
                     'lookout_post': {
                         'colony': '$nest',
                         'portal': '$leg1_bottom',
-                        'watch_point': {'x': 1475000, 'y': 975000},
+                        'watch_point': {'x': watch_x, 'y': watch_y},
                         'watch_radius': 120000,
                         'alert_radius': 500000,
                     },
@@ -167,7 +193,7 @@ def adventure_entities():
             'visual': 'expedition_marker',
             'spawn': {
                 'name': 'salida del pasacables',
-                'location': {'space': '$living', 'pos': {'x': 150000, 'y': 270000, 'z': 0}},
+                'location': {'space': '$living', 'pos': {'x': refuge_x, 'y': duct_local_y, 'z': 0}},
                 'components': {
                     'expedition_target': {
                         'colony': '$nest',
@@ -213,7 +239,7 @@ def with_adventures(d):
             mv['scale'] = ag['scale']
     # Insertar después de sofa_bridge_bottom (así bedroom, living, chair y sofa ya existen).
     i = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'sofa_bridge_bottom') + 1
-    d['entities'][i:i] = adventure_entities()
+    d['entities'][i:i] = adventure_entities(d)
     d['notes'] = d['notes'].split(' Oficios y expediciones:')[0] + (
         ' Oficios y expediciones: oficios flexibles, puesto de vigía, mirador del respaldo, '
         'pasacables del zócalo, refugio del umbral y bolsillo del sofá (tools/scenarios/oficios.py).')

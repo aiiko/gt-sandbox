@@ -199,7 +199,7 @@ func (g *game) minimap(f *view.Frame, focus ids.ID) *ui.Minimap {
 	}
 	mm := &ui.Minimap{}
 	for _, s := range f.Spaces {
-		if s.Kind != space.Static || s.Extent.Empty() || g.visuals[s.ID] == "" {
+		if s.Kind != space.Static || s.Extent.Empty() || g.visuals[s.ID] == "" || !g.art.atlas.Visible(g.visuals[s.ID], render.Macro) {
 			continue
 		}
 		corners := view.Corners(s)
@@ -237,7 +237,7 @@ func (g *game) minimap(f *view.Frame, focus ids.ID) *ui.Minimap {
 func (g *game) roomLabels(f *view.Frame, proj camera.Projector) []ui.RoomLabel {
 	var out []ui.RoomLabel
 	for _, room := range f.Spaces {
-		if room.Kind != space.Static || g.visuals[room.ID] == "" || room.Name == "" {
+		if room.Kind != space.Static || g.visuals[room.ID] == "" || room.Name == "" || !g.art.atlas.Visible(g.visuals[room.ID], render.Macro) {
 			continue
 		}
 		c := view.Corners(room)

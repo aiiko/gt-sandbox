@@ -2281,6 +2281,349 @@
           }
         }
       }
+    },
+    "apt_bedroom": {
+      "macro": {
+        "pivot": [0, 296],
+        "layer": "background",
+        "foreground": "apt_bedroom/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_bedroom/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["bedroom/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_living": {
+      "macro": {
+        "pivot": [0, 296],
+        "layer": "background",
+        "foreground": "apt_living/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_living/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["living/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_hallway": {
+      "macro": {
+        "pivot": [0, 88],
+        "layer": "background",
+        "foreground": "apt_hallway/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_hallway/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["living/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_kitchen": {
+      "macro": {
+        "pivot": [0, 248],
+        "layer": "background",
+        "foreground": "apt_kitchen/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_kitchen/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["kitchen/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_bathroom": {
+      "macro": {
+        "pivot": [0, 160],
+        "layer": "background",
+        "foreground": "apt_bathroom/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_bathroom/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_bathroom/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_genkan": {
+      "macro": {
+        "pivot": [0, 160],
+        "layer": "background",
+        "foreground": "apt_genkan/macro_fg.png",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_genkan/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_genkan/micro_tile.png"] }
+        }
+      }
+    },
+    "door_h": {
+      "macro": {
+        "pivot": [36, 8],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["door_h/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "door_noren_h": {
+      "macro": {
+        "pivot": [36, 10],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["door_noren_h/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "door_bath": {
+      "macro": {
+        "pivot": [32, 7],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["door_bath/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "apt_futon": {
+      "macro": {
+        "pivot": [4, 148],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_futon/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["futon/micro_tile.png"] }
+        }
+      }
+    },
+    "apt_pillow": {
+      "macro": {
+        "pivot": [2, 34],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_pillow/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["pillow/micro_tile.png"] }
+        }
+      }
+    },
+    "low_closet": {
+      "macro": {
+        "pivot": [2, 42],
+        "depth_offset": 6,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["low_closet/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "apt_sofa": {
+      "macro": {
+        "pivot": [6, 46],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_sofa/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sofa/micro_tile.png"] }
+        }
+      }
+    },
+    "tv_stand": {
+      "macro": {
+        "pivot": [3, 36],
+        "depth_offset": 0,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["tv_stand/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "apt_tv": {
+      "macro": {
+        "pivot": [33, 32],
+        "depth_offset": 24,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_tv/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "rug": {
+      "macro": {
+        "pivot": [3, 99],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rug/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "plant": {
+      "macro": {
+        "pivot": [23, 50],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["plant/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "counter": {
+      "macro": {
+        "pivot": [4, 196],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["counter/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["counter/micro_tile.png"] }
+        }
+      }
+    },
+    "sink": {
+      "macro": {
+        "pivot": [2, 42],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sink/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "sink_basin": {
+      "macro": { "hidden": true },
+      "micro": {
+        "pivot": [0, 0],
+        "layer": "background",
+        "tile": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sink_basin/micro_tile.png"] }
+        }
+      }
+    },
+    "stove": {
+      "macro": {
+        "pivot": [2, 50],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["stove/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "rice_cooker": {
+      "macro": {
+        "pivot": [13, 20],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rice_cooker/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "dish_shelf": {
+      "macro": {
+        "pivot": [4, 32],
+        "depth_offset": 12,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["dish_shelf/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "washbasin": {
+      "macro": {
+        "pivot": [2, 58],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["washbasin/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "toilet": {
+      "macro": {
+        "pivot": [2, 50],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["toilet/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "shower_tray": {
+      "macro": {
+        "pivot": [2, 78],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["shower_tray/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
+    },
+    "shoe_rack": {
+      "macro": {
+        "pivot": [2, 66],
+        "depth_offset": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["shoe_rack/macro_idle.png"] }
+        }
+      },
+      "micro": { "hidden": true }
     }
   }
 }

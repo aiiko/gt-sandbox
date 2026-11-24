@@ -17,8 +17,10 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import apartment  # noqa: E402
 import cuerpo  # noqa: E402
 import floors  # noqa: E402
+import furniture  # noqa: E402
 import giantess  # noqa: E402
 import macro  # noqa: E402
 import micro  # noqa: E402
@@ -35,6 +37,8 @@ BASE = os.path.join(HERE, 'base')
 
 def build(out):
     macro.main(out)
+    apartment.main(out)
+    furniture.main(out)
     giantess.main(out)
     micro.main(out, BASE)
     floors.main(out)

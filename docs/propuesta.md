@@ -1361,7 +1361,7 @@ El explorador puede reconocer una zona nueva o esperar en un punto de agarre des
 
 ## 20. Reescritura del mapa de la casa
 
-**Estado.** Propuesta para la próxima implementación de «Nueva partida». La planta actual encadena tres cuartos de 3 × 3 m con el dormitorio como paso entre la cocina y el living. Parte del mobiliario de cocina y living está dibujado en el fondo de cada habitación. La próxima planta organiza el departamento alrededor de un distribuidor y compone cada habitación con piezas de mobiliario independientes. [Escenario actual](../content/partidas/casa.json) · [Fuentes del arte macro](../tools/art/macro.py)
+**Estado.** Implementado: planta paramétrica de 7,4 × 6,4 m con distribuidor, dormitorio, living, cocina, baño y genkan y catálogo de 21 piezas independientes (`tools/scenarios/planta.py`), arquitectura a 80 px/m con tabiques compartidos, ventanas y baldosas micro (`tools/art/apartment.py`), sprites independientes de mobiliario sobre fondo transparente (`tools/art/furniture.py`), generadores adaptados por referencia (`partida.py`, `vida.py`, `oficios.py`, `cuerpo.py`), encuadre inicial completo en macro (`cmd/game/art.go`), ambiente/pasos de audio (`internal/sound`) y pruebas de circulación, edición, superficies, caídas, perfiles y contactos (`internal/scenario/m60_apartment_test.go`). [Escenario actual](../content/partidas/casa.json) · [Planta y catálogo](../tools/scenarios/planta.py)
 
 ### 20.1. Planta y circulación
 

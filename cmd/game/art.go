@@ -230,7 +230,34 @@ func (g *game) fitArt() {
 		return
 	}
 	g.cam.Anchor = ids.Nil
-	g.cam.Fit(f.Bounds(), g.w, g.h)
+	b := f.Bounds()
+	g.cam.Fit(b, g.w, g.h)
+	// Si el usuario no eligió zoom manual y la planta completa no entra al
+	// factor del lienzo, bajar al mayor nivel de zoom que la muestre entera
+	// con margen para barras y pared norte (propuesta 20.3.4).
+	if g.art.factor[render.Macro] == 0 {
+		zpx := g.artZoom(render.Macro)
+		needW := float64(b.Max.X-b.Min.X)*zpx + 24
+		needH := float64(b.Max.Y-b.Min.Y)*zpx + 64
+		uiF := float64(g.art.uiFactor())
+		availW := float64(g.w) * uiF
+		availH := float64(max(1, g.h-artHeader-artFooter)) * uiF
+		if needW*uiF > availW || needH*uiF > availH {
+			best := zoomLevels[0]
+			for _, lvl := range zoomLevels {
+				if lvl >= uiF {
+					break
+				}
+				if needW*lvl <= availW && needH*lvl <= availH {
+					best = lvl
+				}
+			}
+			if g.art.factor == nil {
+				g.art.factor = map[render.Scale]float64{}
+			}
+			g.art.factor[render.Macro] = best
+		}
+	}
 	g.cam.Zoom = g.sceneZoom(render.Macro)
 }
 

@@ -397,7 +397,7 @@ def on(space, ref, x, y, comps, name=None, obj=None):
     return e
 
 
-def life_entities():
+def life_entities(d=None):
     def spot_on(space, ref, x, y, name):
         return on(space, ref, x, y, {'search_spot': {}, 'landmark': {'range': 1000000}}, name)
 
@@ -406,11 +406,19 @@ def life_entities():
         del e['spawn']['components']
         return e
 
+    # Derivar el punto del piso junto a la pata del escritorio por referencia.
+    floor_x, floor_y = 1350000, 900000
+    if d is not None:
+        leg_b = next((e for e in d['entities'] if e['ref'] == 'leg1_bottom'), None)
+        if leg_b is not None:
+            p = leg_b['spawn']['components']['portal']['a']['pos']
+            floor_x, floor_y = max(100000, p['x'] - 100000), max(100000, p['y'] - 50000)
+
     return [
         spot_on('desk1', 'spot_corner', 560000, 50000, 'el rincón del escritorio'),
         spot_on('desk1', 'spot_back', 80000, 350000, 'el fondo del escritorio'),
         spot_on('chair', 'spot_chair', 340000, 340000, 'el borde de la silla'),
-        spot_on('bedroom', 'spot_floor', 1350000, 900000, 'el piso junto al escritorio'),
+        spot_on('bedroom', 'spot_floor', floor_x, floor_y, 'el piso junto al escritorio'),
         chair_crumb('chair_crumb1', 330000, 330000),
         chair_crumb('chair_crumb2', 355000, 350000),
         chair_crumb('chair_crumb3', 340000, 365000),
@@ -437,7 +445,7 @@ def with_life(d):
             c['needs'] = [n for n in c['needs'] if n['name'] != 'fun'] + [dict(TINY_FUN)]
     # la servilleta antes que la obra (la obra la nombra)
     i = next(i for i, e in enumerate(d['entities']) if e['ref'] == 'nest') + 1
-    d['entities'][i:i] = life_entities()
+    d['entities'][i:i] = life_entities(d)
     d['notes'] = d['notes'].split(' Vida del nido:')[0] + (
         ' Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, '
         'refugio por armar y punto de reunión (tools/scenarios/vida.py).')

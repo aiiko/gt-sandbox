@@ -31,9 +31,28 @@ import json
 import os
 
 from asientos import SEAT_POSES, chair_entities, seat_entity, sofa_entities
+from planta import build_apartment
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCENARIOS = os.path.join(ROOT, 'tests', 'scenarios')
+
+# Poses de la partida libre: suma las poses para la mesa auxiliar del living
+# (65 cm de alto, delante del sofá mirando al sur).
+APARTMENT_POSES = copy.deepcopy(SEAT_POSES)
+APARTMENT_POSES.update({
+    'sit_table_set': [
+        {'part': '$palm', 'pos': {'x': 550000, 'y': 0, 'z': 800000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+    ],
+    'sit_table_hover': [
+        {'part': '$palm', 'pos': {'x': 550000, 'y': 0, 'z': 780000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+    ],
+    'sit_table_rest': [
+        {'part': '$palm', 'pos': {'x': 550000, 'y': 0, 'z': 670000}, 'facing': 0},
+        {'part': '$body_rear', 'pos': {'x': 0, 'y': 0, 'z': 470000}, 'facing': 0},
+    ],
+})
 
 # Merienda: sacar un plato de la heladera, llevarlo a la mesa del living,
 # dejarlo con unas migajas alrededor y comer con la mano apoyada.
@@ -58,7 +77,7 @@ SNACK_LIVING = {
 # desayunar/escribir sentada en la silla; merendar/mirar TV sentada en el sofá.
 SNACK_LIVING_SEAT = {
     'action': 'snack_living', 'scale': 'giantess', 'effects': [{'need': 'hunger', 'amount': 350}],
-    'approach': {'x': 0, 'y': -500000},
+    'approach': {'x': -600000, 'y': 0}, 'facing': 0,
     'steps': [
         {'do': 'goto'},
         {'do': 'wait', 'ticks': 30},
@@ -67,11 +86,11 @@ SNACK_LIVING_SEAT = {
         {'do': 'pose', 'pose': 'sit_hover'},
         {'do': 'wait', 'ticks': 16},
         {'do': 'pose', 'pose': 'sit'},
-        {'do': 'pose', 'pose': 'sit_set_table'},
-        {'do': 'drop', 'offset': {'x': 40000, 'y': 120000}},
-        {'do': 'spawn', 'item': 'crumb', 'count': 4, 'offset': {'x': 40000, 'y': 0}, 'spread': 200000},
+        {'do': 'pose', 'pose': 'sit_table_set'},
+        {'do': 'drop', 'offset': {'x': -100000, 'y': 40000}},
+        {'do': 'spawn', 'item': 'crumb', 'count': 4, 'offset': {'x': 0, 'y': 0}, 'spread': 160000},
         {'do': 'wait', 'ticks': 12},
-        {'do': 'pose', 'pose': 'sit_hand_rest'},
+        {'do': 'pose', 'pose': 'sit_table_rest'},
         {'do': 'use', 'ticks': 250},
     ],
 }
@@ -202,23 +221,79 @@ def write(path, d):
     print('escrito', os.path.relpath(path, ROOT))
 
 
-def main():
-    base = json.load(open(os.path.join(SCENARIOS, 'un_descuido_en_el_escritorio.json'), encoding='utf-8'))
+OLD_HOUSE_REFS = {
+    'house', 'kitchen', 'bedroom', 'living', 'door1', 'door2', 'door_kb', 'door_bl',
+    'bed', 'desk1', 'leg1', 'leg1_bottom', 'leg1_top', 'fridge', 'desk2', 'tv',
+}
 
+
+def build_casa_apartment(base):
+    """Arma content/partidas/casa.json sobre la nueva planta del departamento (propuesta 20)."""
     d = copy.deepcopy(base)
     d['name'] = 'Partida libre'
-    d['notes'] = ('Base de «Nueva partida»: la mañana peligrosa con perfiles de arranque de la giantess y la '
-                  'merienda en el living. scenario.Randomize sortea la colonia, el cuidado y el perfil.')
+    d['notes'] = (
+        'Base de «Nueva partida»: departamento de 7,4 × 6,4 m con distribuidor, dormitorio, living, '
+        'cocina, baño y genkan, y 21 piezas de mobiliario independientes (propuesta 20). '
+        'scenario.Randomize sortea la colonia, el cuidado y el perfil.'
+    )
     d['atlas'] = '../art/casa.json'
     d['expect'] = []
-    with_living_snack(d)
-    with_seats(d)
+
+    apt_ents, _ = build_apartment()
+    kept = [e for e in d['entities'] if e['ref'] not in OLD_HOUSE_REFS]
+    # Ubicar a la giantess en zona despejada del dormitorio nuevo e insertar body_rear tras palm.
+    for e in kept:
+        if e['ref'] == 'giantess':
+            e['spawn']['location'] = {'space': '$bedroom', 'pos': {'x': 1800000, 'y': 1500000, 'z': 0}}
+            gc = e['spawn'].setdefault('components', {})
+            gc.setdefault('mover', {})['scale'] = 'giantess'
+            gc['needs'] = copy.deepcopy(STARTS[0]['needs'])
+    i_palm = next(i for i, e in enumerate(kept) if e['ref'] == 'palm')
+    kept.insert(i_palm + 1, seat_entity())
+    d['entities'] = apt_ents + kept
+
+    d['commands'][0]['data']['components']['poses'] = copy.deepcopy(APARTMENT_POSES)
+
+    # Ofertas de heladera (frente despejado al oeste) y escritorio.
+    fridge = entity(d, 'fridge')
+    fridge['spawn'].setdefault('components', {})['offers'] = [
+        {
+            'action': 'breakfast', 'scale': 'giantess',
+            'effects': [{'need': 'hunger', 'amount': 600}],
+            'approach': {'x': -600000, 'y': 0}, 'facing': 0,
+            'steps': [
+                {'do': 'goto'},
+                {'do': 'wait', 'ticks': 40},
+                {'do': 'take', 'item': 'cup'},
+                {'do': 'goto', 'place': 'desk'},
+                {'do': 'pose', 'pose': 'sit_hover'},
+                {'do': 'wait', 'ticks': 16},
+                {'do': 'pose', 'pose': 'sit'},
+                {'do': 'pose', 'pose': 'sit_set_table'},
+                {'do': 'drop', 'offset': {'x': 50000, 'y': 150000}},
+                {'do': 'spawn', 'item': 'crumb', 'count': 4, 'offset': {'x': 60000, 'y': 0}, 'spread': 220000},
+                {'do': 'wait', 'ticks': 12},
+                {'do': 'pose', 'pose': 'sit_hand_rest'},
+                {'do': 'use', 'ticks': 300},
+            ],
+        },
+        copy.deepcopy(SNACK_LIVING_SEAT),
+    ]
+    entity(d, 'desk1')['spawn'].setdefault('components', {})['offers'] = [copy.deepcopy(WRITE_SEAT)]
+
     d['random'] = {'agent': '$giantess', 'starts': copy.deepcopy(STARTS)}
     entity(d, 'giantess')['spawn']['components']['encounter'] = dict(copy.deepcopy(ENCOUNTER), portion=crumb())
     for e in d['entities']:
         a = e['spawn'].get('components', {}).get('agent')
         if a and a.get('scale') == 'tiny':
             a['revisit'] = REVISIT
+    return d
+
+
+def main():
+    base = json.load(open(os.path.join(SCENARIOS, 'un_descuido_en_el_escritorio.json'), encoding='utf-8'))
+
+    d = build_casa_apartment(base)
     write(os.path.join(ROOT, 'content', 'partidas', 'casa.json'), d)
 
     d = copy.deepcopy(base)
