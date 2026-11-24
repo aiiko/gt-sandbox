@@ -474,6 +474,16 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 				look{ghost: true, layer: layerGround, alpha: 0.32})
 		}
 		add(s.ID, support, ids.Nil, s.Pose.Pos, names, true, image.Point{}, lk)
+		if s.Activity == "use:shower" && (s.Step == "" || s.Step == "use") {
+			add(s.ID, support, ids.Nil, s.Pose.Pos, []string{"idle"}, false, image.Point{},
+				look{visual: "shower_fx", ghost: true, layer: layerForeground})
+			if scale == Macro && !s.Goal.IsNil() {
+				if tray, ok := f.ThingByID(s.Goal); ok {
+					add(tray.ID, tray.Space, ids.Nil, tray.Pose.Pos, []string{"idle"}, false, image.Point{},
+						look{visual: "shower_tray_fx", ghost: true, layer: layerForeground})
+				}
+			}
+		}
 	}
 	if scale == Macro {
 		// Sombra de la próxima pisada de quien camina: más oscura cuanto más
@@ -856,6 +866,7 @@ var poseClips = map[string]string{
 	"sleep":        "sleep",
 	"wash_hands":   "wash",
 	"wash_dishes":  "wash",
+	"shower":       "wash",
 }
 
 // actor es el estado de una entidad del que sale su clip.

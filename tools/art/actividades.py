@@ -104,9 +104,100 @@ def nest_water():
         save(c, f'nest_water/micro_{state}.png')
 
 
+def shower_fx():
+    # 1) Sobre la giantess en macro (62 × 76 px, pivote [30, 68]):
+    #    chorros de agua cayendo, salpicaduras en los pies y nubes suaves de vapor.
+    steam_soft = hexc('#F2FAFF', 135)
+    steam_mid = hexc('#FFFFFF', 175)
+    spray_a = hexc('#89D1F2', 200)
+    spray_b = hexc('#E8FAFF', 225)
+    splash = hexc('#76C8F0', 190)
+
+    for frame in range(4):
+        c = Canvas(62, 76)
+        # Nubes de vapor subiendo alrededor de cabeza y hombros
+        rise = frame * 2
+        for bx, by, rx, ry in (
+            (14, 26 - rise, 7, 5),
+            (46, 22 - (rise + 3) % 8, 8, 5),
+            (22, 14 - (rise + 5) % 8, 6, 4),
+            (40, 12 - (rise + 1) % 8, 6, 4),
+            (10, 44 - (rise + 2) % 8, 6, 4),
+            (50, 42 - (rise + 4) % 8, 6, 4),
+        ):
+            c.ellipse(bx, by, rx, ry, steam_soft)
+            c.ellipse(bx - 1, by - 1, max(2, rx - 2), max(2, ry - 2), steam_mid)
+
+        # Líneas de agua cayendo desde arriba
+        for col_i, x0 in enumerate((16, 22, 28, 34, 40, 46)):
+            y_off = (frame * 5 + col_i * 7) % 16
+            for y in range(4 + y_off, 66, 14):
+                col = spray_b if (col_i + frame) % 2 == 0 else spray_a
+                for dy in range(6):
+                    yy = y + dy
+                    if 4 <= yy <= 66:
+                        c.px(x0 + (dy // 4), yy, col)
+
+        # Salpicaduras en la base (pies)
+        ring_r = 12 + (frame % 2) * 3
+        for dx in range(-ring_r, ring_r + 1, 3):
+            c.px(30 + dx, 67 + ((dx + frame) % 2), splash)
+        for sx, sy in ((18, 64 - frame % 3), (42, 63 - (frame + 1) % 3), (26, 65 - (frame + 2) % 3), (36, 64 - frame % 2)):
+            c.px(sx, sy, spray_b)
+            c.px(sx, sy + 1, spray_a)
+        save(c, f'shower_fx/macro_idle_{frame + 1}.png')
+
+    # 2) Sobre el plato de ducha en macro (80 × 80 px, pivote [2, 78]):
+    #    chorro saliendo de la ducha, ondas en el piso y vapor.
+    for frame in range(4):
+        c = Canvas(80, 80)
+        # Vapor suave sobre el plato
+        rise = frame * 2
+        for bx, by, rx, ry in (
+            (32, 24 - rise, 11, 6),
+            (52, 30 - (rise + 4) % 8, 10, 6),
+            (40, 50 - (rise + 2) % 8, 12, 6),
+        ):
+            c.ellipse(bx, by, rx, ry, hexc('#F2FAFF', 110))
+            c.ellipse(bx - 1, by - 1, max(3, rx - 3), max(2, ry - 2), hexc('#FFFFFF', 145))
+
+        # Chorro desde la esquina superior derecha hacia el centro del plato
+        for k in range(7):
+            x0 = 66 - k * 5 - (frame * 2) % 6
+            y0 = 10 + k * 4 + (frame * 3) % 7
+            col = spray_b if (k + frame) % 2 == 0 else spray_a
+            for d in range(7):
+                xx, yy = x0 - d, y0 + d
+                if 6 <= xx < 74 and 6 <= yy < 74:
+                    c.px(xx, yy, col)
+
+        # Ondas y salpicaduras en el plato
+        r1 = 6 + (frame * 3) % 10
+        r2 = 5 + ((frame + 2) * 3) % 10
+        for cx, cy, rad in ((38, 48, r1), (50, 58, r2)):
+            for step in range(-rad, rad + 1, 2):
+                c.px(cx + step, cy - rad // 3, spray_b)
+                c.px(cx + step, cy + rad // 3, spray_a)
+        save(c, f'shower_tray_fx/macro_idle_{frame + 1}.png')
+
+    # 3) Variante micro (48 × 48 px, pivote [24, 24]): gotitas y bruma fina.
+    for frame in range(4):
+        c = Canvas(48, 48)
+        for bx, by in ((14, 16), (34, 20), (22, 34)):
+            c.ellipse(bx, by - (frame % 3), 8, 5, hexc('#F2FAFF', 75))
+        for i in range(8):
+            x = 6 + (i * 5 + frame * 3) % 36
+            y = 4 + (i * 7 + frame * 6) % 38
+            c.px(x, y, spray_b)
+            c.px(x, y + 1, spray_a)
+            c.px(x, y + 2, spray_a)
+        save(c, f'shower_fx/micro_idle_{frame + 1}.png')
+
+
 def main(src):
     global SRC
     SRC = src
     water_drop()
     puddle()
     nest_water()
+    shower_fx()

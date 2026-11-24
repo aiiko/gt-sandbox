@@ -109,6 +109,80 @@ func TestM61GiantessWashesHands(t *testing.T) {
 	}
 }
 
+// M61: la giantess se ducha y deja muchas gotas de agua y un charco.
+func TestM61GiantessTakesShower(t *testing.T) {
+	in := run(t, "giantess_takes_shower.json", nil)
+	r := in.World.ECS()
+	count := 0
+	ecs.Get[colony.WaterDrop](r).Each(func(_ ids.ID, _ *colony.WaterDrop) { count++ })
+	if count < 6 {
+		t.Fatalf("esperaba al menos 6 gotas/charco tras shower, encontré %d", count)
+	}
+}
+
+// M61: en casa.json la giantess tiene necesidad hygiene y puede usar la ducha
+// y el lavamanos cuando su higiene está baja.
+func TestM61CasaGiantessUsesShowerAndWash(t *testing.T) {
+	spec, err := scenario.ReadFile(filepath.Join("..", "..", "content", "partidas", "casa.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec.Ticks = 1200
+	in, err := scenario.Build(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := in.Refs["giantess"]
+	n := ecs.Get[needs.Needs](in.World.ECS()).Ptr(g)
+	if n == nil {
+		t.Fatal("giantess sin needs en casa.json")
+	}
+	if _, ok := n.Get("hygiene"); !ok {
+		t.Fatal("giantess no tiene necesidad hygiene en casa.json")
+	}
+	// Bajar hygiene al mínimo y dejar otras necesidades altas para que vaya al baño.
+	for i := range *n {
+		switch (*n)[i].Name {
+		case "hygiene":
+			(*n)[i].Value = 50
+		default:
+			(*n)[i].Value = 950
+		}
+	}
+	if _, err := in.Run(); err != nil {
+		t.Fatal(err)
+	}
+	washed := false
+	var gEvents []string
+	for _, ev := range in.Events {
+		switch e := ev.Event.(type) {
+		case ai.ActionStarted:
+			if e.Entity == g {
+				gEvents = append(gEvents, "start:"+e.Action+":"+e.What)
+			}
+		case ai.ActionDone:
+			if e.Entity == g {
+				gEvents = append(gEvents, "done:"+e.Action+":"+e.What)
+				if e.What == "shower" || e.What == "wash_hands" || e.What == "wash_dishes" {
+					washed = true
+				}
+			}
+		case ai.ActionFailed:
+			if e.Entity == g {
+				gEvents = append(gEvents, "fail:"+e.Action+":"+e.What)
+			}
+		}
+	}
+	if !washed {
+		t.Fatalf("en casa.json la giantess con higiene baja no usó ducha/lavamanos/bacha; eventos=%v", gEvents)
+	}
+	drops := 0
+	ecs.Get[colony.WaterDrop](in.World.ECS()).Each(func(_ ids.ID, _ *colony.WaterDrop) { drops++ })
+	if drops < 6 {
+		t.Fatalf("esperaba al menos 6 gotas/charco tras ducharse en casa.json, encontré %d (eventos=%v)", drops, gEvents)
+	}
+}
+
 // M61: Deficit y Stock funcionan por recurso independiente (food y water).
 func TestM61DeficitByResource(t *testing.T) {
 	in := run(t, "tiny_drinks_drop.json", func(s *scenario.Spec) { s.Ticks = 1 })

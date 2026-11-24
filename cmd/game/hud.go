@@ -137,6 +137,7 @@ var activities = map[string][2]string{
 	"use:rest":         {"Descansa en el nido", "descansar en el nido"},
 	"use:wash_hands":   {"Se lava las manos", "lavarse las manos"},
 	"use:wash_dishes":  {"Lava los platos", "lavar los platos"},
+	"use:shower":       {"Se ducha", "ducharse"},
 	"use:nibble":       {"Mordisquea una migaja", "mordisquear una migaja"},
 	"use:shelter":      {"Descansa en la taza", "descansar en la taza"},
 	"use:sleep":        {"Duerme", "dormir"},

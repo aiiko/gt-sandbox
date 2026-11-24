@@ -2811,6 +2811,55 @@
         }
       }
     },
+    "shower_fx": {
+      "macro": {
+        "pivot": [30, 68],
+        "clips": {
+          "idle": {
+            "frame_ticks": 3,
+            "frames": [
+              "shower_fx/macro_idle_1.png",
+              "shower_fx/macro_idle_2.png",
+              "shower_fx/macro_idle_3.png",
+              "shower_fx/macro_idle_4.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "pivot": [24, 24],
+        "clips": {
+          "idle": {
+            "frame_ticks": 3,
+            "frames": [
+              "shower_fx/micro_idle_1.png",
+              "shower_fx/micro_idle_2.png",
+              "shower_fx/micro_idle_3.png",
+              "shower_fx/micro_idle_4.png"
+            ]
+          }
+        }
+      }
+    },
+    "shower_tray_fx": {
+      "macro": {
+        "pivot": [2, 78],
+        "clips": {
+          "idle": {
+            "frame_ticks": 3,
+            "frames": [
+              "shower_tray_fx/macro_idle_1.png",
+              "shower_tray_fx/macro_idle_2.png",
+              "shower_tray_fx/macro_idle_3.png",
+              "shower_tray_fx/macro_idle_4.png"
+            ]
+          }
+        }
+      },
+      "micro": {
+        "hidden": true
+      }
+    },
     "shoe_rack": {
       "macro": {
         "pivot": [2, 66],

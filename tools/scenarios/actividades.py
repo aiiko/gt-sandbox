@@ -11,6 +11,8 @@ from aplastamiento import base
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCEN = os.path.join(ROOT, 'tests', 'scenarios')
+CASA = os.path.join(ROOT, 'content', 'partidas', 'casa.json')
+OBJECTS = os.path.join(ROOT, 'content', 'objects')
 
 COMMON = [{'no_event': 'command_rejected'}]
 
@@ -180,9 +182,132 @@ def giantess_washes_hands():
     return d
 
 
+def giantess_takes_shower():
+    d = base('giantess_takes_shower', 800,
+             'M61: la giantess con higiene baja usa la ducha y deja muchas gotas de agua y un charco.')
+    for e in d['entities']:
+        if e['ref'] == 'giantess':
+            e['spawn']['components']['agent'] = {'scale': 'giantess', 'distance_cost': 0.05}
+            e['spawn']['components']['needs'] = [
+                {'name': 'hygiene', 'value': 150, 'decay': 0},
+            ]
+    d['entities'].append({
+        'ref': 'shower_tray',
+        'object': 'shower_tray',
+        'visual': 'shower_tray',
+        'spawn': {
+            'name': 'plato de ducha',
+            'location': {'space': '$roomA', 'pos': {'x': 2400000, 'y': 1400000, 'z': 0}},
+        },
+    })
+    d['expect'] = [
+        {'event': 'action_done', 'match': {'entity': '$giantess', 'what': 'shower', 'target': '$shower_tray'}},
+        {'event': 'items_left', 'match': {'entity': '$giantess', 'motive': 'shower'}},
+    ] + COMMON
+    return d
+
+
+def _set_need(needs_list, name, value, decay):
+    for n in needs_list:
+        if n.get('name') == name:
+            n['value'] = value
+            n['decay'] = decay
+            return
+    needs_list.append({'name': name, 'value': value, 'decay': decay})
+
+
+def apply_to_casa():
+    """Integra M61 en content/partidas/casa.json de forma idempotente:
+    - necesidad hygiene en la giantess (y perfiles de random.starts);
+    - ofertas wash_hands (lavamanos), shower (plato de ducha) y wash_dishes (mesada/bacha);
+    - plato en la mesada para habilitar wash_dishes;
+    - necesidad thirst en los tinies y meta de agua en el nido.
+    """
+    with open(CASA, encoding='utf-8') as f:
+        d = json.load(f)
+
+    by_ref = {e.get('ref'): e for e in d['entities']}
+
+    # 1. Giantess: necesidad de higiene.
+    if 'giantess' in by_ref:
+        g_needs = by_ref['giantess']['spawn'].setdefault('components', {}).setdefault('needs', [])
+        _set_need(g_needs, 'hygiene', 650, 1)
+
+    if 'random' in d and 'starts' in d['random']:
+        hygiene_by_start = {'con hambre': 650, 'cansada': 550, 'con ganas de entretenerse': 450}
+        for st in d['random']['starts']:
+            val = hygiene_by_start.get(st.get('name'), 550)
+            _set_need(st.setdefault('needs', []), 'hygiene', val, 1)
+
+    # 2. Baño: lavamanos y plato de ducha con sus objetos (wash_hands y shower).
+    if 'washbasin' in by_ref:
+        by_ref['washbasin']['object'] = 'washbasin'
+    if 'shower_tray' in by_ref:
+        by_ref['shower_tray']['object'] = 'shower_tray'
+
+    # 3. Cocina: oferta wash_dishes en counter (en el piso de la cocina frente a la bacha)
+    #    y un plato en la mesada para habilitarla.
+    if 'counter' in by_ref:
+        with open(os.path.join(OBJECTS, 'water_drop.json'), encoding='utf-8') as f:
+            drop_item = json.load(f)
+        drop_item.pop('visual', None)
+        c_offers = by_ref['counter']['spawn'].setdefault('components', {}).setdefault('offers', [])
+        wash_dishes = {
+            'action': 'wash_dishes',
+            'scale': 'giantess',
+            'effects': [{'need': 'hygiene', 'amount': 400}],
+            'requires': ['cup', 'plate'],
+            'approach': {'x': 950000, 'y': 400000},
+            'facing': 2048,
+            'steps': [
+                {'do': 'goto'},
+                {'do': 'use', 'ticks': 140},
+                {'do': 'spawn', 'item': drop_item, 'count': 3,
+                 'offset': {'x': 550000, 'y': 200000}, 'spread': 60000},
+            ],
+        }
+        c_offers[:] = [o for o in c_offers if o.get('action') != 'wash_dishes']
+        c_offers.append(wash_dishes)
+
+        if 'kitchen_plate' not in by_ref:
+            idx = next(i for i, e in enumerate(d['entities']) if e.get('ref') == 'counter') + 1
+            d['entities'].insert(idx, {
+                'ref': 'kitchen_plate',
+                'object': 'plate',
+                'visual': 'plate',
+                'spawn': {
+                    'name': 'plate',
+                    'location': {'space': '$counter', 'pos': {'x': 350000, 'y': 800000, 'z': 0}},
+                },
+            })
+
+    # 4. Nido: meta de agua junto a la de comida.
+    if 'nest' in by_ref:
+        col = by_ref['nest']['spawn'].setdefault('components', {}).setdefault('colony', {})
+        stock = col.get('stock', 4)
+        if isinstance(stock, int):
+            col['stock'] = {'food': stock, 'water': 2}
+        elif isinstance(stock, dict):
+            stock.setdefault('food', 4)
+            stock['water'] = 2
+
+    # 5. Tinies: sed (decaimiento más lento que hambre).
+    for e in d['entities']:
+        comps = e.get('spawn', {}).get('components', {})
+        if 'member' in comps and 'needs' in comps:
+            _set_need(comps['needs'], 'thirst', 800, 1)
+
+    with open(CASA, 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(d, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    print('actualizado', os.path.relpath(CASA, ROOT))
+
+
 def main():
-    for fn in (tiny_drinks_drop, drop_evaporates, water_hauled_to_nest, giantess_washes_hands):
+    for fn in (tiny_drinks_drop, drop_evaporates, water_hauled_to_nest,
+               giantess_washes_hands, giantess_takes_shower):
         _write(fn())
+    apply_to_casa()
 
 
 if __name__ == '__main__':

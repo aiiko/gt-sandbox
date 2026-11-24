@@ -49,6 +49,7 @@ const (
 	PassClose     = "pass_close"
 	WaterDrip     = "water_drip" // goteo al aparecer gotas de agua
 	FaucetRun     = "faucet_run" // canilla abierta durante wash_hands / wash_dishes
+	ShowerRun     = "shower_run" // agua de la ducha corriendo durante shower
 	Emote         = "emote_"     // + el símbolo (view.Emote*)
 )
 
@@ -58,13 +59,14 @@ const (
 	tinyStepTicks     clock.Tick = 8
 	biteTicks         clock.Tick = 30
 	faucetTicks       clock.Tick = 20
+	showerTicks       clock.Tick = 14
 )
 
 // minor son los sonidos que se omiten a x4 y x16: los que se repiten. Quedan
 // los que cuentan algo (la mano, las caídas, los descubrimientos).
 var minor = map[string]bool{
 	StepTatami: true, StepWood: true, StepTile: true, FootStepMicro: true, Bite: true,
-	FaucetRun: true, WaterDrip: true,
+	FaucetRun: true, ShowerRun: true, WaterDrip: true,
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
@@ -359,7 +361,7 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 			}
 		}
 	case ai.ItemsLeft:
-		if (ev.Motive == "wash_hands" || ev.Motive == "wash_dishes") && len(ev.Items) > 0 {
+		if (ev.Motive == "wash_hands" || ev.Motive == "wash_dishes" || ev.Motive == "shower") && len(ev.Items) > 0 {
 			if p, ok := pos(ev.Items[0], cur); ok {
 				c.add(WaterDrip, p, 0.8)
 			}
@@ -475,9 +477,18 @@ func (c *collector) state(prev, cur *view.Frame) {
 			if (s.Activity == "use:wash_hands" || s.Activity == "use:wash_dishes") && s.Step == "use" && crossed(prev.Tick, cur.Tick, faucetTicks, 0) {
 				c.add(FaucetRun, s.Pose.Pos, 0.7)
 			}
+			if s.Activity == "use:shower" && (s.Step == "" || s.Step == "use") && crossed(prev.Tick, cur.Tick, showerTicks, 0) {
+				c.add(ShowerRun, s.Pose.Pos, 0.9)
+			}
 		}
 	}
 	if v.Micro {
+		for _, s := range cur.Spaces {
+			if v.Visual(s.ID) == "giantess" && s.Activity == "use:shower" && (s.Step == "" || s.Step == "use") &&
+				sameRoom(cur, v.Focus, s.Parent) && crossed(prev.Tick, cur.Tick, showerTicks, 0) {
+				c.addNear(ShowerRun, s.Pose.Pos, 0.75)
+			}
+		}
 		for i, t := range cur.Things {
 			before, ok := prev.ThingByID(t.ID)
 			if !ok {

@@ -597,6 +597,19 @@
         {"wave": "noise", "f0": 44100, "dur": 0.5, "delay": 0.08, "attack": 0.04, "decay": 0.12, "gain": 0.10, "lp": 4200}
       ]
     },
+    "shower_run": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 450,
+      "volume": 0.9,
+      "layers": [
+        {"wave": "noise", "f0": 44100, "dur": 0.85, "attack": 0.08, "decay": 0.22, "gain": 0.28, "lp": 1800},
+        {"wave": "noise", "f0": 44100, "dur": 0.80, "delay": 0.04, "attack": 0.06, "decay": 0.20, "gain": 0.20, "lp": 4600},
+        {"wave": "sine", "f0": 1100, "f1": 1650, "dur": 0.04, "delay": 0.12, "attack": 0.002, "decay": 0.015, "gain": 0.09},
+        {"wave": "sine", "f0": 1400, "f1": 2100, "dur": 0.04, "delay": 0.36, "attack": 0.002, "decay": 0.015, "gain": 0.08},
+        {"wave": "sine", "f0": 980, "f1": 1520, "dur": 0.04, "delay": 0.58, "attack": 0.002, "decay": 0.015, "gain": 0.08}
+      ]
+    },
     "emote_thirst": {
       "category": "efectos",
       "voices": 2,

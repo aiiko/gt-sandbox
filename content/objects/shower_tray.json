@@ -1,0 +1,18 @@
+{
+  "name": "shower_tray",
+  "visual": "shower_tray",
+  "components": {
+    "offers": [
+      {"action": "shower", "scale": "giantess",
+       "effects": [{"need": "hygiene", "amount": 850}],
+       "approach": {"x": -500000, "y": 500000},
+       "facing": 0,
+       "steps": [
+         {"do": "goto"},
+         {"do": "use", "ticks": 240},
+         {"do": "spawn", "item": "water_drop", "count": 6, "offset": {"x": 50000, "y": 0}, "spread": 140000},
+         {"do": "spawn", "item": "puddle", "count": 1, "offset": {"x": 80000, "y": 60000}}
+       ]}
+    ]
+  }
+}

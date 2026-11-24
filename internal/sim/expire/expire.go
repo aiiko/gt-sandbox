@@ -102,6 +102,6 @@ func Install(w *world.World) error {
 	w.AddInvariant("expire", check)
 	return errors.Join(
 		world.RegisterEvent[Expired](w),
-		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 20}, system{}),
+		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 0}, system{}),
 	)
 }

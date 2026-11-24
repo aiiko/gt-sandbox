@@ -360,7 +360,7 @@ func Install(w *world.World) error {
 		world.RegisterEvent[JobCanceled](w),
 		// Después del movimiento y antes de reconstruir el índice espacial.
 		w.Register(world.SystemSpec{Phase: clock.PhaseMove, Order: 1 << 20}, carry{}),
-		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences, Order: 1 << 20}, upkeep{}),
+		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 20}, upkeep{}),
 	)
 }
 

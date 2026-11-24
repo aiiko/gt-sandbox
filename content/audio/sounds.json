@@ -327,6 +327,14 @@
       "cooldown_ms": 200
     },
     {
+      "id": "shower_run",
+      "file": "shower_run.wav",
+      "category": "efectos",
+      "ms": 850,
+      "voices": 2,
+      "cooldown_ms": 450
+    },
+    {
       "id": "sit_thud_micro",
       "file": "sit_thud_micro.wav",
       "category": "efectos",
