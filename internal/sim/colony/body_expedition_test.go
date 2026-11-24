@@ -155,8 +155,8 @@ func TestBodyExpeditionSupportMemoryAndContinuity(t *testing.T) {
 			Name:     "nido",
 			Location: &comp.Location{Space: desk, Pos: units.V3(20*units.Centimeter, 20*units.Centimeter, 0)},
 			Components: map[string]json.RawMessage{
-				"colony":   bodyMustJSON(t, colony.Colony{Radius: 8 * units.Centimeter, Stock: 2}),
-				"portions": bodyMustJSON(t, ai.Portions{Left: 20}),
+				"colony":   bodyMustJSON(t, colony.Colony{Radius: 8 * units.Centimeter, Stock: colony.NewStock(ai.ResourceFood, 2)}),
+				"portions": bodyMustJSON(t, ai.NewPortions(ai.ResourceFood, 20)),
 			},
 		})
 		target := bodySpawn(t, w, cmds.Spawn{

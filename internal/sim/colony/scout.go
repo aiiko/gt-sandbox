@@ -66,7 +66,7 @@ func (Scout) Options(c *ai.Ctx) []ai.Option {
 		return nil
 	}
 	if m.Role != RoleScout {
-		if Deficit(c.W, m.Colony) > 0 || specialistAvailable(c.W, m.Colony, RoleScout, c.Actor) {
+		if Deficit(c.W, m.Colony, ai.ResourceFood) > 0 || specialistAvailable(c.W, m.Colony, RoleScout, c.Actor) {
 			return nil
 		}
 	}

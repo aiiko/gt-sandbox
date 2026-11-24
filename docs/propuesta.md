@@ -1423,3 +1423,21 @@ El piso seco de cada ambiente es transitable por tinies. Bajo el escritorio, la 
 2. **Montar y verificar las piezas.** Probar la mesa y la silla en dos posiciones de edición. El fondo queda utilizable, la huella y las superficies se ubican con la pieza, y las conexiones se recalculan o se desactivan si quedaron sin contacto. Comprobar en macro y micro que los tinies alcanzan cada superficie marcada «Sí», que las piezas marcadas «No» carecen de rutas por encima y que las caídas terminan sobre un soporte físico o en el piso.
 3. **Adaptar «Nueva partida» desde sus generadores.** Integrar la planta en `tools/scenarios/partida.py` y reubicar las piezas que agregan `vida.py`, `oficios.py` y `cuerpo.py` por referencia a sus soportes. Resolver anclajes de aproximación, poses, recursos y conexiones a partir de la nueva ubicación. Dar identificadores de arte propios a la arquitectura nueva para que los escenarios de referencia sigan cargando las habitaciones para las que fueron calibrados. Regenerar `content/partidas/casa.json` y empaquetar el atlas con `go run ./cmd/artpack`. [Generadores](../tools/scenarios) · [Fuentes del atlas](../content/art/src/casa)
 4. **Probar la partida y sus regresiones.** Verificar que los perfiles de inicio llegan a dormir en el futón, desayunar y escribir en el escritorio, y merendar y mirar TV desde el sofá. Confirmar que la colonia puede salir del nido y volver desde el sofá, y que funcionan escritorio ↔ palma, sofá ↔ cuerpo y almohada ↔ cuerpo con los apoyos previstos. Seguir al mismo tiny en macro y micro al caminar, trepar y caer. Correr `go test ./...` y revisar capturas del plano completo y de los accesos a escritorio, sofá y mesada.
+
+
+## 21. Actividades de los tinies en la casa
+
+La planta nueva del departamento (§20) suma cocina, baño, entrada (genkan), futón, alfombra y maceta. Para que la colonia recorra todas las habitaciones y cada hallazgo en un cuarto sirva en otro, el slice **M61–M71** agrega diez actividades interconectadas:
+
+1. **Agua del baño y la cocina (M61)**: sed (`thirst`) en los tinies, gotas y charcos con vencimiento genérico (`expires`), depósito del nido separado por recurso (`food`, `water`), y rutinas de la giantess (`wash_hands`, `wash_dishes`) que salpican gotas sobre el baño y la mesada.
+2. **Granos de la arrocera (M62)**: acarreo cooperativo (`heavy`) entre varios portadores y rutina `cook_rice`.
+3. **Tesoros perdidos y regalos (M63)**: botín en `search_spot`, colección (`hoard`) en el nido que eleva la diversión y regalos que la giantess nota (`notice_gift`).
+4. **Tender una cuerda (M64)**: obras de anclaje (`anchor_site`) que abren portales `tiny` de trepada y se cortan ante apoyos o pisadas.
+5. **Marcar el camino (M65)**: marcas de grafito (`waymark`) legibles en el lugar sin volver al nido, desgaste por pisadas y oficio de cartógrafo.
+6. **Depósito avanzado en la cocina (M66)**: `depot` cerca de la mesada con relevos hacia el nido cuando hay déficit.
+7. **Lo que traen los zapatos (M67)**: salidas de la giantess (`away`), zapatos como refugio interior y restos sorteados (`debris`, semillas) al regresar.
+8. **Hora del día y calor (M68)**: reloj del día derivado del tick, necesidad `warmth`, manchas de sol móviles y calor riesgoso en el futón de noche.
+9. **Huerta en la maceta (M69)**: tierra de la maceta como superficie tiny, parcelas regadas con agua y hojas como material resistente.
+10. **Ver la tele y contar historias (M70)**: plazas frente al televisor encendido y relatos (`tale`) en el nido tras las expediciones.
+
+Todo se activa por contenido: sin las entidades nuevas, los escenarios previos conservan su comportamiento.

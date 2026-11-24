@@ -63,15 +63,15 @@ func TestPantryDeficit(t *testing.T) {
 	nest := in.Refs["nest"]
 	set := func(stock, left int32) {
 		c := ecs.Get[colony.Colony](w.ECS()).Ptr(nest)
-		c.Stock = stock
-		ecs.Get[ai.Portions](w.ECS()).Ptr(nest).Left = left
+		c.Stock.Set(ai.ResourceFood, stock)
+		ecs.Get[ai.Portions](w.ECS()).Ptr(nest).Set(ai.ResourceFood, left)
 	}
 	for _, tc := range []struct {
 		stock, left int32
 		want        float64
 	}{{0, 0, 0}, {4, 0, 1}, {4, 1, 0.75}, {4, 4, 0}, {4, 9, 0}} {
 		set(tc.stock, tc.left)
-		if got := colony.Deficit(w, nest); got != tc.want {
+		if got := colony.Deficit(w, nest, ai.ResourceFood); got != tc.want {
 			t.Errorf("stock %d, depósito %d: déficit %v, quería %v", tc.stock, tc.left, got, tc.want)
 		}
 	}

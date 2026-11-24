@@ -271,7 +271,7 @@ func CanLaunchReason(w *world.World, col, target ids.ID, participants []ids.ID) 
 	}
 	alive := AliveMembers(w, col)
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
-	if p.Left-int32(len(participants)) < alive {
+	if p.Get(ai.ResourceFood)-int32(len(participants)) < alive {
 		return "faltan provisiones en la despensa"
 	}
 	// Cobertura en casa: al menos 2 miembros disponibles fuera de la salida
@@ -318,7 +318,7 @@ func NoExpeditionReason(w *world.World, col ids.ID) string {
 		return "sin miembros"
 	}
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
-	if p.Left <= alive {
+	if p.Get(ai.ResourceFood) <= alive {
 		return "faltan provisiones en la despensa"
 	}
 	stranded := ecs.Get[Stranded](r)
@@ -777,7 +777,7 @@ func (ExpeditionAction) Options(c *ai.Ctx) []ai.Option {
 		return []ai.Option{{Target: expID, Offer: 0, Utility: 0.36}}
 	}
 	// 3. Proponer o unirse: requiere inclinación, despensa en meta, sin trabajo y en condiciones.
-	if m.Adventure <= 0 || Deficit(c.W, m.Colony) > 0 || !memberReady(c.W, c.Actor) || !jobs.AssignedTo(c.W, c.Actor).IsNil() {
+	if m.Adventure <= 0 || Deficit(c.W, m.Colony, ai.ResourceFood) > 0 || !memberReady(c.W, c.Actor) || !jobs.AssignedTo(c.W, c.Actor).IsNil() {
 		return nil
 	}
 	if expID, exp := ActiveExpedition(c.W, m.Colony); exp != nil {
@@ -806,7 +806,7 @@ func (ExpeditionAction) Options(c *ai.Ctx) []ai.Option {
 		// Comprobación preliminar: despensa y cobertura para al menos 1.
 		alive := AliveMembers(c.W, m.Colony)
 		p, _ := ecs.Get[ai.Portions](r).Get(m.Colony)
-		if p.Left-int32(t.minMembers()) < alive {
+		if p.Get(ai.ResourceFood)-int32(t.minMembers()) < alive {
 			return
 		}
 		u := 0.22 * m.Adventure

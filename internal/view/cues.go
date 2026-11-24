@@ -25,6 +25,7 @@ const (
 	EmoteSpirit   = "spirit"   // espíritu que sube: un tiny murió aplastado (sobre sus restos)
 	EmoteLook     = "look"     // ojo: la giantess se queda mirando a los tinies
 	EmoteChat     = "chat"     // globo de diálogo: dos tinies conversan
+	EmoteThirst   = "thirst"   // gota vacía: un tiny tiene sed
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -66,7 +67,7 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 	}
 	switch ev := event.(type) {
 	case ai.Noticed:
-		if a, ok := agents.Get(ev.Entity); ok && a.Scale != "giantess" && ecs.Get[colony.Food](r).Has(ev.Target) {
+		if a, ok := agents.Get(ev.Entity); ok && a.Scale != "giantess" && (ecs.Get[colony.Food](r).Has(ev.Target) || ecs.Get[colony.Water](r).Has(ev.Target)) {
 			return []Cue{{Entity: ev.Entity, Kind: EmoteDiscover}}
 		}
 	case space.EntityReparented:
@@ -162,6 +163,11 @@ func (f *Frame) Emote(id ids.ID) string {
 		return EmoteSleep
 	case activity == "chat" && step == "talk":
 		return EmoteChat
+	}
+	if t, ok := f.ThingByID(id); ok {
+		if v, has := NeedOf(t.Needs, "thirst"); has && v < LowNeed {
+			return EmoteThirst
+		}
 	}
 	return ""
 }

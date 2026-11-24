@@ -2,8 +2,10 @@ package ai
 
 import (
 	"cmp"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
@@ -33,6 +35,9 @@ type Offer struct {
 	Approach units.Vec2       `json:"approach,omitempty"`
 	Facing   *fixedmath.Angle `json:"facing,omitempty"`
 	Steps    []Step           `json:"steps,omitempty"`
+	// Requires exige que exista al menos una entidad con alguno de estos nombres
+	// en el mismo Space (o un Space hijo) para que la oferta esté disponible.
+	Requires []string `json:"requires,omitempty"`
 }
 
 // Offers es el componente "offers".
@@ -54,16 +59,17 @@ const (
 // (Agent.Hand) o, si no tiene, al actor, y gira con él. Lo que se deja o
 // se crea cae a la superficie que haya debajo.
 type Step struct {
-	Do     string       `json:"do"`
-	Place  string       `json:"place,omitempty"`
-	Ticks  clock.Tick   `json:"ticks,omitempty"`
-	Pose   string       `json:"pose,omitempty"`
-	Item   *cmds.Spawn  `json:"item,omitempty"`
-	Count  int          `json:"count,omitempty"`
-	Offset units.Vec2   `json:"offset,omitempty"`
-	Spread units.Length `json:"spread,omitempty"`
-	Amount int32        `json:"amount,omitempty"`
-	Keep   bool         `json:"keep,omitempty"` // consume: en 0 porciones no desaparece (un depósito)
+	Do       string       `json:"do"`
+	Place    string       `json:"place,omitempty"`
+	Ticks    clock.Tick   `json:"ticks,omitempty"`
+	Pose     string       `json:"pose,omitempty"`
+	Item     *cmds.Spawn  `json:"item,omitempty"`
+	Count    int          `json:"count,omitempty"`
+	Offset   units.Vec2   `json:"offset,omitempty"`
+	Spread   units.Length `json:"spread,omitempty"`
+	Resource string       `json:"resource,omitempty"` // consume: recurso a gastar ("" = "food")
+	Amount   int32        `json:"amount,omitempty"`
+	Keep     bool         `json:"keep,omitempty"` // consume: en 0 porciones no desaparece (un depósito)
 }
 
 // Place marca un lugar donde se hacen cosas (componente "place"): un
@@ -75,9 +81,140 @@ type Place struct {
 	Facing *fixedmath.Angle `json:"facing,omitempty"`
 }
 
-// Portions es lo que queda de un objeto consumible (componente "portions").
+// Recursos estándar del depósito y objetos consumibles.
+const (
+	ResourceFood  = "food"
+	ResourceWater = "water"
+)
+
+// NormalizeResource devuelve ResourceFood si res está vacío.
+func NormalizeResource(res string) string {
+	if res == "" {
+		return ResourceFood
+	}
+	return res
+}
+
+// ResourceAmount es una entrada (recurso, cantidad) en Portions.
+type ResourceAmount struct {
+	Resource string `json:"resource"`
+	Amount   int32  `json:"amount"`
+}
+
+// Portions es lo que queda de un objeto consumible o de un depósito por tipo
+// de recurso (componente "portions"). Se serializa como lista ordenada por
+// nombre de recurso (D5).
 type Portions struct {
-	Left int32 `json:"left"`
+	Items []ResourceAmount `json:"items,omitempty"`
+}
+
+// NewPortions crea un Portions con una sola entrada (res, amount).
+func NewPortions(res string, amount int32) Portions {
+	var p Portions
+	p.Set(res, amount)
+	return p
+}
+
+// Get devuelve cuántas porciones quedan del recurso res ("" = "food").
+func (p Portions) Get(res string) int32 {
+	res = NormalizeResource(res)
+	for _, it := range p.Items {
+		if it.Resource == res {
+			return it.Amount
+		}
+	}
+	return 0
+}
+
+// Set fija la cantidad del recurso res ("" = "food") manteniendo la lista
+// ordenada por nombre. Valores <= 0 quitan la entrada.
+func (p *Portions) Set(res string, amount int32) {
+	res = NormalizeResource(res)
+	for i, it := range p.Items {
+		if it.Resource == res {
+			if amount <= 0 {
+				p.Items = slices.Delete(p.Items, i, i+1)
+			} else {
+				p.Items[i].Amount = amount
+			}
+			return
+		}
+	}
+	if amount <= 0 {
+		return
+	}
+	p.Items = append(p.Items, ResourceAmount{Resource: res, Amount: amount})
+	slices.SortFunc(p.Items, func(a, b ResourceAmount) int { return cmp.Compare(a.Resource, b.Resource) })
+}
+
+// Add suma delta al recurso res (recortando a >= 0) y devuelve el nuevo valor.
+func (p *Portions) Add(res string, delta int32) int32 {
+	v := max(p.Get(res)+delta, 0)
+	p.Set(res, v)
+	return v
+}
+
+// Total devuelve la suma de porciones de todos los recursos.
+func (p Portions) Total() int32 {
+	var sum int32
+	for _, it := range p.Items {
+		sum += it.Amount
+	}
+	return sum
+}
+
+// MarshalJSON serializa siempre como lista ordenada por nombre de recurso (D5).
+func (p Portions) MarshalJSON() ([]byte, error) {
+	items := make([]ResourceAmount, 0, len(p.Items))
+	for _, it := range p.Items {
+		if it.Amount > 0 {
+			items = append(items, ResourceAmount{Resource: NormalizeResource(it.Resource), Amount: it.Amount})
+		}
+	}
+	slices.SortFunc(items, func(a, b ResourceAmount) int { return cmp.Compare(a.Resource, b.Resource) })
+	if len(items) == 0 {
+		return []byte("{}"), nil
+	}
+	return json.Marshal(struct {
+		Items []ResourceAmount `json:"items"`
+	}{Items: items})
+}
+
+// UnmarshalJSON acepta el formato nuevo {"items":[...]} o [...], y también el
+// formato histórico {"left": N} (equivalente a food: N).
+func (p *Portions) UnmarshalJSON(data []byte) error {
+	p.Items = nil
+	trimmed := data
+	for len(trimmed) > 0 && (trimmed[0] == ' ' || trimmed[0] == '\t' || trimmed[0] == '\n' || trimmed[0] == '\r') {
+		trimmed = trimmed[1:]
+	}
+	if len(trimmed) > 0 && trimmed[0] == '[' {
+		var list []ResourceAmount
+		if err := json.Unmarshal(data, &list); err != nil {
+			return err
+		}
+		for _, it := range list {
+			p.Set(it.Resource, it.Amount)
+		}
+		return nil
+	}
+	var raw struct {
+		Items []ResourceAmount `json:"items"`
+		Left  *int32           `json:"left"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	if len(raw.Items) > 0 {
+		for _, it := range raw.Items {
+			p.Set(it.Resource, it.Amount)
+		}
+		return nil
+	}
+	if raw.Left != nil {
+		p.Set(ResourceFood, *raw.Left)
+	}
+	return nil
 }
 
 // Eventos de las ofertas.
@@ -95,9 +232,10 @@ type (
 		Motive string   `json:"motive"`
 	}
 	Consumed struct {
-		Entity ids.ID `json:"entity"`
-		Target ids.ID `json:"target"`
-		Left   int32  `json:"left"`
+		Entity   ids.ID `json:"entity"`
+		Target   ids.ID `json:"target"`
+		Resource string `json:"resource,omitempty"`
+		Left     int32  `json:"left"`
 	}
 )
 
@@ -250,7 +388,7 @@ func (use) Options(c *Ctx) []Option {
 		}
 	offers:
 		for i, o := range *os {
-			if o.Scale != c.Agent.Scale || wasteful(c, o.Effects) || !c.Agent.Knows(e) || !stocked(c, e, o) || o.Validate() != nil {
+			if o.Scale != c.Agent.Scale || wasteful(c, o.Effects) || !c.Agent.Knows(e) || !stocked(c, e, o) || !hasRequired(c, loc.Space, o.Requires) || o.Validate() != nil {
 				continue
 			}
 			for _, s := range o.plan() {
@@ -267,6 +405,31 @@ func (use) Options(c *Ctx) []Option {
 	return out
 }
 
+// hasRequired verifica si existe alguna entidad viva con alguno de los nombres
+// requeridos en el Space sp o en alguno de sus Spaces hijos directos.
+func hasRequired(c *Ctx, sp ids.ID, names []string) bool {
+	if len(names) == 0 {
+		return true
+	}
+	r := c.W.ECS()
+	g := space.Of(r)
+	locs := comp.Of(r).Location
+	found := false
+	comp.Of(r).Name.Each(func(id ids.ID, n *comp.Name) {
+		if found || r.Despawning(id) || !slices.Contains(names, string(*n)) {
+			return
+		}
+		l, ok := locs.Get(id)
+		if !ok {
+			return
+		}
+		if l.Space == sp || g.Parent(l.Space) == sp {
+			found = true
+		}
+	})
+	return found
+}
+
 // stocked: si la oferta consume porciones, el objeto tiene suficientes.
 func stocked(c *Ctx, e ids.ID, o Offer) bool {
 	p, ok := ecs.Get[Portions](c.W.ECS()).Get(e)
@@ -274,7 +437,7 @@ func stocked(c *Ctx, e ids.ID, o Offer) bool {
 		return true
 	}
 	for _, s := range o.plan() {
-		if s.Do == StepConsume && p.Left < max(s.Amount, 1) {
+		if s.Do == StepConsume && p.Get(s.Resource) < max(s.Amount, 1) {
 			return false
 		}
 	}
@@ -439,12 +602,12 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 		w.Emit(ItemsLeft{Entity: c.Actor, Items: left, Motive: o.Action})
 	case StepConsume:
 		amount := max(s.Amount, 1)
+		res := NormalizeResource(s.Resource)
 		left := int32(0)
 		if p := ecs.Get[Portions](w.ECS()).Ptr(d.Target); p != nil {
-			p.Left = max(p.Left-amount, 0)
-			left = p.Left
+			left = p.Add(res, -amount)
 		}
-		w.Emit(Consumed{Entity: c.Actor, Target: d.Target, Left: left})
+		w.Emit(Consumed{Entity: c.Actor, Target: d.Target, Resource: res, Left: left})
 		if left == 0 && !s.Keep {
 			w.ECS().Despawn(d.Target)
 		}
@@ -546,6 +709,21 @@ func (use) Interruptible(c *Ctx, d *Doing) bool {
 	return !ok || d.Stage <= o.useStep()
 }
 
+func checkPortions(w *world.World) error {
+	var err error
+	ecs.Get[Portions](w.ECS()).Each(func(e ids.ID, p *Portions) {
+		for i, it := range p.Items {
+			if it.Resource == "" || it.Amount <= 0 {
+				err = errors.Join(err, fmt.Errorf("portions %v: entrada inválida %+v", e, it))
+			}
+			if i > 0 && it.Resource <= p.Items[i-1].Resource {
+				err = errors.Join(err, fmt.Errorf("portions %v: recursos sin ordenar o duplicados (%q, %q)", e, p.Items[i-1].Resource, it.Resource))
+			}
+		}
+	})
+	return err
+}
+
 func registerUse(w *world.World) error {
 	r := w.ECS()
 	for _, err := range []error{
@@ -557,6 +735,7 @@ func registerUse(w *world.World) error {
 			return err
 		}
 	}
+	w.AddInvariant("ai.portions", checkPortions)
 	return errors.Join(world.RegisterEvent[ItemDropped](w), world.RegisterEvent[Consumed](w), world.RegisterEvent[ItemsLeft](w))
 }
 

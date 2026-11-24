@@ -133,7 +133,10 @@ var activities = map[string][2]string{
 	"use:snack_living": {"Merienda en el living", "merendar en el living"},
 	"use:watch":        {"Mira televisión", "mirar televisión"},
 	"use:eat":          {"Come en el nido", "comer en el nido"},
+	"use:drink":        {"Toma agua", "tomar agua"},
 	"use:rest":         {"Descansa en el nido", "descansar en el nido"},
+	"use:wash_hands":   {"Se lava las manos", "lavarse las manos"},
+	"use:wash_dishes":  {"Lava los platos", "lavar los platos"},
 	"use:nibble":       {"Mordisquea una migaja", "mordisquear una migaja"},
 	"use:shelter":      {"Descansa en la taza", "descansar en la taza"},
 	"use:sleep":        {"Duerme", "dormir"},
@@ -216,6 +219,20 @@ func (g *game) lifeText(t view.Thing, carrying string) string {
 		if t.Step == "goto" {
 			return "Vuelve al nido a comer"
 		}
+	case "use:drink":
+		if g.visuals[t.Goal] == "nest" {
+			if t.Step == "goto" {
+				return "Vuelve al nido a tomar agua"
+			}
+			return "Toma agua en el nido"
+		}
+		place := g.display(t.Space)
+		if place != "" {
+			if t.Step == "goto" {
+				return "Va a tomar agua en " + place
+			}
+			return "Toma agua en " + place
+		}
 	case "use:rest":
 		if t.Step == "goto" || t.Step == "" && t.Mover != nil && t.Mover.Status == "moving" {
 			return "Vuelve al nido a descansar"
@@ -233,13 +250,16 @@ func (g *game) lifeText(t view.Thing, carrying string) string {
 			if g.visuals[t.Goal] == "fiber" {
 				return "Lleva " + carrying + " al refugio"
 			}
+			if g.visuals[t.Goal] == "water_drop" || g.visuals[t.Goal] == "puddle" {
+				return "Lleva agua al nido"
+			}
 			return "Lleva " + carrying + " al nido"
 		}
 	}
 	return ""
 }
 
-var needLabels = map[string]string{"hunger": "Hambre", "energy": "Energía", "fun": "Diversión"}
+var needLabels = map[string]string{"hunger": "Hambre", "thirst": "Sed", "energy": "Energía", "fun": "Diversión", "hygiene": "Higiene"}
 
 // card arma el inspector resumido de la entidad elegida.
 func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {

@@ -142,7 +142,7 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 		c := spawn["components"].(map[string]any)
 		if needs, ok := c["needs"].([]any); ok {
 			for _, need := range needs {
-				if nd, ok := need.(map[string]any); ok && nd["name"] != lateNeed {
+				if nd, ok := need.(map[string]any); ok && !isLateNeed(nd["name"]) {
 					if v, ok := nd["value"].(float64); ok {
 						nd["value"] = min(1000, int64(v*(0.6+0.5*rnd.Float64())))
 					}
@@ -184,13 +184,72 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 	if err := randomTrades(out.Entities[len(rest):], out.Entities, rnd); err != nil {
 		return nil, err
 	}
+	if err := randomActivities(out.Entities[len(rest):], rnd); err != nil {
+		return nil, err
+	}
 	out.Random = nil
 	return &out, nil
 }
 
 // lateNeed es la necesidad de los tinies que se sortea al final (la
 // diversión llegó después que el resto: así no cambia lo ya sorteado).
-const lateNeed = "fun"
+const (
+	lateNeed   = "fun"
+	thirstNeed = "thirst"
+)
+
+func isLateNeed(name any) bool {
+	return name == lateNeed || name == thirstNeed
+}
+
+// randomActivities sortea las necesidades del slice de actividades (thirst) al
+// final de Randomize, para no alterar lo ya sorteado.
+func randomActivities(tinies []EntitySpec, rnd *rng.Stream) error {
+	for i, e := range tinies {
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		list, _ := c["needs"].([]any)
+		changed := false
+		for _, need := range list {
+			if nd, ok := need.(map[string]any); ok && nd["name"] == thirstNeed {
+				if v, ok := nd["value"].(float64); ok {
+					nd["value"] = min(1000, int64(v*(0.6+0.5*rnd.Float64())))
+					changed = true
+				}
+			}
+		}
+		if changed {
+			raw, err := json.Marshal(spawn)
+			if err != nil {
+				return err
+			}
+			tinies[i].Spawn = raw
+		}
+	}
+	return nil
+}
+
+func hasFoodStock(stock any) bool {
+	switch s := stock.(type) {
+	case float64:
+		return s > 0
+	case map[string]any:
+		v, _ := s["food"].(float64)
+		return v > 0
+	case []any:
+		for _, it := range s {
+			if m, ok := it.(map[string]any); ok && m["resource"] == "food" {
+				if v, _ := m["amount"].(float64); v > 0 {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
 
 // randomLife sortea, después de todo lo demás, la diversión de los tinies
 // y la despensa inicial del nido (de 0 a una porción por tiny, por debajo
@@ -231,10 +290,24 @@ func randomLife(tinies, entities []EntitySpec, nest string, rnd *rng.Stream) err
 		c, _ := spawn["components"].(map[string]any)
 		col, _ := c["colony"].(map[string]any)
 		portions, _ := c["portions"].(map[string]any)
-		if stock, ok := col["stock"].(float64); !ok || stock <= 0 || portions == nil {
+		if !hasFoodStock(col["stock"]) || portions == nil {
 			return nil
 		}
-		portions["left"] = rnd.IntN(len(tinies) + 1)
+		n := rnd.IntN(len(tinies) + 1)
+		if items, ok := portions["items"].([]any); ok {
+			updated := false
+			for _, it := range items {
+				if m, ok := it.(map[string]any); ok && m["resource"] == "food" {
+					m["amount"] = n
+					updated = true
+				}
+			}
+			if !updated && n > 0 {
+				portions["items"] = append(items, map[string]any{"resource": "food", "amount": n})
+			}
+		} else {
+			portions["left"] = n
+		}
 		raw, err := json.Marshal(spawn)
 		if err != nil {
 			return err

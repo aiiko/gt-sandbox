@@ -1,0 +1,15 @@
+{
+  "name": "puddle",
+  "visual": "puddle",
+  "body": {"radius": 5000, "height": 1000, "mass": 0},
+  "components": {
+    "water_drop": {"volume": 6},
+    "water": {},
+    "portions": {"items": [{"resource": "water", "amount": 6}]},
+    "expires": {"ttl": 4800, "kind": "puddle"},
+    "offers": [
+      {"action": "drink", "scale": "tiny", "effects": [{"need": "thirst", "amount": 350}],
+       "steps": [{"do": "goto"}, {"do": "use", "ticks": 50}, {"do": "consume", "resource": "water"}]}
+    ]
+  }
+}

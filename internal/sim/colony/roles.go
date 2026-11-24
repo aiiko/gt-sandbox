@@ -52,7 +52,7 @@ func AliveMembers(w *world.World, col ids.ID) int32 {
 func CriticalFood(w *world.World, col ids.ID) bool {
 	r := w.ECS()
 	c, ok := ecs.Get[Colony](r).Get(col)
-	if !ok || c.Stock <= 0 {
+	if !ok || c.Stock.Get(ai.ResourceFood) <= 0 {
 		return false
 	}
 	n := AliveMembers(w, col)
@@ -60,23 +60,24 @@ func CriticalFood(w *world.World, col ids.ID) bool {
 		return false
 	}
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
-	return p.Left < n
+	return p.Get(ai.ResourceFood) < n
 }
 
-// MissingPortions devuelve cuántas porciones faltan en el depósito de col para
-// alcanzar su meta (Colony.Stock * miembros vivos).
+// MissingPortions devuelve cuántas porciones de comida faltan en el depósito de
+// col para alcanzar su meta (Colony.Stock.Get("food") * miembros vivos).
 func MissingPortions(w *world.World, col ids.ID) int32 {
 	r := w.ECS()
 	c, ok := ecs.Get[Colony](r).Get(col)
-	if !ok || c.Stock <= 0 {
+	if !ok || c.Stock.Get(ai.ResourceFood) <= 0 {
 		return 0
 	}
-	goal := c.Stock * AliveMembers(w, col)
+	goal := c.Stock.Get(ai.ResourceFood) * AliveMembers(w, col)
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
-	if p.Left >= goal {
+	have := p.Get(ai.ResourceFood)
+	if have >= goal {
 		return 0
 	}
-	return goal - max(p.Left, 0)
+	return goal - max(have, 0)
 }
 
 // PendingFoodPortions suma las porciones de comida que ya tienen un acarreo
@@ -91,8 +92,8 @@ func PendingFoodPortions(w *world.World, col ids.ID) int32 {
 			return
 		}
 		n := int32(1)
-		if p, ok := portions.Get(j.Target); ok && p.Left > 0 {
-			n = p.Left
+		if p, ok := portions.Get(j.Target); ok && p.Get(ai.ResourceFood) > 0 {
+			n = p.Get(ai.ResourceFood)
 		}
 		total += n
 	})
@@ -164,11 +165,13 @@ func scoreJob(c *ai.Ctx, _ ids.ID, j jobs.Job, base float64) (float64, bool) {
 		return base, true
 	}
 	isFoodHaul := j.Type == "haul" && ecs.Get[Food](r).Has(j.Target)
+	isWaterHaul := j.Type == "haul" && ecs.Get[Water](r).Has(j.Target)
 	isFiberHaul := j.Type == "haul" && ecs.Get[Material](r).Has(j.Target)
 	isBuildWork := j.Type == JobPluck || j.Type == JobBuild
 	wantRole := jobRole(j.Type)
 	critical := CriticalFood(c.W, m.Colony)
-	def := Deficit(c.W, m.Colony)
+	def := Deficit(c.W, m.Colony, ai.ResourceFood)
+	waterDef := Deficit(c.W, m.Colony, ai.ResourceWater)
 
 	if critical {
 		if isFoodHaul {
@@ -193,6 +196,8 @@ func scoreJob(c *ai.Ctx, _ ids.ID, j jobs.Job, base float64) (float64, bool) {
 		u := base + RoleBonus
 		if m.Role == RolePorter {
 			if def > 0 && isFoodHaul {
+				u += 0.04
+			} else if waterDef > 0 && isWaterHaul {
 				u += 0.04
 			} else if def == 0 && isFiberHaul {
 				u += StockedFiberBonus
@@ -247,14 +252,17 @@ func JobReason(w *world.World, actor ids.ID) string {
 			}
 			return "cubre la obra"
 		}
-		if Deficit(w, m.Colony) > 0 && ecs.Get[Food](r).Has(j.Target) {
+		if Deficit(w, m.Colony, ai.ResourceFood) > 0 && ecs.Get[Food](r).Has(j.Target) {
 			return "despensa baja"
+		}
+		if Deficit(w, m.Colony, ai.ResourceWater) > 0 && ecs.Get[Water](r).Has(j.Target) {
+			return "falta agua"
 		}
 		if ecs.Get[Material](r).Has(j.Target) || j.Type == JobPluck || j.Type == JobBuild {
 			return "obra en marcha"
 		}
 	case SearchAction, "forage":
-		if Deficit(w, m.Colony) > 0 {
+		if Deficit(w, m.Colony, ai.ResourceFood) > 0 {
 			return "despensa baja"
 		}
 	case ScoutAction:

@@ -101,6 +101,10 @@ func storyText(k chronicler, event world.Event) string {
 			return "Caen migajas del desayuno."
 		case "snack_living", "snack":
 			return "Caen migajas de la merienda."
+		case "wash_hands":
+			return "Quedan gotas de agua en el baño."
+		case "wash_dishes":
+			return "Quedan gotas de agua en la mesada."
 		}
 	case encounter.Observed:
 		if ev.Seen == 1 {
@@ -131,6 +135,9 @@ func storyText(k chronicler, event world.Event) string {
 			return fmt.Sprintf("La colonia asigna un acarreo a %s.", name(ev.By))
 		}
 	case colony.Stored:
+		if ev.Resource == ai.ResourceWater {
+			return fmt.Sprintf("El depósito de %s guarda %d porciones de agua.", name(ev.Colony), ev.Total)
+		}
 		return fmt.Sprintf("El depósito de %s guarda %d porciones.", name(ev.Colony), ev.Total)
 	case colony.Searched:
 		// una búsqueda vacía no se cuenta

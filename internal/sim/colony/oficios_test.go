@@ -41,8 +41,8 @@ func newDeskWorld(t *testing.T, seed uint64) (*world.World, ids.ID, ids.ID) {
 	nest := r.Spawn()
 	comp.Of(r).Name.Set(nest, "nido")
 	comp.Of(r).Location.Set(nest, comp.Location{Space: desk, Pos: units.V3(10*units.Centimeter, 10*units.Centimeter, 0)})
-	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: 2})
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 0})
+	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: colony.NewStock(ai.ResourceFood, 2)})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 0))
 	return w, desk, nest
 }
 
@@ -204,7 +204,7 @@ func TestNavPortalScaleFilter(t *testing.T) {
 func TestLookoutWarnsAndReleasesPost(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 4)
 	r := w.ECS()
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 10})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 10))
 
 	post := r.Spawn()
 	comp.Of(r).Location.Set(post, comp.Location{Space: desk, Pos: units.V3(20*units.Centimeter, 20*units.Centimeter, 0)})
@@ -262,7 +262,7 @@ func TestLookoutWarnsAndReleasesPost(t *testing.T) {
 func TestExpeditionLifecycleAndConservation(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 5)
 	r := w.ECS()
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 20))
 
 	// Destino de compañía (2 a 4) en el otro extremo del escritorio con una migaja oculta.
 	clue := r.Spawn()
@@ -347,8 +347,8 @@ func TestExpeditionLifecycleAndConservation(t *testing.T) {
 		}
 	}
 	dep, _ := ecs.Get[ai.Portions](r).Get(nest)
-	if dep.Left != 20 {
-		t.Fatalf("conservación de porciones rota: quedaron %d, se esperaban 20", dep.Left)
+	if dep.Get(ai.ResourceFood) != 20 {
+		t.Fatalf("conservación de porciones rota: quedaron %d, se esperaban 20", dep.Get(ai.ResourceFood))
 	}
 
 	// Continuidad desde snapshot a mitad de la convocatoria: mismo hash al llegar al mismo tick.
@@ -393,8 +393,8 @@ func TestExpeditionStrandedAndRecovery(t *testing.T) {
 
 	nest := r.Spawn()
 	comp.Of(r).Location.Set(nest, comp.Location{Space: roomA, Pos: units.V3(10*units.Centimeter, 20*units.Centimeter, 0)})
-	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: 2})
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 10})
+	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: colony.NewStock(ai.ResourceFood, 2)})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 10))
 
 	// Refugio en roomB para que el varado se resguarde.
 	refuge := r.Spawn()
@@ -450,8 +450,8 @@ func TestExpeditionStrandedAndRecovery(t *testing.T) {
 	}
 	// La ración volvió al depósito.
 	dep, _ := ecs.Get[ai.Portions](r).Get(nest)
-	if dep.Left != 10 {
-		t.Fatalf("ración perdida tras regreso del varado: quedaron %d, se esperaban 10", dep.Left)
+	if dep.Get(ai.ResourceFood) != 10 {
+		t.Fatalf("ración perdida tras regreso del varado: quedaron %d, se esperaban 10", dep.Get(ai.ResourceFood))
 	}
 }
 
@@ -459,7 +459,7 @@ func TestExpeditionStrandedAndRecovery(t *testing.T) {
 func TestExpeditionGuideReplacement(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 7)
 	r := w.ECS()
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 20))
 
 	clue := r.Spawn()
 	comp.Of(r).Location.Set(clue, comp.Location{Space: desk, Pos: units.V3(12*units.Centimeter, 10*units.Centimeter, 0)})
@@ -505,8 +505,8 @@ func TestExpeditionGuideReplacement(t *testing.T) {
 	}
 	// La ración del guía muerto se perdió con él (19), las de los 2 supervivientes volvieron.
 	dep, _ := ecs.Get[ai.Portions](r).Get(nest)
-	if dep.Left != 19 {
-		t.Fatalf("conservación tras baja: quedaron %d, se esperaban 19", dep.Left)
+	if dep.Get(ai.ResourceFood) != 19 {
+		t.Fatalf("conservación tras baja: quedaron %d, se esperaban 19", dep.Get(ai.ResourceFood))
 	}
 }
 
@@ -515,7 +515,7 @@ func TestExpeditionCanceledWhenLowProvisions(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 8)
 	r := w.ECS()
 	// 4 tinies y 5 porciones: alcanza preliminarmente para 1, pero al llegar 2 (min=2) no alcanza (5-2=3 < 4).
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 5})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 5))
 
 	clue := r.Spawn()
 	comp.Of(r).Location.Set(clue, comp.Location{Space: desk, Pos: units.V3(12*units.Centimeter, 10*units.Centimeter, 0)})
@@ -557,8 +557,8 @@ func TestExpeditionCanceledWhenLowProvisions(t *testing.T) {
 		t.Fatal("debería haberse cancelado por falta de provisiones")
 	}
 	dep, _ := ecs.Get[ai.Portions](r).Get(nest)
-	if dep.Left != 5 {
-		t.Fatalf("las porciones no deben cambiar al cancelar: quedaron %d", dep.Left)
+	if dep.Get(ai.ResourceFood) != 5 {
+		t.Fatalf("las porciones no deben cambiar al cancelar: quedaron %d", dep.Get(ai.ResourceFood))
 	}
 }
 
@@ -569,7 +569,7 @@ func TestExpeditionCanceledWhenLowProvisions(t *testing.T) {
 func TestLookoutNearbyWaitsDistantUnaffectedAndThreatenedFlees(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 11)
 	r := w.ECS()
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 10})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 10))
 
 	post := r.Spawn()
 	comp.Of(r).Location.Set(post, comp.Location{Space: desk, Pos: units.V3(20*units.Centimeter, 20*units.Centimeter, 0)})
@@ -632,7 +632,7 @@ func TestLookoutNearbyWaitsDistantUnaffectedAndThreatenedFlees(t *testing.T) {
 func TestExpeditionSnapshotMidReturn(t *testing.T) {
 	w, desk, nest := newDeskWorld(t, 12)
 	r := w.ECS()
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 20))
 
 	clue := r.Spawn()
 	comp.Of(r).Location.Set(clue, comp.Location{Space: desk, Pos: units.V3(12*units.Centimeter, 10*units.Centimeter, 0)})
@@ -715,8 +715,8 @@ func TestSofaPocketExpeditionEmptyAndWithCrumb(t *testing.T) {
 
 		nest := r.Spawn()
 		comp.Of(r).Location.Set(nest, comp.Location{Space: sofa, Pos: units.V3(6*units.Centimeter, 6*units.Centimeter, 0)})
-		ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: 2})
-		ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+		ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: colony.NewStock(ai.ResourceFood, 2)})
+		ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 20))
 
 		target := r.Spawn()
 		comp.Of(r).Location.Set(target, comp.Location{Space: pocket, Pos: units.V3(6*units.Centimeter, 3*units.Centimeter, 0)})
@@ -789,8 +789,8 @@ func TestScoutOpensUnvisitedMapAndGuidesExpedition(t *testing.T) {
 
 	nest := r.Spawn()
 	comp.Of(r).Location.Set(nest, comp.Location{Space: roomA, Pos: units.V3(10*units.Centimeter, 20*units.Centimeter, 0)})
-	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: 2})
-	ecs.Get[ai.Portions](r).Set(nest, ai.Portions{Left: 20})
+	ecs.Get[colony.Colony](r).Set(nest, colony.Colony{Radius: 4 * units.Centimeter, Stock: colony.NewStock(ai.ResourceFood, 2)})
+	ecs.Get[ai.Portions](r).Set(nest, ai.NewPortions(ai.ResourceFood, 20))
 
 	// Hito oculto en roomB cerca de la salida del portal.
 	hidden := r.Spawn()

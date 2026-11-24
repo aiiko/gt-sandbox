@@ -464,6 +464,42 @@
               "giantess/macro_sleep_1.png",
               "giantess/macro_sleep_2.png"
             ]
+          },
+          "wash_east": {
+            "frame_ticks": 4,
+            "frames": [
+              "giantess/macro_wash_east_1.png",
+              "giantess/macro_wash_east_2.png",
+              "giantess/macro_wash_east_3.png",
+              "giantess/macro_wash_east_4.png"
+            ]
+          },
+          "wash_west": {
+            "frame_ticks": 4,
+            "frames": [
+              "giantess/macro_wash_west_1.png",
+              "giantess/macro_wash_west_2.png",
+              "giantess/macro_wash_west_3.png",
+              "giantess/macro_wash_west_4.png"
+            ]
+          },
+          "wash_north": {
+            "frame_ticks": 4,
+            "frames": [
+              "giantess/macro_wash_north_1.png",
+              "giantess/macro_wash_north_2.png",
+              "giantess/macro_wash_north_3.png",
+              "giantess/macro_wash_north_4.png"
+            ]
+          },
+          "wash_south": {
+            "frame_ticks": 4,
+            "frames": [
+              "giantess/macro_wash_south_1.png",
+              "giantess/macro_wash_south_2.png",
+              "giantess/macro_wash_south_3.png",
+              "giantess/macro_wash_south_4.png"
+            ]
           }
         },
         "carry": [
@@ -634,6 +670,96 @@
             "frame_ticks": 1,
             "frames": [
               "crumb/micro_idle.png"
+            ]
+          }
+        }
+      }
+    },
+    "water_drop": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          3,
+          4
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 12,
+            "frames": [
+              "water_drop/micro_idle_1.png",
+              "water_drop/micro_idle_2.png"
+            ]
+          },
+          "low": {
+            "frame_ticks": 1,
+            "frames": [
+              "water_drop/micro_low.png"
+            ]
+          }
+        }
+      }
+    },
+    "puddle": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          7,
+          4
+        ],
+        "layer": "ground",
+        "clips": {
+          "idle": {
+            "frame_ticks": 14,
+            "frames": [
+              "puddle/micro_idle_1.png",
+              "puddle/micro_idle_2.png"
+            ]
+          },
+          "low": {
+            "frame_ticks": 1,
+            "frames": [
+              "puddle/micro_low.png"
+            ]
+          }
+        }
+      }
+    },
+    "nest_water": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          9,
+          7
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_water/micro_empty.png"
+            ]
+          },
+          "empty": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_water/micro_empty.png"
+            ]
+          },
+          "half": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_water/micro_half.png"
+            ]
+          },
+          "full": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_water/micro_full.png"
             ]
           }
         }
@@ -1304,6 +1430,12 @@
             "frames": [
               "ui/emote_chat.png"
             ]
+          },
+          "thirst": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_thirst.png"
+            ]
           }
         }
       },
@@ -1371,6 +1503,12 @@
             "frame_ticks": 1,
             "frames": [
               "ui/emote_chat.png"
+            ]
+          },
+          "thirst": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_thirst.png"
             ]
           }
         }

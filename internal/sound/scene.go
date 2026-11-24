@@ -47,7 +47,9 @@ const (
 	CrushFar      = "crush_far"  // macro: un golpe sordo donde murió un tiny
 	PassOpen      = "pass_open"
 	PassClose     = "pass_close"
-	Emote         = "emote_" // + el símbolo (view.Emote*)
+	WaterDrip     = "water_drip" // goteo al aparecer gotas de agua
+	FaucetRun     = "faucet_run" // canilla abierta durante wash_hands / wash_dishes
+	Emote         = "emote_"     // + el símbolo (view.Emote*)
 )
 
 // Cadencias de los sonidos que salen del estado (en ticks).
@@ -55,16 +57,18 @@ const (
 	giantessStepTicks clock.Tick = 10
 	tinyStepTicks     clock.Tick = 8
 	biteTicks         clock.Tick = 30
+	faucetTicks       clock.Tick = 20
 )
 
 // minor son los sonidos que se omiten a x4 y x16: los que se repiten. Quedan
 // los que cuentan algo (la mano, las caídas, los descubrimientos).
 var minor = map[string]bool{
 	StepTatami: true, StepWood: true, StepTile: true, FootStepMicro: true, Bite: true,
+	FaucetRun: true, WaterDrip: true,
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
-	Emote + view.EmoteLook: true, Emote + view.EmoteChat: true, FiberRustle: true,
+	Emote + view.EmoteLook: true, Emote + view.EmoteChat: true, Emote + view.EmoteThirst: true, FiberRustle: true,
 }
 
 // floors da el sonido de los pasos de la giantess según la habitación.
@@ -354,6 +358,12 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 				}
 			}
 		}
+	case ai.ItemsLeft:
+		if (ev.Motive == "wash_hands" || ev.Motive == "wash_dishes") && len(ev.Items) > 0 {
+			if p, ok := pos(ev.Items[0], cur); ok {
+				c.add(WaterDrip, p, 0.8)
+			}
+		}
 	case ai.ItemDropped:
 		if p, ok := pos(ev.Item, cur); ok {
 			if v.Micro && ev.On == v.Focus {
@@ -461,6 +471,9 @@ func (c *collector) state(prev, cur *view.Frame) {
 			}
 			if s.Activity == "use:breakfast" && s.Step == "use" && crossed(prev.Tick, cur.Tick, biteTicks, 0) {
 				c.add(Bite, s.Pose.Pos, 0.7)
+			}
+			if (s.Activity == "use:wash_hands" || s.Activity == "use:wash_dishes") && s.Step == "use" && crossed(prev.Tick, cur.Tick, faucetTicks, 0) {
+				c.add(FaucetRun, s.Pose.Pos, 0.7)
 			}
 		}
 	}

@@ -17,6 +17,7 @@ import (
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/encounter"
+	"gtsandbox/internal/sim/expire"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/needs"
@@ -64,6 +65,9 @@ func New(cfg world.Config, opts ...Option) (*world.World, error) {
 	}
 	if err := encounter.Install(w); err != nil {
 		return nil, fmt.Errorf("engine: encounter: %w", err)
+	}
+	if err := expire.Install(w); err != nil {
+		return nil, fmt.Errorf("engine: expire: %w", err)
 	}
 	if err := cmds.Register(w); err != nil {
 		return nil, fmt.Errorf("engine: comandos: %w", err)

@@ -578,6 +578,32 @@
         {"wave": "sine", "f0": 50, "dur": 6, "attack": 0, "gain": 0.05},
         {"wave": "noise", "f0": 44100, "dur": 6, "attack": 0, "gain": 0.02, "lp": 900}
       ]
+    },
+    "water_drip": {
+      "category": "efectos",
+      "voices": 3,
+      "cooldown_ms": 140,
+      "layers": [
+        {"wave": "sine", "f0": 880, "f1": 1760, "dur": 0.07, "attack": 0.002, "decay": 0.025, "gain": 0.28},
+        {"wave": "sine", "f0": 1320, "f1": 2200, "dur": 0.04, "delay": 0.015, "attack": 0.001, "decay": 0.015, "gain": 0.14}
+      ]
+    },
+    "faucet_run": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 500,
+      "layers": [
+        {"wave": "noise", "f0": 44100, "dur": 0.65, "attack": 0.06, "decay": 0.15, "gain": 0.18, "lp": 2400},
+        {"wave": "noise", "f0": 44100, "dur": 0.5, "delay": 0.08, "attack": 0.04, "decay": 0.12, "gain": 0.10, "lp": 4200}
+      ]
+    },
+    "emote_thirst": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "sine", "f0": 620, "f1": 480, "dur": 0.09, "attack": 0.004, "decay": 0.035, "gain": 0.20}
+      ]
     }
   }
 }

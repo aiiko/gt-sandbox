@@ -25,7 +25,7 @@ func (Forage) Options(c *ai.Ctx) []ai.Option {
 		return nil
 	}
 	u := m.Forage
-	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony) > 0 &&
+	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony, ai.ResourceFood) > 0 &&
 		PendingFoodPortions(c.W, m.Colony) < MissingPortions(c.W, m.Colony) {
 		u += 0.04
 	}
@@ -35,7 +35,7 @@ func (Forage) Options(c *ai.Ctx) []ai.Option {
 func (Forage) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
 	u := m.Forage
-	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony) > 0 &&
+	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer && Deficit(c.W, m.Colony, ai.ResourceFood) > 0 &&
 		PendingFoodPortions(c.W, m.Colony) < MissingPortions(c.W, m.Colony) {
 		u += 0.04
 	}

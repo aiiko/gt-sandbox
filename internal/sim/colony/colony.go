@@ -8,8 +8,11 @@
 package colony
 
 import (
+	"cmp"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
@@ -43,6 +46,105 @@ type SupportDiscovered struct {
 
 func (SupportDiscovered) Kind() string { return "support_discovered" }
 
+// StockGoal es la meta de un recurso en el depósito de la colonia, en
+// porciones por miembro vivo.
+type StockGoal struct {
+	Resource string `json:"resource"`
+	Amount   int32  `json:"amount"`
+}
+
+// Stock guarda las metas del depósito por recurso, serializado como lista
+// ordenada por nombre (D5). En JSON también acepta un entero (meta de "food")
+// o un mapa {"food": 4, "water": 2}.
+type Stock []StockGoal
+
+// NewStock crea un Stock con una sola meta para el recurso dado.
+func NewStock(res string, amount int32) Stock {
+	var s Stock
+	s.Set(res, amount)
+	return s
+}
+
+// Get devuelve la meta por miembro vivo del recurso res ("" = "food").
+func (s Stock) Get(res string) int32 {
+	res = ai.NormalizeResource(res)
+	for _, g := range s {
+		if g.Resource == res {
+			return g.Amount
+		}
+	}
+	return 0
+}
+
+// Set fija la meta por miembro vivo del recurso res manteniendo el orden (D5).
+func (s *Stock) Set(res string, amount int32) {
+	res = ai.NormalizeResource(res)
+	for i, g := range *s {
+		if g.Resource == res {
+			if amount <= 0 {
+				*s = slices.Delete(*s, i, i+1)
+			} else {
+				(*s)[i].Amount = amount
+			}
+			return
+		}
+	}
+	if amount <= 0 {
+		return
+	}
+	*s = append(*s, StockGoal{Resource: res, Amount: amount})
+	slices.SortFunc(*s, func(a, b StockGoal) int { return cmp.Compare(a.Resource, b.Resource) })
+}
+
+// MarshalJSON serializa siempre como lista ordenada por nombre (D5).
+func (s Stock) MarshalJSON() ([]byte, error) {
+	out := make([]StockGoal, 0, len(s))
+	for _, g := range s {
+		if g.Amount > 0 {
+			out = append(out, StockGoal{Resource: ai.NormalizeResource(g.Resource), Amount: g.Amount})
+		}
+	}
+	slices.SortFunc(out, func(a, b StockGoal) int { return cmp.Compare(a.Resource, b.Resource) })
+	return json.Marshal(out)
+}
+
+// UnmarshalJSON acepta entero (meta de food), objeto {"food":4,"water":2} o lista ordenada.
+func (s *Stock) UnmarshalJSON(data []byte) error {
+	*s = nil
+	trimmed := data
+	for len(trimmed) > 0 && (trimmed[0] == ' ' || trimmed[0] == '\t' || trimmed[0] == '\n' || trimmed[0] == '\r') {
+		trimmed = trimmed[1:]
+	}
+	if len(trimmed) == 0 {
+		return nil
+	}
+	switch trimmed[0] {
+	case '[':
+		var list []StockGoal
+		if err := json.Unmarshal(data, &list); err != nil {
+			return err
+		}
+		for _, g := range list {
+			s.Set(g.Resource, g.Amount)
+		}
+	case '{':
+		var m map[string]int32
+		if err := json.Unmarshal(data, &m); err != nil {
+			return err
+		}
+		for k, v := range m {
+			s.Set(k, v)
+		}
+	default:
+		var n int32
+		if err := json.Unmarshal(data, &n); err != nil {
+			return err
+		}
+		s.Set(ai.ResourceFood, n)
+	}
+	return nil
+}
+
 // Colony es el componente "colony" de la entidad nido. Lo que llega a menos
 // de Radius del nido se guarda en el depósito.
 type Colony struct {
@@ -51,9 +153,9 @@ type Colony struct {
 	// peligro que deja la muerte de un miembro (0 = por defecto).
 	DangerRadius units.Length `json:"danger_radius,omitempty"`
 	DangerTicks  clock.Tick   `json:"danger_ticks,omitempty"`
-	// Stock es la meta del depósito, en porciones por miembro vivo (0 = sin
-	// meta). Ver Deficit.
-	Stock int32 `json:"stock,omitempty"`
+	// Stock es la meta del depósito por recurso, en porciones por miembro vivo.
+	// Ver Deficit.
+	Stock Stock `json:"stock,omitempty"`
 	// KnownSupports guarda los apoyos cuerpo↔casa reportados a la colonia.
 	KnownSupports []SupportNote `json:"known_supports,omitempty"`
 }
@@ -74,13 +176,24 @@ type Member struct {
 }
 
 // Food marca algo que la colonia junta (componente "food"). Al guardarlo
-// suma sus porciones (o 1) al depósito.
+// suma sus porciones (o 1) al depósito bajo "food".
 type Food struct{}
 
-// Stored se emite al guardar comida en el depósito.
+// Water marca agua que la colonia puede acarrear al nido (componente "water").
+type Water struct{}
+
+// WaterDrop describe una gota o charco de agua (componente "water_drop").
+// Volume refleja cuántas tomas/porciones de agua le quedan; se sincroniza con
+// ai.Portions ("water") cuando un tiny toma de ella.
+type WaterDrop struct {
+	Volume int32 `json:"volume"`
+}
+
+// Stored se emite al guardar comida o agua en el depósito.
 type Stored struct {
 	Colony   ids.ID `json:"colony"`
 	Item     ids.ID `json:"item"`
+	Resource string `json:"resource,omitempty"`
 	Portions int32  `json:"portions"`
 	Total    int32  `json:"total"`
 }
@@ -116,7 +229,7 @@ func (share) Run(w *world.World) {
 				ai.Learn(w, a, e, n.Target)
 			}
 		})
-		if ecs.Get[Food](r).Has(n.Target) && !atNest(w, m.Colony, n.Target) && !hauled(w, n.Target) {
+		if (ecs.Get[Food](r).Has(n.Target) || ecs.Get[Water](r).Has(n.Target)) && !atNest(w, m.Colony, n.Target) && !hauled(w, n.Target) {
 			nest, ok := comp.Of(r).Location.Get(m.Colony)
 			if !ok {
 				continue
@@ -127,12 +240,18 @@ func (share) Run(w *world.World) {
 }
 
 // Deficit es cuánto le falta al depósito de la colonia col para llegar a
-// su meta (Colony.Stock por miembro vivo), en [0, 1]: 0 en la meta o sin
-// meta, 1 vacío. Se calcula al vuelo: no es estado.
-func Deficit(w *world.World, col ids.ID) float64 {
+// su meta del recurso dado (Colony.Stock.Get(resource) por miembro vivo), en
+// [0, 1]: 0 en la meta o sin meta, 1 vacío. Si resource == "" usa "food".
+// Se calcula al vuelo: no es estado.
+func Deficit(w *world.World, col ids.ID, resource string) float64 {
+	resource = ai.NormalizeResource(resource)
 	r := w.ECS()
 	c, ok := ecs.Get[Colony](r).Get(col)
-	if !ok || c.Stock <= 0 {
+	if !ok {
+		return 0
+	}
+	stock := c.Stock.Get(resource)
+	if stock <= 0 {
 		return 0
 	}
 	n := int32(0)
@@ -141,15 +260,16 @@ func Deficit(w *world.World, col ids.ID) float64 {
 			n++
 		}
 	})
-	goal := c.Stock * n
+	goal := stock * n
 	if goal <= 0 {
 		return 0
 	}
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
-	if p.Left >= goal {
+	have := p.Get(resource)
+	if have >= goal {
 		return 0
 	}
-	return float64(goal-max(p.Left, 0)) / float64(goal)
+	return float64(goal-max(have, 0)) / float64(goal)
 }
 
 // hauled: ya hay un trabajo sobre e, o alguien lo carga.
@@ -174,7 +294,8 @@ func atNest(w *world.World, col, e ids.ID) bool {
 		l.Pos.XY().DistSq(nest.Pos.XY()) <= int64(c.Radius)*int64(c.Radius)
 }
 
-// store guarda en el depósito la comida suelta que está en el nido.
+// store guarda en el depósito la comida y el agua sueltas que están en el nido,
+// y sincroniza WaterDrop.Volume con Portions("water").
 type store struct{}
 
 func (store) Name() string { return "colony.store" }
@@ -183,7 +304,22 @@ func (store) Run(w *world.World) {
 	r := w.ECS()
 	locs := comp.Of(r).Location
 	food := ecs.Get[Food](r)
+	water := ecs.Get[Water](r)
+	drops := ecs.Get[WaterDrop](r)
 	portions := ecs.Get[ai.Portions](r)
+
+	// Sincronizar WaterDrop.Volume con Portions("water") tras consumos o al nacer.
+	drops.Each(func(id ids.ID, d *WaterDrop) {
+		if r.Despawning(id) {
+			return
+		}
+		if p, ok := portions.Get(id); ok {
+			d.Volume = p.Get(ai.ResourceWater)
+		} else if d.Volume > 0 {
+			portions.Set(id, ai.NewPortions(ai.ResourceWater, d.Volume))
+		}
+	})
+
 	ecs.Get[Colony](r).Each(func(col ids.ID, c *Colony) {
 		nest, ok := locs.Get(col)
 		if !ok || r.Despawning(col) {
@@ -191,20 +327,28 @@ func (store) Run(w *world.World) {
 		}
 		var items []ids.ID
 		spatial.Of(w).Near(nest.Space, nest.Pos.XY(), c.Radius, func(e ids.ID, _ units.Vec2) {
-			if food.Has(e) && !r.Despawning(e) && !ecs.Get[jobs.Carried](r).Has(e) && jobs.Holder(w, e).IsNil() {
+			if (food.Has(e) || water.Has(e)) && !r.Despawning(e) && !ecs.Get[jobs.Carried](r).Has(e) && jobs.Holder(w, e).IsNil() {
 				items = append(items, e)
 			}
 		})
 		for _, e := range items {
+			res := ai.ResourceFood
+			if water.Has(e) && !food.Has(e) {
+				res = ai.ResourceWater
+			}
 			n := int32(1)
-			if p, ok := portions.Get(e); ok {
-				n = p.Left
+			if p, ok := portions.Get(e); ok && p.Get(res) > 0 {
+				n = p.Get(res)
+			} else if res == ai.ResourceWater {
+				if d, ok := drops.Get(e); ok && d.Volume > 0 {
+					n = d.Volume
+				}
 			}
 			dep, _ := portions.Get(col)
-			dep.Left += n
+			total := dep.Add(res, n)
 			portions.Set(col, dep)
 			r.Despawn(e)
-			w.Emit(Stored{Colony: col, Item: e, Portions: n, Total: dep.Left})
+			w.Emit(Stored{Colony: col, Item: e, Resource: res, Portions: n, Total: total})
 		}
 	})
 }
@@ -217,6 +361,21 @@ func check(w *world.World) error {
 			err = errors.Join(err, fmt.Errorf("colony: %v es miembro de %v, que no es una colonia", e, m.Colony))
 		}
 	})
+	ecs.Get[WaterDrop](r).Each(func(e ids.ID, d *WaterDrop) {
+		if d.Volume < 0 {
+			err = errors.Join(err, fmt.Errorf("colony: %v tiene volumen de agua negativo (%d)", e, d.Volume))
+		}
+	})
+	ecs.Get[Colony](r).Each(func(e ids.ID, c *Colony) {
+		for i, g := range c.Stock {
+			if g.Resource == "" || g.Amount <= 0 {
+				err = errors.Join(err, fmt.Errorf("colony %v: stock inválido %+v", e, g))
+			}
+			if i > 0 && g.Resource <= c.Stock[i-1].Resource {
+				err = errors.Join(err, fmt.Errorf("colony %v: stock sin ordenar o duplicado", e))
+			}
+		}
+	})
 	return err
 }
 
@@ -225,7 +384,8 @@ func check(w *world.World) error {
 func Install(w *world.World) error {
 	r := w.ECS()
 	for _, err := range []error{
-		register[Colony](r, "colony"), register[Member](r, "member"), register[Food](r, "food"),
+		register[Colony](r, "colony"), register[Member](r, "member"),
+		register[Food](r, "food"), register[Water](r, "water"), register[WaterDrop](r, "water_drop"),
 	} {
 		if err != nil {
 			return err

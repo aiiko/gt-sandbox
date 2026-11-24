@@ -183,12 +183,28 @@
       "cooldown_ms": 120
     },
     {
+      "id": "emote_thirst",
+      "file": "emote_thirst.wav",
+      "category": "efectos",
+      "ms": 90,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
       "id": "emote_vein",
       "file": "emote_vein.wav",
       "category": "efectos",
       "ms": 220,
       "voices": 1,
       "cooldown_ms": 200
+    },
+    {
+      "id": "faucet_run",
+      "file": "faucet_run.wav",
+      "category": "efectos",
+      "ms": 650,
+      "voices": 1,
+      "cooldown_ms": 500
     },
     {
       "id": "fiber_rustle",
@@ -437,6 +453,14 @@
       "ms": 260,
       "voices": 1,
       "cooldown_ms": 150
+    },
+    {
+      "id": "water_drip",
+      "file": "water_drip.wav",
+      "category": "efectos",
+      "ms": 70,
+      "voices": 3,
+      "cooldown_ms": 140
     },
     {
       "id": "zabuton",

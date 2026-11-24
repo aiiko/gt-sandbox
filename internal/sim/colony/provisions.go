@@ -65,10 +65,10 @@ func equipRation(w *world.World, col, entity ids.ID, amount int32) bool {
 	r := w.ECS()
 	portions := ecs.Get[ai.Portions](r)
 	dep, ok := portions.Get(col)
-	if !ok || dep.Left < amount {
+	if !ok || dep.Get(ai.ResourceFood) < amount {
 		return false
 	}
-	dep.Left -= amount
+	dep.Add(ai.ResourceFood, -amount)
 	portions.Set(col, dep)
 	provs := ecs.Get[Provisions](r)
 	p, _ := provs.Get(entity)
@@ -92,7 +92,7 @@ func returnRations(w *world.World, col, entity ids.ID) int32 {
 	provs.Remove(entity)
 	portions := ecs.Get[ai.Portions](r)
 	dep, _ := portions.Get(col)
-	dep.Left += amount
+	dep.Add(ai.ResourceFood, amount)
 	portions.Set(col, dep)
 	w.Emit(ProvisionsReturned{Colony: col, Entity: entity, Amount: amount})
 	return amount

@@ -116,7 +116,9 @@ type Colony struct {
 	Name        string      `json:"name,omitempty"`
 	Space       ids.ID      `json:"space"`
 	Portions    int32       `json:"portions"`
-	Goal        int32       `json:"goal"` // meta de porciones (Stock * miembros vivos)
+	Goal        int32       `json:"goal"` // meta de porciones de comida (Stock.Get("food") * miembros vivos)
+	Water       int32       `json:"water,omitempty"`
+	WaterGoal   int32       `json:"water_goal,omitempty"` // meta de agua (Stock.Get("water") * miembros vivos)
 	Members     int         `json:"members"`
 	Site        *Site       `json:"site,omitempty"`
 	Expedition  *Expedition `json:"expedition,omitempty"`
@@ -177,6 +179,7 @@ type Thing struct {
 	Stranded      bool   `json:"stranded,omitempty"`
 	NearestRefuge string `json:"nearest_refuge,omitempty"`
 	GripLabel     string `json:"grip_label,omitempty"`
+	WaterLow      bool   `json:"water_low,omitempty"`
 }
 
 // ExpeditionMark es un hito o pista de expedición para el miniplano en micro.
@@ -447,6 +450,9 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		if gr, ok := ecs.Get[attach.Gripping](r).Get(id); ok {
 			t.GripLabel = gr.Label
 		}
+		if wd, ok := ecs.Get[colony.WaterDrop](r).Get(id); ok && wd.Volume <= 1 {
+			t.WaterLow = true
+		}
 		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)
 	})
@@ -590,8 +596,10 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		f.Colonies = append(f.Colonies, Colony{
 			ID: id, Name: names(id), Space: sp,
-			Portions: p.Left, Goal: col.Stock * int32(m), Members: m,
-			Site: colSites[id], Expedition: expView, Stranded: strandedCount,
+			Portions: p.Get(ai.ResourceFood), Goal: col.Stock.Get(ai.ResourceFood) * int32(m),
+			Water: p.Get(ai.ResourceWater), WaterGoal: col.Stock.Get(ai.ResourceWater) * int32(m),
+			Members: m,
+			Site:    colSites[id], Expedition: expView, Stranded: strandedCount,
 			NoExpReason: colony.NoExpeditionReason(w, id),
 		})
 	})

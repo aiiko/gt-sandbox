@@ -23,7 +23,7 @@ func playSearches(t *testing.T, portions int32) int {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ecs.Get[ai.Portions](in.World.ECS()).Ptr(in.Refs["nest"]).Left = portions
+	ecs.Get[ai.Portions](in.World.ECS()).Ptr(in.Refs["nest"]).Set(ai.ResourceFood, portions)
 	p, err := in.Player()
 	if err != nil {
 		t.Fatal(err)

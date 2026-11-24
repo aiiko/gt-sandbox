@@ -221,7 +221,7 @@ func (site) Run(w *world.World) {
 			continue
 		}
 		need := s.Required - s.Delivered - fibers
-		if need > 0 && !plucks && Deficit(w, s.Colony) == 0 && colonyKnows(w, s.Colony, s.Source) {
+		if need > 0 && !plucks && Deficit(w, s.Colony, ai.ResourceFood) == 0 && colonyKnows(w, s.Colony, s.Source) {
 			post(JobPluck, s.Source)
 		}
 	}

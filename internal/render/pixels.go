@@ -624,7 +624,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 	for _, t := range f.Things {
 		if t.CarriedBy.IsNil() && inFocus(t.Space) {
 			names := actor{mover: t.Mover, facing: t.Pose.Rot, activity: t.Activity, step: t.Step,
-				carrying: carrying[t.ID], built: t.Built}.clips()
+				carrying: carrying[t.ID], built: t.Built, low: t.WaterLow}.clips()
 			pos := microPos(t.Space, t.Pose.Pos, t.LocalPos)
 			var offset image.Point
 			if fl, ok := f.FallOf(t.ID); ok {
@@ -635,6 +635,22 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 					look{ghost: true, layer: layerGround, alpha: 0.3 + 0.5*float32(fallLift-lift)/fallLift})
 			}
 			add(t.ID, t.Space, ids.Nil, pos, names, false, offset, look{})
+			if scale == Micro && visuals[t.ID] == "nest" {
+				for _, col := range f.Colonies {
+					if col.ID == t.ID && (col.Water > 0 || col.WaterGoal > 0) {
+						capClip := "empty"
+						switch {
+						case col.Water > 0 && (col.WaterGoal == 0 || col.Water >= col.WaterGoal):
+							capClip = "full"
+						case col.Water > 0:
+							capClip = "half"
+						}
+						add(t.ID, t.Space, ids.Nil, pos, []string{capClip}, false, image.Pt(18, -6),
+							look{visual: "nest_water", ghost: true, layer: layerDepth})
+						break
+					}
+				}
+			}
 			if scale == Micro && slices.Contains(featured, t.ID) {
 				// Lo seguido se ve a través de una superficie que lo tapa (la
 				// mano apoyada encima del extremo del paso).
@@ -838,6 +854,8 @@ var poseClips = map[string]string{
 	"watch":        "sit",
 	"relax":        "sit",
 	"sleep":        "sleep",
+	"wash_hands":   "wash",
+	"wash_dishes":  "wash",
 }
 
 // actor es el estado de una entidad del que sale su clip.
@@ -848,6 +866,7 @@ type actor struct {
 	carrying       bool // lleva algo
 	resting        bool // tiene una parte apoyada en otra superficie
 	built          bool // una obra terminada (refugio auxiliar)
+	low            bool // recurso casi vacío (gota chica)
 }
 
 func compass(facing fixedmath.Angle) string {
@@ -860,6 +879,9 @@ func compass(facing fixedmath.Angle) string {
 func (a actor) clips() []string {
 	if a.built {
 		return []string{"built", "idle"}
+	}
+	if a.low {
+		return []string{"low", "idle"}
 	}
 	if a.mover == nil {
 		return []string{"idle"}

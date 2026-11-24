@@ -72,7 +72,7 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 	if !ok || m.Search <= 0 {
 		return nil
 	}
-	def := Deficit(c.W, m.Colony)
+	def := Deficit(c.W, m.Colony, ai.ResourceFood)
 	if def <= 0 {
 		return nil
 	}
@@ -123,7 +123,7 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 
 func (Search) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
-	u := m.Search * Deficit(c.W, m.Colony)
+	u := m.Search * Deficit(c.W, m.Colony, ai.ResourceFood)
 	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer {
 		u += RoleBonus
 	}

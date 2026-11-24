@@ -17,6 +17,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import actividades  # noqa: E402
 import apartment  # noqa: E402
 import cuerpo  # noqa: E402
 import floors  # noqa: E402
@@ -50,6 +51,7 @@ def build(out):
     vida.main(out)
     oficios.main(out)
     cuerpo.main(out)
+    actividades.main(out)
 
 
 def pixels(path):

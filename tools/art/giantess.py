@@ -474,6 +474,39 @@ def sleep(frame):
     return s
 
 
+def wash(facing, frame):
+    """De pie frente al lavamanos o la bacha, manos moviéndose (4 cuadros)."""
+    dx = (0, 2, 0, -2)[frame]
+    dy = (0, -1, 1, -1)[frame]
+    if facing == 'north':
+        s = north(0)
+        # codos que se mueven a los lados
+        s.rrect(13 + dx // 2, 42 + dy, 18, 49 + dy, CARD)
+        s.rrect(44, 42 - dy, 49 + dx // 2, 49 - dy, CARD)
+        return finish(s)
+    if facing == 'south':
+        s = south(0, expression='calm', hands=True)
+        # manos juntas al frente frotándose
+        s.rrect(21, 43, 27, 50 + dy, CARD)
+        s.rrect(35, 43, 41, 50 - dy, CARD)
+        s.ell(25 + dx, 48 + dy, 31 + dx, 53 + dy, SKIN)
+        s.ell(31 - dx, 48 - dy, 37 - dx, 53 - dy, SKIN)
+        if frame in (1, 3):
+            s.px(30, 47, '#89D1F2')
+            s.px(32, 53, '#E8FAFF')
+        return finish(s)
+    # east (west se espeja)
+    s = east(arm=None)
+    s.rrect(30, 41, 46 + dx, 46 + dy, CARD)
+    s.hline(31, 45 + dx, 41, CARD_L)
+    s.ell(46 + dx, 40 + dy, 52 + dx, 46 + dy, SKIN)
+    s.ell(44 - dx // 2, 42 - dy, 50 - dx // 2, 47 - dy, SKIN_D)
+    if frame in (1, 3):
+        s.px(52 + dx, 45 + dy, '#89D1F2')
+        s.px(50, 48, '#E8FAFF')
+    return finish(s)
+
+
 def frames():
     """Todos los cuadros: nombre de archivo → Sprite."""
     out = {}
@@ -485,6 +518,8 @@ def frames():
         out[f'reach_{facing}'] = reach(facing)
         for i in (1, 2):
             out[f'eat_{facing}_{i}'] = eat(facing, i)
+        for i in range(4):
+            out[f'wash_{facing}_{i + 1}'] = wash(facing, i)
     for i in (1, 2):
         out[f'sleep_{i}'] = sleep(i)
     for name in [n for n in out if n.endswith('east') or '_east_' in n]:
