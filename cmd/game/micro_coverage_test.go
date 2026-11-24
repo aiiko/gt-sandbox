@@ -136,3 +136,66 @@ func TestTabOnClimbingTinyOpensMicro(t *testing.T) {
 		t.Fatalf("Tab en mitad de la trepada abrió %s, se esperaba %s", g.name(got), g.name(climbSpace))
 	}
 }
+
+// Verifica consistencia entre vista macro y vista micro: todo mueble o pieza
+// visible en macro en casa.json (salvo la giantess, puertas y marcadores de
+// tinies) tiene arte micro propio y efectivamente se dibuja al enfocar su
+// soporte en vista micro.
+func TestAllMacroFurnitureVisibleInMicro(t *testing.T) {
+	g := artGame(t, randomBase)
+	g.w, g.h = 960, 540
+	g.run.StepOnce()
+	f := g.run.Cur
+
+	skip := map[string]bool{
+		"giantess": true, "door": true, "door_noren": true,
+		"door_h": true, "door_noren_h": true, "door_bath": true,
+		"tiny": true, "tiny_lavender": true, "tiny_ochre": true,
+	}
+	checked := 0
+	checkEntity := func(id, support ids.ID, name string, pos units.Vec3) {
+		vis := g.visuals[id]
+		if vis == "" || skip[vis] || !g.art.atlas.Visible(vis, render.Macro) {
+			return
+		}
+		if !g.art.atlas.Visible(vis, render.Micro) {
+			t.Errorf("mueble %q (visual %q) se ve en macro pero está oculto en micro", name, vis)
+			return
+		}
+		if support.IsNil() {
+			return
+		}
+		// Enfocar el soporte en micro centrado en el mueble y verificar que se dibuja.
+		g.art.focus = support
+		g.cam.Anchor = ids.Nil
+		g.cam.X, g.cam.Y = float64(pos.X), float64(pos.Y)
+		g.syncArtZoom(f)
+		proj := g.cam.Project(g.anchor(f), g.w, g.h)
+		scene := g.art.atlas.Arrange(f, proj, g.visuals, render.Micro, support)
+		if scene.Clip(id) == "" {
+			t.Errorf("mueble %q (visual %q) no se dibujó en micro de %s", name, vis, g.name(support))
+		}
+		if b, ok := scene.Bounds(id); !ok || !b.Overlaps(proj.Bounds()) {
+			t.Errorf("mueble %q (visual %q) quedó sin bounds visibles en micro de %s (%v)", name, vis, g.name(support), b)
+		}
+		checked++
+	}
+	for _, s := range f.Spaces {
+		if s.Parent.IsNil() || s.Extent.Empty() {
+			continue
+		}
+		if p, ok := f.SpaceByID(s.Parent); ok && p.Parent.IsNil() {
+			continue // habitaciones raíz (se ven al enfocarlas)
+		}
+		checkEntity(s.ID, s.Parent, s.Name, s.Pose.Pos)
+	}
+	for _, th := range f.Things {
+		if !th.CarriedBy.IsNil() {
+			continue
+		}
+		checkEntity(th.ID, th.Space, th.Name, th.Pose.Pos)
+	}
+	if checked < 20 {
+		t.Fatalf("se esperaban >= 20 muebles verificados en micro, hubo %d", checked)
+	}
+}

@@ -108,8 +108,9 @@ func TestReferenceCaptures(t *testing.T) {
 		base := map[ids.ID]int{}
 		var lines []string
 		for k, p := range scene.Placements() {
-			if p.Dest.Size() != p.Src.Size() {
-				t.Errorf("%s: %s escalado %v → %v", c.Name, p.ID, p.Src, p.Dest)
+			sc := max(1, p.Scale)
+			if p.Dest.Size() != p.Src.Size().Mul(sc) {
+				t.Errorf("%s: %s escalado %v → %v (escala %d)", c.Name, p.ID, p.Src, p.Dest, sc)
 			}
 			if p.Space && p.Layer != 3 {
 				if _, ok := base[p.ID]; !ok {

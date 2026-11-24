@@ -168,6 +168,7 @@ type sprite struct {
 	group ids.ID
 	z     units.Length
 	alpha float32 // 0 = opaco
+	scale int     // 0 o 1 = 1×; >1 = ampliación entera FilterNearest
 	ghost bool    // sombras y señales: no se eligen ni llevan el marco de selección
 	space bool
 }
@@ -362,9 +363,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		} else {
 			out.clips[id], out.lifts[id] = name, -offset.Y
 		}
+		sc := v.pixelScale()
 		x, y := p.ToScreen(pos)
-		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0], int(math.Round(float64(y)))-v.Pivot[1]).Add(offset)
-		group, depth := id, y+float32(v.DepthOffset)
+		at := image.Pt(int(math.Round(float64(x)))-v.Pivot[0]*sc, int(math.Round(float64(y)))-v.Pivot[1]*sc).Add(offset)
+		group, depth := id, y+float32(v.DepthOffset*sc)
 		height := pos.Z
 		layer := layerDepth
 		switch v.Layer {
@@ -404,10 +406,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			group, height, layer = id, units.Length(math.MaxInt64), layerForeground
 		}
 		addFrame := func(src image.Rectangle, layer int) {
-			dest := image.Rectangle{Min: at, Max: at.Add(src.Size())}
+			dest := image.Rectangle{Min: at, Max: at.Add(src.Size().Mul(sc))}
 			if dest.Overlaps(canvas) {
 				out.sprites = append(out.sprites, sprite{id: id, src: src, dest: dest, layer: layer, y: depth, group: group, z: height,
-					alpha: lk.alpha, ghost: lk.ghost, space: isSpace})
+					alpha: lk.alpha, scale: sc, ghost: lk.ghost, space: isSpace})
 			}
 		}
 		addFrame(v.frame(name, uint64(f.Tick)), layer)
@@ -914,7 +916,11 @@ func (s ArtScene) Pick(p image.Point) ids.ID {
 	for i := len(s.sprites) - 1; i >= 0; i-- {
 		sp := s.sprites[i]
 		if !sp.ghost && p.In(sp.dest) {
-			at := p.Sub(sp.dest.Min).Add(sp.src.Min)
+			rel := p.Sub(sp.dest.Min)
+			if sp.scale > 1 {
+				rel = rel.Div(sp.scale)
+			}
+			at := rel.Add(sp.src.Min)
 			if _, _, _, alpha := s.atlas.pixels.At(at.X, at.Y).RGBA(); alpha > 0 {
 				return sp.id
 			}
@@ -933,6 +939,7 @@ type Placement struct {
 	Dest  image.Rectangle // destino en el lienzo, alineado al píxel
 	Layer int             // 0 fondo, 1 suelo, 2 profundidad, 3 primer plano
 	Alpha float32         // 0 = opaco
+	Scale int             // 0 o 1 = 1×; >1 = ampliación entera FilterNearest
 	Ghost bool            // sombra o señal
 	Space bool            // una superficie (la base sobre la que se apoyan otros)
 }
@@ -941,7 +948,7 @@ type Placement struct {
 func (s ArtScene) Placements() []Placement {
 	out := make([]Placement, len(s.sprites))
 	for i, sp := range s.sprites {
-		out[i] = Placement{ID: sp.id, Src: sp.src, Dest: sp.dest, Layer: sp.layer, Alpha: sp.alpha, Ghost: sp.ghost, Space: sp.space}
+		out[i] = Placement{ID: sp.id, Src: sp.src, Dest: sp.dest, Layer: sp.layer, Alpha: sp.alpha, Scale: sp.scale, Ghost: sp.ghost, Space: sp.space}
 	}
 	return out
 }
@@ -992,6 +999,9 @@ func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 	var selection image.Rectangle
 	for _, sp := range s.sprites {
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		if sp.scale > 1 {
+			op.GeoM.Scale(float64(sp.scale), float64(sp.scale))
+		}
 		op.GeoM.Translate(float64(sp.dest.Min.X), float64(sp.dest.Min.Y))
 		if sp.alpha > 0 {
 			op.ColorScale.ScaleAlpha(sp.alpha)

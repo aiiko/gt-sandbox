@@ -50,6 +50,16 @@ type variant struct {
 	// Tile repite el cuadro sobre la extensión del Space, desde su esquina
 	// mínima (un piso visto de cerca). El pivote debe ser (0, 0).
 	Tile bool `json:"tile,omitempty"`
+	// Scale amplía el cuadro por un factor entero con FilterNearest (0 o 1 = 1×),
+	// útil para muebles grandes en vista micro sin inflar el atlas.
+	Scale int `json:"scale,omitempty"`
+}
+
+func (v variant) pixelScale() int {
+	if v.Scale > 1 {
+		return v.Scale
+	}
+	return 1
 }
 
 type clip struct {
@@ -144,10 +154,13 @@ func LoadAtlas(fsys fs.FS, file string) (*Atlas, error) {
 func validateVariant(v variant, bounds image.Rectangle, context string) error {
 	if v.Hidden {
 		if len(v.Pivot) != 0 || len(v.Clips) != 0 || v.Layer != "" || v.DepthOffset != 0 ||
-			v.Foreground != nil || v.Focus != nil || v.Carry != nil || v.SelectedOnly || v.Tile {
+			v.Foreground != nil || v.Focus != nil || v.Carry != nil || v.SelectedOnly || v.Tile || v.Scale != 0 {
 			return fmt.Errorf("%s: la variante oculta tiene datos de dibujo", context)
 		}
 		return nil
+	}
+	if v.Scale < 0 {
+		return fmt.Errorf("%s: escala inválida %d", context, v.Scale)
 	}
 	if len(v.Pivot) != 2 || v.Pivot[0] < 0 || v.Pivot[1] < 0 {
 		return fmt.Errorf("%s: pivote inválido %v", context, v.Pivot)

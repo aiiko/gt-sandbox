@@ -149,7 +149,12 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [160, 350],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["bed/micro_idle.png"] }
+        }
       }
     },
     "desk": {
@@ -241,7 +246,11 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [110, 160],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["fridge/micro_idle.png"] }
+        }
       }
     },
     "tv": {
@@ -261,7 +270,11 @@
         }
       },
       "micro": {
-        "hidden": true
+        "pivot": [180, 240],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["tv/micro_idle.png"] }
+        }
       }
     },
     "nest": {
@@ -2461,7 +2474,13 @@
           "idle": { "frame_ticks": 1, "frames": ["low_closet/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 210],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["low_closet/micro_idle.png"] }
+        }
+      }
     },
     "apt_sofa": {
       "macro": {
@@ -2488,7 +2507,14 @@
           "idle": { "frame_ticks": 1, "frames": ["tv_stand/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [15, 180],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["tv_stand/micro_idle.png"] }
+        }
+      }
     },
     "apt_tv": {
       "macro": {
@@ -2498,7 +2524,13 @@
           "idle": { "frame_ticks": 1, "frames": ["apt_tv/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [165, 160],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["apt_tv/micro_idle.png"] }
+        }
+      }
     },
     "rug": {
       "macro": {
@@ -2508,7 +2540,14 @@
           "idle": { "frame_ticks": 1, "frames": ["rug/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [15, 495],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rug/micro_idle.png"] }
+        }
+      }
     },
     "plant": {
       "macro": {
@@ -2518,7 +2557,13 @@
           "idle": { "frame_ticks": 1, "frames": ["plant/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [115, 250],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["plant/micro_idle.png"] }
+        }
+      }
     },
     "counter": {
       "macro": {
@@ -2544,7 +2589,14 @@
           "idle": { "frame_ticks": 1, "frames": ["sink/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 210],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sink/micro_idle.png"] }
+        }
+      }
     },
     "sink_basin": {
       "macro": { "hidden": true },
@@ -2564,7 +2616,14 @@
           "idle": { "frame_ticks": 1, "frames": ["stove/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 250],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["stove/micro_idle.png"] }
+        }
+      }
     },
     "rice_cooker": {
       "macro": {
@@ -2573,7 +2632,13 @@
           "idle": { "frame_ticks": 1, "frames": ["rice_cooker/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [65, 100],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rice_cooker/micro_idle.png"] }
+        }
+      }
     },
     "dish_shelf": {
       "macro": {
@@ -2583,7 +2648,13 @@
           "idle": { "frame_ticks": 1, "frames": ["dish_shelf/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [20, 160],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["dish_shelf/micro_idle.png"] }
+        }
+      }
     },
     "washbasin": {
       "macro": {
@@ -2593,7 +2664,13 @@
           "idle": { "frame_ticks": 1, "frames": ["washbasin/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 290],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["washbasin/micro_idle.png"] }
+        }
+      }
     },
     "toilet": {
       "macro": {
@@ -2603,7 +2680,13 @@
           "idle": { "frame_ticks": 1, "frames": ["toilet/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 250],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["toilet/micro_idle.png"] }
+        }
+      }
     },
     "shower_tray": {
       "macro": {
@@ -2613,7 +2696,14 @@
           "idle": { "frame_ticks": 1, "frames": ["shower_tray/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 390],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["shower_tray/micro_idle.png"] }
+        }
+      }
     },
     "shoe_rack": {
       "macro": {
@@ -2623,7 +2713,13 @@
           "idle": { "frame_ticks": 1, "frames": ["shoe_rack/macro_idle.png"] }
         }
       },
-      "micro": { "hidden": true }
+      "micro": {
+        "pivot": [10, 330],
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["shoe_rack/micro_idle.png"] }
+        }
+      }
     }
   }
 }

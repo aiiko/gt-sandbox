@@ -21,6 +21,7 @@ import apartment  # noqa: E402
 import cuerpo  # noqa: E402
 import floors  # noqa: E402
 import furniture  # noqa: E402
+import furniture_micro  # noqa: E402
 import giantess  # noqa: E402
 import macro  # noqa: E402
 import micro  # noqa: E402
@@ -39,6 +40,7 @@ def build(out):
     macro.main(out)
     apartment.main(out)
     furniture.main(out)
+    furniture_micro.main(out)
     giantess.main(out)
     micro.main(out, BASE)
     floors.main(out)
