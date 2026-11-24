@@ -705,6 +705,8 @@ El escenario de referencia reúne un dormitorio con cama y escritorio, una cocin
 
 Este recorrido sirve para probar la dirección visual. En macro se debe entender qué hace la giantess y adónde va. En micro se debe poder seguir al mismo tiny desde el escritorio hasta la palma y la mesa del living. La secuencia se tiene que entender por lo que se ve en ambas vistas, con la historia como apoyo.
 
+La [reescritura del mapa de la casa](#20-reescritura-del-mapa-de-la-casa) define la próxima planta para «Nueva partida» y el mobiliario que se podrá recorrer en micro.
+
 ## 11. Dirección visual
 
 **Anime cotidiano vívido en pixel art.** La casa se ve como un interior de anime en una mañana soleada, con manchas de sol bien definidas, materiales de colores reconocibles y personajes expresivos. Cada cuarto tiene su propia combinación de color. Los tonos más saturados se concentran en ropa, textiles y objetos pequeños sobre superficies claras. La luz de ventana y los detalles de uso cotidiano hacen que el departamento se sienta habitado.
@@ -1356,3 +1358,68 @@ El explorador puede reconocer una zona nueva o esperar en un punto de agarre des
 4. **Partida libre y continuidad.** Una compañía debe poder iniciar una salida, aguardar un cambio de pose o retirarse por una alternativa conocida y comunicar sus hallazgos. Al guardar y cargar cerca de un cambio de pose o de un cierre de portal, el log y el hash deben coincidir con la ejecución continua. Los escenarios de la palma sirven de regresión para embarque, transporte, desembarco y caída.
 
 **Estado.** Implementado ([spec del mapa corporal](specs/cuerpo.md)): proyección 3D entera en `Space` (`space/projection.go`), poses con proyección, articulaciones sin recrear portales y puntos de agarre (`attach/body.go`, `attach/pose.go`), apoyos con bordes de acceso, estabilidad, quietud y validación en el tick de cruce (`attach/contact.go`, `nav.SetPortalValidator`, `crush/resolve.go`), mapa corporal completo con futón y almohada (`tools/scenarios/cuerpo.py`, `body_desk_to_pillow.json`, `body_floor_to_sofa.json`), expediciones con memoria de apoyos y espera en agarres (`colony/expedition.go`, `colony/scout.go`) y cobertura micro con trepadas de costado, recorte de ropa/pelo, rótulo jerárquico y crónica (`view`, `render/pixels.go`, `cmd/game/hud.go`).
+
+## 20. Reescritura del mapa de la casa
+
+**Estado.** Propuesta para la próxima implementación de «Nueva partida». La planta actual encadena tres cuartos de 3 × 3 m con el dormitorio como paso entre la cocina y el living. Parte del mobiliario de cocina y living está dibujado en el fondo de cada habitación. La próxima planta organiza el departamento alrededor de un distribuidor y compone cada habitación con piezas de mobiliario independientes. [Escenario actual](../content/partidas/casa.json) · [Fuentes del arte macro](../tools/art/macro.py)
+
+### 20.1. Planta y circulación
+
+Tomar como punto de partida un departamento japonés contemporáneo de una planta, con un perímetro aproximado de **7,4 × 6,4 m**. El origen está en la esquina sudoeste, `x` crece hacia el este e `y` hacia el norte. Las cotas sirven para bloquear la planta. Ajustarlas al resolver espesores, marcos y anchos libres.
+
+| Ambiente | Huella aproximada en planta (m) | Acceso y distribución |
+| --- | --- | --- |
+| Dormitorio | `x 0–3,2`, `y 3,1–6,4` | Fusuma al distribuidor en la pared sur. Futón contra un lateral y escritorio cerca de una ventana exterior, con espacio para retirar la silla y acceder al futón. |
+| Living | `x 3,2–7,4`, `y 3,1–6,4` | Entrada desde el distribuidor en el extremo sudoeste y paso con noren a la cocina en el sudeste. Sofá contra la pared norte, TV enfrente entre los dos accesos y mesa al alcance desde el sofá. |
+| Cocina | `x 4,4–7,4`, `y 0–3,1` | Entrada desde el living. Mesada contra la pared oeste, compartida con el baño en el tramo sur. Bacha, tramo seco de preparación y anafe en ese orden. Heladera con frente despejado. |
+| Distribuidor | `x 0–4,4`, `y 2–3,1` | Une la entrada, el baño, el dormitorio y el living. El recorrido de la heladera al escritorio pasa por el living y el distribuidor. |
+| Baño | `x 1,5–4,4`, `y 0–2` | Acceso desde el distribuidor. Lavamanos y ducha cerca de la pared compartida con la cocina, con un tramo seco desde la puerta hasta el inodoro. |
+| Entrada (genkan) | `x 0–1,5`, `y 0–2` | Puerta exterior al sur y escalón hacia el piso interior al norte. Zapatero de poca profundidad sobre un lateral. |
+
+- Reservar unos **0,80–0,90 m libres** en pasos interiores y **0,90–1,10 m** frente a la mesada y detrás de la silla retirada, como referencias de diseño. Dibujar en planta el recorrido de la giantess con la taza o el plato, el giro de la puerta de la heladera y el espacio que necesita para sentarse, levantarse y recostarse.
+- Dibujar un solo tabique por límite compartido. Colocar ventanas sobre el perímetro y orientar la luz según esas aperturas. Usar tatami en el dormitorio, madera en el living y el distribuidor, y materiales lavables en cocina, baño y genkan. Mantener norte arriba en macro y micro.
+- El dormitorio y el living comparten un tabique. La giantess cruza por el distribuidor. Los tinies pueden tomar el mismo recorrido o usar el pasacables del zócalo, con una boca a cada lado del tabique. Colocar el refugio del umbral junto a la salida del living, fuera de la línea habitual de pisadas y cerca de la pata accesible del sofá. [Expedición al sofá](#186-un-mapa-de-aventuras-entre-el-dormitorio-y-el-living)
+
+### 20.2. Inventario de muebles y superficies tiny
+
+**Sí** indica una superficie jugable en esta versión. La última columna delimita por dónde se camina y cómo se llega. Las patas, costuras y cables habilitan trepadas entre superficies. Las medidas son de partida para el diseño y se prueban con las poses y accesos del juego.
+
+| Mueble o pieza | Habitación | ¿Pueden caminar los tinies encima? | Superficie y acceso previstos |
+| --- | --- | --- | --- |
+| Escritorio | Dormitorio | Sí | Tablero a 75 cm, con sitio para el nido, la taza y la palma. Acceso desde el piso por una pata y desde el respaldo de la silla cuando toca el borde. |
+| Silla del escritorio | Dormitorio | Sí | Asiento a 45 cm y parte alta del respaldo como mirador. Acceso por una pata. El asiento conserva la zona de presión cuando la giantess se sienta. |
+| Futón | Dormitorio | Sí | Superficie del edredón a unos 15 cm del piso. Subida por un borde bajo, con salida a la almohada o a un apoyo corporal válido. |
+| Almohada | Dormitorio | Sí | Cara superior, con acceso por la costura del borde desde el futón. |
+| Placard bajo | Dormitorio | No | Volumen sólido junto a una pared, con espacio libre frente a sus puertas corredizas. |
+| Sofá | Living | Sí | Asiento a 45 cm y cavidad bajo el ribete lateral. Subida por la pata y la costura del lateral. La huella de la giantess al sentarse deja una salida lateral hacia el bolsillo. |
+| Mesa auxiliar | Living | Sí | Tablero a unos 65 cm para el plato, las migajas y el apoyo de la mano. Acceso por una pata, con ancho y orientación acordes a la pose de merienda desde el sofá. |
+| Mueble bajo de TV | Living | No | Soporta el televisor y deja despejada la visual frente al sofá. |
+| Televisor | Living | No | Pieza sobre el mueble bajo, orientada al asiento que usa la rutina de mirar TV. |
+| Alfombra | Living | Sí | Tejido a ras del piso, transitable por su borde. El recorrido sigue en la grilla del suelo. |
+| Planta en maceta | Living | No | Huella sólida del tiesto. Deja libre el acceso a la ventana y el paso. |
+| Mesada con bajo mesada | Cocina | Sí | Tramo seco de preparación a unos 85–90 cm. Acceso por un lateral con cable sujeto al mueble desde el zócalo. La bacha y el anafe ocupan sus recortes. |
+| Bacha | Cocina | No | Pieza encastrada. Su abertura recorta la mesada y su fondo sirve de apoyo ante una caída. |
+| Anafe | Cocina | No | Pieza encastrada con hornallas fuera de la grilla transitable de la mesada. |
+| Heladera | Cocina | No | Huella sólida, con punto de uso frente a la puerta para sacar la taza y el plato. |
+| Arrocera | Cocina | No | Electrodoméstico sobre la mesada, con una huella que deja paso por el tramo seco. |
+| Repisa de vajilla | Cocina | No | Pieza anclada a la pared, por encima del área de trabajo. |
+| Lavamanos | Baño | No | Pieza con huella y frente de uso en el tramo seco. |
+| Inodoro | Baño | No | Pieza con espacio de aproximación desde la puerta. |
+| Plato de ducha | Baño | No | Pieza en la zona húmeda. Su borde delimita hasta dónde llega el piso transitable para tinies. |
+| Zapatero | Entrada | No | Pieza poco profunda junto al escalón, con el frente orientado al genkan. |
+
+El piso seco de cada ambiente es transitable por tinies. Bajo el escritorio, la silla y el sofá, habilitar solo los huecos con altura y una entrada física. Donde el hueco sea exclusivo de los tinies, representarlo como un espacio local con portales de escala `tiny`. En el genkan, el desnivel de unos 8 cm se resuelve con un escalón para la giantess y un acceso trepable por su lateral para los tinies. La vajilla y el nido cuelgan del soporte sobre el que estén, como entidades propias. Las rutinas de esta iteración se concentran en dormitorio, cocina y living.
+
+### 20.3. Diseño de piezas y montaje
+
+1. **Dibujar primero la arquitectura.** La capa del mapa contiene pisos, muros, zócalos, ventanas, vanos y umbrales. Cada vano de circulación comparte geometría con el portal y con sus celdas de aproximación. Usar la planta como fuente de las posiciones y las medidas en el escenario y en el arte de arquitectura.
+2. **Diseñar y guardar cada mueble por separado.** Cada pieza de la tabla tiene un recurso de arte con fondo transparente y una instancia propia. Esto incluye la mesada, la bacha y el anafe, aunque se monten juntos, así como la alfombra, la almohada y los electrodomésticos. Extraer del fondo actual los elementos que se reutilicen, como la mesada, la repisa, la alfombra y la maceta. El living se compone con una sola instancia de sofá.
+3. **Definir medidas y referencias locales para cada pieza.** Registrar ancho, fondo, alto, huella sólida, pivote, caras que ocluyen y, cuando corresponda, superficie navegable, puntos de trepada, apoyo y uso. Declarar en la planta qué pieza se instala, en qué habitación o soporte, dónde y con qué orientación. Generar desde esos datos el sprite colocado, el bloqueo del piso, las superficies hijas y sus extremos de conexión. Modelar la posición y las alturas en `units.Length` y usar las proyecciones y los portales existentes.
+4. **Alinear el arte con las dos escalas.** Dibujar en macro a 80 px/m y usar 1600 px/m para las variantes micro. El pivote, las caras y los bordes de apoyo deben coincidir con la geometría que usa la simulación. Dar vista micro a cada superficie jugable, con el dibujo básico del motor donde alcance. Separar sombra y frente por pieza y mantener visible el marcador de seguimiento si la pieza oculta al tiny. Ajustar el encuadre inicial para que la planta completa se lea al abrir la partida. [Capas y atlas](specs/presentacion.md#la-casa-en-macro) · [Superficies y proyección](specs/space.md)
+
+### 20.4. Implementación y criterios de aceptación
+
+1. **Bloquear la planta con huellas y volúmenes simples.** Recorrer genkan → distribuidor → dormitorio, baño y living, y living → cocina. Cada puerta conecta dos puntos próximos en el mundo, dentro del vano, y quedan libres las zonas de giro y aproximación. Revisar ambos recorridos del dormitorio al living, por piso y por pasacables, con el filtro de escala del pasacables.
+2. **Montar y verificar las piezas.** Probar la mesa y la silla en dos posiciones de edición. El fondo queda utilizable, la huella y las superficies se ubican con la pieza, y las conexiones se recalculan o se desactivan si quedaron sin contacto. Comprobar en macro y micro que los tinies alcanzan cada superficie marcada «Sí», que las piezas marcadas «No» carecen de rutas por encima y que las caídas terminan sobre un soporte físico o en el piso.
+3. **Adaptar «Nueva partida» desde sus generadores.** Integrar la planta en `tools/scenarios/partida.py` y reubicar las piezas que agregan `vida.py`, `oficios.py` y `cuerpo.py` por referencia a sus soportes. Resolver anclajes de aproximación, poses, recursos y conexiones a partir de la nueva ubicación. Dar identificadores de arte propios a la arquitectura nueva para que los escenarios de referencia sigan cargando las habitaciones para las que fueron calibrados. Regenerar `content/partidas/casa.json` y empaquetar el atlas con `go run ./cmd/artpack`. [Generadores](../tools/scenarios) · [Fuentes del atlas](../content/art/src/casa)
+4. **Probar la partida y sus regresiones.** Verificar que los perfiles de inicio llegan a dormir en el futón, desayunar y escribir en el escritorio, y merendar y mirar TV desde el sofá. Confirmar que la colonia puede salir del nido y volver desde el sofá, y que funcionan escritorio ↔ palma, sofá ↔ cuerpo y almohada ↔ cuerpo con los apoyos previstos. Seguir al mismo tiny en macro y micro al caminar, trepar y caer. Correr `go test ./...` y revisar capturas del plano completo y de los accesos a escritorio, sofá y mesada.
