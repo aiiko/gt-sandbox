@@ -3,12 +3,13 @@
   "visual": "water_drop",
   "body": {"radius": 2000, "height": 1500, "mass": 0},
   "components": {
-    "water_drop": {"volume": 3},
+    "water_drop": {"volume": 6},
     "water": {},
-    "portions": {"items": [{"resource": "water", "amount": 3}]},
-    "expires": {"ttl": 2400, "kind": "water_drop"},
+    "landmark": {},
+    "portions": {"items": [{"resource": "water", "amount": 6}]},
+    "expires": {"ttl": 12000, "kind": "water_drop"},
     "offers": [
-      {"action": "drink", "scale": "tiny", "effects": [{"need": "thirst", "amount": 300}],
+      {"action": "drink", "scale": "tiny", "effects": [{"need": "thirst", "amount": 550}],
        "steps": [{"do": "goto"}, {"do": "use", "ticks": 50}, {"do": "consume", "resource": "water"}]}
     ]
   }

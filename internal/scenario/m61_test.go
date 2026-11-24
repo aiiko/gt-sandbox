@@ -183,6 +183,76 @@ func TestM61CasaGiantessUsesShowerAndWash(t *testing.T) {
 	}
 }
 
+// M61: en una partida libre (casa.json) la giantess llega a usar la ducha
+// (no solo lavarse las manos) y los tinies acarrean agua y beben sin quedar
+// todos secos.
+func TestM61CasaShowerAndWaterLoop(t *testing.T) {
+	base, err := scenario.ReadFile(filepath.Join("..", "..", "content", "partidas", "casa.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec, err := scenario.Randomize(base, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec.Ticks = 12000
+	in, err := scenario.Build(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := in.Run(); err != nil {
+		t.Fatal(err)
+	}
+	showers, washes, waterStored, drinks := 0, 0, 0, 0
+	for _, ev := range in.Events {
+		switch e := ev.Event.(type) {
+		case ai.ActionDone:
+			switch e.What {
+			case "shower":
+				showers++
+			case "wash_hands", "wash_dishes":
+				washes++
+			case "drink":
+				drinks++
+			}
+		case colony.Stored:
+			if e.Resource == ai.ResourceWater {
+				waterStored++
+			}
+		}
+	}
+	nestWater := int32(0)
+	if p, ok := ecs.Get[ai.Portions](in.World.ECS()).Get(in.Refs["nest"]); ok {
+		nestWater = p.Get(ai.ResourceWater)
+	}
+	alive, thirsty := 0, 0
+	ecs.Get[colony.Member](in.World.ECS()).Each(func(id ids.ID, _ *colony.Member) {
+		if in.World.ECS().Despawning(id) {
+			return
+		}
+		alive++
+		if n, ok := ecs.Get[needs.Needs](in.World.ECS()).Get(id); ok {
+			if th, ok := n.Get("thirst"); ok && th < 300 {
+				thirsty++
+			}
+		}
+	})
+	t.Logf("casa seed 1 (12000 ticks): showers=%d washes=%d waterStored=%d drinks=%d nestWater=%d thirsty=%d/%d",
+		showers, washes, waterStored, drinks, nestWater, thirsty, alive)
+	if showers == 0 {
+		t.Errorf("la giantess nunca usó la ducha en 12000 ticks (washes=%d)", washes)
+	}
+	if waterStored == 0 {
+		t.Errorf("los tinies nunca acarrearon agua al nido en 12000 ticks")
+	}
+	if drinks == 0 {
+		t.Errorf("ningún tiny bebió agua en 12000 ticks")
+	}
+	if alive > 0 && thirsty*2 > alive {
+		t.Errorf("más de la mitad de la colonia quedó sedienta (%d/%d con thirst < 300)", thirsty, alive)
+	}
+}
+
 // M61: Deficit y Stock funcionan por recurso independiente (food y water).
 func TestM61DeficitByResource(t *testing.T) {
 	in := run(t, "tiny_drinks_drop.json", func(s *scenario.Spec) { s.Ticks = 1 })

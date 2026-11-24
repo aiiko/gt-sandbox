@@ -4,14 +4,18 @@
   "components": {
     "offers": [
       {"action": "shower", "scale": "giantess",
-       "effects": [{"need": "hygiene", "amount": 850}],
+       "effects": [
+         {"need": "hygiene", "amount": 850},
+         {"need": "energy", "amount": 150},
+         {"need": "fun", "amount": 120}
+       ],
        "approach": {"x": -500000, "y": 500000},
        "facing": 0,
        "steps": [
          {"do": "goto"},
          {"do": "use", "ticks": 240},
-         {"do": "spawn", "item": "water_drop", "count": 6, "offset": {"x": 50000, "y": 0}, "spread": 140000},
-         {"do": "spawn", "item": "puddle", "count": 1, "offset": {"x": 80000, "y": 60000}}
+         {"do": "spawn", "item": "water_drop", "count": 10, "offset": {"x": -100000, "y": 150000}, "spread": 140000},
+         {"do": "spawn", "item": "puddle", "count": 2, "offset": {"x": -50000, "y": 50000}, "spread": 80000}
        ]}
     ]
   }

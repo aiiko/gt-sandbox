@@ -72,12 +72,12 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 	if !ok || m.Search <= 0 {
 		return nil
 	}
-	def := Deficit(c.W, m.Colony, ai.ResourceFood)
+	def := max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
 	if def <= 0 {
 		return nil
 	}
 	hasRoles := HasRoles(c.W, m.Colony)
-	if hasRoles && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony) {
+	if hasRoles && Deficit(c.W, m.Colony, ai.ResourceWater) == 0 && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony) {
 		return nil // ya hay comida suficiente en acarreos para cubrir el faltante
 	}
 	locs := comp.Of(r).Location
@@ -123,7 +123,7 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 
 func (Search) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
-	u := m.Search * Deficit(c.W, m.Colony, ai.ResourceFood)
+	u := m.Search * max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
 	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer {
 		u += RoleBonus
 	}
@@ -176,10 +176,10 @@ func foodNear(c *ai.Ctx, l comp.Location, known bool) bool {
 	if c.Agent.Sight <= 0 {
 		return false
 	}
-	food, carried := ecs.Get[Food](r), ecs.Get[jobs.Carried](r)
+	food, water, carried := ecs.Get[Food](r), ecs.Get[Water](r), ecs.Get[jobs.Carried](r)
 	found := false
 	spatial.Of(c.W).Near(l.Space, l.Pos.XY(), c.Agent.Sight, func(e ids.ID, _ units.Vec2) {
-		found = found || food.Has(e) && !carried.Has(e) && !r.Despawning(e) && (!known || c.Agent.Knows(e))
+		found = found || (food.Has(e) || water.Has(e)) && !carried.Has(e) && !r.Despawning(e) && (!known || c.Agent.Knows(e))
 	})
 	return found
 }

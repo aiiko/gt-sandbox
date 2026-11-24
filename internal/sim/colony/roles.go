@@ -4,6 +4,7 @@ import (
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/ai"
 	"gtsandbox/internal/sim/clock"
+	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/jobs"
 	"gtsandbox/internal/sim/world"
@@ -61,6 +62,22 @@ func CriticalFood(w *world.World, col ids.ID) bool {
 	}
 	p, _ := ecs.Get[ai.Portions](r).Get(col)
 	return p.Get(ai.ResourceFood) < n
+}
+
+// CriticalWater indica si la reserva de agua de col está por debajo de una
+// porción por miembro vivo (con meta de agua configurada).
+func CriticalWater(w *world.World, col ids.ID) bool {
+	r := w.ECS()
+	c, ok := ecs.Get[Colony](r).Get(col)
+	if !ok || c.Stock.Get(ai.ResourceWater) <= 0 {
+		return false
+	}
+	n := AliveMembers(w, col)
+	if n <= 0 {
+		return false
+	}
+	p, _ := ecs.Get[ai.Portions](r).Get(col)
+	return p.Get(ai.ResourceWater) < n
 }
 
 // MissingPortions devuelve cuántas porciones de comida faltan en el depósito de
@@ -170,8 +187,25 @@ func scoreJob(c *ai.Ctx, _ ids.ID, j jobs.Job, base float64) (float64, bool) {
 	isBuildWork := j.Type == JobPluck || j.Type == JobBuild
 	wantRole := jobRole(j.Type)
 	critical := CriticalFood(c.W, m.Colony)
+	criticalWater := CriticalWater(c.W, m.Colony)
 	def := Deficit(c.W, m.Colony, ai.ResourceFood)
 	waterDef := Deficit(c.W, m.Colony, ai.ResourceWater)
+
+	// El agua está en el baño o la cocina (lejos del nido): cuando falta agua,
+	// atenuar el costo por distancia para que los porteadores salgan a buscarla.
+	if isWaterHaul && waterDef > 0 {
+		if loc, ok := comp.Of(r).Location.Get(j.Target); ok {
+			dist := ai.Distance(c, loc.Space, loc.Pos.XY())
+			bonus := 0.16 * waterDef
+			if criticalWater {
+				bonus += 0.14
+			}
+			waterBase := c.Agent.Work + 0.01*float64(j.Priority) + bonus - 0.015*dist
+			if waterBase > base {
+				base = waterBase
+			}
+		}
+	}
 
 	if critical {
 		if isFoodHaul {

@@ -4,13 +4,13 @@
   "components": {
     "offers": [
       {"action": "wash_hands", "scale": "giantess",
-       "effects": [{"need": "hygiene", "amount": 450}],
+       "effects": [{"need": "hygiene", "amount": 220}],
        "approach": {"x": -500000, "y": 350000},
        "facing": 0,
        "steps": [
          {"do": "goto"},
-         {"do": "use", "ticks": 120},
-         {"do": "spawn", "item": "water_drop", "count": 3, "offset": {"x": 80000, "y": 0}, "spread": 60000}
+         {"do": "use", "ticks": 100},
+         {"do": "spawn", "item": "water_drop", "count": 6, "offset": {"x": -50000, "y": 0}, "spread": 90000}
        ]}
     ]
   }

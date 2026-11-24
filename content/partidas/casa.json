@@ -2407,7 +2407,7 @@
               "effects": [
                 {
                   "need": "hygiene",
-                  "amount": 400
+                  "amount": 180
                 }
               ],
               "requires": [
@@ -2425,7 +2425,7 @@
                 },
                 {
                   "do": "use",
-                  "ticks": 140
+                  "ticks": 110
                 },
                 {
                   "do": "spawn",
@@ -2438,19 +2438,20 @@
                     },
                     "components": {
                       "water_drop": {
-                        "volume": 3
+                        "volume": 6
                       },
                       "water": {},
+                      "landmark": {},
                       "portions": {
                         "items": [
                           {
                             "resource": "water",
-                            "amount": 3
+                            "amount": 6
                           }
                         ]
                       },
                       "expires": {
-                        "ttl": 2400,
+                        "ttl": 12000,
                         "kind": "water_drop"
                       },
                       "offers": [
@@ -2460,7 +2461,7 @@
                           "effects": [
                             {
                               "need": "thirst",
-                              "amount": 300
+                              "amount": 550
                             }
                           ],
                           "steps": [
@@ -2480,12 +2481,12 @@
                       ]
                     }
                   },
-                  "count": 3,
+                  "count": 6,
                   "offset": {
-                    "x": 550000,
-                    "y": 200000
+                    "x": 650000,
+                    "y": -400000
                   },
-                  "spread": 60000
+                  "spread": 90000
                 }
               ]
             }
@@ -2985,6 +2986,40 @@
       "object": "shower_tray"
     },
     {
+      "ref": "spot_bath",
+      "spawn": {
+        "name": "borde de la ducha",
+        "location": {
+          "space": "$bathroom",
+          "pos": {
+            "x": 1750000,
+            "y": 1100000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "bath_puddle",
+      "object": "puddle",
+      "visual": "puddle",
+      "spawn": {
+        "name": "charco de la ducha",
+        "location": {
+          "space": "$bathroom",
+          "pos": {
+            "x": 1750000,
+            "y": 800000,
+            "z": 0
+          }
+        }
+      }
+    },
+    {
       "ref": "shoe_rack",
       "visual": "shoe_rack",
       "spawn": {
@@ -3049,8 +3084,8 @@
             },
             {
               "name": "hygiene",
-              "value": 650,
-              "decay": 1
+              "value": 500,
+              "decay": 2
             }
           ],
           "stride": {
@@ -3279,11 +3314,16 @@
             "radius": 30000,
             "stock": {
               "food": 2,
-              "water": 2
+              "water": 3
             }
           },
           "portions": {
-            "left": 0
+            "items": [
+              {
+                "resource": "water",
+                "amount": 6
+              }
+            ]
           }
         }
       }
@@ -3686,7 +3726,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -3749,7 +3789,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -3812,7 +3852,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -3875,7 +3915,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -3938,7 +3978,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4001,7 +4041,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4064,7 +4104,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4127,7 +4167,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4190,7 +4230,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4253,7 +4293,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4316,7 +4356,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4379,7 +4419,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4442,7 +4482,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4505,7 +4545,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4568,7 +4608,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4631,7 +4671,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4694,7 +4734,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4757,7 +4797,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4820,7 +4860,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4883,7 +4923,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -4946,7 +4986,7 @@
             },
             {
               "name": "thirst",
-              "value": 800,
+              "value": 950,
               "decay": 1
             }
           ],
@@ -10751,8 +10791,8 @@
           },
           {
             "name": "hygiene",
-            "value": 650,
-            "decay": 1
+            "value": 500,
+            "decay": 2
           }
         ]
       },
@@ -10776,8 +10816,8 @@
           },
           {
             "name": "hygiene",
-            "value": 550,
-            "decay": 1
+            "value": 420,
+            "decay": 2
           }
         ]
       },
@@ -10801,8 +10841,8 @@
           },
           {
             "name": "hygiene",
-            "value": 450,
-            "decay": 1
+            "value": 350,
+            "decay": 2
           }
         ]
       }

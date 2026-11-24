@@ -438,8 +438,8 @@
             },
             {
               "name": "thirst",
-              "value": 300,
-              "decay": 0
+              "value": 760,
+              "decay": 2
             },
             {
               "name": "energy",

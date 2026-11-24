@@ -146,7 +146,7 @@ def water_hauled_to_nest():
         _nest('desk1', 80000, 80000, portions={'items': []}, stock={'food': 2, 'water': 2}),
         _drop('drop', 'desk1', 240000, 120000, volume=3, ttl=4000),
         _tiny('porter', 'desk1', 210000, 120000, thirst=950, work=0.5, sight=120000, visual='tiny'),
-        _tiny('drinker', 'desk1', 60000, 80000, thirst=300, work=0.0, sight=80000, visual='tiny_lavender'),
+        _tiny('drinker', 'desk1', 60000, 80000, thirst=760, decay=(0, 2, 0), work=0.0, sight=80000, visual='tiny_lavender'),
     ]
     d['expect'] = [
         {'event': 'stored', 'match': {'colony': '$nest', 'item': '$drop', 'resource': 'water'}},
@@ -228,22 +228,47 @@ def apply_to_casa():
 
     by_ref = {e.get('ref'): e for e in d['entities']}
 
-    # 1. Giantess: necesidad de higiene.
+    # 1. Giantess: necesidad de higiene (decay 2 para que use ducha además de lavarse las manos).
     if 'giantess' in by_ref:
         g_needs = by_ref['giantess']['spawn'].setdefault('components', {}).setdefault('needs', [])
-        _set_need(g_needs, 'hygiene', 650, 1)
+        _set_need(g_needs, 'hygiene', 500, 2)
 
     if 'random' in d and 'starts' in d['random']:
-        hygiene_by_start = {'con hambre': 650, 'cansada': 550, 'con ganas de entretenerse': 450}
+        hygiene_by_start = {'con hambre': 500, 'cansada': 420, 'con ganas de entretenerse': 350}
         for st in d['random']['starts']:
-            val = hygiene_by_start.get(st.get('name'), 550)
-            _set_need(st.setdefault('needs', []), 'hygiene', val, 1)
+            val = hygiene_by_start.get(st.get('name'), 450)
+            _set_need(st.setdefault('needs', []), 'hygiene', val, 2)
 
-    # 2. Baño: lavamanos y plato de ducha con sus objetos (wash_hands y shower).
+    # 2. Baño: lavamanos y plato de ducha con sus objetos (wash_hands y shower),
+    #    un punto de búsqueda en el baño y un charco inicial junto a la ducha.
     if 'washbasin' in by_ref:
         by_ref['washbasin']['object'] = 'washbasin'
     if 'shower_tray' in by_ref:
         by_ref['shower_tray']['object'] = 'shower_tray'
+        if 'bath_puddle' not in by_ref:
+            idx = next(i for i, e in enumerate(d['entities']) if e.get('ref') == 'shower_tray') + 1
+            d['entities'].insert(idx, {
+                'ref': 'bath_puddle',
+                'object': 'puddle',
+                'visual': 'puddle',
+                'spawn': {
+                    'name': 'charco de la ducha',
+                    'location': {'space': '$bathroom', 'pos': {'x': 1750000, 'y': 800000, 'z': 0}},
+                },
+            })
+        if 'spot_bath' not in by_ref:
+            idx = next(i for i, e in enumerate(d['entities']) if e.get('ref') == 'shower_tray') + 1
+            d['entities'].insert(idx, {
+                'ref': 'spot_bath',
+                'spawn': {
+                    'name': 'borde de la ducha',
+                    'location': {'space': '$bathroom', 'pos': {'x': 1750000, 'y': 1100000, 'z': 0}},
+                    'components': {
+                        'search_spot': {},
+                        'landmark': {},
+                    },
+                },
+            })
 
     # 3. Cocina: oferta wash_dishes en counter (en el piso de la cocina frente a la bacha)
     #    y un plato en la mesada para habilitarla.
@@ -255,15 +280,15 @@ def apply_to_casa():
         wash_dishes = {
             'action': 'wash_dishes',
             'scale': 'giantess',
-            'effects': [{'need': 'hygiene', 'amount': 400}],
+            'effects': [{'need': 'hygiene', 'amount': 180}],
             'requires': ['cup', 'plate'],
             'approach': {'x': 950000, 'y': 400000},
             'facing': 2048,
             'steps': [
                 {'do': 'goto'},
-                {'do': 'use', 'ticks': 140},
-                {'do': 'spawn', 'item': drop_item, 'count': 3,
-                 'offset': {'x': 550000, 'y': 200000}, 'spread': 60000},
+                {'do': 'use', 'ticks': 110},
+                {'do': 'spawn', 'item': drop_item, 'count': 6,
+                 'offset': {'x': 650000, 'y': -400000}, 'spread': 90000},
             ],
         }
         c_offers[:] = [o for o in c_offers if o.get('action') != 'wash_dishes']
@@ -281,21 +306,23 @@ def apply_to_casa():
                 },
             })
 
-    # 4. Nido: meta de agua junto a la de comida.
+    # 4. Nido: meta de agua y reserva inicial de agua para que no empiecen todos con sed.
     if 'nest' in by_ref:
-        col = by_ref['nest']['spawn'].setdefault('components', {}).setdefault('colony', {})
+        nest_comps = by_ref['nest']['spawn'].setdefault('components', {})
+        col = nest_comps.setdefault('colony', {})
         stock = col.get('stock', 4)
         if isinstance(stock, int):
-            col['stock'] = {'food': stock, 'water': 2}
+            col['stock'] = {'food': stock, 'water': 3}
         elif isinstance(stock, dict):
             stock.setdefault('food', 4)
-            stock['water'] = 2
+            stock['water'] = 3
+        nest_comps['portions'] = {'items': [{'resource': 'water', 'amount': 6}]}
 
     # 5. Tinies: sed (decaimiento más lento que hambre).
     for e in d['entities']:
         comps = e.get('spawn', {}).get('components', {})
         if 'member' in comps and 'needs' in comps:
-            _set_need(comps['needs'], 'thirst', 800, 1)
+            _set_need(comps['needs'], 'thirst', 950, 1)
 
     with open(CASA, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(d, f, indent=2, ensure_ascii=False)

@@ -7,7 +7,7 @@
     "offers": [
       {"action": "eat", "scale": "tiny", "effects": [{"need": "hunger", "amount": 300}],
        "steps": [{"do": "goto"}, {"do": "use", "ticks": 60}, {"do": "consume", "resource": "food", "keep": true}]},
-      {"action": "drink", "scale": "tiny", "effects": [{"need": "thirst", "amount": 350}],
+      {"action": "drink", "scale": "tiny", "effects": [{"need": "thirst", "amount": 550}],
        "steps": [{"do": "goto"}, {"do": "use", "ticks": 50}, {"do": "consume", "resource": "water", "keep": true}]},
       {"action": "rest", "scale": "tiny", "effects": [{"need": "energy", "amount": 400}], "duration": 200}
     ]

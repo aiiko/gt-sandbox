@@ -4,14 +4,14 @@
   "components": {
     "offers": [
       {"action": "wash_dishes", "scale": "giantess",
-       "effects": [{"need": "hygiene", "amount": 400}],
+       "effects": [{"need": "hygiene", "amount": 180}],
        "requires": ["cup", "plate"],
        "approach": {"x": 750000, "y": 250000},
        "facing": 2048,
        "steps": [
          {"do": "goto"},
          {"do": "use", "ticks": 140},
-         {"do": "spawn", "item": "water_drop", "count": 3, "offset": {"x": 300000, "y": 0}, "spread": 50000}
+         {"do": "spawn", "item": "water_drop", "count": 6, "offset": {"x": 650000, "y": -400000}, "spread": 90000}
        ]}
     ]
   }
