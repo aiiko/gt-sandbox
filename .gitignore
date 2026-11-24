@@ -1,2 +1,6 @@
 # Binarios de go build
 *.exe
+
+# Caché de Python
+__pycache__/
+*.py[cod]
