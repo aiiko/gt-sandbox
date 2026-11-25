@@ -41,3 +41,23 @@ Esta especificación documenta las mecánicas, componentes, contenido, arte y ci
 - Escenarios de cierre verificados en `TestScenarios` y `internal/scenario/m61_test.go` (`TestM61TinyDrinksDrop`, `TestM61DropEvaporates`, `TestM61WaterHauledToNest` con continuidad desde snapshot, `TestM61GiantessWashesHands`, `TestM61DeficitByResource`).
 
 ![M61 — Agua en el nido y tinies](img/m61-agua.png)
+
+
+## M63 — Tesoros perdidos y regalos
+
+### Simulación
+- **Tesoros (`colony.Trinket`)**: componente `"trinket"` (`Kind`: `button`, `clip`, `thread`, `graphite`; `Uses`; `Giver`), siempre con `ai.Landmark` para aprenderse sin ofertas. `colony.hoard` publica acarreos (`haul`) hacia el nido cuando no hay déficit de comida ni de agua.
+- **Botín (`colony.SearchSpot.Loot`)**: lista ponderada de tesoros sorteada con `w.RNG("colony.loot")` al revisar un `search_spot`. Emite `colony.TrinketFound`.
+- **Colección (`colony.Hoard`)**: componente `"hoard"` en el nido (lista ordenada de IDs, D5). `colony.hoard` almacena tesoros sueltos cerca del nido y emite `colony.TrinketStored`. `colony.hoard_fun` (`PhaseSlow`) eleva el piso de `fun` en `150` por cada tipo distinto (tope `600`) y frena su decaimiento.
+- **Regalos (`colony.GiftSpot`, `colony.Gift`, `encounter.NoticeGift`)**:
+  - Un tiny con `fun >= 700` y un tesoro repetido en el `hoard` lo lleva a un `gift_spot` libre (`colony.GiftPlaced`).
+  - La giantess nota el regalo (`encounter.NoticeGift`), se detiene, mira, baja su enfriamiento de `share` en esa superficie y emite `encounter.GiftNoticed`.
+- **Versiones**: `world.HashVersion = 15`, `world.SnapshotSchema = 18`.
+
+### Contenido, sprites, lectura y sonido
+- Objetos: `trinket_button.json`, `trinket_clip.json`, `trinket_thread.json`, `trinket_graphite.json` y `hoard` en `nest.json`. En `casa.json`: puntos de botín bajo el futón, frente al placard bajo, junto al zapatero y debajo de la alfombra, y `gift_spot` en escritorio y mesa del living.
+- Sprites (`tools/art/actividades.py`, `ui.py`): los cuatro tesoros en micro (`idle` + `held`) y punto macro de 2 × 2 px (`selected_only`), capa `nest_hoard` en tres etapas (`one`, `few`, `pile`), y emotes `treasure` y `curious`.
+- Crónica y sonido: entradas en `view.storyText` («La colonia encontró su primer botón.», «Ella encontró el regalo de ...»), `trinket_clink`, `trinket_found`, `emote_treasure` y `emote_curious`.
+
+### Cierre
+- Escenarios en `tests/scenarios/` y tests en `internal/scenario/m63_test.go`: `tiny_finds_trinket` (sorteo reproducible), `hoard_raises_fun` y `giantess_notices_gift` (con continuidad desde snapshot).

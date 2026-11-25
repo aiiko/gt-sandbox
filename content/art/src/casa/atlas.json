@@ -765,6 +765,107 @@
         }
       }
     },
+    "nest_hoard": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [
+          14,
+          10
+        ],
+        "clips": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_hoard/micro_one.png"
+            ]
+          },
+          "one": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_hoard/micro_one.png"
+            ]
+          },
+          "few": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_hoard/micro_few.png"
+            ]
+          },
+          "pile": {
+            "frame_ticks": 1,
+            "frames": [
+              "nest_hoard/micro_pile.png"
+            ]
+          }
+        }
+      }
+    },
+    "trinket_button": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_button/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [8, 12],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_button/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["trinket_button/micro_held.png"] }
+        }
+      }
+    },
+    "trinket_clip": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_clip/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [10, 6],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_clip/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["trinket_clip/micro_held.png"] }
+        }
+      }
+    },
+    "trinket_thread": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_thread/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [7, 8],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_thread/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["trinket_thread/micro_held.png"] }
+        }
+      }
+    },
+    "trinket_graphite": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_graphite/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [6, 3],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_graphite/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["trinket_graphite/micro_held.png"] }
+        }
+      }
+    },
     "tiny": {
       "macro": {
         "pivot": [
@@ -1436,6 +1537,18 @@
             "frames": [
               "ui/emote_thirst.png"
             ]
+          },
+          "treasure": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_treasure.png"
+            ]
+          },
+          "curious": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_curious.png"
+            ]
           }
         }
       },
@@ -1509,6 +1622,18 @@
             "frame_ticks": 1,
             "frames": [
               "ui/emote_thirst.png"
+            ]
+          },
+          "treasure": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_treasure.png"
+            ]
+          },
+          "curious": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_curious.png"
             ]
           }
         }

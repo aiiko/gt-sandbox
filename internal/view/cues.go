@@ -9,6 +9,7 @@ import (
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
+	"gtsandbox/internal/sim/encounter"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/world"
 )
@@ -26,6 +27,8 @@ const (
 	EmoteLook     = "look"     // ojo: la giantess se queda mirando a los tinies
 	EmoteChat     = "chat"     // globo de diálogo: dos tinies conversan
 	EmoteThirst   = "thirst"   // gota vacía: un tiny tiene sed
+	EmoteTreasure = "treasure" // estrella: un tiny encontró un tesoro
+	EmoteCurious  = "curious"  // signo curioso: la giantess nota un regalo
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -91,6 +94,10 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 		return []Cue{{Entity: ev.Entity, Kind: EmoteExplore}}
 	case crush.Crushed:
 		return []Cue{{Entity: ev.Remains, Kind: EmoteSpirit}}
+	case colony.TrinketFound:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteTreasure}}
+	case encounter.GiftNoticed:
+		return []Cue{{Entity: ev.Entity, Kind: EmoteCurious}}
 	}
 	if n, ok := event.(ai.Noticed); ok && ecs.Get[crush.Remains](r).Has(n.Target) {
 		if a, ok := agents.Get(n.Entity); ok && a.Scale == "giantess" {
@@ -157,6 +164,8 @@ func (f *Frame) Emote(id ids.ID) string {
 		return EmoteNote
 	case activity == "observe" && step != "goto":
 		return EmoteLook
+	case activity == "notice_gift" && step != "goto":
+		return EmoteCurious
 	case activity == "search" && step == "look":
 		return EmoteExplore
 	case activity == "use:rest" && using:
@@ -190,7 +199,7 @@ func (f *Frame) Expression(id ids.ID) string {
 		if using {
 			return FaceHappy
 		}
-	case "observe", "share", "offer_palm":
+	case "observe", "share", "offer_palm", "notice_gift":
 		if s.Step != "goto" {
 			return FaceCurious
 		}

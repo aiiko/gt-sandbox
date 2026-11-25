@@ -3324,7 +3324,8 @@
                 "amount": 6
               }
             ]
-          }
+          },
+          "hoard": {}
         }
       }
     },
@@ -7521,6 +7522,190 @@
             "scale": "tiny",
             "version": 0
           }
+        }
+      }
+    },
+    {
+      "ref": "spot_futon",
+      "spawn": {
+        "name": "debajo del futón",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 150000,
+            "y": 1200000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "loot": [
+              {
+                "kind": "button",
+                "weight": 3
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 2
+              },
+              {
+                "kind": "graphite",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "spot_closet",
+      "spawn": {
+        "name": "frente al placard bajo",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 700000,
+            "y": 700000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "loot": [
+              {
+                "kind": "button",
+                "weight": 3
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 2
+              },
+              {
+                "kind": "graphite",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "spot_shoes",
+      "spawn": {
+        "name": "junto al zapatero",
+        "location": {
+          "space": "$genkan",
+          "pos": {
+            "x": 500000,
+            "y": 1100000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "loot": [
+              {
+                "kind": "button",
+                "weight": 3
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 2
+              },
+              {
+                "kind": "graphite",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "spot_rug",
+      "spawn": {
+        "name": "debajo de la alfombra",
+        "location": {
+          "space": "$living",
+          "pos": {
+            "x": 1600000,
+            "y": 1800000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "loot": [
+              {
+                "kind": "button",
+                "weight": 3
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 2
+              },
+              {
+                "kind": "graphite",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "gift_desk",
+      "spawn": {
+        "name": "borde del escritorio",
+        "location": {
+          "space": "$desk1",
+          "pos": {
+            "x": 520000,
+            "y": 60000,
+            "z": 0
+          }
+        },
+        "components": {
+          "gift_spot": {},
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "gift_table",
+      "spawn": {
+        "name": "mesa del living",
+        "location": {
+          "space": "$desk2",
+          "pos": {
+            "x": 450000,
+            "y": 60000,
+            "z": 0
+          }
+        },
+        "components": {
+          "gift_spot": {},
+          "landmark": {}
         }
       }
     }

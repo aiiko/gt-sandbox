@@ -119,6 +119,7 @@ type Colony struct {
 	Goal        int32       `json:"goal"` // meta de porciones de comida (Stock.Get("food") * miembros vivos)
 	Water       int32       `json:"water,omitempty"`
 	WaterGoal   int32       `json:"water_goal,omitempty"` // meta de agua (Stock.Get("water") * miembros vivos)
+	Hoard       int         `json:"hoard,omitempty"`      // cantidad de tesoros en la colección del nido
 	Members     int         `json:"members"`
 	Site        *Site       `json:"site,omitempty"`
 	Expedition  *Expedition `json:"expedition,omitempty"`
@@ -566,6 +567,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		colSites[b.Colony] = &Site{ID: id, Name: names(id), Space: sp, Delivered: b.Delivered, Required: b.Required, Done: b.Done}
 	})
 	portions := ecs.Get[ai.Portions](r)
+	hoards := ecs.Get[colony.Hoard](r)
 	strandedStore := ecs.Get[colony.Stranded](r)
 	ecs.Get[colony.Colony](r).Each(func(id ids.ID, col *colony.Colony) {
 		var sp ids.ID
@@ -573,6 +575,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			sp = l.Space
 		}
 		p, _ := portions.Get(id)
+		h, _ := hoards.Get(id)
 		m := colMembers[id]
 		strandedCount := 0
 		strandedStore.Each(func(e ids.ID, st *colony.Stranded) {
@@ -598,6 +601,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			ID: id, Name: names(id), Space: sp,
 			Portions: p.Get(ai.ResourceFood), Goal: col.Stock.Get(ai.ResourceFood) * int32(m),
 			Water: p.Get(ai.ResourceWater), WaterGoal: col.Stock.Get(ai.ResourceWater) * int32(m),
+			Hoard:   len(h.Items),
 			Members: m,
 			Site:    colSites[id], Expedition: expView, Stranded: strandedCount,
 			NoExpReason: colony.NoExpeditionReason(w, id),

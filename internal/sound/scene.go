@@ -8,6 +8,7 @@ import (
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/crush"
+	"gtsandbox/internal/sim/encounter"
 	"gtsandbox/internal/sim/nav"
 	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/view"
@@ -47,10 +48,12 @@ const (
 	CrushFar      = "crush_far"  // macro: un golpe sordo donde murió un tiny
 	PassOpen      = "pass_open"
 	PassClose     = "pass_close"
-	WaterDrip     = "water_drip" // goteo al aparecer gotas de agua
-	FaucetRun     = "faucet_run" // canilla abierta durante wash_hands / wash_dishes
-	ShowerRun     = "shower_run" // agua de la ducha corriendo durante shower
-	Emote         = "emote_"     // + el símbolo (view.Emote*)
+	WaterDrip     = "water_drip"    // goteo al aparecer gotas de agua
+	FaucetRun     = "faucet_run"    // canilla abierta durante wash_hands / wash_dishes
+	ShowerRun     = "shower_run"    // agua de la ducha corriendo durante shower
+	TrinketClink  = "trinket_clink" // tintineo metálico de un tesoro
+	TrinketFound  = "trinket_found" // sonido suave de hallazgo de tesoro / regalo
+	Emote         = "emote_"        // + el símbolo (view.Emote*)
 )
 
 // Cadencias de los sonidos que salen del estado (en ticks).
@@ -427,6 +430,22 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 	case colony.FiberDelivered:
 		if p, ok := pos(ev.Site, cur); ok && v.Micro {
 			c.add(FiberRustle, p, 0.8)
+		}
+	case colony.TrinketFound:
+		if p, ok := pos(ev.Entity, cur); ok && v.Micro {
+			c.add(TrinketFound, p, 0.85)
+		}
+	case colony.TrinketStored:
+		if p, ok := pos(ev.Colony, cur); ok && v.Micro {
+			c.add(TrinketClink, p, 0.85)
+		}
+	case colony.GiftPlaced:
+		if p, ok := pos(ev.Entity, cur); ok && v.Micro {
+			c.add(TrinketClink, p, 0.8)
+		}
+	case encounter.GiftNoticed:
+		if p, ok := pos(ev.Entity, cur); ok {
+			c.add(TrinketFound, p, 0.85)
 		}
 	}
 }

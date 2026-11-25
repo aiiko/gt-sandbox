@@ -400,6 +400,7 @@ func Install(w *world.World) error {
 		registerLookout(w),
 		registerProvisions(w),
 		registerExpeditions(w),
+		registerTrinkets(w),
 		world.RegisterEvent[Stored](w),
 		world.RegisterEvent[MemberLost](w),
 		world.RegisterEvent[DangerExpired](w),
@@ -414,7 +415,7 @@ func Install(w *world.World) error {
 
 // Actions son las acciones de la colonia, para ai.Install.
 func Actions() []ai.Action {
-	return []ai.Action{Forage{}, Search{}, Chat{}, Watch{}, Scout{}, EatRation{}, ExpeditionAction{}}
+	return []ai.Action{Forage{}, Search{}, Chat{}, Watch{}, Scout{}, EatRation{}, ExpeditionAction{}, Gift{}}
 }
 
 func register[T any](r *ecs.Registry, name string) error {

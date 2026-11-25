@@ -194,6 +194,123 @@ def shower_fx():
         save(c, f'shower_fx/micro_idle_{frame + 1}.png')
 
 
+def trinkets():
+    # M63: Tesoros perdidos (micro idle + held, macro punto de 2x2 px) y pila del nido.
+    btn, btn_hi, btn_sh = '#E8859A', '#FFC2D0', '#B5556D'
+    metal, metal_hi, metal_sh = '#C6D4E0', '#FFFFFF', '#7E90A4'
+    thread, thread_hi, thread_sh = '#76C8B8', '#B8F0E4', '#4A9688'
+    graph, graph_hi, graph_sh = '#555A6E', '#8E95AC', '#313544'
+
+    # Punto macro 2x2 px (selected_only) para cada tesoro
+    for name, col in (
+        ('trinket_button', btn),
+        ('trinket_clip', metal_hi),
+        ('trinket_thread', thread),
+        ('trinket_graphite', graph_hi),
+    ):
+        m = Canvas(2, 2)
+        m.px(0, 0, col)
+        m.px(1, 0, col)
+        m.px(0, 1, INK)
+        m.px(1, 1, col)
+        save(m, f'{name}/macro_idle.png')
+
+    # 1) Botón (16 x 16 px, cuatro agujeros)
+    c = Canvas(16, 16)
+    c.ellipse(8, 12, 6, 3, hexc(INK, 55))
+    c.ellipse(8, 8, 6, 6, INK)
+    c.ellipse(8, 8, 5, 5, btn)
+    c.ellipse(7, 7, 4, 4, btn_hi)
+    c.ellipse(8, 8, 3, 3, btn)
+    for hx, hy in ((6, 7), (10, 7), (6, 10), (10, 10)):
+        c.px(hx, hy, INK)
+    c.px(5, 4, '#FFFFFF')
+    save(c, 'trinket_button/micro_idle.png')
+    # Variante carried (held) - mismo tamaño que idle para compartir pivote
+    h = Canvas(16, 16)
+    h.ellipse(8, 10, 5, 5, INK)
+    h.ellipse(8, 10, 4, 4, btn)
+    h.px(6, 9, INK)
+    h.px(10, 9, INK)
+    h.px(6, 11, INK)
+    h.px(10, 11, INK)
+    h.px(6, 7, btn_hi)
+    save(h, 'trinket_button/micro_held.png')
+
+    # 2) Clip metálico (20 x 8 px)
+    c = Canvas(20, 8)
+    c.ellipse(10, 6, 8, 1, hexc(INK, 45))
+    # lazo exterior
+    c.rrect(2, 1, 16, 6, metal, INK)
+    c.rrect(4, 2, 12, 4, (0, 0, 0, 0), metal_sh)
+    c.hline(5, 3, 9, metal_hi)
+    c.hline(3, 1, 14, metal_hi)
+    save(c, 'trinket_clip/micro_idle.png')
+    h = Canvas(20, 8)
+    h.rrect(3, 2, 14, 4, metal, INK)
+    h.hline(5, 3, 10, metal_hi)
+    save(h, 'trinket_clip/micro_held.png')
+
+    # 3) Madeja de hilo con cabo suelto (14 x 10 px)
+    c = Canvas(14, 10)
+    c.ellipse(7, 8, 5, 2, hexc(INK, 45))
+    c.ellipse(6, 5, 5, 4, INK)
+    c.ellipse(6, 5, 4, 3, thread)
+    c.hline(4, 3, 4, thread_hi)
+    c.hline(4, 6, 5, thread_sh)
+    # cabo suelto hacia la derecha
+    for x, y in ((10, 6), (11, 7), (12, 7), (13, 6)):
+        c.px(x, y, INK)
+        c.px(x, y - 1, thread)
+    save(c, 'trinket_thread/micro_idle.png')
+    h = Canvas(14, 10)
+    h.ellipse(7, 6, 4, 3, INK)
+    h.ellipse(7, 6, 3, 2, thread)
+    h.hline(5, 5, 3, thread_hi)
+    save(h, 'trinket_thread/micro_held.png')
+
+    # 4) Mina de grafito (12 x 4 px)
+    c = Canvas(12, 4)
+    c.hline(1, 3, 10, hexc(INK, 45))
+    for x in range(1, 11):
+        c.px(x, 0, INK)
+        c.px(x, 1, graph_hi if x < 4 else graph)
+        c.px(x, 2, graph_sh)
+    c.px(0, 1, INK)
+    c.px(11, 1, INK)
+    save(c, 'trinket_graphite/micro_idle.png')
+    h = Canvas(12, 4)
+    for x in range(2, 10):
+        h.px(x, 0, INK)
+        h.px(x, 1, graph_hi if x < 4 else graph)
+        h.px(x, 2, INK)
+    save(h, 'trinket_graphite/micro_held.png')
+
+    # 5) Capa hoard del nido en 3 etapas (28 x 14 px, pivote [14, 10])
+    for stage in ('one', 'few', 'pile'):
+        c = Canvas(28, 14)
+        # etapa 1: un botón
+        c.ellipse(9, 9, 4, 3, INK)
+        c.ellipse(9, 9, 3, 2, btn)
+        c.px(8, 8, btn_hi)
+        if stage in ('few', 'pile'):
+            # etapa 2: suma un clip y un hilo
+            c.rrect(13, 8, 9, 4, metal, INK)
+            c.hline(14, 9, 6, metal_hi)
+            c.ellipse(18, 6, 4, 3, INK)
+            c.ellipse(18, 6, 3, 2, thread)
+            c.px(17, 5, thread_hi)
+        if stage == 'pile':
+            # etapa 3: pila completa con grafito y brillo extra
+            for x in range(6, 16):
+                c.px(x, 5, INK)
+                c.px(x, 6, graph_hi if x < 10 else graph)
+            c.ellipse(14, 5, 3, 2, INK)
+            c.ellipse(14, 5, 2, 1, '#FFD866')
+            c.px(13, 4, '#FFFFFF')
+        save(c, f'nest_hoard/micro_{stage}.png')
+
+
 def main(src):
     global SRC
     SRC = src
@@ -201,3 +318,4 @@ def main(src):
     puddle()
     nest_water()
     shower_fx()
+    trinkets()

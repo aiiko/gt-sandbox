@@ -647,7 +647,10 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			add(t.ID, t.Space, ids.Nil, pos, names, false, offset, look{})
 			if scale == Micro && visuals[t.ID] == "nest" {
 				for _, col := range f.Colonies {
-					if col.ID == t.ID && (col.Water > 0 || col.WaterGoal > 0) {
+					if col.ID != t.ID {
+						continue
+					}
+					if col.Water > 0 || col.WaterGoal > 0 {
 						capClip := "empty"
 						switch {
 						case col.Water > 0 && (col.WaterGoal == 0 || col.Water >= col.WaterGoal):
@@ -657,8 +660,19 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 						}
 						add(t.ID, t.Space, ids.Nil, pos, []string{capClip}, false, image.Pt(18, -6),
 							look{visual: "nest_water", ghost: true, layer: layerDepth})
-						break
 					}
+					if col.Hoard > 0 {
+						hoardClip := "one"
+						switch {
+						case col.Hoard >= 4:
+							hoardClip = "pile"
+						case col.Hoard >= 2:
+							hoardClip = "few"
+						}
+						add(t.ID, t.Space, ids.Nil, pos, []string{hoardClip}, false, image.Pt(-16, -8),
+							look{visual: "nest_hoard", ghost: true, layer: layerDepth})
+					}
+					break
 				}
 			}
 			if scale == Micro && slices.Contains(featured, t.ID) {

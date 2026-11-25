@@ -54,8 +54,16 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.Surface
 	case encounter.Skipped:
 		return ev.Entity, ev.Surface
+	case encounter.GiftNoticed:
+		return ev.Entity, ev.Surface
 	case colony.Searched:
 		return ev.Entity, ids.Nil
+	case colony.TrinketFound:
+		return ev.Entity, ev.Spot
+	case colony.TrinketStored:
+		return ids.Nil, ev.Colony
+	case colony.GiftPlaced:
+		return ev.Entity, ev.Surface
 	case colony.FiberDelivered:
 		return ids.Nil, ev.Site
 	case colony.RefugeBuilt:
@@ -132,6 +140,20 @@ func storyText(k chronicler, event world.Event) string {
 		case "enough":
 			return fmt.Sprintf("%s ve que ya hay migajas en %s.", name(ev.Entity), name(ev.Surface))
 		}
+	case encounter.GiftNoticed:
+		if !ev.Giver.IsNil() {
+			return fmt.Sprintf("Ella encontró el regalo de %s.", name(ev.Giver))
+		}
+		return fmt.Sprintf("Ella encontró un regalo en %s.", name(ev.Surface))
+	case colony.TrinketFound:
+		return fmt.Sprintf("%s encontró %s.", name(ev.Entity), trinketArticle(ev.TrinketKind))
+	case colony.TrinketStored:
+		if ev.FirstOfKind {
+			return fmt.Sprintf("La colonia encontró %s.", trinketFirst(ev.TrinketKind))
+		}
+		return fmt.Sprintf("La colección de %s suma %d tesoros.", name(ev.Colony), ev.Total)
+	case colony.GiftPlaced:
+		return fmt.Sprintf("%s dejó %s como regalo en %s.", name(ev.Entity), trinketArticle(ev.TrinketKind), name(ev.Surface))
 	case jobs.JobAssigned:
 		if j := ecs.Get[jobs.Job](r).Ptr(ev.Job); j != nil && j.Type == "haul" {
 			return fmt.Sprintf("La colonia asigna un acarreo a %s.", name(ev.By))
@@ -233,6 +255,36 @@ func storyText(k chronicler, event world.Event) string {
 		return ""
 	}
 	return ""
+}
+
+func trinketArticle(kind string) string {
+	switch kind {
+	case colony.TrinketButton:
+		return "un botón"
+	case colony.TrinketClip:
+		return "un clip"
+	case colony.TrinketThread:
+		return "un hilo"
+	case colony.TrinketGraphite:
+		return "una mina de grafito"
+	default:
+		return "un tesoro"
+	}
+}
+
+func trinketFirst(kind string) string {
+	switch kind {
+	case colony.TrinketButton:
+		return "su primer botón"
+	case colony.TrinketClip:
+		return "su primer clip"
+	case colony.TrinketThread:
+		return "su primer hilo"
+	case colony.TrinketGraphite:
+		return "su primera mina de grafito"
+	default:
+		return "su primer tesoro"
+	}
 }
 
 func posePhrase(pose string) string {

@@ -127,6 +127,14 @@
       "cooldown_ms": 400
     },
     {
+      "id": "emote_curious",
+      "file": "emote_curious.wav",
+      "category": "efectos",
+      "ms": 120,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
       "id": "emote_discover",
       "file": "emote_discover.wav",
       "category": "efectos",
@@ -187,6 +195,14 @@
       "file": "emote_thirst.wav",
       "category": "efectos",
       "ms": 90,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "emote_treasure",
+      "file": "emote_treasure.wav",
+      "category": "efectos",
+      "ms": 160,
       "voices": 2,
       "cooldown_ms": 400
     },
@@ -397,6 +413,22 @@
       "ms": 25,
       "voices": 2,
       "cooldown_ms": 110
+    },
+    {
+      "id": "trinket_clink",
+      "file": "trinket_clink.wav",
+      "category": "efectos",
+      "ms": 90,
+      "voices": 3,
+      "cooldown_ms": 180
+    },
+    {
+      "id": "trinket_found",
+      "file": "trinket_found.wav",
+      "category": "efectos",
+      "ms": 280,
+      "voices": 2,
+      "cooldown_ms": 250
     },
     {
       "id": "tv_on",

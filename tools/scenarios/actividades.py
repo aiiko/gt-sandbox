@@ -207,6 +207,175 @@ def giantess_takes_shower():
     return d
 
 
+# --- M63: Tesoros perdidos y regalos ---
+
+DEFAULT_LOOT = [
+    {'kind': 'button', 'weight': 3},
+    {'kind': 'clip', 'weight': 3},
+    {'kind': 'thread', 'weight': 2},
+    {'kind': 'graphite', 'weight': 2},
+]
+
+
+def tiny_finds_trinket():
+    d = base('tiny_finds_trinket', 1200,
+             'M63: un tiny revisa un punto de búsqueda con botín, sortea un tesoro con colony.loot y lo acarrea al hoard del nido.')
+    d['entities'] += [
+        _nest('desk1', 80000, 80000,
+              portions={'items': [{'resource': 'food', 'amount': 4}, {'resource': 'water', 'amount': 4}]},
+              stock={'food': 2, 'water': 2}),
+        {
+            'ref': 'loot_spot',
+            'spawn': {
+                'name': 'debajo del futón',
+                'location': {'space': '$desk1', 'pos': {'x': 220000, 'y': 160000, 'z': 0}},
+                'components': {
+                    'search_spot': {'look_ticks': 40, 'loot': DEFAULT_LOOT},
+                    'landmark': {},
+                },
+            },
+        },
+        _tiny('t', 'desk1', 120000, 100000, hunger=950, thirst=950, energy=950,
+              work=0.3, sight=250000, member={'search': 0.4}),
+    ]
+    d['expect'] = [
+        {'event': 'trinket_found', 'match': {'entity': '$t', 'spot': '$loot_spot'}},
+        {'event': 'trinket_stored', 'match': {'colony': '$nest', 'first_of_kind': True}},
+    ] + COMMON
+    return d
+
+
+def hoard_raises_fun():
+    d = base('hoard_raises_fun', 1600,
+             'M63: dos tesoros distintos en el hoard del nido elevan el piso de diversión (fun >= 300) y frenan su decaimiento.')
+    d['entities'] += [
+        _nest('desk1', 80000, 80000,
+              portions={'items': [{'resource': 'food', 'amount': 6}, {'resource': 'water', 'amount': 6}]},
+              stock={'food': 2, 'water': 2}),
+        {
+            'ref': 'btn',
+            'object': 'trinket_button',
+            'visual': 'trinket_button',
+            'spawn': {
+                'name': 'trinket_button',
+                'location': {'space': '$desk1', 'pos': {'x': 82000, 'y': 80000, 'z': 0}},
+            },
+        },
+        {
+            'ref': 'clp',
+            'object': 'trinket_clip',
+            'visual': 'trinket_clip',
+            'spawn': {
+                'name': 'trinket_clip',
+                'location': {'space': '$desk1', 'pos': {'x': 78000, 'y': 82000, 'z': 0}},
+            },
+        },
+        {
+            'ref': 't',
+            'visual': 'tiny',
+            'spawn': {
+                'name': 't',
+                'location': {'space': '$desk1', 'pos': {'x': 120000, 'y': 100000, 'z': 0}},
+                'body': {'radius': 2000, 'height': 8000, 'mass': 0},
+                'components': {
+                    'mover': {'speed': 20000},
+                    'agent': {'scale': 'tiny', 'work': 0.1, 'distance_cost': 0.2, 'sight': 200000},
+                    'member': {'colony': '$nest'},
+                    'needs': [
+                        {'name': 'hunger', 'value': 950, 'decay': 0},
+                        {'name': 'thirst', 'value': 950, 'decay': 0},
+                        {'name': 'energy', 'value': 950, 'decay': 0},
+                        {'name': 'fun', 'value': 450, 'decay': 5},
+                    ],
+                },
+            },
+        },
+    ]
+    d['expect'] = COMMON
+    return d
+
+
+def giantess_notices_gift():
+    d = base('giantess_notices_gift', 1600,
+             'M63: un tiny con mucha diversión deja un tesoro repetido en un gift_spot; la giantess lo nota (notice_gift) y baja su enfriamiento de share.')
+    for e in d['entities']:
+        if e['ref'] == 'giantess':
+            e['spawn']['components']['agent'] = {
+                'scale': 'giantess', 'distance_cost': 0.05, 'watch': 3000000,
+            }
+            e['spawn']['components']['needs'] = [
+                {'name': 'hunger', 'value': 950, 'decay': 0},
+                {'name': 'energy', 'value': 950, 'decay': 0},
+            ]
+            e['spawn']['components']['encounter'] = {
+                'observe': 0.12, 'share': 0.2, 'notice_gift': 0.4,
+                'cooldowns': [{'surface': '$desk1', 'action': 'share', 'until': 6000}],
+            }
+        elif e['ref'] == 'desk1':
+            e['spawn'].setdefault('components', {})['place'] = {
+                'tags': ['desk'], 'spot': {'x': 300000, 'y': -300000}, 'facing': 1024,
+            }
+    d['entities'] += [
+        _nest('desk1', 80000, 80000,
+              portions={'items': [{'resource': 'food', 'amount': 6}, {'resource': 'water', 'amount': 6}]},
+              stock={'food': 2, 'water': 2}),
+        {
+            'ref': 'btn1',
+            'object': 'trinket_button',
+            'visual': 'trinket_button',
+            'spawn': {
+                'name': 'trinket_button',
+                'location': {'space': '$desk1', 'pos': {'x': 80000, 'y': 80000, 'z': 0}},
+            },
+        },
+        {
+            'ref': 'btn2',
+            'object': 'trinket_button',
+            'visual': 'trinket_button',
+            'spawn': {
+                'name': 'trinket_button',
+                'location': {'space': '$desk1', 'pos': {'x': 82000, 'y': 80000, 'z': 0}},
+            },
+        },
+        {
+            'ref': 'gift_desk',
+            'spawn': {
+                'name': 'borde del escritorio',
+                'location': {'space': '$desk1', 'pos': {'x': 240000, 'y': 60000, 'z': 0}},
+                'components': {
+                    'gift_spot': {},
+                    'landmark': {},
+                },
+            },
+        },
+        {
+            'ref': 't',
+            'visual': 'tiny',
+            'spawn': {
+                'name': 't',
+                'location': {'space': '$desk1', 'pos': {'x': 100000, 'y': 80000, 'z': 0}},
+                'body': {'radius': 2000, 'height': 8000, 'mass': 0},
+                'components': {
+                    'mover': {'speed': 20000},
+                    'agent': {'scale': 'tiny', 'work': 0.1, 'distance_cost': 0.2, 'sight': 300000},
+                    'member': {'colony': '$nest'},
+                    'needs': [
+                        {'name': 'hunger', 'value': 950, 'decay': 0},
+                        {'name': 'thirst', 'value': 950, 'decay': 0},
+                        {'name': 'energy', 'value': 950, 'decay': 0},
+                        {'name': 'fun', 'value': 900, 'decay': 0},
+                    ],
+                },
+            },
+        },
+    ]
+    d['expect'] = [
+        {'event': 'gift_placed', 'match': {'entity': '$t', 'kind': 'button', 'spot': '$gift_desk'}},
+        {'event': 'gift_noticed', 'match': {'entity': '$giantess', 'surface': '$desk1', 'kind': 'button', 'giver': '$t'}},
+    ] + COMMON
+    return d
+
+
 def _set_need(needs_list, name, value, decay):
     for n in needs_list:
         if n.get('name') == name:
@@ -317,12 +486,40 @@ def apply_to_casa():
             stock.setdefault('food', 4)
             stock['water'] = 3
         nest_comps['portions'] = {'items': [{'resource': 'water', 'amount': 6}]}
+        nest_comps.setdefault('hoard', {})
 
     # 5. Tinies: sed (decaimiento más lento que hambre).
     for e in d['entities']:
         comps = e.get('spawn', {}).get('components', {})
         if 'member' in comps and 'needs' in comps:
             _set_need(comps['needs'], 'thirst', 950, 1)
+
+    # 6. M63: puntos de botín (bajo el futón, frente al placard bajo, junto al
+    #    zapatero y debajo de la alfombra) y puntos de regalo (escritorio y mesa).
+    m63_spots = [
+        ('spot_futon', 'debajo del futón', '$bedroom', (150000, 1200000),
+         {'search_spot': {'loot': DEFAULT_LOOT}, 'landmark': {}}),
+        ('spot_closet', 'frente al placard bajo', '$bedroom', (700000, 700000),
+         {'search_spot': {'loot': DEFAULT_LOOT}, 'landmark': {}}),
+        ('spot_shoes', 'junto al zapatero', '$genkan', (500000, 1100000),
+         {'search_spot': {'loot': DEFAULT_LOOT}, 'landmark': {}}),
+        ('spot_rug', 'debajo de la alfombra', '$living', (1600000, 1800000),
+         {'search_spot': {'loot': DEFAULT_LOOT}, 'landmark': {}}),
+        ('gift_desk', 'borde del escritorio', '$desk1', (520000, 60000),
+         {'gift_spot': {}, 'landmark': {}}),
+        ('gift_table', 'mesa del living', '$desk2', (450000, 60000),
+         {'gift_spot': {}, 'landmark': {}}),
+    ]
+    for ref, name, sp, (x, y), comps in m63_spots:
+        if ref not in by_ref:
+            d['entities'].append({
+                'ref': ref,
+                'spawn': {
+                    'name': name,
+                    'location': {'space': sp, 'pos': {'x': x, 'y': y, 'z': 0}},
+                    'components': comps,
+                },
+            })
 
     with open(CASA, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(d, f, indent=2, ensure_ascii=False)
@@ -332,7 +529,8 @@ def apply_to_casa():
 
 def main():
     for fn in (tiny_drinks_drop, drop_evaporates, water_hauled_to_nest,
-               giantess_washes_hands, giantess_takes_shower):
+               giantess_washes_hands, giantess_takes_shower,
+               tiny_finds_trinket, hoard_raises_fun, giantess_notices_gift):
         _write(fn())
     apply_to_casa()
 

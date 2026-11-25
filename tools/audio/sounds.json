@@ -617,6 +617,42 @@
       "layers": [
         {"wave": "sine", "f0": 620, "f1": 480, "dur": 0.09, "attack": 0.004, "decay": 0.035, "gain": 0.20}
       ]
+    },
+    "trinket_clink": {
+      "category": "efectos",
+      "voices": 3,
+      "cooldown_ms": 180,
+      "layers": [
+        {"wave": "sine", "f0": 2640, "f1": 2580, "dur": 0.09, "attack": 0.001, "decay": 0.04, "gain": 0.22},
+        {"wave": "triangle", "f0": 3960, "f1": 3880, "dur": 0.06, "delay": 0.012, "attack": 0.001, "decay": 0.025, "gain": 0.14}
+      ]
+    },
+    "trinket_found": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 250,
+      "layers": [
+        {"wave": "triangle", "f0": 659.25, "dur": 0.09, "attack": 0.004, "decay": 0.035, "gain": 0.22},
+        {"wave": "triangle", "f0": 880, "dur": 0.11, "delay": 0.07, "attack": 0.004, "decay": 0.045, "gain": 0.24},
+        {"wave": "sine", "f0": 1318.5, "dur": 0.14, "delay": 0.14, "attack": 0.004, "decay": 0.06, "gain": 0.20}
+      ]
+    },
+    "emote_treasure": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "triangle", "f0": 783.99, "dur": 0.08, "attack": 0.003, "decay": 0.03, "gain": 0.20},
+        {"wave": "sine", "f0": 1174.66, "dur": 0.10, "delay": 0.06, "attack": 0.003, "decay": 0.04, "gain": 0.18}
+      ]
+    },
+    "emote_curious": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "sine", "f0": 523.25, "f1": 698.46, "dur": 0.12, "attack": 0.005, "decay": 0.05, "gain": 0.22}
+      ]
     }
   }
 }

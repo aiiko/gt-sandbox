@@ -2,6 +2,7 @@
   "name": "nest",
   "components": {
     "colony": {"radius": 30000},
+    "hoard": {},
     "portions": {"left": 0},
     "shelter": {"strength": 50, "radius": 20000},
     "offers": [

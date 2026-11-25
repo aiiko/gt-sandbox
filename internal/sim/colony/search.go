@@ -19,15 +19,22 @@ const (
 	DefaultCooldown  clock.Tick = 120 * clock.TPS
 )
 
+// LootEntry define un posible tesoro en un punto de búsqueda con su peso
+// relativo para el sorteo determinista con w.RNG("colony.loot").
+type LootEntry struct {
+	Kind   string `json:"kind"`
+	Weight int32  `json:"weight"`
+}
+
 // SearchSpot es el componente "search_spot": un lugar que vale la pena
-// revisar cuando falta comida (un rincón del escritorio, el borde de la
-// silla). Lo revisa un tiny a la vez (reserva). LookTicks es cuánto se
-// queda mirando; si no encontró nada, el punto no se ofrece hasta
-// EmptyUntil (ahora + Cooldown).
+// revisar cuando falta comida o para buscar tesoros (Loot). Lo revisa un tiny
+// a la vez (reserva). LookTicks es cuánto se queda mirando; si no encontró
+// nada (o tras sortear botín), el punto no se ofrece hasta EmptyUntil.
 type SearchSpot struct {
-	LookTicks  clock.Tick `json:"look_ticks,omitempty"`
-	Cooldown   clock.Tick `json:"cooldown,omitempty"`
-	EmptyUntil clock.Tick `json:"empty_until,omitempty"`
+	LookTicks  clock.Tick  `json:"look_ticks,omitempty"`
+	Cooldown   clock.Tick  `json:"cooldown,omitempty"`
+	EmptyUntil clock.Tick  `json:"empty_until,omitempty"`
+	Loot       []LootEntry `json:"loot,omitempty"`
 }
 
 func (s SearchSpot) look() clock.Tick { return cmpOr(s.LookTicks, DefaultLookTicks) }
@@ -73,19 +80,19 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 		return nil
 	}
 	def := max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
-	if def <= 0 {
-		return nil
-	}
 	hasRoles := HasRoles(c.W, m.Colony)
-	if hasRoles && Deficit(c.W, m.Colony, ai.ResourceWater) == 0 && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony) {
-		return nil // ya hay comida suficiente en acarreos para cubrir el faltante
-	}
+	foodCovered := hasRoles && Deficit(c.W, m.Colony, ai.ResourceWater) == 0 && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony)
 	locs := comp.Of(r).Location
 	var spots []struct {
-		id  ids.ID
-		loc comp.Location
+		id      ids.ID
+		loc     comp.Location
+		hasLoot bool
 	}
 	ecs.Get[SearchSpot](r).Each(func(e ids.ID, s *SearchSpot) {
+		hasLoot := len(s.Loot) > 0
+		if !hasLoot && (def <= 0 || foodCovered) {
+			return
+		}
 		l, ok := locs.Get(e)
 		if !ok || r.Despawning(e) || !c.Agent.Knows(e) || c.W.Tick() < s.EmptyUntil {
 			return
@@ -93,13 +100,14 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 		if h := jobs.Holder(c.W, e); !h.IsNil() && h != c.Actor {
 			return
 		}
-		if knownFood(c, l) {
+		if !hasLoot && knownFood(c, l) {
 			return // ya se sabe que ahí hay comida: la cola de trabajos se encarga
 		}
 		spots = append(spots, struct {
-			id  ids.ID
-			loc comp.Location
-		}{e, l})
+			id      ids.ID
+			loc     comp.Location
+			hasLoot bool
+		}{e, l, hasLoot})
 	})
 	if len(spots) == 0 {
 		return nil
@@ -115,15 +123,27 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 	}
 	out := make([]ai.Option, 0, len(spots))
 	for _, s := range spots {
-		u := m.Search*def + bonus - c.Agent.DistanceCost*ai.Distance(c, s.loc.Space, s.loc.Pos.XY())
+		scale := def
+		distCost := c.Agent.DistanceCost
+		if s.hasLoot && scale < 0.55 {
+			scale = 0.55
+			distCost = min(distCost, 0.03)
+		}
+		u := m.Search*scale + bonus - distCost*ai.Distance(c, s.loc.Space, s.loc.Pos.XY())
 		out = append(out, ai.Option{Target: s.id, Utility: u})
 	}
 	return out
 }
 
-func (Search) Utility(c *ai.Ctx, _ *ai.Doing) float64 {
+func (Search) Utility(c *ai.Ctx, d *ai.Doing) float64 {
 	m, _ := ecs.Get[Member](c.W.ECS()).Get(c.Actor)
-	u := m.Search * max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
+	scale := max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
+	if d != nil {
+		if sp, ok := ecs.Get[SearchSpot](c.W.ECS()).Get(d.Target); ok && len(sp.Loot) > 0 && scale < 0.55 {
+			scale = 0.55
+		}
+	}
+	u := m.Search * scale
 	if HasRoles(c.W, m.Colony) && m.Role == RoleGatherer {
 		u += RoleBonus
 	}
@@ -154,11 +174,44 @@ func (Search) Step(c *ai.Ctx, d *ai.Doing) ai.Result {
 	if d.Progress++; !found && d.Progress < s.look() {
 		return ai.Running
 	}
+	if !found && len(s.Loot) > 0 {
+		if kind, ok := rollLoot(w, s.Loot); ok {
+			id := spawnTrinket(w, kind, l)
+			ai.Learn(w, c.Agent, c.Actor, id)
+			s.EmptyUntil = w.Tick() + s.cooldown()
+			w.Emit(TrinketFound{Entity: c.Actor, Spot: d.Target, Trinket: id, TrinketKind: kind})
+			w.Emit(Searched{Entity: c.Actor, Spot: d.Target, Found: true})
+			return ai.Done
+		}
+	}
 	if !found {
 		s.EmptyUntil = w.Tick() + s.cooldown()
 	}
 	w.Emit(Searched{Entity: c.Actor, Spot: d.Target, Found: found})
 	return ai.Done
+}
+
+func rollLoot(w *world.World, loot []LootEntry) (string, bool) {
+	var total int32
+	for _, e := range loot {
+		if e.Weight > 0 && ValidTrinketKind(e.Kind) {
+			total += e.Weight
+		}
+	}
+	if total <= 0 {
+		return "", false
+	}
+	pick := int32(w.RNG("colony.loot").IntN(int(total)))
+	for _, e := range loot {
+		if e.Weight <= 0 || !ValidTrinketKind(e.Kind) {
+			continue
+		}
+		if pick < e.Weight {
+			return e.Kind, true
+		}
+		pick -= e.Weight
+	}
+	return "", false
 }
 
 // seesFood: el actor ve comida suelta (en su Space, a menos de su vista).

@@ -1,0 +1,9 @@
+{
+  "name": "trinket_graphite",
+  "visual": "trinket_graphite",
+  "body": {"radius": 1800, "height": 1000, "mass": 0},
+  "components": {
+    "trinket": {"kind": "graphite", "uses": 3},
+    "landmark": {}
+  }
+}

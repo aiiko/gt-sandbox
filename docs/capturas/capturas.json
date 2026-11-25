@@ -22,7 +22,7 @@
         200,
         -90
       ],
-      "digest": "f8d422faa0a932d0"
+      "digest": "937d2445c1e01df5"
     },
     {
       "name": "mano-apoyada",
@@ -32,7 +32,7 @@
       "tick": 300,
       "view": "micro",
       "micro": "palma",
-      "digest": "90883008a764346e"
+      "digest": "d21f896515471aae"
     },
     {
       "name": "viaje-macro",
@@ -41,7 +41,7 @@
       "seed": 42,
       "tick": 530,
       "view": "macro",
-      "digest": "0d424ccc41168fab"
+      "digest": "beec78fecfc09ead"
     },
     {
       "name": "viaje",
@@ -61,7 +61,7 @@
       "tick": 600,
       "view": "micro",
       "micro": "mesa del living",
-      "digest": "38115c5f83374822"
+      "digest": "b47ffc44ae460eea"
     },
     {
       "name": "caida",
@@ -81,7 +81,7 @@
       "tick": 188,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "7591dea8e903f0ce"
+      "digest": "9a2c9102996a5a6b"
     },
     {
       "name": "aplastado",
@@ -91,7 +91,7 @@
       "tick": 200,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "f3f4ef9cae2848ef"
+      "digest": "9623bce30ccedff6"
     },
     {
       "name": "pisada",

@@ -1,0 +1,9 @@
+{
+  "name": "trinket_button",
+  "visual": "trinket_button",
+  "body": {"radius": 2000, "height": 1500, "mass": 0},
+  "components": {
+    "trinket": {"kind": "button"},
+    "landmark": {}
+  }
+}

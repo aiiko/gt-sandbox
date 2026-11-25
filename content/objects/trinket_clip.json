@@ -1,0 +1,9 @@
+{
+  "name": "trinket_clip",
+  "visual": "trinket_clip",
+  "body": {"radius": 2000, "height": 1200, "mass": 0},
+  "components": {
+    "trinket": {"kind": "clip"},
+    "landmark": {}
+  }
+}

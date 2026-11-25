@@ -367,6 +367,30 @@ XoooooooosX
 ....XssX...
 .....XX....
 ...........''', (0x76, 0xC8, 0xF0), DROP_HI, (0x46, 0x8E, 0xC0)),
+    'treasure': ('''
+.....X.....
+....XoX....
+...XhooX...
+.XXhooooXX.
+XhooooooosX
+.XXooooXX..
+..XhooosX..
+..XooXooX..
+..XX...XX..
+...........
+...........''', (0xFF, 0xD2, 0x5A), (0xFF, 0xFB, 0xD6), (0xD4, 0x92, 0x2E)),
+    'curious': ('''
+..XXXX.X...
+.XhoooXXoX.
+.XoXXoXXoX.
+..XX.XoXoX.
+....XooXoX.
+...XooXXoX.
+...XoX..X..
+...XXX.XXX.
+...XoX.XoX.
+...XXX.XXX.
+...........''', CORAL, (0xFF, 0xE6, 0xEC), CORAL_SH),
 }
 
 

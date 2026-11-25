@@ -150,6 +150,8 @@ var activities = map[string][2]string{
 	"observe":          {"Mira a los tinies", "mirar a los tinies"},
 	"share":            {"Comparte migajas", "compartir migajas"},
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
+	"notice_gift":      {"Mira un regalo", "mirar un regalo"},
+	"gift":             {"Lleva un regalo", "llevar un regalo"},
 	"watch":            {"Vigila el paso", "vigilar el paso"},
 	"scout":            {"Explora el mapa", "explorar el mapa"},
 	"eat_ration":       {"Come una ración", "comer una ración"},
@@ -205,6 +207,11 @@ func (g *game) lifeText(t view.Thing, carrying string) string {
 			return "Va a revisar " + goal
 		}
 		return "Revisa " + goal
+	case "gift":
+		if carrying != "" {
+			return "Lleva un regalo a " + goal
+		}
+		return "Busca un regalo para dejar en " + goal
 	case "chat":
 		switch t.Step {
 		case "goto":

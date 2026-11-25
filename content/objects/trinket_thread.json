@@ -1,0 +1,9 @@
+{
+  "name": "trinket_thread",
+  "visual": "trinket_thread",
+  "body": {"radius": 2000, "height": 1500, "mass": 0},
+  "components": {
+    "trinket": {"kind": "thread", "uses": 1},
+    "landmark": {}
+  }
+}
