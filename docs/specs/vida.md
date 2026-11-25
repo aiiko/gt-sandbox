@@ -1,6 +1,6 @@
 # Spec: Vida cotidiana de los tinies (M39–M44)
 
-Diseño y alcance del slice en la [propuesta](../propuesta.md#16-vida-cotidiana-de-los-tinies); plan en [plan-motor](../plan-motor.md). Los escenarios del slice los genera `python tools/scenarios/vida.py` (parte de la base de `aplastamiento.py` y le suma la pata `leg1` entre el piso y el escritorio).
+Diseño y alcance del slice en la [propuesta](../propuesta.md#16-vida-cotidiana-de-los-tinies). Los escenarios del slice los genera `python tools/scenarios/vida.py` (parte de la base de `aplastamiento.py` y le suma la pata `leg1` entre el piso y el escritorio).
 
 ## Despensa y rutina del nido (M39)
 

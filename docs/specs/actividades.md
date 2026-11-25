@@ -1,6 +1,6 @@
 # Spec: actividades de los tinies en la casa (M61–M71)
 
-Esta especificación documenta las mecánicas, componentes, contenido, arte y cierre de cada hito del slice descrito en `docs/plan-actividades.md` y `docs/propuesta.md` (§21).
+Esta especificación documenta las mecánicas, componentes, contenido, arte y cierre de cada hito del slice descrito en la [propuesta](../propuesta.md#21-actividades-de-los-tinies-en-la-casa).
 
 ## M61 — Agua del baño y la cocina
 
