@@ -43,11 +43,26 @@ func verifySnapshotContinuity(t *testing.T, scenFile string, saveTick, afterTick
 	if err != nil {
 		t.Fatal(err)
 	}
+	specB := *spec
+	specB.Commands = nil
+	for _, c := range spec.Commands {
+		if c.Tick >= saveTick {
+			c.Tick -= saveTick
+			specB.Commands = append(specB.Commands, c)
+		}
+	}
+	inB := &scenario.Instance{Spec: &specB, World: wB, Refs: inA.Refs}
+	pB, err := inB.Player()
+	if err != nil {
+		t.Fatal(err)
+	}
 	for range afterTicks {
 		if err := pA.Step(); err != nil {
 			t.Fatal(err)
 		}
-		wB.Step()
+		if err := pB.Step(); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if inA.World.Hash() != wB.Hash() {
 		t.Fatalf("%s: continuidad rota tras snapshot en tick %d: %x vs %x", scenFile, saveTick, inA.World.Hash(), wB.Hash())
@@ -96,5 +111,20 @@ func TestQW1CarryPassengerSnapshotAndOutcome(t *testing.T) {
 	}
 	if len(delivered) != 1 || !slices.Contains(delivered[0].Passengers, in.Refs["passenger"]) {
 		t.Fatalf("esperaba entrega de passenger %v, vino %+v", in.Refs["passenger"], delivered)
+	}
+}
+
+func TestQW2GarmentsAndGenkanSnapshot(t *testing.T) {
+	for _, tc := range []struct {
+		file       string
+		saveTick   int
+		afterTicks int
+	}{
+		{"genkan_expedition_and_loot.json", 160, 400},
+		{"sock_donning_and_hair_tie_shelter.json", 18, 120},
+	} {
+		t.Run(tc.file, func(t *testing.T) {
+			verifySnapshotContinuity(t, tc.file, tc.saveTick, tc.afterTicks)
+		})
 	}
 }

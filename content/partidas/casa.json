@@ -3053,6 +3053,11 @@
             "y": 800000,
             "z": 0
           }
+        },
+        "components": {
+          "landmark": {
+            "range": 1800000
+          }
         }
       }
     },
@@ -7667,6 +7672,10 @@
               {
                 "kind": "graphite",
                 "weight": 2
+              },
+              {
+                "kind": "coin",
+                "weight": 3
               }
             ]
           },
@@ -8312,6 +8321,982 @@
             "scale": "tiny",
             "version": 0,
             "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "sock_left",
+      "visual": "sock",
+      "spawn": {
+        "name": "media izquierda",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -40000,
+              "y": -110000
+            },
+            "max": {
+              "x": 40000,
+              "y": 110000
+            }
+          }
+        },
+        "location": {
+          "space": "$body_foot_l",
+          "pos": {
+            "x": 50000,
+            "y": 120000,
+            "z": -5000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -40000,
+              "y": -110000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "media izquierda",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 90000
+                },
+                "radius": 35000,
+                "label": "puntera de la media"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -95000
+                },
+                "radius": 35000,
+                "label": "puño de la media"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -100000
+              },
+              {
+                "x": -35000,
+                "y": -30000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "sock_left",
+            "state": "worn",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -5000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -35000,
+                  "y": -75000
+                },
+                "max": {
+                  "x": 35000,
+                  "y": 65000
+                }
+              },
+              "force": 35,
+              "source": "garment"
+            },
+            "don_warn_ticks": 15
+          }
+        }
+      }
+    },
+    {
+      "ref": "sock_right",
+      "visual": "sock",
+      "spawn": {
+        "name": "media derecha",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -40000,
+              "y": -110000
+            },
+            "max": {
+              "x": 40000,
+              "y": 110000
+            }
+          }
+        },
+        "location": {
+          "space": "$body_foot_r",
+          "pos": {
+            "x": 50000,
+            "y": 120000,
+            "z": -5000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -40000,
+              "y": -110000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........",
+              "........"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "media derecha",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 90000
+                },
+                "radius": 35000,
+                "label": "puntera de la media"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -95000
+                },
+                "radius": 35000,
+                "label": "puño de la media"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -100000
+              },
+              {
+                "x": -35000,
+                "y": -30000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "sock_right",
+            "state": "worn",
+            "mount_part": "$body_foot_r",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -5000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -35000,
+                  "y": -75000
+                },
+                "max": {
+                  "x": 35000,
+                  "y": 65000
+                }
+              },
+              "force": 35,
+              "source": "garment"
+            },
+            "don_warn_ticks": 15
+          }
+        }
+      }
+    },
+    {
+      "ref": "sock_fibers",
+      "spawn": {
+        "name": "pelusa de la media",
+        "location": {
+          "space": "$sock_left",
+          "pos": {
+            "x": 0,
+            "y": 80000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "look_ticks": 40,
+            "loot": [
+              {
+                "kind": "thread",
+                "weight": 4
+              },
+              {
+                "kind": "button",
+                "weight": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_sock_l_ankle",
+      "spawn": {
+        "name": "media izquierda a tobillo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sock_left",
+              "pos": {
+                "x": 0,
+                "y": -85000
+              }
+            },
+            "b": {
+              "space": "$body_calf_l",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_sock_l_foot",
+      "spawn": {
+        "name": "media izquierda a pie",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sock_left",
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "b": {
+              "space": "$body_foot_l",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_sock_r_ankle",
+      "spawn": {
+        "name": "media derecha a tobillo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sock_right",
+              "pos": {
+                "x": 0,
+                "y": -85000
+              }
+            },
+            "b": {
+              "space": "$body_calf_r",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_sock_r_foot",
+      "spawn": {
+        "name": "media derecha a pie",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$sock_right",
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "b": {
+              "space": "$body_foot_r",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "hair_tie",
+      "visual": "hair_tie",
+      "spawn": {
+        "name": "coletero del cabello",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -30000,
+              "y": -30000
+            },
+            "max": {
+              "x": 30000,
+              "y": 30000
+            }
+          }
+        },
+        "location": {
+          "space": "$body_head",
+          "pos": {
+            "x": 100000,
+            "y": 110000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -30000,
+              "y": -30000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "......",
+              "......",
+              "......",
+              "......",
+              "......",
+              "......"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "coletero del cabello",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 0
+                },
+                "radius": 30000,
+                "label": "lazo del coletero"
+              }
+            ]
+          },
+          "shelter": {
+            "strength": 60,
+            "radius": 30000
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -25000
+              },
+              {
+                "x": -25000,
+                "y": 0
+              }
+            ],
+            "access_reach": 60000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "hair_tie",
+            "state": "worn",
+            "mount_part": "$body_head",
+            "worn_pos": {
+              "x": 100000,
+              "y": 110000,
+              "z": 20000
+            },
+            "don_warn_ticks": 5
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_hair_tie_head",
+      "spawn": {
+        "name": "coletero a cabello",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$hair_tie",
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "b": {
+              "space": "$body_head",
+              "pos": {
+                "x": 100000,
+                "y": 110000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "street_shoe_l",
+      "visual": "street_shoe",
+      "spawn": {
+        "name": "zapato de calle izquierdo",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -130000
+            },
+            "max": {
+              "x": 50000,
+              "y": 130000
+            }
+          }
+        },
+        "location": {
+          "space": "$genkan",
+          "pos": {
+            "x": 650000,
+            "y": 900000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -130000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "region": "zapato de calle izquierdo",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "talón del zapato"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "access": [
+              {
+                "x": 0,
+                "y": -120000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "street_shoe_r",
+      "visual": "street_shoe",
+      "spawn": {
+        "name": "zapato de calle derecho",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -130000
+            },
+            "max": {
+              "x": 50000,
+              "y": 130000
+            }
+          }
+        },
+        "location": {
+          "space": "$genkan",
+          "pos": {
+            "x": 820000,
+            "y": 900000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -130000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "region": "zapato de calle derecho",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "talón del zapato"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "access": [
+              {
+                "x": 0,
+                "y": -120000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "street_shoe_spot",
+      "spawn": {
+        "name": "puntera del zapato de calle",
+        "location": {
+          "space": "$street_shoe_l",
+          "pos": {
+            "x": 0,
+            "y": 70000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "look_ticks": 40,
+            "loot": [
+              {
+                "kind": "coin",
+                "weight": 4
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 3
+              },
+              {
+                "kind": "button",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "genkan_bag",
+      "visual": "genkan_bag",
+      "spawn": {
+        "name": "bolso de la entrada",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -130000,
+              "y": -90000
+            },
+            "max": {
+              "x": 130000,
+              "y": 90000
+            }
+          }
+        },
+        "location": {
+          "space": "$genkan",
+          "pos": {
+            "x": 1150000,
+            "y": 600000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -130000,
+              "y": -90000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              "..........................",
+              ".........................."
+            ]
+          },
+          "body_zone": {
+            "region": "bolso de la entrada",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 75000
+                },
+                "radius": 45000,
+                "label": "solapa del bolso"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "access": [
+              {
+                "x": -120000,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 80000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "genkan_bag_spot",
+      "spawn": {
+        "name": "interior del bolso",
+        "location": {
+          "space": "$genkan_bag",
+          "pos": {
+            "x": 30000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "look_ticks": 40,
+            "loot": [
+              {
+                "kind": "coin",
+                "weight": 4
+              },
+              {
+                "kind": "clip",
+                "weight": 3
+              },
+              {
+                "kind": "thread",
+                "weight": 3
+              },
+              {
+                "kind": "button",
+                "weight": 2
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "genkan_bag_target",
+      "spawn": {
+        "name": "bolso de la entrada",
+        "location": {
+          "space": "$genkan_bag",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "expedition_target": {
+            "colony": "$nest",
+            "clue": "$genkan_climb_top",
+            "min_members": 2,
+            "max_members": 3,
+            "waypoints": [
+              "$threshold_refuge"
+            ],
+            "max_duration": 7200
+          },
+          "landmark": {
+            "range": 250000
+          }
+        }
+      }
+    },
+    {
+      "ref": "genkan_bag_crumb_1",
+      "object": "crumb",
+      "visual": "crumb",
+      "spawn": {
+        "name": "migaja del bolso",
+        "location": {
+          "space": "$genkan_bag",
+          "pos": {
+            "x": -50000,
+            "y": 20000,
+            "z": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "genkan_bag_crumb_2",
+      "object": "crumb",
+      "visual": "crumb",
+      "spawn": {
+        "name": "migaja del bolso",
+        "location": {
+          "space": "$genkan_bag",
+          "pos": {
+            "x": 60000,
+            "y": -30000,
+            "z": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_bedroom_door",
+      "spawn": {
+        "name": "umbral del dormitorio",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 2150000,
+            "y": 150000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 2800000
+          }
+        }
+      }
+    },
+    {
+      "ref": "spot_hallway_bath",
+      "spawn": {
+        "name": "umbral del baño",
+        "location": {
+          "space": "$hallway",
+          "pos": {
+            "x": 2200000,
+            "y": 150000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {},
+          "landmark": {
+            "range": 2500000
           }
         }
       }
@@ -11657,6 +12642,108 @@
               "$portal_cardigan_shoulder"
             ],
             "don_warn_ticks": 20
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$sock_left",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "sock_left",
+            "state": "worn",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -5000
+            },
+            "body_portals": [
+              "$portal_sock_l_ankle",
+              "$portal_sock_l_foot"
+            ],
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -35000,
+                  "y": -75000
+                },
+                "max": {
+                  "x": 35000,
+                  "y": 65000
+                }
+              },
+              "force": 35,
+              "source": "garment"
+            },
+            "don_warn_ticks": 15
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$sock_right",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "sock_right",
+            "state": "worn",
+            "mount_part": "$body_foot_r",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -5000
+            },
+            "body_portals": [
+              "$portal_sock_r_ankle",
+              "$portal_sock_r_foot"
+            ],
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -35000,
+                  "y": -75000
+                },
+                "max": {
+                  "x": 35000,
+                  "y": 65000
+                }
+              },
+              "force": 35,
+              "source": "garment"
+            },
+            "don_warn_ticks": 15
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$hair_tie",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "hair_tie",
+            "state": "worn",
+            "mount_part": "$body_head",
+            "worn_pos": {
+              "x": 100000,
+              "y": 110000,
+              "z": 20000
+            },
+            "body_portals": [
+              "$portal_hair_tie_head"
+            ],
+            "don_warn_ticks": 5
           }
         }
       }

@@ -391,6 +391,14 @@
       "cooldown_ms": 250
     },
     {
+      "id": "sock_rustle",
+      "file": "sock_rustle.wav",
+      "category": "efectos",
+      "ms": 160,
+      "voices": 2,
+      "cooldown_ms": 250
+    },
+    {
       "id": "sofa_sit",
       "file": "sofa_sit.wav",
       "category": "efectos",

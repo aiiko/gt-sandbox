@@ -25,6 +25,7 @@ const (
 	TrinketClip     = "clip"
 	TrinketThread   = "thread"
 	TrinketGraphite = "graphite"
+	TrinketCoin     = "coin"
 )
 
 // Parámetros de regalos y colección (M63).
@@ -51,7 +52,7 @@ type Trinket struct {
 // ValidTrinketKind indica si kind es un tipo conocido de tesoro.
 func ValidTrinketKind(kind string) bool {
 	switch kind {
-	case TrinketButton, TrinketClip, TrinketThread, TrinketGraphite:
+	case TrinketButton, TrinketClip, TrinketThread, TrinketGraphite, TrinketCoin:
 		return true
 	}
 	return false

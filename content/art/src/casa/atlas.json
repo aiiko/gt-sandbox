@@ -3045,6 +3045,87 @@
           "idle": { "frame_ticks": 1, "frames": ["cardigan_pocket/micro_idle.png"] }
         }
       }
+    },
+    "sock": {
+      "macro": {
+        "pivot": [6, 11],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sock/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [96, 200],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["sock/micro_idle.png"] },
+          "donning": { "frame_ticks": 1, "frames": ["sock/micro_donning.png"] }
+        }
+      }
+    },
+    "hair_tie": {
+      "macro": {
+        "pivot": [5, 5],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["hair_tie/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [64, 64],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["hair_tie/micro_idle.png"] }
+        }
+      }
+    },
+    "street_shoe": {
+      "macro": {
+        "pivot": [8, 13],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["street_shoe/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [112, 232],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["street_shoe/micro_idle.png"] }
+        }
+      }
+    },
+    "genkan_bag": {
+      "macro": {
+        "pivot": [13, 10],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["genkan_bag/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [232, 168],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["genkan_bag/micro_idle.png"] }
+        }
+      }
+    },
+    "trinket_coin": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_coin/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [7, 10],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["trinket_coin/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["trinket_coin/micro_held.png"] }
+        }
+      }
     }
   }
 }

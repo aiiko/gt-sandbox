@@ -187,6 +187,10 @@ func TestAllMacroFurnitureVisibleInMicro(t *testing.T) {
 		if p, ok := f.SpaceByID(s.Parent); ok && p.Parent.IsNil() {
 			continue // habitaciones raíz (se ven al enfocarlas)
 		}
+		if s.GarmentState == "worn" {
+			checkEntity(s.ID, s.ID, s.Name, s.Pose.Pos)
+			continue
+		}
 		checkEntity(s.ID, s.Parent, s.Name, s.Pose.Pos)
 	}
 	for _, th := range f.Things {

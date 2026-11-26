@@ -296,6 +296,8 @@ func trinketArticle(kind string) string {
 		return "un hilo"
 	case colony.TrinketGraphite:
 		return "una mina de grafito"
+	case colony.TrinketCoin:
+		return "una moneda"
 	default:
 		return "un tesoro"
 	}
@@ -311,6 +313,8 @@ func trinketFirst(kind string) string {
 		return "su primer hilo"
 	case colony.TrinketGraphite:
 		return "su primera mina de grafito"
+	case colony.TrinketCoin:
+		return "su primera moneda"
 	default:
 		return "su primer tesoro"
 	}

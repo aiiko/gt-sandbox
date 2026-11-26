@@ -28,6 +28,7 @@ import macro  # noqa: E402
 import micro  # noqa: E402
 import oficios  # noqa: E402
 import prendas  # noqa: E402
+import quickwins  # noqa: E402
 import seats  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
@@ -54,6 +55,7 @@ def build(out):
     cuerpo.main(out)
     actividades.main(out)
     prendas.main(out)
+    quickwins.main(out)
 
 
 def pixels(path):

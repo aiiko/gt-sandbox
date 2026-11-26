@@ -1,0 +1,9 @@
+{
+  "name": "trinket_coin",
+  "visual": "trinket_coin",
+  "body": {"radius": 3000, "height": 1500, "mass": 0},
+  "components": {
+    "trinket": {"kind": "coin"},
+    "landmark": {}
+  }
+}

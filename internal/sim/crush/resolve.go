@@ -211,6 +211,11 @@ func victims(w *world.World, g space.Graph, im impact) []ids.ID {
 			return
 		}
 		var by ids.ID
+		if sh, ok := shelters.Get(l.Space); ok && !r.Despawning(l.Space) && sh.Strength >= im.c.Force {
+			if l.Pos.XY().DistSq(units.Vec2{}) <= int64(sh.Radius)*int64(sh.Radius) {
+				by = l.Space
+			}
+		}
 		shelters.Each(func(s ids.ID, sh *Shelter) {
 			sl, ok := locs.Get(s)
 			if !by.IsNil() || !ok || sl.Space != l.Space || r.Despawning(s) || sh.Strength < im.c.Force {

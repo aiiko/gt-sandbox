@@ -79,9 +79,10 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 	if !ok || m.Search <= 0 {
 		return nil
 	}
-	def := max(Deficit(c.W, m.Colony, ai.ResourceFood), Deficit(c.W, m.Colony, ai.ResourceWater))
+	waterDef := Deficit(c.W, m.Colony, ai.ResourceWater)
+	def := max(Deficit(c.W, m.Colony, ai.ResourceFood), waterDef)
 	hasRoles := HasRoles(c.W, m.Colony)
-	foodCovered := hasRoles && Deficit(c.W, m.Colony, ai.ResourceWater) == 0 && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony)
+	foodCovered := hasRoles && waterDef == 0 && PendingFoodPortions(c.W, m.Colony) >= MissingPortions(c.W, m.Colony)
 	locs := comp.Of(r).Location
 	var spots []struct {
 		id      ids.ID
@@ -128,6 +129,8 @@ func (Search) Options(c *ai.Ctx) []ai.Option {
 		if s.hasLoot && scale < 0.55 {
 			scale = 0.55
 			distCost = min(distCost, 0.03)
+		} else if waterDef > 0 && !s.hasLoot {
+			distCost = min(distCost, 0.02)
 		}
 		u := m.Search*scale + bonus - distCost*ai.Distance(c, s.loc.Space, s.loc.Pos.XY())
 		out = append(out, ai.Option{Target: s.id, Utility: u})

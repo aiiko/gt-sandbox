@@ -689,6 +689,14 @@
         {"wave": "noise", "f0": 3200, "f1": 1400, "dur": 0.22, "attack": 0.03, "decay": 0.08, "gain": 0.24, "lp": 2200},
         {"wave": "noise", "f0": 1800, "f1": 2400, "dur": 0.14, "delay": 0.05, "attack": 0.02, "decay": 0.05, "gain": 0.16, "lp": 1800}
       ]
+    },
+    "sock_rustle": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 250,
+      "layers": [
+        {"wave": "noise", "f0": 2400, "f1": 1100, "dur": 0.16, "attack": 0.02, "decay": 0.06, "gain": 0.20, "lp": 1800}
+      ]
     }
   }
 }

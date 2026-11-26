@@ -56,6 +56,7 @@ const (
 	SlipperSlide  = "slipper_slide"  // roce de pantufla al calzarla
 	GarmentDrop   = "garment_drop"   // golpe blando al dejar la pantufla en el piso
 	GarmentRustle = "garment_rustle" // roce de tela al ponerse o sacarse el cárdigan
+	SockRustle    = "sock_rustle"    // roce suave de media o coletero
 	Emote         = "emote_"         // + el símbolo (view.Emote*)
 )
 
@@ -452,8 +453,11 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		}
 	case attach.GarmentDonning:
 		id := SlipperSlide
-		if ev.Slot == "cardigan" {
+		switch {
+		case ev.Slot == "cardigan":
 			id = GarmentRustle
+		case ev.Slot == "hair_tie" || ev.Slot == "sock_left" || ev.Slot == "sock_right":
+			id = SockRustle
 		}
 		if p, ok := pos(ev.Garment, cur); ok {
 			if v.Micro && v.Focus == ev.Garment {
@@ -464,8 +468,11 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		}
 	case attach.GarmentWorn:
 		id := SlipperSlide
-		if ev.Slot == "cardigan" {
+		switch {
+		case ev.Slot == "cardigan":
 			id = GarmentRustle
+		case ev.Slot == "hair_tie" || ev.Slot == "sock_left" || ev.Slot == "sock_right":
+			id = SockRustle
 		}
 		if p, ok := pos(ev.Garment, cur); ok {
 			if v.Micro && v.Focus == ev.Garment {
@@ -476,8 +483,11 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 		}
 	case attach.GarmentDoffed:
 		id := GarmentDrop
-		if ev.Slot == "cardigan" {
+		switch {
+		case ev.Slot == "cardigan":
 			id = GarmentRustle
+		case ev.Slot == "hair_tie" || ev.Slot == "sock_left" || ev.Slot == "sock_right":
+			id = SockRustle
 		}
 		if p, ok := pos(ev.Garment, cur); ok {
 			if v.Micro && (v.Focus == ev.Garment || v.Focus == ev.Surface) {

@@ -124,7 +124,11 @@ func (Scout) Options(c *ai.Ctx) []ai.Option {
 				base -= 0.04
 			}
 			seenSpaces[end.Space] = true
-			u := base + bonus - c.Agent.DistanceCost*ai.Distance(c, end.Space, end.Pos)
+			distCost := c.Agent.DistanceCost
+			if !vis && !isContact {
+				distCost = min(distCost, 0.03)
+			}
+			u := base + bonus - distCost*ai.Distance(c, end.Space, end.Pos)
 			out = append(out, ai.Option{Target: k.Entity, Offer: endOffer(p, end.Space), Utility: u})
 		}
 	}
