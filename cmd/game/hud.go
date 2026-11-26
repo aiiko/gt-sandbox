@@ -150,6 +150,7 @@ var activities = map[string][2]string{
 	"observe":          {"Mira a los tinies", "mirar a los tinies"},
 	"share":            {"Comparte migajas", "compartir migajas"},
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
+	"carry_passenger":  {"Lleva pasajeros", "llevar pasajeros"},
 	"notice_gift":      {"Mira un regalo", "mirar un regalo"},
 	"gift":             {"Lleva un regalo", "llevar un regalo"},
 	"watch":            {"Vigila el paso", "vigilar el paso"},

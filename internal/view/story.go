@@ -52,6 +52,13 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.Surface
 	case encounter.PalmWithdrawn:
 		return ev.Entity, ev.Surface
+	case encounter.CarryStarted:
+		return ev.Entity, ev.Surface
+	case encounter.PassengerDelivered:
+		if len(ev.Passengers) > 0 {
+			return ev.Passengers[0], ev.Surface
+		}
+		return ev.Entity, ev.Surface
 	case encounter.Skipped:
 		return ev.Entity, ev.Surface
 	case encounter.GiftNoticed:
@@ -133,6 +140,22 @@ func storyText(k chronicler, event world.Event) string {
 			return fmt.Sprintf("%s subió a la palma; %s la retira.", name(ev.Boarded[0]), name(ev.Entity))
 		}
 		return fmt.Sprintf("Subieron %d tinies a la palma; %s la retira.", len(ev.Boarded), name(ev.Entity))
+	case encounter.CarryStarted:
+		switch len(ev.Passengers) {
+		case 0:
+			return ""
+		case 1:
+			return fmt.Sprintf("%s lleva a %s en la palma hasta %s.", name(ev.Entity), name(ev.Passengers[0]), name(ev.Surface))
+		}
+		return fmt.Sprintf("%s lleva a %d tinies en la palma hasta %s.", name(ev.Entity), len(ev.Passengers), name(ev.Surface))
+	case encounter.PassengerDelivered:
+		switch len(ev.Passengers) {
+		case 0:
+			return ""
+		case 1:
+			return fmt.Sprintf("%s bajó a %s en %s.", name(ev.Entity), name(ev.Passengers[0]), name(ev.Surface))
+		}
+		return fmt.Sprintf("%s bajó a %d tinies en %s.", name(ev.Entity), len(ev.Passengers), name(ev.Surface))
 	case encounter.Skipped:
 		switch ev.Reason {
 		case "occupied":

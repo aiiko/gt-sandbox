@@ -391,6 +391,18 @@ XhooooooosX
 ...XoX.XoX.
 ...XXX.XXX.
 ...........''', CORAL, (0xFF, 0xE6, 0xEC), CORAL_SH),
+    'carry': ('''
+...........
+..XX...XX..
+.XhoX.XhoX.
+XhoooXooooX
+XhooooooosX
+.XoooooosX.
+..XoooosX..
+...XoosX...
+....XsX....
+.....X.....
+...........''', CORAL, (0xFF, 0xE6, 0xEC), CORAL_SH),
 }
 
 

@@ -29,6 +29,7 @@ const (
 	EmoteThirst   = "thirst"   // gota vacía: un tiny tiene sed
 	EmoteTreasure = "treasure" // estrella: un tiny encontró un tesoro
 	EmoteCurious  = "curious"  // signo curioso: la giantess nota un regalo
+	EmoteCarry    = "carry"    // corazón/mano: lleva y baja pasajeros con cuidado
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -98,6 +99,10 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 		return []Cue{{Entity: ev.Entity, Kind: EmoteTreasure}}
 	case encounter.GiftNoticed:
 		return []Cue{{Entity: ev.Entity, Kind: EmoteCurious}}
+	case encounter.PassengerDelivered:
+		if len(ev.Passengers) > 0 {
+			return []Cue{{Entity: ev.Entity, Kind: EmoteCarry}}
+		}
 	}
 	if n, ok := event.(ai.Noticed); ok && ecs.Get[crush.Remains](r).Has(n.Target) {
 		if a, ok := agents.Get(n.Entity); ok && a.Scale == "giantess" {
@@ -197,6 +202,10 @@ func (f *Frame) Expression(id ids.ID) string {
 	switch s.Activity {
 	case "use:breakfast", "use:snack", "use:snack_living", "use:eat", "use:watch", "use:relax", "use:shower":
 		if using {
+			return FaceHappy
+		}
+	case encounter.CarryAction:
+		if s.Step != "goto" {
 			return FaceHappy
 		}
 	case "observe", "share", "offer_palm", "notice_gift":

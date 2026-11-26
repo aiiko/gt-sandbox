@@ -861,7 +861,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [2012, 9282, 12, 8]
+              [2024, 9282, 12, 8]
             ]
           }
         }
@@ -874,13 +874,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [1857, 9282, 16, 10]
+              [1869, 9282, 16, 10]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1874, 9282, 16, 10]
+              [1886, 9282, 16, 10]
             ]
           }
         }
@@ -1045,82 +1045,88 @@
       "macro": {
         "pivot": [5, 10],
         "clips": {
-          "chat": {
+          "carry": {
             "frame_ticks": 1,
             "frames": [
               [1656, 9282, 11, 11]
             ]
           },
-          "curious": {
+          "chat": {
             "frame_ticks": 1,
             "frames": [
               [1668, 9282, 11, 11]
             ]
           },
-          "discover": {
+          "curious": {
             "frame_ticks": 1,
             "frames": [
               [1680, 9282, 11, 11]
             ]
           },
-          "explore": {
+          "discover": {
             "frame_ticks": 1,
             "frames": [
               [1692, 9282, 11, 11]
             ]
           },
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              [1680, 9282, 11, 11]
-            ]
-          },
-          "look": {
+          "explore": {
             "frame_ticks": 1,
             "frames": [
               [1704, 9282, 11, 11]
             ]
           },
-          "note": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [1692, 9282, 11, 11]
+            ]
+          },
+          "look": {
             "frame_ticks": 1,
             "frames": [
               [1716, 9282, 11, 11]
             ]
           },
-          "sleep": {
+          "note": {
             "frame_ticks": 1,
             "frames": [
               [1728, 9282, 11, 11]
             ]
           },
-          "spirit": {
+          "sleep": {
             "frame_ticks": 1,
             "frames": [
               [1740, 9282, 11, 11]
             ]
           },
-          "sweat": {
+          "spirit": {
             "frame_ticks": 1,
             "frames": [
               [1752, 9282, 11, 11]
             ]
           },
-          "thirst": {
+          "sweat": {
             "frame_ticks": 1,
             "frames": [
               [1764, 9282, 11, 11]
             ]
           },
-          "treasure": {
+          "thirst": {
             "frame_ticks": 1,
             "frames": [
               [1776, 9282, 11, 11]
             ]
           },
-          "vein": {
+          "treasure": {
             "frame_ticks": 1,
             "frames": [
               [1788, 9282, 11, 11]
+            ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              [1800, 9282, 11, 11]
             ]
           }
         }
@@ -1128,82 +1134,88 @@
       "micro": {
         "pivot": [5, 10],
         "clips": {
-          "chat": {
+          "carry": {
             "frame_ticks": 1,
             "frames": [
               [1656, 9282, 11, 11]
             ]
           },
-          "curious": {
+          "chat": {
             "frame_ticks": 1,
             "frames": [
               [1668, 9282, 11, 11]
             ]
           },
-          "discover": {
+          "curious": {
             "frame_ticks": 1,
             "frames": [
               [1680, 9282, 11, 11]
             ]
           },
-          "explore": {
+          "discover": {
             "frame_ticks": 1,
             "frames": [
               [1692, 9282, 11, 11]
             ]
           },
-          "idle": {
-            "frame_ticks": 1,
-            "frames": [
-              [1680, 9282, 11, 11]
-            ]
-          },
-          "look": {
+          "explore": {
             "frame_ticks": 1,
             "frames": [
               [1704, 9282, 11, 11]
             ]
           },
-          "note": {
+          "idle": {
+            "frame_ticks": 1,
+            "frames": [
+              [1692, 9282, 11, 11]
+            ]
+          },
+          "look": {
             "frame_ticks": 1,
             "frames": [
               [1716, 9282, 11, 11]
             ]
           },
-          "sleep": {
+          "note": {
             "frame_ticks": 1,
             "frames": [
               [1728, 9282, 11, 11]
             ]
           },
-          "spirit": {
+          "sleep": {
             "frame_ticks": 1,
             "frames": [
               [1740, 9282, 11, 11]
             ]
           },
-          "sweat": {
+          "spirit": {
             "frame_ticks": 1,
             "frames": [
               [1752, 9282, 11, 11]
             ]
           },
-          "thirst": {
+          "sweat": {
             "frame_ticks": 1,
             "frames": [
               [1764, 9282, 11, 11]
             ]
           },
-          "treasure": {
+          "thirst": {
             "frame_ticks": 1,
             "frames": [
               [1776, 9282, 11, 11]
             ]
           },
-          "vein": {
+          "treasure": {
             "frame_ticks": 1,
             "frames": [
               [1788, 9282, 11, 11]
+            ]
+          },
+          "vein": {
+            "frame_ticks": 1,
+            "frames": [
+              [1800, 9282, 11, 11]
             ]
           }
         }
@@ -1236,7 +1248,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [0, 9301, 14, 6]
+              [13, 9301, 14, 6]
             ]
           }
         }
@@ -1315,7 +1327,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1982, 9282, 14, 8]
+              [1994, 9282, 14, 8]
             ]
           }
         }
@@ -1767,25 +1779,25 @@
           "empty": {
             "frame_ticks": 1,
             "frames": [
-              [1800, 9282, 18, 10]
+              [1812, 9282, 18, 10]
             ]
           },
           "full": {
             "frame_ticks": 1,
             "frames": [
-              [1819, 9282, 18, 10]
+              [1831, 9282, 18, 10]
             ]
           },
           "half": {
             "frame_ticks": 1,
             "frames": [
-              [1838, 9282, 18, 10]
+              [1850, 9282, 18, 10]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1800, 9282, 18, 10]
+              [1812, 9282, 18, 10]
             ]
           }
         }
@@ -1971,13 +1983,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [1997, 9282, 14, 8]
+              [2009, 9282, 14, 8]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [2025, 9282, 12, 8]
+              [0, 9301, 12, 8]
             ]
           }
         }
@@ -2063,14 +2075,14 @@
           "idle": {
             "frame_ticks": 14,
             "frames": [
-              [15, 9301, 14, 6],
-              [30, 9301, 14, 6]
+              [28, 9301, 14, 6],
+              [43, 9301, 14, 6]
             ]
           },
           "low": {
             "frame_ticks": 1,
             "frames": [
-              [45, 9301, 14, 6]
+              [58, 9301, 14, 6]
             ]
           }
         }
@@ -2106,7 +2118,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [125, 9301, 4, 2]
+              [138, 9301, 4, 2]
             ]
           }
         }
@@ -2118,7 +2130,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1963, 9282, 18, 8]
+              [1975, 9282, 18, 8]
             ]
           }
         }
@@ -2478,7 +2490,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [107, 9301, 5, 4]
+              [120, 9301, 5, 4]
             ]
           }
         }
@@ -2623,7 +2635,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [113, 9301, 5, 4]
+              [126, 9301, 5, 4]
             ]
           }
         }
@@ -2768,7 +2780,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [119, 9301, 5, 4]
+              [132, 9301, 5, 4]
             ]
           }
         }
@@ -2938,7 +2950,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [130, 9301, 2, 2]
+              [143, 9301, 2, 2]
             ]
           }
         }
@@ -2969,7 +2981,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [133, 9301, 2, 2]
+              [146, 9301, 2, 2]
             ]
           }
         }
@@ -2980,13 +2992,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [1921, 9282, 20, 8]
+              [1933, 9282, 20, 8]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1942, 9282, 20, 8]
+              [1954, 9282, 20, 8]
             ]
           }
         }
@@ -3000,7 +3012,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [136, 9301, 2, 2]
+              [149, 9301, 2, 2]
             ]
           }
         }
@@ -3011,13 +3023,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [81, 9301, 12, 4]
+              [94, 9301, 12, 4]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [94, 9301, 12, 4]
+              [107, 9301, 12, 4]
             ]
           }
         }
@@ -3031,7 +3043,7 @@
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [139, 9301, 2, 2]
+              [152, 9301, 2, 2]
             ]
           }
         }
@@ -3042,13 +3054,13 @@
           "held": {
             "frame_ticks": 1,
             "frames": [
-              [1891, 9282, 14, 10]
+              [1903, 9282, 14, 10]
             ]
           },
           "idle": {
             "frame_ticks": 1,
             "frames": [
-              [1906, 9282, 14, 10]
+              [1918, 9282, 14, 10]
             ]
           }
         }
@@ -3142,14 +3154,14 @@
           "idle": {
             "frame_ticks": 12,
             "frames": [
-              [60, 9301, 6, 6],
-              [67, 9301, 6, 6]
+              [73, 9301, 6, 6],
+              [80, 9301, 6, 6]
             ]
           },
           "low": {
             "frame_ticks": 1,
             "frames": [
-              [74, 9301, 6, 6]
+              [87, 9301, 6, 6]
             ]
           }
         }

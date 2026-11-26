@@ -40,6 +40,7 @@ type Encounter struct {
 	Observe    float64 `json:"observe,omitempty"`
 	Share      float64 `json:"share,omitempty"`
 	Offer      float64 `json:"offer,omitempty"`
+	Carry      float64 `json:"carry,omitempty"`
 	NoticeGift float64 `json:"notice_gift,omitempty"`
 	// Portion es lo que deja al compartir (una migaja); DropPose, la pose
 	// desde la que la deja (vacía = DefaultDropPose).
@@ -208,11 +209,13 @@ func check(w *world.World) error {
 
 // IsAction indica si name es una acción de encuentro.
 func IsAction(name string) bool {
-	return name == "observe" || name == "share" || name == "offer_palm" || name == NoticeGiftAction
+	return name == "observe" || name == "share" || name == "offer_palm" || name == CarryAction || name == NoticeGiftAction
 }
 
 // Actions son las acciones de encuentro, para ai.Install.
-func Actions() []ai.Action { return []ai.Action{Observe{}, Share{}, OfferPalm{}, NoticeGift{}} }
+func Actions() []ai.Action {
+	return []ai.Action{Observe{}, Share{}, OfferPalm{}, CarryPassenger{}, NoticeGift{}}
+}
 
 // Install registra el componente, los eventos y el sistema de avistamientos.
 // Las acciones se instalan con ai.Install(w, encounter.Actions()...).
@@ -227,6 +230,8 @@ func Install(w *world.World) error {
 		world.RegisterEvent[Shared](w),
 		world.RegisterEvent[PalmOffered](w),
 		world.RegisterEvent[PalmWithdrawn](w),
+		world.RegisterEvent[CarryStarted](w),
+		world.RegisterEvent[PassengerDelivered](w),
 		world.RegisterEvent[GiftNoticed](w),
 		// Después de ai.look (Order -50) y antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -45}, look{}),
