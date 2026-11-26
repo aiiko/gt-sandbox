@@ -3179,7 +3179,8 @@
                 ]
               }
             },
-            "carry": 0.18
+            "carry": 0.18,
+            "personality": "curious"
           }
         }
       }
@@ -8027,7 +8028,10 @@
               "decay": 0
             }
           ],
-          "fragile": {}
+          "fragile": {},
+          "bond": {
+            "trust": 20
+          }
         }
       }
     }

@@ -1561,6 +1561,18 @@
             "frames": [
               "ui/emote_tickle.png"
             ]
+          },
+          "wave": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_wave.png"
+            ]
+          },
+          "shy": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_shy.png"
+            ]
           }
         }
       },
@@ -1658,6 +1670,18 @@
             "frame_ticks": 1,
             "frames": [
               "ui/emote_tickle.png"
+            ]
+          },
+          "wave": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_wave.png"
+            ]
+          },
+          "shy": {
+            "frame_ticks": 1,
+            "frames": [
+              "ui/emote_shy.png"
             ]
           }
         }

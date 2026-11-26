@@ -203,6 +203,12 @@ def with_quickwins(d):
     g = _entity(d, 'giantess')
     enc = g['spawn']['components'].setdefault('encounter', {})
     enc['carry'] = 0.18
+    # QW4: personalidad de la giantess y vínculo inicial (Bond) en cada tiny de casa.json.
+    enc['personality'] = 'curious'
+    for e in d['entities']:
+        comps = e.get('spawn', {}).get('components', {})
+        if comps.get('member') and 'bond' not in comps:
+            comps['bond'] = {'trust': 20}
 
     # QW2: limpiar entidades y comandos previos de QW2 para idempotencia.
     d['entities'] = [e for e in d['entities'] if e.get('ref') not in QW2_REFS]
@@ -701,6 +707,130 @@ def tiny_tickles_giantess_neck(casa):
     return d
 
 
+def tinies_react_to_observe_by_trust(casa):
+    d = copy.deepcopy(casa)
+    d['name'] = 'tinies_react_to_observe_by_trust'
+    d['notes'] = 'QW4: cuando la giantess observa el escritorio, el tiny confiado saluda (wave) y el temeroso se encoge (shy).'
+    d['ticks'] = 240
+    d.pop('atlas', None)
+    d.pop('random', None)
+
+    tinies = [e for e in d['entities'] if e['spawn'].get('components', {}).get('member')]
+    waver = copy.deepcopy(tinies[0])
+    shyer = copy.deepcopy(tinies[1])
+    d['entities'] = [e for e in d['entities'] if not e['spawn'].get('components', {}).get('member')]
+
+    for ref, name, pos, trust in (
+        ('waver', 'Tiny 01', {'x': 250000, 'y': 250000, 'z': 0}, 120),
+        ('shyer', 'Tiny 02', {'x': 360000, 'y': 260000, 'z': 0}, -100),
+    ):
+        t = copy.deepcopy(waver if ref == 'waver' else shyer)
+        t['ref'] = ref
+        t['spawn']['name'] = name
+        t['spawn']['location'] = {'space': '$desk1', 'pos': pos}
+        t['spawn']['components'].pop('member', None)
+        t['spawn']['components']['agent'].update({'curiosity': 0, 'work': 0, 'reflex': 4})
+        t['spawn']['components']['bond'] = {'trust': trust}
+        t['spawn']['components']['needs'] = [
+            {'name': 'hunger', 'value': 950, 'decay': 0},
+            {'name': 'thirst', 'value': 950, 'decay': 0},
+            {'name': 'energy', 'value': 950, 'decay': 0},
+            {'name': 'fun', 'value': 950, 'decay': 0},
+        ]
+        d['entities'].append(t)
+
+    g = _entity(d, 'giantess')
+    g['spawn']['location'] = {'space': '$bedroom', 'pos': {'x': 1550000, 'y': 1950000, 'z': 0}}
+    g['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+        {'name': 'hygiene', 'value': 950, 'decay': 0},
+    ]
+    g['spawn']['components']['encounter'] = {
+        'personality': 'curious',
+        'observe': 0.65,
+        'sightings': [{'surface': '$desk1', 'last': 0, 'seen': 2}],
+    }
+    d['expect'] = COMMON + [
+        {'event': 'action_started', 'match': {'entity': '$giantess', 'action': 'observe', 'target': '$desk1'}},
+        {'event': 'tiny_reacted', 'match': {'entity': '$waver', 'giantess': '$giantess', 'reaction': 'wave'}},
+        {'event': 'tiny_reacted', 'match': {'entity': '$shyer', 'giantess': '$giantess', 'reaction': 'shy'}},
+        {'no_event': 'crushed'},
+    ]
+    return d
+
+
+def bond_evolves_from_share_and_near_miss(casa):
+    d = copy.deepcopy(casa)
+    d['name'] = 'bond_evolves_from_share_and_near_miss'
+    d['notes'] = 'QW4: compartir comida sube la confianza del vínculo y salvarse de una pisada la reduce.'
+    d['ticks'] = 320
+    d.pop('atlas', None)
+    d.pop('random', None)
+
+    tinies = [e for e in d['entities'] if e['spawn'].get('components', {}).get('member')]
+    sharer = copy.deepcopy(tinies[0])
+    dodger = copy.deepcopy(tinies[1])
+    d['entities'] = [e for e in d['entities'] if not e['spawn'].get('components', {}).get('member')]
+
+    sharer['ref'] = 'desk_tiny'
+    sharer['spawn']['name'] = 'Tiny 01'
+    sharer['spawn']['location'] = {'space': '$desk1', 'pos': {'x': 120000, 'y': 260000, 'z': 0}}
+    sharer['spawn']['components']['agent'].update({'curiosity': 0, 'work': 0, 'reflex': 4})
+    sharer['spawn']['components']['member']['forage'] = 0.4
+    sharer['spawn']['components']['bond'] = {'trust': 10}
+    sharer['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 250, 'decay': 0},
+        {'name': 'thirst', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+    ]
+
+    dodger['ref'] = 'floor_tiny'
+    dodger['spawn']['name'] = 'Tiny 02'
+    dodger['spawn']['location'] = {'space': '$desk1', 'pos': {'x': 335000, 'y': 110000, 'z': 0}}
+    dodger['spawn']['components'].pop('member', None)
+    dodger['spawn']['components']['mover'] = {'speed': 40000, 'scale': 'tiny'}
+    dodger['spawn']['components']['agent'].update({'curiosity': 0, 'work': 0, 'reflex': 5})
+    dodger['spawn']['components']['bond'] = {'trust': 10}
+    dodger['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'thirst', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+    ]
+
+    d['entities'].extend([sharer, dodger])
+    g = _entity(d, 'giantess')
+    g['spawn']['location'] = {'space': '$bedroom', 'pos': {'x': 1550000, 'y': 1950000, 'z': 0}}
+    g['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+        {'name': 'hygiene', 'value': 950, 'decay': 0},
+    ]
+    crumb = json.load(open(os.path.join(ROOT, 'content', 'objects', 'crumb.json'), encoding='utf-8'))
+    crumb.pop('visual', None)
+    g['spawn']['components']['encounter'] = {
+        'personality': 'gentle',
+        'share': 0.75,
+        'portion': crumb,
+        'sightings': [{'surface': '$desk1', 'last': 0, 'seen': 1, 'foraging': 1}],
+    }
+    d['commands'].extend([
+        {'tick': 200, 'kind': 'set_pose', 'data': {'entity': '$giantess', 'pose': 'hand_hover'}},
+        {'tick': 230, 'kind': 'set_pose', 'data': {'entity': '$giantess', 'pose': 'hand_rest'}},
+        {'tick': 250, 'kind': 'set_pose', 'data': {'entity': '$giantess', 'pose': 'idle'}},
+    ])
+    d['expect'] = COMMON + [
+        {'event': 'shared', 'match': {'entity': '$giantess', 'surface': '$desk1'}},
+        {'event': 'near_miss', 'match': {'entity': '$floor_tiny'}},
+        {'no_event': 'crushed'},
+    ]
+    return d
+
+
 def _write(path, d):
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')
@@ -718,6 +848,8 @@ def main():
         genkan_expedition_and_loot,
         sock_donning_and_hair_tie_shelter,
         tiny_tickles_giantess_neck,
+        tinies_react_to_observe_by_trust,
+        bond_evolves_from_share_and_near_miss,
     ):
         d = fn(casa)
         _write(os.path.join(SCEN, d['name'] + '.json'), d)

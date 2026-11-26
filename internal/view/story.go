@@ -63,6 +63,8 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.Surface
 	case encounter.GiftNoticed:
 		return ev.Entity, ev.Surface
+	case encounter.TinyReacted:
+		return ev.Entity, ids.Nil
 	case colony.Searched:
 		return ev.Entity, ids.Nil
 	case colony.TrinketFound:
@@ -170,6 +172,11 @@ func storyText(k chronicler, event world.Event) string {
 			return fmt.Sprintf("Ella encontró el regalo de %s.", name(ev.Giver))
 		}
 		return fmt.Sprintf("Ella encontró un regalo en %s.", name(ev.Surface))
+	case encounter.TinyReacted:
+		if ev.Reaction == encounter.ReactionShy {
+			return fmt.Sprintf("%s se encoge al sentirse observado por %s.", name(ev.Entity), name(ev.Giantess))
+		}
+		return fmt.Sprintf("%s saluda con la mano a %s.", name(ev.Entity), name(ev.Giantess))
 	case colony.TrinketFound:
 		return fmt.Sprintf("%s encontró %s.", name(ev.Entity), trinketArticle(ev.TrinketKind))
 	case colony.TrinketStored:

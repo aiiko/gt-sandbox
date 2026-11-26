@@ -59,7 +59,7 @@ func TestManifestMatchesFiles(t *testing.T) {
 	for _, step := range tinySteps {
 		scene = append(scene, step)
 	}
-	for _, e := range []string{view.EmoteDiscover, view.EmoteExplore, view.EmoteSweat, view.EmoteSleep, view.EmoteNote, view.EmoteVein, view.EmoteTickle} {
+	for _, e := range []string{view.EmoteDiscover, view.EmoteExplore, view.EmoteSweat, view.EmoteSleep, view.EmoteNote, view.EmoteVein, view.EmoteTickle, view.EmoteWave, view.EmoteShy} {
 		scene = append(scene, Emote+e)
 	}
 	for _, id := range scene {

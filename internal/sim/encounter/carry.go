@@ -143,6 +143,7 @@ func carryTargets(c *ai.Ctx, enc *Encounter, passengers []ids.ID) []ai.Option {
 	places := ecs.Get[ai.Place](r)
 	homes := homeSurfaces(c, passengers)
 
+	mod := personalityMod(enc, CarryAction, c.W.Tick())
 	idsList := slices.Clone(places.IDs())
 	slices.Sort(idsList)
 	var out []ai.Option
@@ -155,7 +156,7 @@ func carryTargets(c *ai.Ctx, enc *Encounter, passengers []ids.ID) []ai.Option {
 			continue
 		}
 		dist := distance(c, sp)
-		u := enc.Carry - c.Agent.DistanceCost*dist
+		u := enc.Carry + mod - c.Agent.DistanceCost*dist
 		if homes[s] {
 			u += 0.08
 		}

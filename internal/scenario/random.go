@@ -187,6 +187,9 @@ func RandomizeCount(base *Spec, seed uint64, count int) (*Spec, error) {
 	if err := randomActivities(out.Entities[len(rest):], rnd); err != nil {
 		return nil, err
 	}
+	if err := randomBond(out.Entities[len(rest):], out.Entities[:len(rest)], rnd); err != nil {
+		return nil, err
+	}
 	out.Random = nil
 	return &out, nil
 }
@@ -222,6 +225,51 @@ func randomActivities(tinies []EntitySpec, rnd *rng.Stream) error {
 			}
 		}
 		if changed {
+			raw, err := json.Marshal(spawn)
+			if err != nil {
+				return err
+			}
+			tinies[i].Spawn = raw
+		}
+	}
+	return nil
+}
+
+// randomBond sortea la confianza inicial del vínculo y la personalidad de la
+// giantess al final de Randomize, solo cuando el escenario base incluye esos
+// campos (activación por contenido).
+func randomBond(tinies, rest []EntitySpec, rnd *rng.Stream) error {
+	personalities := []string{"gentle", "curious", "distracted"}
+	for i, e := range rest {
+		if !strings.Contains(string(e.Spawn), `"personality"`) {
+			continue
+		}
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		enc, _ := c["encounter"].(map[string]any)
+		if p, _ := enc["personality"].(string); p != "" {
+			enc["personality"] = personalities[rnd.IntN(len(personalities))]
+			raw, err := json.Marshal(spawn)
+			if err != nil {
+				return err
+			}
+			rest[i].Spawn = raw
+		}
+	}
+	for i, e := range tinies {
+		if !strings.Contains(string(e.Spawn), `"bond"`) {
+			continue
+		}
+		var spawn map[string]any
+		if err := json.Unmarshal(e.Spawn, &spawn); err != nil {
+			return err
+		}
+		c, _ := spawn["components"].(map[string]any)
+		if b, ok := c["bond"].(map[string]any); ok {
+			b["trust"] = int64(-80 + rnd.IntN(201))
 			raw, err := json.Marshal(spawn)
 			if err != nil {
 				return err

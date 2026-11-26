@@ -415,6 +415,30 @@ XhooooooosX
 .XsX.......
 ..X........
 ...........''', (0xFF, 0xC4, 0x7A), (0xFF, 0xF3, 0xD6), (0xD4, 0x8B, 0x45)),
+    'wave': ('''
+....XXX....
+...XhooX...
+..XXoooXX..
+.XhoooooXX.
+.XoXXoooosX
+.XoXXoooosX
+..XooooosX.
+...XoooosX.
+...XooosX..
+....XXXX...
+...........''', (0x76, 0xD8, 0xCB), (0xE6, 0xFF, 0xFA), TEAL),
+    'shy': ('''
+...........
+..XXXXXXX..
+.XhooooosX.
+XooXXXXoosX
+XoXX..XoosX
+XoX.XXooosX
+XoX.XoosXX.
+.XooosXXX..
+..XXXXX....
+...........
+...........''', LILAC, LILAC_HI, LILAC_SH),
 }
 
 

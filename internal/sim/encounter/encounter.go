@@ -42,6 +42,11 @@ type Encounter struct {
 	Offer      float64 `json:"offer,omitempty"`
 	Carry      float64 `json:"carry,omitempty"`
 	NoticeGift float64 `json:"notice_gift,omitempty"`
+	// Personality ("", "gentle", "curious", "distracted"), Affinity [-500,+500]
+	// y CautionUntil modulan la disposición hacia los tinies.
+	Personality  string     `json:"personality,omitempty"`
+	Affinity     int32      `json:"affinity,omitempty"`
+	CautionUntil clock.Tick `json:"caution_until,omitempty"`
 	// Portion es lo que deja al compartir (una migaja); DropPose, la pose
 	// desde la que la deja (vacía = DefaultDropPose).
 	Portion  *cmds.Spawn `json:"portion,omitempty"`
@@ -203,24 +208,35 @@ func check(w *world.World) error {
 		if !ecs.Get[ai.Agent](w.ECS()).Has(e) {
 			err = errors.Join(err, fmt.Errorf("encounter %s: no es agente", e))
 		}
+		if enc.Affinity < BondMin || enc.Affinity > BondMax {
+			err = errors.Join(err, fmt.Errorf("encounter %s: affinity %d fuera de [%d,%d]", e, enc.Affinity, BondMin, BondMax))
+		}
+	})
+	ecs.Get[Bond](w.ECS()).Each(func(e ids.ID, b *Bond) {
+		if b.Trust < BondMin || b.Trust > BondMax {
+			err = errors.Join(err, fmt.Errorf("bond %s: trust %d fuera de [%d,%d]", e, b.Trust, BondMin, BondMax))
+		}
 	})
 	return err
 }
 
 // IsAction indica si name es una acción de encuentro.
 func IsAction(name string) bool {
-	return name == "observe" || name == "share" || name == "offer_palm" || name == CarryAction || name == NoticeGiftAction
+	return name == "observe" || name == "share" || name == "offer_palm" || name == CarryAction || name == NoticeGiftAction || name == ReactObserveAction
 }
 
 // Actions son las acciones de encuentro, para ai.Install.
 func Actions() []ai.Action {
-	return []ai.Action{Observe{}, Share{}, OfferPalm{}, CarryPassenger{}, NoticeGift{}}
+	return []ai.Action{Observe{}, Share{}, OfferPalm{}, CarryPassenger{}, NoticeGift{}, ReactObserve{}}
 }
 
 // Install registra el componente, los eventos y el sistema de avistamientos.
 // Las acciones se instalan con ai.Install(w, encounter.Actions()...).
 func Install(w *world.World) error {
 	if _, err := ecs.Register[Encounter](w.ECS(), "encounter"); err != nil {
+		return err
+	}
+	if _, err := ecs.Register[Bond](w.ECS(), "bond"); err != nil {
 		return err
 	}
 	w.AddInvariant("encounter", check)
@@ -233,7 +249,10 @@ func Install(w *world.World) error {
 		world.RegisterEvent[CarryStarted](w),
 		world.RegisterEvent[PassengerDelivered](w),
 		world.RegisterEvent[GiftNoticed](w),
+		world.RegisterEvent[TinyReacted](w),
 		// Después de ai.look (Order -50) y antes de ai.decide.
 		w.Register(world.SystemSpec{Phase: clock.PhaseDecide, Order: -45}, look{}),
+		// Después de crush.resolve (Order -1) y colony.mourn (Order 0).
+		w.Register(world.SystemSpec{Phase: clock.PhaseConsequences, Order: 50}, bonds{}),
 	)
 }

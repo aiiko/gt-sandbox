@@ -81,6 +81,10 @@ type Space struct {
 	// GarmentState es el estado de la prenda ("placed", "donning", "worn", "doffing")
 	// si este Space es una prenda explorable.
 	GarmentState string `json:"garment_state,omitempty"`
+	// Personality, Affinity y HasEncounter resumen el vínculo de la giantess.
+	HasEncounter bool   `json:"has_encounter,omitempty"`
+	Personality  string `json:"personality,omitempty"`
+	Affinity     int32  `json:"affinity,omitempty"`
 }
 
 // Threat representa una compresión interior activa (prenda en donning) para la
@@ -194,6 +198,8 @@ type Thing struct {
 	NearestRefuge string `json:"nearest_refuge,omitempty"`
 	GripLabel     string `json:"grip_label,omitempty"`
 	WaterLow      bool   `json:"water_low,omitempty"`
+	HasBond       bool   `json:"has_bond,omitempty"`
+	Trust         int32  `json:"trust,omitempty"`
 }
 
 // ExpeditionMark es un hito o pista de expedición para el miniplano en micro.
@@ -425,6 +431,11 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 			s.Activity, s.Step = activity(r, a)
 			s.Goal, _, _ = purpose(r, id, a)
 		}
+		if enc, ok := ecs.Get[encounter.Encounter](r).Get(id); ok {
+			s.HasEncounter = true
+			s.Personality = enc.Personality
+			s.Affinity = enc.Affinity
+		}
 		s.Needs = needsOf(r, id)
 		for e := s.Parent; !e.IsNil() && s.Depth < space.MaxDepth; e = g.Parent(e) {
 			s.Depth++
@@ -491,6 +502,10 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		}
 		if wd, ok := ecs.Get[colony.WaterDrop](r).Get(id); ok && wd.Volume <= 1 {
 			t.WaterLow = true
+		}
+		if b, ok := ecs.Get[encounter.Bond](r).Get(id); ok {
+			t.HasBond = true
+			t.Trust = b.Trust
 		}
 		t.Needs = needsOf(r, id)
 		f.Things = append(f.Things, t)
@@ -731,7 +746,7 @@ func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 		return "", ""
 	}
 	name, step := d.Action, ""
-	if encounter.IsAction(d.Action) && d.Stage == 0 && suffix == "" {
+	if encounter.IsAction(d.Action) && d.Action != encounter.ReactObserveAction && d.Stage == 0 && suffix == "" {
 		step = "goto" // va hacia la superficie
 	}
 	if suffix == "" {
@@ -740,6 +755,8 @@ func activity(r *ecs.Registry, a ai.Agent) (string, string) {
 			step = [...]string{"goto", "look"}[min(d.Stage, 1)]
 		case colony.ChatAction:
 			step = [...]string{"goto", "wait", "talk"}[min(d.Stage, 2)]
+		case encounter.ReactObserveAction:
+			step = encounter.ReactionOfOffer(d.Offer)
 		}
 	}
 	if os, ok := ecs.Get[ai.Offers](r).Get(d.Target); ok && d.Action == "use" && d.Offer < len(os) {

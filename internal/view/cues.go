@@ -32,6 +32,8 @@ const (
 	EmoteCurious  = "curious"  // signo curioso: la giantess nota un regalo
 	EmoteCarry    = "carry"    // corazón/mano: lleva y baja pasajeros con cuidado
 	EmoteTickle   = "tickle"   // pluma/cosquillas: reacción involuntaria en la piel
+	EmoteWave     = "wave"     // saludo amistoso al sentirse observado
+	EmoteShy      = "shy"      // cautela/timidez al sentirse observado
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -107,6 +109,11 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 		}
 	case attach.BodyTickled:
 		return []Cue{{Entity: ev.Body, Kind: EmoteTickle}}
+	case encounter.TinyReacted:
+		if ev.Reaction == encounter.ReactionShy {
+			return []Cue{{Entity: ev.Entity, Kind: EmoteShy}}
+		}
+		return []Cue{{Entity: ev.Entity, Kind: EmoteWave}}
 	}
 	if n, ok := event.(ai.Noticed); ok && ecs.Get[crush.Remains](r).Has(n.Target) {
 		if a, ok := agents.Get(n.Entity); ok && a.Scale == "giantess" {
@@ -171,6 +178,10 @@ func (f *Frame) Emote(id ids.ID) string {
 		return EmoteSleep
 	case activity == "use:watch" && using:
 		return EmoteNote
+	case activity == encounter.ReactObserveAction && step == encounter.ReactionShy:
+		return EmoteShy
+	case activity == encounter.ReactObserveAction:
+		return EmoteWave
 	case activity == "observe" && step != "goto":
 		return EmoteLook
 	case activity == "notice_gift" && step != "goto":

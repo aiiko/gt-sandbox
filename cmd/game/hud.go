@@ -153,6 +153,7 @@ var activities = map[string][2]string{
 	"offer_palm":       {"Ofrece la palma", "ofrecer la palma"},
 	"carry_passenger":  {"Lleva pasajeros", "llevar pasajeros"},
 	"notice_gift":      {"Mira un regalo", "mirar un regalo"},
+	"react_observe":    {"Reacciona a la mirada", "reaccionar a la mirada"},
 	"gift":             {"Lleva un regalo", "llevar un regalo"},
 	"watch":            {"Vigila el paso", "vigilar el paso"},
 	"scout":            {"Explora el mapa", "explorar el mapa"},
@@ -292,6 +293,15 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 		CanFollow: true,
 		CanGo:     true,
 	}
+	if s, ok := f.SpaceByID(id); ok && s.HasEncounter {
+		pLabel := map[string]string{"gentle": "Atenta", "curious": "Curiosa", "distracted": "Distraída"}[s.Personality]
+		if pLabel != "" {
+			c.Name += " · " + pLabel
+		}
+		if s.Personality != "" || s.Affinity != 0 {
+			c.Carrying = fmt.Sprintf("Afinidad: %+d", s.Affinity)
+		}
+	}
 	var place []string
 	for _, s := range chain(f, spaceOf(f, id)) {
 		place = append(place, capital(g.display(s)))
@@ -332,6 +342,21 @@ func (g *game) card(f *view.Frame, id ids.ID) *ui.Card {
 		}
 		if t.NearestRefuge != "" && cause == "" && c.Dest == "" {
 			c.Dest = "Refugio cercano: " + capital(t.NearestRefuge)
+		}
+		if t.HasBond && cause == "" {
+			state := "cauteloso"
+			switch {
+			case t.Trust >= 80:
+				state = "confiado"
+			case t.Trust <= -60:
+				state = "temeroso"
+			}
+			bondText := fmt.Sprintf("Vínculo: %s (%+d)", state, t.Trust)
+			if c.Carrying == "" {
+				c.Carrying = bondText
+			} else {
+				c.Carrying += " · " + bondText
+			}
 		}
 		// Si integra la expedición activa, mostrar objetivo, fase y compañeros.
 		if cause == "" && len(f.Colonies) > 0 && f.Colonies[0].Expedition != nil {

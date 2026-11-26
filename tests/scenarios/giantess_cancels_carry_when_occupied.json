@@ -8011,7 +8011,10 @@
               "decay": 0
             }
           ],
-          "fragile": {}
+          "fragile": {},
+          "bond": {
+            "trust": 20
+          }
         }
       }
     },

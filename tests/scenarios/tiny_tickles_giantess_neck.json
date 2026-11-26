@@ -7977,7 +7977,10 @@
               "decay": 0
             }
           ],
-          "fragile": {}
+          "fragile": {},
+          "bond": {
+            "trust": 20
+          }
         }
       }
     },
@@ -8017,6 +8020,9 @@
             }
           ],
           "fragile": {},
+          "bond": {
+            "trust": 20
+          },
           "gripping": {
             "space": "$body_neck",
             "pos": {

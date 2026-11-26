@@ -55,6 +55,7 @@ func options(c *ai.Ctx, action string, utility float64, ok func(enc *Encounter, 
 	if enc == nil || utility <= 0 {
 		return nil
 	}
+	mod := personalityMod(enc, action, c.W.Tick())
 	var out []ai.Option
 	for _, s := range enc.Sightings {
 		if !recent(c.W, s) || enc.Cooling(s.Surface, action, c.W.Tick()) || ok != nil && !ok(enc, s) {
@@ -64,7 +65,7 @@ func options(c *ai.Ctx, action string, utility float64, ok func(enc *Encounter, 
 		if !found {
 			continue
 		}
-		out = append(out, ai.Option{Target: s.Surface, Utility: utility - c.Agent.DistanceCost*distance(c, sp)})
+		out = append(out, ai.Option{Target: s.Surface, Utility: utility + mod - c.Agent.DistanceCost*distance(c, sp)})
 	}
 	return out
 }

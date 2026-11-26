@@ -7993,7 +7993,10 @@
               "decay": 0
             }
           ],
-          "fragile": {}
+          "fragile": {},
+          "bond": {
+            "trust": 20
+          }
         }
       }
     },
@@ -8046,7 +8049,10 @@
               "decay": 0
             }
           ],
-          "fragile": {}
+          "fragile": {},
+          "bond": {
+            "trust": 20
+          }
         }
       }
     }
