@@ -5,6 +5,7 @@ import (
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/ai"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/crush"
@@ -30,6 +31,7 @@ const (
 	EmoteTreasure = "treasure" // estrella: un tiny encontró un tesoro
 	EmoteCurious  = "curious"  // signo curioso: la giantess nota un regalo
 	EmoteCarry    = "carry"    // corazón/mano: lleva y baja pasajeros con cuidado
+	EmoteTickle   = "tickle"   // pluma/cosquillas: reacción involuntaria en la piel
 	cueSurprise   = "surprise" // la giantess nota algo en su mano (solo el retrato)
 )
 
@@ -103,6 +105,8 @@ func cuesOf(r *ecs.Registry, event world.Event) []Cue {
 		if len(ev.Passengers) > 0 {
 			return []Cue{{Entity: ev.Entity, Kind: EmoteCarry}}
 		}
+	case attach.BodyTickled:
+		return []Cue{{Entity: ev.Body, Kind: EmoteTickle}}
 	}
 	if n, ok := event.(ai.Noticed); ok && ecs.Get[crush.Remains](r).Has(n.Target) {
 		if a, ok := agents.Get(n.Entity); ok && a.Scale == "giantess" {
@@ -195,7 +199,7 @@ func (f *Frame) Expression(id ids.ID) string {
 	if !ok {
 		return FaceNeutral
 	}
-	if _, ok := f.cue(id, func(k string) bool { return k == cueSurprise }); ok {
+	if _, ok := f.cue(id, func(k string) bool { return k == cueSurprise || k == EmoteTickle }); ok {
 		return FaceSurprised
 	}
 	using := s.Step == "" || s.Step == "use"

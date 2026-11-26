@@ -55,11 +55,11 @@ func TestManifestMatchesFiles(t *testing.T) {
 	}
 	scene := []string{StepTatami, StepWood, StepTile, DoorFusuma, DoorNoren, FridgeOpen, FridgeClose,
 		CupClink, Bite, Zabuton, TVOn, HandNear, HandLand, HandLift, HandTap, CrumbPop, CrumbTick,
-		NestStore, TinyHop, TinyFall, TinyLand, PassOpen, PassClose, SlipperSlide, GarmentDrop, GarmentRustle, SockRustle}
+		NestStore, TinyHop, TinyFall, TinyLand, PassOpen, PassClose, SlipperSlide, GarmentDrop, GarmentRustle, SockRustle, BodyTickle}
 	for _, step := range tinySteps {
 		scene = append(scene, step)
 	}
-	for _, e := range []string{view.EmoteDiscover, view.EmoteExplore, view.EmoteSweat, view.EmoteSleep, view.EmoteNote, view.EmoteVein} {
+	for _, e := range []string{view.EmoteDiscover, view.EmoteExplore, view.EmoteSweat, view.EmoteSleep, view.EmoteNote, view.EmoteVein, view.EmoteTickle} {
 		scene = append(scene, Emote+e)
 	}
 	for _, id := range scene {

@@ -128,3 +128,7 @@ func TestQW2GarmentsAndGenkanSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestQW3TickleSnapshot(t *testing.T) {
+	verifySnapshotContinuity(t, "tiny_tickles_giantess_neck.json", 15, 90)
+}

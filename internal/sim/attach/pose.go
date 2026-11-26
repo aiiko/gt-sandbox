@@ -77,7 +77,9 @@ func (c SetPose) Apply(w *world.World) error {
 		affected = append(affected, p.Part)
 	}
 	if ecs.Get[BodyState](r).Has(c.Entity) || ecs.Get[BodyJoints](r).Has(c.Entity) {
-		ecs.Get[BodyState](r).Set(c.Entity, BodyState{Pose: c.Pose, PoseTick: w.Tick()})
+		st, _ := ecs.Get[BodyState](r).Get(c.Entity)
+		st.Pose, st.PoseTick = c.Pose, w.Tick()
+		ecs.Get[BodyState](r).Set(c.Entity, st)
 	}
 	applyJoints(w, c.Entity, c.Pose)
 	checkGripOnPose(w, affected)
@@ -151,8 +153,10 @@ func Install(w *world.World) error {
 		world.RegisterEvent[GarmentDonCancelled](w),
 		world.RegisterEvent[GarmentWorn](w),
 		world.RegisterEvent[GarmentDoffed](w),
+		world.RegisterEvent[BodyTickled](w),
 		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -10}, gripUpkeep{}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -5}, garments{}),
+		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -2}, tickle{}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseTopology}, contacts{}),
 		// Mismo Order que space.orphans y nav.portals, registrado después.
 		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 30}, contactCleanup{}),

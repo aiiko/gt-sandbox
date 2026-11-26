@@ -98,6 +98,8 @@ func storySubjects(event world.Event) (actor, place ids.ID) {
 		return ev.Entity, ev.BodySpace
 	case attach.EntityGripped:
 		return ev.Entity, ev.Space
+	case attach.BodyTickled:
+		return ev.Body, ev.Zone
 	}
 	return ids.Nil, ids.Nil
 }
@@ -280,6 +282,15 @@ func storyText(k chronicler, event world.Event) string {
 			return fmt.Sprintf("%s nota tinies dentro de %s y espera.", name(ev.Entity), withArticle(name(ev.Surface)))
 		}
 		return fmt.Sprintf("%s ve tinies bajo su mano y espera.", name(ev.Entity))
+	case attach.BodyTickled:
+		region := ev.Region
+		if region == "" {
+			region = name(ev.Zone)
+		}
+		if region == "" {
+			return fmt.Sprintf("%s siente un cosquilleo repentino.", name(ev.Body))
+		}
+		return fmt.Sprintf("%s siente cosquillas en %s.", name(ev.Body), withArticle(region))
 	case colony.MemberLost:
 		return ""
 	}

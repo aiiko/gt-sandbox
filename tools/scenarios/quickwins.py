@@ -33,6 +33,19 @@ QW2_REFS = {
 
 QW2_GARMENT_ENTITIES = {'$sock_left', '$sock_right', '$hair_tie'}
 
+QW3_SENSITIVITY = {
+    'body_neck': 10,
+    'body_foot_l': 8,
+    'body_foot_r': 8,
+    'body_side_l': 7,
+    'body_side_r': 7,
+    'body_hand_r_back': 5,
+    'body_hand_l': 5,
+    'body_calf_l': 4,
+    'body_calf_r': 4,
+    'body_head': 3,
+}
+
 GENKAN_LOOT = [
     {'kind': 'coin', 'weight': 4},
     {'kind': 'clip', 'weight': 3},
@@ -198,15 +211,25 @@ def with_quickwins(d):
         if not (c['kind'] == 'set_components' and c['data'].get('entity') in QW2_GARMENT_ENTITIES)
     ]
 
-    # Sumar moneda al botín del zapatero del genkan si existe, y hacer visible el charco del baño dentro del cuarto.
+    # Sumar moneda al botín del zapatero del genkan si existe, hacer visible el charco del baño,
+    # y asignar sensibilidad táctil en piel desnuda (QW3; las prendas mantienen 0).
     for e in d['entities']:
-        if e.get('ref') == 'spot_shoes':
+        ref = e.get('ref')
+        if ref == 'spot_shoes':
             sp = e['spawn']['components'].get('search_spot', {})
             loot = sp.get('loot', [])
             if not any(it.get('kind') == 'coin' for it in loot):
                 loot.append({'kind': 'coin', 'weight': 3})
-        elif e.get('ref') == 'bath_puddle':
+        elif ref == 'bath_puddle':
             e['spawn'].setdefault('components', {})['landmark'] = {'range': 1800000}
+        if ref in QW3_SENSITIVITY:
+            bz = e['spawn'].get('components', {}).get('body_zone')
+            if bz is not None:
+                bz['sensitivity'] = QW3_SENSITIVITY[ref]
+        elif e['spawn'].get('components', {}).get('garment'):
+            bz = e['spawn'].get('components', {}).get('body_zone')
+            if bz is not None:
+                bz.pop('sensitivity', None)
 
     d['entities'].extend([
         _sock_entity('sock_left', 'media izquierda', 'sock_left', '$body_foot_l', (1550000, 1750000, 0)),
@@ -621,6 +644,63 @@ def sock_donning_and_hair_tie_shelter(casa):
     return d
 
 
+def tiny_tickles_giantess_neck(casa):
+    d = copy.deepcopy(casa)
+    d['name'] = 'tiny_tickles_giantess_neck'
+    d['notes'] = 'QW3: un tiny camina sin agarre sobre el cuello sensible y provoca cosquillas (body_tickled); otro tiny sujeto no dispara ni cae.'
+    d['ticks'] = 120
+    d.pop('atlas', None)
+    d.pop('random', None)
+
+    tinies = [e for e in d['entities'] if e['spawn'].get('components', {}).get('member')]
+    walker = copy.deepcopy(tinies[0])
+    gripped = copy.deepcopy(tinies[1])
+    d['entities'] = [e for e in d['entities'] if not e['spawn'].get('components', {}).get('member')]
+
+    walker['ref'] = 'tickler'
+    walker['spawn']['name'] = 'Tiny 01'
+    walker['spawn']['location'] = {'space': '$body_neck', 'pos': {'x': 10000, 'y': 10000, 'z': 0}}
+    walker['spawn']['components'].pop('member', None)
+    walker['spawn']['components'].pop('agent', None)
+    walker['spawn']['components']['mover'] = {'speed': 20000, 'scale': 'tiny'}
+    walker['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+    ]
+
+    gripped['ref'] = 'gripped_tiny'
+    gripped['spawn']['name'] = 'Tiny 02'
+    gripped['spawn']['location'] = {'space': '$body_neck', 'pos': {'x': 40000, 'y': 60000, 'z': 0}}
+    gripped['spawn']['components'].pop('member', None)
+    gripped['spawn']['components'].pop('agent', None)
+    gripped['spawn']['components']['mover'] = {'speed': 20000, 'scale': 'tiny'}
+    gripped['spawn']['components']['gripping'] = {
+        'space': '$body_neck',
+        'pos': {'x': 40000, 'y': 60000},
+        'label': 'cuello de la ropa',
+        'until': 500,
+    }
+    gripped['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+    ]
+
+    d['entities'].extend([walker, gripped])
+    g = _entity(d, 'giantess')
+    g['spawn']['components'].pop('agent', None)
+    g['spawn']['components'].pop('encounter', None)
+    d['commands'].extend([
+        {'tick': 1, 'kind': 'move_to', 'data': {'entity': '$giantess', 'space': '$bedroom', 'goal': {'x': 1000000, 'y': 1500000}}},
+        {'tick': 1, 'kind': 'move_to', 'data': {'entity': '$tickler', 'space': '$body_neck', 'goal': {'x': 70000, 'y': 110000}}},
+    ])
+    d['expect'] = COMMON + [
+        {'event': 'body_tickled', 'match': {'body': '$giantess', 'zone': '$body_neck', 'by': '$tickler'}},
+        {'event': 'entity_gripped', 'match': {'entity': '$tickler', 'space': '$body_neck'}},
+        {'no_event': 'crushed'},
+    ]
+    return d
+
+
 def _write(path, d):
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')
@@ -637,6 +717,7 @@ def main():
         giantess_cancels_carry_when_occupied,
         genkan_expedition_and_loot,
         sock_donning_and_hair_tie_shelter,
+        tiny_tickles_giantess_neck,
     ):
         d = fn(casa)
         _write(os.path.join(SCEN, d['name'] + '.json'), d)

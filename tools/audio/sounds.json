@@ -697,6 +697,24 @@
       "layers": [
         {"wave": "noise", "f0": 2400, "f1": 1100, "dur": 0.16, "attack": 0.02, "decay": 0.06, "gain": 0.20, "lp": 1800}
       ]
+    },
+    "body_tickle": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "triangle", "f0": 660, "f1": 990, "dur": 0.08, "attack": 0.004, "decay": 0.03, "gain": 0.20},
+        {"wave": "triangle", "f0": 784, "f1": 1175, "dur": 0.09, "delay": 0.06, "attack": 0.004, "decay": 0.035, "gain": 0.22},
+        {"wave": "sine", "f0": 880, "f1": 1320, "dur": 0.11, "delay": 0.13, "attack": 0.004, "decay": 0.04, "gain": 0.18}
+      ]
+    },
+    "emote_tickle": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "sine", "f0": 740, "f1": 1110, "dur": 0.10, "attack": 0.004, "decay": 0.04, "gain": 0.18}
+      ]
     }
   }
 }

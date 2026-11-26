@@ -3747,7 +3747,8 @@
                 "radius": 50000,
                 "label": "mechón derecho"
               }
-            ]
+            ],
+            "sensitivity": 3
           },
           "contact_surface": {
             "tolerance": 60000,
@@ -3839,7 +3840,8 @@
                 "radius": 50000,
                 "label": "cuello de la ropa"
               }
-            ]
+            ],
+            "sensitivity": 10
           }
         }
       },
@@ -4216,7 +4218,8 @@
                 "radius": 60000,
                 "label": "costura lateral derecha"
               }
-            ]
+            ],
+            "sensitivity": 7
           }
         }
       },
@@ -4301,7 +4304,8 @@
                 "radius": 60000,
                 "label": "costura lateral izquierda"
               }
-            ]
+            ],
+            "sensitivity": 7
           },
           "contact_surface": {
             "tolerance": 60000,
@@ -4425,7 +4429,8 @@
           },
           "body_zone": {
             "body": "$giantess",
-            "region": "mano derecha"
+            "region": "mano derecha",
+            "sensitivity": 5
           }
         }
       },
@@ -4639,7 +4644,8 @@
           },
           "body_zone": {
             "body": "$giantess",
-            "region": "mano izquierda"
+            "region": "mano izquierda",
+            "sensitivity": 5
           },
           "contact_surface": {
             "tolerance": 50000,
@@ -4997,7 +5003,8 @@
                 "radius": 50000,
                 "label": "costura de la pantorrilla izquierda"
               }
-            ]
+            ],
+            "sensitivity": 4
           }
         }
       },
@@ -5063,7 +5070,8 @@
                 "radius": 50000,
                 "label": "borde del calzado izquierdo"
               }
-            ]
+            ],
+            "sensitivity": 8
           },
           "contact_surface": {
             "tolerance": 40000,
@@ -5258,7 +5266,8 @@
                 "radius": 50000,
                 "label": "costura de la pantorrilla derecha"
               }
-            ]
+            ],
+            "sensitivity": 4
           }
         }
       },
@@ -5324,7 +5333,8 @@
                 "radius": 50000,
                 "label": "borde del calzado derecho"
               }
-            ]
+            ],
+            "sensitivity": 8
           },
           "contact_surface": {
             "tolerance": 40000,

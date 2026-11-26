@@ -525,7 +525,8 @@ func (k chronicler) entry(event world.Event) (StoryEntry, bool) {
 	case crush.NearMiss:
 		e.Level, e.Kind, e.plural = LevelMilestone, KindDanger, "%d tinies se salvaron por poco."
 	case ai.Hesitated, encounter.Observed, encounter.Shared,
-		encounter.PalmWithdrawn, encounter.CarryStarted, encounter.PassengerDelivered, encounter.Skipped:
+		encounter.PalmWithdrawn, encounter.CarryStarted, encounter.PassengerDelivered, encounter.Skipped,
+		attach.BodyTickled:
 		e.Level, e.Kind = LevelMilestone, KindEncounter
 	case colony.RefugeBuilt, colony.ExpeditionDeparted, colony.ExpeditionReported,
 		colony.ExpeditionCompleted, colony.StrandedReturned, colony.SupportDiscovered:

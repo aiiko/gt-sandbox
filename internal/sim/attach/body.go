@@ -22,8 +22,12 @@ const (
 
 // BodyState guarda la pose activa de un cuerpo (store "body_state").
 type BodyState struct {
-	Pose     string     `json:"pose"`
-	PoseTick clock.Tick `json:"pose_tick,omitempty"`
+	Pose           string     `json:"pose"`
+	PoseTick       clock.Tick `json:"pose_tick,omitempty"`
+	Tickle         int32      `json:"tickle,omitempty"`
+	TickleZone     ids.ID     `json:"tickle_zone,omitempty"`
+	TickleCooldown clock.Tick `json:"tickle_cooldown,omitempty"`
+	TickleUntil    clock.Tick `json:"tickle_until,omitempty"`
 }
 
 // Joint declara un portal interno entre dos zonas del cuerpo cuyo estado
@@ -65,6 +69,7 @@ func (g GripPoint) radius() units.Length {
 type BodyZone struct {
 	Body        ids.ID      `json:"body,omitempty"`
 	Region      string      `json:"region,omitempty"`
+	Sensitivity int32       `json:"sensitivity,omitempty"`
 	RequireGrip bool        `json:"require_grip,omitempty"`
 	Grips       []GripPoint `json:"grips,omitempty"`
 	// Occluded indica que la ropa o el pelo tapan al tiny y la vista micro

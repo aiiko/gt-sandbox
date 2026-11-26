@@ -403,6 +403,18 @@ XhooooooosX
 ....XsX....
 .....X.....
 ...........''', CORAL, (0xFF, 0xE6, 0xEC), CORAL_SH),
+    'tickle': ('''
+.......XXX.
+......XhoX.
+..X..XhooX.
+.XoXXhooX..
+..X.XhoX...
+...XhoX..X.
+..XooX..XoX
+.XooXX...X.
+.XsX.......
+..X........
+...........''', (0xFF, 0xC4, 0x7A), (0xFF, 0xF3, 0xD6), (0xD4, 0x8B, 0x45)),
 }
 
 

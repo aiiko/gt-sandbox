@@ -57,6 +57,7 @@ const (
 	GarmentDrop   = "garment_drop"   // golpe blando al dejar la pantufla en el piso
 	GarmentRustle = "garment_rustle" // roce de tela al ponerse o sacarse el cárdigan
 	SockRustle    = "sock_rustle"    // roce suave de media o coletero
+	BodyTickle    = "body_tickle"    // risa o sobresalto breve al sentir cosquillas
 	Emote         = "emote_"         // + el símbolo (view.Emote*)
 )
 
@@ -495,6 +496,10 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 			} else {
 				c.add(id, p, 0.75)
 			}
+		}
+	case attach.BodyTickled:
+		if p, ok := pos(ev.Body, cur); ok {
+			c.add(BodyTickle, p, 0.85)
 		}
 	}
 }

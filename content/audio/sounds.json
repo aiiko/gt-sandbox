@@ -47,6 +47,14 @@
       "loop": true
     },
     {
+      "id": "body_tickle",
+      "file": "body_tickle.wav",
+      "category": "efectos",
+      "ms": 240,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
       "id": "chair_creak",
       "file": "chair_creak.wav",
       "category": "efectos",
@@ -203,6 +211,14 @@
       "file": "emote_thirst.wav",
       "category": "efectos",
       "ms": 90,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "emote_tickle",
+      "file": "emote_tickle.wav",
+      "category": "efectos",
+      "ms": 100,
       "voices": 2,
       "cooldown_ms": 400
     },
