@@ -3,7 +3,7 @@
   "seed": 43,
   "atlas": "../art/casa.json",
   "ticks": 1600,
-  "notes": "Base de «Nueva partida»: departamento de 7,4 × 6,4 m con distribuidor, dormitorio, living, cocina, baño y genkan, y 21 piezas de mobiliario independientes (propuesta 20). scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py). Oficios y expediciones: oficios flexibles, puesto de vigía, mirador del respaldo, pasacables del zócalo, refugio del umbral y bolsillo del sofá (tools/scenarios/oficios.py). Mapa corporal: regiones completas de la giantess, articulaciones, apoyos, futón y almohada (tools/scenarios/cuerpo.py).",
+  "notes": "Base de «Nueva partida»: departamento de 7,4 × 6,4 m con distribuidor, dormitorio, living, cocina, baño y genkan, y 21 piezas de mobiliario independientes (propuesta 20). scenario.Randomize sortea la colonia, el cuidado y el perfil. Vida del nido: despensa con meta, puntos de búsqueda, migajas en la silla, servilleta, refugio por armar y punto de reunión (tools/scenarios/vida.py). Oficios y expediciones: oficios flexibles, puesto de vigía, mirador del respaldo, pasacables del zócalo, refugio del umbral y bolsillo del sofá (tools/scenarios/oficios.py). Mapa corporal: regiones completas de la giantess, articulaciones, apoyos, futón y almohada (tools/scenarios/cuerpo.py). Prendas: pantuflas explorables junto al futón y bolsillo del cárdigan (tools/scenarios/prendas.py).",
   "entities": [
     {
       "ref": "house",
@@ -698,6 +698,11 @@
                   "do": "goto"
                 },
                 {
+                  "do": "doff",
+                  "slot": "cardigan",
+                  "place": "chair"
+                },
+                {
                   "do": "pose",
                   "pose": "sit_hover"
                 },
@@ -724,6 +729,10 @@
                 {
                   "do": "use",
                   "ticks": 400
+                },
+                {
+                  "do": "don",
+                  "slot": "cardigan"
                 }
               ]
             }
@@ -1295,12 +1304,40 @@
                   "do": "goto"
                 },
                 {
+                  "do": "doff",
+                  "slot": "slipper_left",
+                  "offset": {
+                    "x": -180000,
+                    "y": -250000
+                  }
+                },
+                {
+                  "do": "doff",
+                  "slot": "slipper_right",
+                  "offset": {
+                    "x": 180000,
+                    "y": -250000
+                  }
+                },
+                {
                   "do": "pose",
                   "pose": "lie_down"
                 },
                 {
                   "do": "use",
                   "ticks": 600
+                },
+                {
+                  "do": "pose",
+                  "pose": "idle"
+                },
+                {
+                  "do": "don",
+                  "slot": "slipper_left"
+                },
+                {
+                  "do": "don",
+                  "slot": "slipper_right"
                 }
               ]
             }
@@ -7708,6 +7745,575 @@
           "landmark": {}
         }
       }
+    },
+    {
+      "ref": "slipper_left",
+      "visual": "slipper",
+      "spawn": {
+        "name": "pantufla izquierda",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -120000
+            },
+            "max": {
+              "x": 50000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1550000,
+            "y": 1450000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -120000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantufla izquierda",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 95000
+                },
+                "radius": 40000,
+                "label": "puntera"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "borde del talón"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -110000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_left",
+            "state": "placed",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "slipper_right",
+      "visual": "slipper",
+      "spawn": {
+        "name": "pantufla derecha",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -120000
+            },
+            "max": {
+              "x": 50000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1700000,
+            "y": 1450000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -120000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantufla derecha",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 95000
+                },
+                "radius": 40000,
+                "label": "puntera"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "borde del talón"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -110000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_right",
+            "state": "placed",
+            "mount_part": "$body_foot_r",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "slipper_fibers",
+      "spawn": {
+        "name": "fibras de pantufla",
+        "location": {
+          "space": "$slipper_left",
+          "pos": {
+            "x": 0,
+            "y": 90000,
+            "z": 0
+          }
+        },
+        "components": {
+          "search_spot": {
+            "look_ticks": 40,
+            "loot": [
+              {
+                "kind": "button",
+                "weight": 2
+              },
+              {
+                "kind": "clip",
+                "weight": 2
+              },
+              {
+                "kind": "thread",
+                "weight": 4
+              },
+              {
+                "kind": "graphite",
+                "weight": 1
+              }
+            ]
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "portal_slipper_l_ankle",
+      "spawn": {
+        "name": "pantufla izquierda a tobillo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$slipper_left",
+              "pos": {
+                "x": 0,
+                "y": -90000
+              }
+            },
+            "b": {
+              "space": "$body_calf_l",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_slipper_l_foot",
+      "spawn": {
+        "name": "pantufla izquierda a pie",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$slipper_left",
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "b": {
+              "space": "$body_foot_l",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_slipper_r_ankle",
+      "spawn": {
+        "name": "pantufla derecha a tobillo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$slipper_right",
+              "pos": {
+                "x": 0,
+                "y": -90000
+              }
+            },
+            "b": {
+              "space": "$body_calf_r",
+              "pos": {
+                "x": 40000,
+                "y": 20000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_slipper_r_foot",
+      "spawn": {
+        "name": "pantufla derecha a pie",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$slipper_right",
+              "pos": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "b": {
+              "space": "$body_foot_r",
+              "pos": {
+                "x": 50000,
+                "y": 120000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "cardigan_pocket",
+      "visual": "cardigan_pocket",
+      "spawn": {
+        "name": "bolsillo del cárdigan",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -60000,
+              "y": -70000
+            },
+            "max": {
+              "x": 60000,
+              "y": 70000
+            }
+          }
+        },
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 200000,
+            "y": 200000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -60000,
+              "y": -70000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "bolsillo del cárdigan",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 55000
+                },
+                "radius": 40000,
+                "label": "borde del bolsillo"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": 60000
+              },
+              {
+                "x": -50000,
+                "y": 0
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "cardigan",
+            "state": "placed",
+            "mount_part": "$body_hips",
+            "worn_pos": {
+              "x": 240000,
+              "y": 120000,
+              "z": 120000
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "portal_cardigan_chest",
+      "spawn": {
+        "name": "bolsillo a pecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$cardigan_pocket",
+              "pos": {
+                "x": 0,
+                "y": 50000
+              }
+            },
+            "b": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 200000,
+                "y": 140000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "portal_cardigan_shoulder",
+      "spawn": {
+        "name": "bolsillo a hombro izquierdo",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$cardigan_pocket",
+              "pos": {
+                "x": -40000,
+                "y": 50000
+              }
+            },
+            "b": {
+              "space": "$body_shoulder_l",
+              "pos": {
+                "x": 60000,
+                "y": 60000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
     }
   ],
   "commands": [
@@ -10947,6 +11553,109 @@
           ],
           "body_state": {
             "pose": "idle"
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$slipper_left",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_left",
+            "state": "placed",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "body_portals": [
+              "$portal_slipper_l_ankle",
+              "$portal_slipper_l_foot"
+            ],
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$slipper_right",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_right",
+            "state": "placed",
+            "mount_part": "$body_foot_r",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "body_portals": [
+              "$portal_slipper_r_ankle",
+              "$portal_slipper_r_foot"
+            ],
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          }
+        }
+      }
+    },
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$cardigan_pocket",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "cardigan",
+            "state": "placed",
+            "mount_part": "$body_hips",
+            "worn_pos": {
+              "x": 240000,
+              "y": 120000,
+              "z": 120000
+            },
+            "body_portals": [
+              "$portal_cardigan_chest",
+              "$portal_cardigan_shoulder"
+            ],
+            "don_warn_ticks": 20
           }
         }
       }

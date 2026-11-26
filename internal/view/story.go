@@ -235,6 +235,9 @@ func storyText(k chronicler, event world.Event) string {
 			return fmt.Sprintf("%s explora %s.", name(ev.Entity), name(ev.Space))
 		}
 	case crush.Crushed:
+		if ev.Source == crush.SourceGarment {
+			return fmt.Sprintf("%s quedó dentro de %s.", name(ev.Remains), withArticle(name(ev.By)))
+		}
 		by := map[string]string{"hand": "la palma", "foot": "un pie", "seat": "la giantess al sentarse"}[ev.Source]
 		if by == "" {
 			by = name(ev.By)
@@ -249,6 +252,9 @@ func storyText(k chronicler, event world.Event) string {
 	case ai.Hesitated:
 		if ev.Source == crush.SourceSeat {
 			return fmt.Sprintf("%s nota tinies en %s y espera antes de sentarse.", name(ev.Entity), name(ev.Surface))
+		}
+		if ev.Source == attach.DefaultGarmentSource {
+			return fmt.Sprintf("%s nota tinies dentro de %s y espera.", name(ev.Entity), withArticle(name(ev.Surface)))
 		}
 		return fmt.Sprintf("%s ve tinies bajo su mano y espera.", name(ev.Entity))
 	case colony.MemberLost:
@@ -285,6 +291,35 @@ func trinketFirst(kind string) string {
 	default:
 		return "su primer tesoro"
 	}
+}
+
+func withArticle(s string) string {
+	switch s {
+	case "baño":
+		return "el baño"
+	case "dormitorio":
+		return "el dormitorio"
+	case "living":
+		return "el living"
+	case "pasillo":
+		return "el pasillo"
+	case "genkan", "recibidor":
+		return "el " + s
+	case "cocina":
+		return "la cocina"
+	}
+	if len(s) == 0 {
+		return s
+	}
+	for _, pref := range []string{"la ", "el ", "las ", "los ", "un ", "una "} {
+		if len(s) >= len(pref) && s[:len(pref)] == pref {
+			return s
+		}
+	}
+	if s[len(s)-1] == 'a' {
+		return "la " + s
+	}
+	return "el " + s
 }
 
 func posePhrase(pose string) string {

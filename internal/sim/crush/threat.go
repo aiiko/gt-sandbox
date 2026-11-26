@@ -1,9 +1,12 @@
 package crush
 
 import (
+	"slices"
+
 	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/space"
@@ -90,6 +93,32 @@ func Threats(w *world.World) []Threat {
 		f := next(e, *st, l.Space, l.Pos.XY())
 		out = append(out, Threat{By: e, Source: SourceFoot, Force: st.Force, Surface: l.Space, Channel: "vibration", inside: footprint(g, f)})
 	})
+	garments := ecs.Get[attach.Garment](r)
+	garIDs := slices.Clone(garments.IDs())
+	slices.Sort(garIDs)
+	for _, id := range garIDs {
+		if r.Despawning(id) || !g.IsSpace(id) {
+			continue
+		}
+		gar, _ := garments.Get(id)
+		if gar.State != attach.GarmentStateDonning || gar.InnerPressure == nil {
+			continue
+		}
+		zone := gar.InnerPressure.Zone
+		src := gar.InnerPressure.EffectiveSource()
+		garID := id
+		out = append(out, Threat{
+			By:      id,
+			Source:  src,
+			Force:   gar.InnerPressure.Force,
+			Surface: id,
+			Channel: "shadow",
+			inside: func(p units.Vec3) bool {
+				l, err := g.FromWorld(garID, p)
+				return err == nil && zone.Contains(l.XY())
+			},
+		})
+	}
 	return out
 }
 

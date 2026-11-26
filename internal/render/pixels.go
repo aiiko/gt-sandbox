@@ -247,14 +247,23 @@ const (
 
 // ArtScene comparte las colocaciones de sprites entre el dibujo y el picking.
 type ArtScene struct {
-	atlas    *Atlas
-	sprites  []sprite
-	clips    map[ids.ID]string
-	marks    map[ids.ID][]string
-	lifts    map[ids.ID]int
-	backdrop *basicSurface
-	cutaway  *cutawayMask
+	atlas         *Atlas
+	sprites       []sprite
+	clips         map[ids.ID]string
+	marks         map[ids.ID][]string
+	lifts         map[ids.ID]int
+	backdrop      *basicSurface
+	cutaway       *cutawayMask
+	threatShadows []threatShadow
 }
+
+type threatShadow struct {
+	rect  image.Rectangle
+	alpha float32
+}
+
+// ThreatShadows devuelve cuántas sombras de compresión de prenda se dibujan en micro.
+func (s ArtScene) ThreatShadows() int { return len(s.threatShadows) }
 
 // cutawayMask recorta la capa frontal de una cavidad cerrada (pasacables del
 // zócalo o bolsillo del sofá) alrededor del tiny seguido (propuesta, 18.7).
@@ -442,8 +451,14 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 		// son el foco o están en contacto directo con él, para que la cabeza o
 		// las caderas no tapen el pie o el suelo en vista micro. Los pies ya
 		// animados por f.Feet sobre el piso tampoco se duplican.
+		if scale == Macro && s.GarmentState == "worn" {
+			continue
+		}
 		if scale == Micro && s.ID != focus {
 			if visuals[s.ID] == ClimbVisual || visuals[s.ID] == "sofa_pocket" || s.Projected {
+				continue
+			}
+			if s.GarmentState == "worn" && !scope[s.ID] {
 				continue
 			}
 			if (visuals[s.ID] == "body_foot_l" || visuals[s.ID] == "body_foot_r") && feetOnFocus[s.Parent] {
@@ -461,6 +476,9 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			carrying: carrying[s.ID], resting: resting[s.ID]}.clips()
 		if s.Mover == nil && !s.Extent.Empty() {
 			names = surfaceClips(s.Pose.Rot, inContact[s.ID])
+			if s.GarmentState != "" && s.GarmentState != "placed" {
+				names = append([]string{s.GarmentState}, names...)
+			}
 		}
 		support, lk := s.Parent, look{}
 		if scale == Macro {
@@ -522,6 +540,32 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 				}
 			}
 		}
+		// Sombra creciente dentro de una prenda en transición (donning).
+		if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
+			for _, th := range f.Threats {
+				if th.Surface != focus {
+					continue
+				}
+				tr := fs.Pose.Transform()
+				c0 := fs.MicroPos(tr.Apply(units.V3(th.Zone.Min.X, th.Zone.Min.Y, 0)), units.V3(th.Zone.Min.X, th.Zone.Min.Y, 0))
+				c1 := fs.MicroPos(tr.Apply(units.V3(th.Zone.Max.X, th.Zone.Max.Y, 0)), units.V3(th.Zone.Max.X, th.Zone.Max.Y, 0))
+				x0, y0 := p.ToScreen(c0)
+				x1, y1 := p.ToScreen(c1)
+				rect := image.Rect(
+					int(math.Round(min(float64(x0), float64(x1)))),
+					int(math.Round(min(float64(y0), float64(y1)))),
+					int(math.Round(max(float64(x0), float64(x1)))),
+					int(math.Round(max(float64(y0), float64(y1)))),
+				).Intersect(canvas)
+				if !rect.Empty() {
+					out.threatShadows = append(out.threatShadows, threatShadow{
+						rect:  rect,
+						alpha: float32(0.22 + 0.36*th.Progress),
+					})
+					out.marks[th.By] = append(out.marks[th.By], "donning_shadow")
+				}
+			}
+		}
 		// Superficie básica si el Space enfocado no tiene arte micro propio
 		// (patas, respaldos, pasacables, bolsillo del sofá o zonas corporales).
 		if fs, ok := f.SpaceByID(focus); ok && !fs.Extent.Empty() {
@@ -568,9 +612,9 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 					look{visual: FootVisual, ghost: true, layer: layerForeground})
 			}
 		}
-		focusArticulated := false
+		focusBody := false
 		if fs, ok := f.SpaceByID(focus); ok {
-			focusArticulated = fs.Kind == space.Articulated
+			focusBody = fs.Kind == space.Articulated || fs.BodyZone
 			for _, gr := range fs.Grips {
 				pos := fs.MicroPos(fs.Pose.Transform().Apply(units.V3(gr.Pos.X, gr.Pos.Y, 0)), units.V3(gr.Pos.X, gr.Pos.Y, 0))
 				add(fs.ID, fs.ID, ids.Nil, pos, []string{"idle"}, false, image.Point{},
@@ -578,7 +622,7 @@ func (a *Atlas) Arrange(f *view.Frame, p camera.Projector, visuals map[ids.ID]st
 			}
 		}
 		for _, pt := range f.Portals {
-			if !pt.Dynamic && !focusArticulated {
+			if !pt.Dynamic && !focusBody {
 				continue
 			}
 			state := []string{"open"}
@@ -1057,6 +1101,17 @@ func (s ArtScene) Draw(dst *ebiten.Image, selected ids.ID) {
 		if sp.id == selected && !sp.ghost {
 			selection = sp.dest.Inset(-2)
 		}
+	}
+	for _, ts := range s.threatShadows {
+		r := ts.rect.Intersect(dst.Bounds())
+		if r.Empty() {
+			continue
+		}
+		a := uint8(math.Round(float64(ts.alpha) * 255))
+		vector.FillRect(dst, float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), float32(r.Dy()),
+			color.NRGBA{R: 32, G: 22, B: 46, A: a}, false)
+		vector.StrokeRect(dst, float32(r.Min.X), float32(r.Min.Y), float32(r.Dx()), float32(r.Dy()), 1,
+			color.NRGBA{R: 220, G: 110, B: 130, A: min(255, a+45)}, false)
 	}
 	if s.cutaway != nil {
 		drawCutaway(dst, s.cutaway)

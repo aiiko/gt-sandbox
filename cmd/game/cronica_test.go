@@ -61,7 +61,7 @@ func TestChronicleAcceptance(t *testing.T) {
 			}
 		}
 		switch {
-		case strings.Contains(e.Text, "quedó bajo"):
+		case strings.Contains(e.Text, "quedó bajo") || strings.Contains(e.Text, "quedó dentro de"):
 			gotCrushed++
 		case strings.Contains(e.Text, "por poco"):
 			gotScared += max(e.Count, 1)

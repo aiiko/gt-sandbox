@@ -53,6 +53,8 @@ const (
 	StepDrop    = "drop"    // dejar lo cargado en Offset
 	StepSpawn   = "spawn"   // crear Count copias de Item alrededor de Offset
 	StepConsume = "consume" // gastar Amount porciones del objeto (sin porciones, todo; ver Keep)
+	StepDon     = "don"     // ponerse la prenda del Slot indicado
+	StepDoff    = "doff"    // sacarse la prenda del Slot indicado y dejarla en Offset
 )
 
 // Step es un paso de una oferta. Offset es relativo a la mano del actor
@@ -63,6 +65,7 @@ type Step struct {
 	Place    string       `json:"place,omitempty"`
 	Ticks    clock.Tick   `json:"ticks,omitempty"`
 	Pose     string       `json:"pose,omitempty"`
+	Slot     string       `json:"slot,omitempty"`
 	Item     *cmds.Spawn  `json:"item,omitempty"`
 	Count    int          `json:"count,omitempty"`
 	Offset   units.Vec2   `json:"offset,omitempty"`
@@ -282,6 +285,10 @@ func (o Offer) Validate() error {
 		case StepPose:
 			if s.Pose == "" {
 				bad(i, "falta pose")
+			}
+		case StepDon, StepDoff:
+			if s.Slot == "" {
+				bad(i, "falta slot")
 			}
 		case StepTake, StepSpawn:
 			if s.Item == nil {
@@ -511,7 +518,7 @@ func RunSteps(c *Ctx, d *Doing, o Offer, loc comp.Location) Result {
 			return Failed
 		}
 		d.Stage++
-		d.Progress, d.Moving, d.Place = 0, false, ids.Nil
+		d.Progress, d.Moving, d.Place, d.Wary = 0, false, ids.Nil, false
 	}
 	return Done
 }
@@ -611,6 +618,10 @@ func doStep(c *Ctx, d *Doing, o Offer, loc comp.Location, s Step) stepResult {
 		if left == 0 && !s.Keep {
 			w.ECS().Despawn(d.Target)
 		}
+	case StepDon:
+		return stepDon(c, d, s)
+	case StepDoff:
+		return stepDoff(c, s)
 	}
 	return stepNext
 }
@@ -684,6 +695,7 @@ func UndoSteps(c *Ctx, d *Doing) {
 	if d.Moving {
 		nav.Halt(c.W, c.Actor)
 	}
+	cancelDonningGarments(c.W, c.Actor)
 	if !d.Item.IsNil() {
 		putDown(c, d, units.Vec2{}, false)
 	}
@@ -700,9 +712,11 @@ func (use) Valid(c *Ctx, d *Doing) bool {
 
 // Interruptible: hasta terminar el paso use. Lo que sigue (dejar cosas,
 // limpiar) se completa siempre.
-// Committed: con la mano apoyada o algo en la mano, solo algo urgente la
-// interrumpe (ver UrgentUtility).
-func (use) Committed(_ *Ctx, d *Doing) bool { return d.Posed || !d.Item.IsNil() }
+// Committed: con la mano apoyada, algo en la mano o una prenda en donning,
+// solo algo urgente la interrumpe (ver UrgentUtility).
+func (use) Committed(c *Ctx, d *Doing) bool {
+	return d.Posed || !d.Item.IsNil() || hasDonningGarment(c.W, c.Actor)
+}
 
 func (use) Interruptible(c *Ctx, d *Doing) bool {
 	o, _, ok := offerOf(c, d)

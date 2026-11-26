@@ -129,10 +129,17 @@ func Install(w *world.World) error {
 	if _, err := ecs.Register[Gripping](r, "gripping"); err != nil {
 		return err
 	}
+	if _, err := ecs.Register[Garment](r, "garment"); err != nil {
+		return err
+	}
 	w.AddInvariant("attach.contact", checkContacts)
+	w.AddInvariant("attach.garment", checkGarments)
 	nav.SetPortalValidator(w, PortalCrossingValid)
 	return errors.Join(
 		world.RegisterCommand[SetPose](w),
+		world.RegisterCommand[DonGarment](w),
+		world.RegisterCommand[CancelDon](w),
+		world.RegisterCommand[DoffGarment](w),
 		world.RegisterEvent[PoseChanged](w),
 		world.RegisterEvent[ContactBegan](w),
 		world.RegisterEvent[ContactEnded](w),
@@ -140,7 +147,12 @@ func Install(w *world.World) error {
 		world.RegisterEvent[PortalClosed](w),
 		world.RegisterEvent[EntityGripped](w),
 		world.RegisterEvent[EntityLostGrip](w),
+		world.RegisterEvent[GarmentDonning](w),
+		world.RegisterEvent[GarmentDonCancelled](w),
+		world.RegisterEvent[GarmentWorn](w),
+		world.RegisterEvent[GarmentDoffed](w),
 		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -10}, gripUpkeep{}),
+		w.Register(world.SystemSpec{Phase: clock.PhaseAct, Order: -5}, garments{}),
 		w.Register(world.SystemSpec{Phase: clock.PhaseTopology}, contacts{}),
 		// Mismo Order que space.orphans y nav.portals, registrado después.
 		w.Register(world.SystemSpec{Phase: clock.PhaseFlush, Order: 1 << 30}, contactCleanup{}),

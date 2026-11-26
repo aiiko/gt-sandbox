@@ -164,7 +164,7 @@ func buildSurf(r *ecs.Registry, g space.Graph, id ids.ID, s Surface) (surf, bool
 	if s.RequireStill {
 		movers := ecs.Get[nav.Mover](r)
 		check := id
-		if !s.Body.IsNil() {
+		if !s.Body.IsNil() && mountedOn(g, id, s.Body) {
 			check = s.Body
 		}
 		if mv, ok := movers.Get(check); ok && mv.Status == nav.Moving {
@@ -315,6 +315,9 @@ func PortalCrossingValid(w *world.World, _, portalID ids.ID) bool {
 	c, ok := ecs.Get[Contact](r).Get(portalID)
 	if !ok {
 		return true // portal estático: ya validado por nav.routeValid
+	}
+	if isJustWorn(w, c.A) || isJustWorn(w, c.B) {
+		return false
 	}
 	p := ecs.Get[nav.Portal](r).Ptr(portalID)
 	if p == nil || p.Disabled {

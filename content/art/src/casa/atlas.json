@@ -3000,6 +3000,39 @@
           "idle": { "frame_ticks": 1, "frames": ["shoe_rack/micro_idle.png"] }
         }
       }
+    },
+    "slipper": {
+      "macro": {
+        "pivot": [7, 12],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["slipper/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [104, 216],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["slipper/micro_idle.png"] },
+          "donning": { "frame_ticks": 1, "frames": ["slipper/micro_donning.png"] }
+        }
+      }
+    },
+    "cardigan_pocket": {
+      "macro": {
+        "pivot": [9, 8],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["cardigan_pocket/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [120, 136],
+        "layer": "background",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["cardigan_pocket/micro_idle.png"] }
+        }
+      }
     }
   }
 }

@@ -48,12 +48,15 @@ const (
 	CrushFar      = "crush_far"  // macro: un golpe sordo donde murió un tiny
 	PassOpen      = "pass_open"
 	PassClose     = "pass_close"
-	WaterDrip     = "water_drip"    // goteo al aparecer gotas de agua
-	FaucetRun     = "faucet_run"    // canilla abierta durante wash_hands / wash_dishes
-	ShowerRun     = "shower_run"    // agua de la ducha corriendo durante shower
-	TrinketClink  = "trinket_clink" // tintineo metálico de un tesoro
-	TrinketFound  = "trinket_found" // sonido suave de hallazgo de tesoro / regalo
-	Emote         = "emote_"        // + el símbolo (view.Emote*)
+	WaterDrip     = "water_drip"     // goteo al aparecer gotas de agua
+	FaucetRun     = "faucet_run"     // canilla abierta durante wash_hands / wash_dishes
+	ShowerRun     = "shower_run"     // agua de la ducha corriendo durante shower
+	TrinketClink  = "trinket_clink"  // tintineo metálico de un tesoro
+	TrinketFound  = "trinket_found"  // sonido suave de hallazgo de tesoro / regalo
+	SlipperSlide  = "slipper_slide"  // roce de pantufla al calzarla
+	GarmentDrop   = "garment_drop"   // golpe blando al dejar la pantufla en el piso
+	GarmentRustle = "garment_rustle" // roce de tela al ponerse o sacarse el cárdigan
+	Emote         = "emote_"         // + el símbolo (view.Emote*)
 )
 
 // Cadencias de los sonidos que salen del estado (en ticks).
@@ -446,6 +449,42 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 	case encounter.GiftNoticed:
 		if p, ok := pos(ev.Entity, cur); ok {
 			c.add(TrinketFound, p, 0.85)
+		}
+	case attach.GarmentDonning:
+		id := SlipperSlide
+		if ev.Slot == "cardigan" {
+			id = GarmentRustle
+		}
+		if p, ok := pos(ev.Garment, cur); ok {
+			if v.Micro && v.Focus == ev.Garment {
+				c.addNear(id, p, 0.9)
+			} else {
+				c.add(id, p, 0.7)
+			}
+		}
+	case attach.GarmentWorn:
+		id := SlipperSlide
+		if ev.Slot == "cardigan" {
+			id = GarmentRustle
+		}
+		if p, ok := pos(ev.Garment, cur); ok {
+			if v.Micro && v.Focus == ev.Garment {
+				c.addNear(id, p, 1.0)
+			} else {
+				c.add(id, p, 0.8)
+			}
+		}
+	case attach.GarmentDoffed:
+		id := GarmentDrop
+		if ev.Slot == "cardigan" {
+			id = GarmentRustle
+		}
+		if p, ok := pos(ev.Garment, cur); ok {
+			if v.Micro && (v.Focus == ev.Garment || v.Focus == ev.Surface) {
+				c.addNear(id, p, 0.9)
+			} else {
+				c.add(id, p, 0.75)
+			}
 		}
 	}
 }

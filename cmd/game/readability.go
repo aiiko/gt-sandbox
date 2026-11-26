@@ -63,6 +63,9 @@ func threatenedSurfaces(f *view.Frame) map[ids.ID]bool {
 			}
 		}
 	}
+	for _, th := range f.Threats {
+		out[th.Surface] = true
+	}
 	return out
 }
 

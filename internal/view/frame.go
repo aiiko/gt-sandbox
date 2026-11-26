@@ -78,6 +78,19 @@ type Space struct {
 	Projected bool   `json:"projected,omitempty"`
 	BodyZone  bool   `json:"body_zone,omitempty"`
 	Grips     []Grip `json:"grips,omitempty"`
+	// GarmentState es el estado de la prenda ("placed", "donning", "worn", "doffing")
+	// si este Space es una prenda explorable.
+	GarmentState string `json:"garment_state,omitempty"`
+}
+
+// Threat representa una compresión interior activa (prenda en donning) para la
+// sombra creciente en vista micro.
+type Threat struct {
+	By       ids.ID     `json:"by"`
+	Surface  ids.ID     `json:"surface"`
+	Source   string     `json:"source"`
+	Zone     units.Rect `json:"zone"`
+	Progress float64    `json:"progress"`
 }
 
 // UsesMicroLocal indica si la vista micro dibuja este Space derecho en su plano
@@ -295,6 +308,8 @@ type Frame struct {
 	Colonies []Colony `json:"colonies,omitempty"`
 	// Marks son pistas vistas y destinos confirmados para el miniplano en micro.
 	Marks []ExpeditionMark `json:"marks,omitempty"`
+	// Threats son las amenazas de compresión interior activas en prendas en donning.
+	Threats []Threat `json:"threats,omitempty"`
 }
 
 // FallOf devuelve la caída en curso de una entidad.
@@ -364,6 +379,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	grids := ecs.Get[nav.Grid](r)
 	surfaces := ecs.Get[attach.Surface](r)
 	zones := ecs.Get[attach.BodyZone](r)
+	garments := ecs.Get[attach.Garment](r)
 	seen := map[ids.ID]bool{}
 	ecs.Get[space.Space](r).Each(func(id ids.ID, sp *space.Space) {
 		p, ok := pose(id)
@@ -373,6 +389,28 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 		s := Space{ID: id, Name: names(id), Kind: sp.Kind, Parent: g.Parent(id), Pose: p,
 			Extent: sp.Extent, Surface: surfaces.Has(id), Mover: mover(id, p.Pos),
 			Climb: sp.IsClimb(), Projected: sp.Projection != nil}
+		if gar, ok := garments.Get(id); ok {
+			s.GarmentState = string(gar.State)
+			if gar.State == attach.GarmentStateDonning && gar.InnerPressure != nil {
+				total := gar.DonWarnTicks
+				if total == 0 {
+					total = attach.DefaultDonWarnTicks
+				}
+				rem := clock.Tick(0)
+				if gar.StateUntil > w.Tick() {
+					rem = gar.StateUntil - w.Tick()
+				}
+				prog := 1.0 - float64(rem)/float64(total)
+				prog = max(0.1, min(1.0, prog))
+				f.Threats = append(f.Threats, Threat{
+					By:       id,
+					Surface:  id,
+					Source:   gar.InnerPressure.EffectiveSource(),
+					Zone:     gar.InnerPressure.Zone,
+					Progress: prog,
+				})
+			}
+		}
 		if z, ok := zones.Get(id); ok {
 			s.BodyZone = true
 			s.Occluded = z.Occluded
@@ -621,6 +659,7 @@ func (c *Capturer) Capture(w *world.World) *Frame {
 	slices.SortFunc(f.Contacts, func(a, b Contact) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Colonies, func(a, b Colony) int { return byID(a.ID, b.ID) })
 	slices.SortFunc(f.Marks, func(a, b ExpeditionMark) int { return byID(a.ID, b.ID) })
+	slices.SortFunc(f.Threats, func(a, b Threat) int { return byID(a.By, b.By) })
 	return f
 }
 

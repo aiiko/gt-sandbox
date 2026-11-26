@@ -13,9 +13,15 @@
        "facing": 0,
        "steps": [
          {"do": "goto"},
+         {"do": "doff", "slot": "slipper_left", "offset": {"x": -200000, "y": -150000}},
+         {"do": "doff", "slot": "slipper_right", "offset": {"x": -200000, "y": 150000}},
+         {"do": "doff", "slot": "cardigan", "offset": {"x": -350000, "y": 0}},
          {"do": "use", "ticks": 240},
          {"do": "spawn", "item": "water_drop", "count": 10, "offset": {"x": -100000, "y": 150000}, "spread": 140000},
-         {"do": "spawn", "item": "puddle", "count": 2, "offset": {"x": -50000, "y": 50000}, "spread": 80000}
+         {"do": "spawn", "item": "puddle", "count": 2, "offset": {"x": -50000, "y": 50000}, "spread": 80000},
+         {"do": "don", "slot": "slipper_left"},
+         {"do": "don", "slot": "slipper_right"},
+         {"do": "don", "slot": "cardigan"}
        ]}
     ]
   }

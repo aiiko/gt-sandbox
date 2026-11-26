@@ -2,10 +2,12 @@ package view
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/sim/ai"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/clock"
 	"gtsandbox/internal/sim/colony"
 	"gtsandbox/internal/sim/comp"
@@ -99,12 +101,18 @@ type Chronicle struct {
 	diaries map[ids.ID][]StoryEntry
 	seq     int
 
-	seeded  bool
-	firsts  map[ids.ID]bool   // lugares a los que ya llegó un tiny
-	routine map[ids.ID]int    // Seq de la actividad en curso de cada giantess
-	empty   map[ids.ID]bool   // despensas que ya se contaron vacías
-	period  clock.Tick        // inicio del período del resumen
-	tally   [tallyKinds]int32 // lo que hizo la colonia en el período
+	seeded       bool
+	firsts       map[ids.ID]bool         // lugares a los que ya llegó un tiny
+	routine      map[ids.ID]int          // Seq de la actividad en curso de cada giantess
+	empty        map[ids.ID]bool         // despensas que ya se contaron vacías
+	garmentRides map[ids.ID]*garmentRide // viajes iniciados en una prenda puesta
+	period       clock.Tick              // inicio del período del resumen
+	tally        [tallyKinds]int32       // lo que hizo la colonia en el período
+}
+
+type garmentRide struct {
+	fromRoom ids.ID
+	riders   map[ids.ID]bool
 }
 
 type tallyKind int
@@ -181,11 +189,83 @@ func (c *Chronicle) Record(r *ecs.Registry, t clock.Tick, event world.Event) {
 		if ev.Found {
 			c.tally[tallyFound]++
 		}
+	case attach.GarmentWorn:
+		fromRoom := k.roomOrSelf(ev.Actor)
+		if fromRoom.IsNil() {
+			fromRoom = k.roomOrSelf(ev.Garment)
+		}
+		riders := map[ids.ID]bool{}
+		locs := comp.Of(r).Location
+		ecs.Get[ai.Agent](r).Each(func(id ids.ID, a *ai.Agent) {
+			if a.Scale == "giantess" || r.Despawning(id) {
+				return
+			}
+			if l, ok := locs.Get(id); ok && l.Space == ev.Garment {
+				riders[id] = true
+			}
+		})
+		if len(riders) > 0 && !fromRoom.IsNil() {
+			c.garmentRides[ev.Garment] = &garmentRide{fromRoom: fromRoom, riders: riders}
+		}
+		return
+	case attach.GarmentDoffed:
+		ride, ok := c.garmentRides[ev.Garment]
+		delete(c.garmentRides, ev.Garment)
+		toRoom := k.roomOrSelf(ev.Surface)
+		if ok && !toRoom.IsNil() && toRoom != ride.fromRoom {
+			locs := comp.Of(r).Location
+			var idsList []ids.ID
+			for tid := range ride.riders {
+				if r.Alive(tid) && !r.Despawning(tid) {
+					if l, lok := locs.Get(tid); lok && l.Space == ev.Garment {
+						idsList = append(idsList, tid)
+					}
+				}
+			}
+			slices.Sort(idsList)
+			for _, tid := range idsList {
+				c.add(StoryEntry{
+					Tick:  t,
+					Text:  fmt.Sprintf("%s viajó en %s hasta %s.", k.name(tid), withArticle(k.name(ev.Garment)), withArticle(k.name(toRoom))),
+					Actor: tid,
+					Place: ev.Garment,
+					Level: LevelMilestone,
+					Kind:  KindColony,
+				})
+			}
+		}
+		return
 	case space.EntityReparented:
 		// la primera vez que un tiny llega a un lugar es un hito
 		if ev.Cause == "portal" && !k.isGiantess(ev.Entity) && ecs.Get[ai.Agent](r).Has(ev.Entity) && !k.isHand(ev.To) && !c.firsts[ev.To] {
 			c.firsts[ev.To] = true
 			c.add(StoryEntry{Tick: t, Text: fmt.Sprintf("Por primera vez un tiny llega a %s.", k.name(ev.To)), Actor: ev.Entity, Place: ev.To, Level: LevelMilestone, Kind: KindColony})
+		}
+		if ev.Cause == "portal" && !k.isGiantess(ev.Entity) && ecs.Get[ai.Agent](r).Has(ev.Entity) {
+			if gar, ok := ecs.Get[attach.Garment](r).Get(ev.From); ok && gar.State == attach.GarmentStateDonning {
+				c.add(StoryEntry{
+					Tick:  t,
+					Text:  fmt.Sprintf("%s salió de %s justo antes de que se la pusiera.", k.name(ev.Entity), withArticle(k.name(ev.From))),
+					Actor: ev.Entity,
+					Place: ev.From,
+					Level: LevelMilestone,
+					Kind:  KindDanger,
+				})
+			}
+			if ride, ok := c.garmentRides[ev.From]; ok && ride.riders[ev.Entity] {
+				delete(ride.riders, ev.Entity)
+				toRoom := k.roomOrSelf(ev.To)
+				if !toRoom.IsNil() && toRoom != ride.fromRoom && !ecs.Get[attach.BodyZone](r).Has(ev.To) {
+					c.add(StoryEntry{
+						Tick:  t,
+						Text:  fmt.Sprintf("%s viajó en %s hasta %s.", k.name(ev.Entity), withArticle(k.name(ev.From)), withArticle(k.name(toRoom))),
+						Actor: ev.Entity,
+						Place: ev.To,
+						Level: LevelMilestone,
+						Kind:  KindColony,
+					})
+				}
+			}
 		}
 	}
 	e, ok := k.entry(event)
@@ -350,7 +430,7 @@ func (c *Chronicle) seed(r *ecs.Registry) {
 		return
 	}
 	c.seeded = true
-	c.diaries, c.firsts, c.routine, c.empty = map[ids.ID][]StoryEntry{}, map[ids.ID]bool{}, map[ids.ID]int{}, map[ids.ID]bool{}
+	c.diaries, c.firsts, c.routine, c.empty, c.garmentRides = map[ids.ID][]StoryEntry{}, map[ids.ID]bool{}, map[ids.ID]int{}, map[ids.ID]bool{}, map[ids.ID]*garmentRide{}
 	loc := comp.Of(r).Location
 	ecs.Get[ai.Agent](r).Each(func(id ids.ID, a *ai.Agent) {
 		if a.Scale == "giantess" {
@@ -416,6 +496,17 @@ func (k chronicler) room(id ids.ID) ids.ID {
 		id = l.Space
 	}
 	return room
+}
+
+func (k chronicler) roomOrSelf(id ids.ID) ids.ID {
+	loc := comp.Of(k.r).Location
+	spaces := ecs.Get[space.Space](k.r)
+	if sp, ok := spaces.Get(id); ok && sp.Kind == space.Static {
+		if l, ok := loc.Get(id); ok && !loc.Has(l.Space) {
+			return id
+		}
+	}
+	return k.room(id)
 }
 
 // entry es la entrada de un evento, con su nivel; false si no se cuenta.

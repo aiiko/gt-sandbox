@@ -91,6 +91,21 @@ func (resolve) Run(w *world.World) {
 		}})
 	}
 
+	for _, gp := range attach.ConsumeGarmentPressures(w) {
+		garID := gp.Garment
+		zone := gp.Pressure.Zone
+		impacts = append(impacts, impact{
+			by:      garID,
+			c:       Crusher{Source: gp.Pressure.EffectiveSource(), Force: gp.Pressure.Force},
+			surface: garID,
+			gap:     0,
+			inside: func(p units.Vec3) bool {
+				l, err := g.FromWorld(garID, p)
+				return err == nil && zone.Contains(l.XY())
+			},
+		})
+	}
+
 	for _, im := range impacts {
 		w.Emit(Pressed{By: im.by, Source: im.c.Source, Surface: im.surface})
 		for _, v := range victims(w, g, im) {

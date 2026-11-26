@@ -1,9 +1,12 @@
 package ai
 
 import (
+	"slices"
+
 	"gtsandbox/internal/core/fixedmath"
 	"gtsandbox/internal/core/ids"
 	"gtsandbox/internal/core/units"
+	"gtsandbox/internal/sim/attach"
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/crush"
 	"gtsandbox/internal/sim/ecs"
@@ -172,6 +175,48 @@ func escape(c *Ctx, t crush.Threat, threats []crush.Threat) (ids.ID, units.Vec2,
 			best, found, bestD = sl.Pos.XY(), true, d
 		}
 	})
+	if ecs.Get[attach.Garment](r).Has(l.Space) {
+		outSpace, outGoal, outD := l.Space, best, bestD
+		portals := ecs.Get[nav.Portal](r)
+		spaces := ecs.Get[space.Space](r)
+		grids := ecs.Get[nav.Grid](r)
+		pids := slices.Clone(portals.IDs())
+		slices.Sort(pids)
+		for _, pid := range pids {
+			p, ok := portals.Get(pid)
+			if !ok || p.Disabled || r.Despawning(pid) {
+				continue
+			}
+			mine, other, ok := side(&p, l.Space)
+			if !ok || !reach(mine.Pos) {
+				continue
+			}
+			if otherSp, ok := spaces.Get(other.Space); !ok || !otherSp.Extent.Contains(other.Pos) {
+				continue
+			}
+			if og := grids.Ptr(other.Space); og != nil && !og.Walkable(other.Pos) {
+				continue
+			}
+			ow, err := g.ToWorld(other.Space, units.V3(other.Pos.X, other.Pos.Y, 0))
+			if err != nil {
+				continue
+			}
+			safe := true
+			for _, x := range threats {
+				if x.Surface == other.Space && x.Covers(ow, margin) {
+					safe = false
+					break
+				}
+			}
+			if !safe {
+				continue
+			}
+			if d := from.DistSq(mine.Pos); !found || d < outD {
+				outSpace, outGoal, outD, found = other.Space, other.Pos, d, true
+			}
+		}
+		return outSpace, outGoal, found
+	}
 	return l.Space, best, found
 }
 

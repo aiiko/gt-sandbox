@@ -168,7 +168,7 @@ var roleLabels = map[string]string{
 
 // remainsCause dice qué aplastó a quien dejó unos restos.
 var remainsCause = map[string]string{"hand": "Aplastado por la palma", "foot": "Aplastado por un pie",
-	"object": "Aplastado por un objeto", "seat": "Aplastado al sentarse"}
+	"object": "Aplastado por un objeto", "seat": "Aplastado al sentarse", "garment": "Aplastado dentro de una prenda"}
 
 // activityText resume en castellano lo que hace un agente.
 func activityText(activity, step string, carrying string) string {

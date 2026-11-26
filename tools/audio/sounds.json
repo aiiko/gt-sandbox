@@ -653,6 +653,33 @@
       "layers": [
         {"wave": "sine", "f0": 523.25, "f1": 698.46, "dur": 0.12, "attack": 0.005, "decay": 0.05, "gain": 0.22}
       ]
+    },
+    "slipper_slide": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 250,
+      "layers": [
+        {"wave": "noise", "f0": 1800, "f1": 700, "dur": 0.16, "attack": 0.02, "decay": 0.06, "gain": 0.28, "lp": 1200},
+        {"wave": "sine", "f0": 110, "f1": 75, "dur": 0.14, "attack": 0.01, "decay": 0.05, "gain": 0.18}
+      ]
+    },
+    "garment_drop": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 250,
+      "layers": [
+        {"wave": "sine", "f0": 140, "f1": 65, "dur": 0.12, "attack": 0.003, "decay": 0.04, "gain": 0.30},
+        {"wave": "noise", "f0": 1200, "f1": 400, "dur": 0.08, "attack": 0.002, "decay": 0.025, "gain": 0.20, "lp": 900}
+      ]
+    },
+    "garment_rustle": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 250,
+      "layers": [
+        {"wave": "noise", "f0": 3200, "f1": 1400, "dur": 0.22, "attack": 0.03, "decay": 0.08, "gain": 0.24, "lp": 2200},
+        {"wave": "noise", "f0": 1800, "f1": 2400, "dur": 0.14, "delay": 0.05, "attack": 0.02, "decay": 0.05, "gain": 0.16, "lp": 1800}
+      ]
     }
   }
 }

@@ -1,0 +1,841 @@
+{
+  "name": "cardigan_pocket_ride",
+  "seed": 205,
+  "ticks": 500,
+  "notes": "P4: un tiny entra al bolsillo del cárdigan en la silla, la giantess se lo pone y lo lleva al baño; otro tiny sale por el portal al pecho.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "bedroom",
+      "visual": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "bathroom",
+      "visual": "apt_bathroom",
+      "spawn": {
+        "name": "baño",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 3000000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "door_bed_bath",
+      "spawn": {
+        "name": "puerta al baño",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 2900000,
+                "y": 1500000
+              }
+            },
+            "b": {
+              "space": "$bathroom",
+              "pos": {
+                "x": 100000,
+                "y": 1500000
+              }
+            },
+            "cost": 10000,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "visual": "giantess",
+      "spawn": {
+        "name": "Giantess",
+        "space": {
+          "kind": "body",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1500000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "mover": {
+            "speed": 1000000,
+            "scale": "giantess"
+          },
+          "agent": {
+            "scale": "giantess",
+            "distance_cost": 0.05,
+            "watch": 2500000
+          },
+          "needs": [
+            {
+              "name": "energy",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hygiene",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hunger",
+              "value": 900,
+              "decay": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "body_foot_l",
+      "visual": "body_foot_l",
+      "spawn": {
+        "name": "pie izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -150000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_foot_r",
+      "visual": "body_foot_r",
+      "spawn": {
+        "name": "pie derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 50000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_calf_l",
+      "visual": "body_calf_l",
+      "spawn": {
+        "name": "pantorrilla izquierda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 160000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -140000,
+            "y": -40000,
+            "z": 120000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_hips",
+      "visual": "body_hips",
+      "spawn": {
+        "name": "cintura y caderas",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 320000,
+              "y": 200000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -160000,
+            "y": -100000,
+            "z": 950000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              "........",
+              "........",
+              "........",
+              "........",
+              "........"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_chest",
+      "visual": "body_chest",
+      "spawn": {
+        "name": "pecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 280000,
+              "y": 360000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -140000,
+            "y": -180000,
+            "z": 1040000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 40000,
+            "version": 0,
+            "rows": [
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              ".......",
+              "......."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pecho"
+          }
+        }
+      }
+    },
+    {
+      "ref": "chair",
+      "object": "chair",
+      "visual": "chair",
+      "spawn": {
+        "name": "silla",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1100000,
+            "y": 1400000,
+            "z": 450000
+          }
+        }
+      }
+    },
+    {
+      "ref": "cardigan_pocket",
+      "visual": "cardigan_pocket",
+      "spawn": {
+        "name": "bolsillo del cárdigan",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -60000,
+              "y": -70000
+            },
+            "max": {
+              "x": 60000,
+              "y": 70000
+            }
+          }
+        },
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 200000,
+            "y": 200000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -60000,
+              "y": -70000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............",
+              "............"
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "bolsillo del cárdigan",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 55000
+                },
+                "radius": 40000,
+                "label": "borde del bolsillo"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 50000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": 60000
+              },
+              {
+                "x": -50000,
+                "y": 0
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "cardigan",
+            "state": "placed",
+            "mount_part": "$body_hips",
+            "worn_pos": {
+              "x": 240000,
+              "y": 120000,
+              "z": 120000
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "portal_cardigan_chest",
+      "spawn": {
+        "name": "bolsillo a pecho",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$cardigan_pocket",
+              "pos": {
+                "x": 0,
+                "y": 50000
+              }
+            },
+            "b": {
+              "space": "$body_chest",
+              "pos": {
+                "x": 200000,
+                "y": 140000
+              }
+            },
+            "cost": 20000,
+            "scale": "tiny",
+            "version": 0,
+            "disabled": true
+          }
+        }
+      }
+    },
+    {
+      "ref": "tiny1",
+      "visual": "tiny",
+      "spawn": {
+        "name": "Tiny 01",
+        "location": {
+          "space": "$chair",
+          "pos": {
+            "x": 120000,
+            "y": 150000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 80000,
+            "scale": "tiny"
+          },
+          "fragile": {}
+        }
+      }
+    },
+    {
+      "ref": "tiny2",
+      "visual": "tiny_ochre",
+      "spawn": {
+        "name": "Tiny 02",
+        "location": {
+          "space": "$cardigan_pocket",
+          "pos": {
+            "x": 0,
+            "y": -20000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 80000,
+            "scale": "tiny"
+          },
+          "fragile": {}
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_components",
+      "data": {
+        "entity": "$cardigan_pocket",
+        "components": {
+          "garment": {
+            "owner": "$giantess",
+            "slot": "cardigan",
+            "state": "placed",
+            "mount_part": "$body_hips",
+            "worn_pos": {
+              "x": 240000,
+              "y": 120000,
+              "z": 120000
+            },
+            "body_portals": [
+              "$portal_cardigan_chest"
+            ],
+            "don_warn_ticks": 10
+          }
+        }
+      }
+    },
+    {
+      "tick": 10,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny1",
+        "space": "$cardigan_pocket",
+        "goal": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "tick": 100,
+      "kind": "don_garment",
+      "data": {
+        "actor": "$giantess",
+        "garment": "$cardigan_pocket",
+        "warn_ticks": 10
+      }
+    },
+    {
+      "tick": 130,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny2",
+        "space": "$body_chest",
+        "goal": {
+          "x": 200000,
+          "y": 140000
+        }
+      }
+    },
+    {
+      "tick": 140,
+      "kind": "move_to",
+      "data": {
+        "entity": "$giantess",
+        "space": "$bathroom",
+        "goal": {
+          "x": 1200000,
+          "y": 1500000
+        }
+      }
+    },
+    {
+      "tick": 320,
+      "kind": "doff_garment",
+      "data": {
+        "actor": "$giantess",
+        "garment": "$cardigan_pocket",
+        "target_space": "$bathroom",
+        "pos": {
+          "x": 1000000,
+          "y": 1500000,
+          "z": 0
+        }
+      }
+    },
+    {
+      "tick": 350,
+      "kind": "move_to",
+      "data": {
+        "entity": "$tiny1",
+        "space": "$bathroom",
+        "goal": {
+          "x": 1300000,
+          "y": 1500000
+        }
+      }
+    }
+  ],
+  "expect": [
+    {
+      "no_event": "command_rejected"
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$cardigan_pocket"
+      }
+    },
+    {
+      "event": "garment_worn",
+      "match": {
+        "garment": "$cardigan_pocket"
+      }
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny2",
+        "to": "$body_chest"
+      }
+    },
+    {
+      "event": "garment_doffed",
+      "match": {
+        "garment": "$cardigan_pocket",
+        "surface": "$bathroom"
+      }
+    },
+    {
+      "event": "entity_reparented",
+      "match": {
+        "entity": "$tiny1",
+        "to": "$bathroom"
+      }
+    },
+    {
+      "no_event": "crushed"
+    }
+  ]
+}

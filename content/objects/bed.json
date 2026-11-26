@@ -3,7 +3,19 @@
   "body": {"radius": 900000, "height": 500000, "mass": 0},
   "components": {
     "offers": [
-      {"action": "sleep", "scale": "giantess", "effects": [{"need": "energy", "amount": 800}], "duration": 600}
+      {
+        "action": "sleep",
+        "scale": "giantess",
+        "effects": [{"need": "energy", "amount": 800}],
+        "steps": [
+          {"do": "goto"},
+          {"do": "doff", "slot": "slipper_left", "offset": {"x": -180000, "y": -250000}},
+          {"do": "doff", "slot": "slipper_right", "offset": {"x": 180000, "y": -250000}},
+          {"do": "use", "ticks": 600},
+          {"do": "don", "slot": "slipper_left"},
+          {"do": "don", "slot": "slipper_right"}
+        ]
+      }
     ]
   }
 }

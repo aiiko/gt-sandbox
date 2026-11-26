@@ -1,0 +1,761 @@
+{
+  "name": "giantess_slipper_routine",
+  "seed": 203,
+  "ticks": 1500,
+  "notes": "P2: la giantess duerme sin pantuflas, se las calza al despertar, va al baño y se las saca antes de ducharse.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "bedroom",
+      "visual": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "bathroom",
+      "visual": "apt_bathroom",
+      "spawn": {
+        "name": "baño",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 3000000,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "door_bed_bath",
+      "spawn": {
+        "name": "puerta al baño",
+        "components": {
+          "portal": {
+            "a": {
+              "space": "$bedroom",
+              "pos": {
+                "x": 2900000,
+                "y": 1500000
+              }
+            },
+            "b": {
+              "space": "$bathroom",
+              "pos": {
+                "x": 100000,
+                "y": 1500000
+              }
+            },
+            "cost": 10000,
+            "version": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "visual": "giantess",
+      "spawn": {
+        "name": "Giantess",
+        "space": {
+          "kind": "body",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1000000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "mover": {
+            "speed": 1000000,
+            "scale": "giantess"
+          },
+          "agent": {
+            "scale": "giantess",
+            "distance_cost": 0.05,
+            "watch": 2500000
+          },
+          "needs": [
+            {
+              "name": "energy",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hygiene",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hunger",
+              "value": 900,
+              "decay": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "body_foot_l",
+      "visual": "body_foot_l",
+      "spawn": {
+        "name": "pie izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -150000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_foot_r",
+      "visual": "body_foot_r",
+      "spawn": {
+        "name": "pie derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 50000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_calf_l",
+      "visual": "body_calf_l",
+      "spawn": {
+        "name": "pantorrilla izquierda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 160000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -140000,
+            "y": -40000,
+            "z": 120000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "slipper_left",
+      "visual": "slipper",
+      "spawn": {
+        "name": "pantufla izquierda",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -120000
+            },
+            "max": {
+              "x": 50000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1150000,
+            "y": 1450000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -120000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantufla izquierda",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 95000
+                },
+                "radius": 40000,
+                "label": "puntera"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "borde del talón"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -110000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_left",
+            "state": "placed",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "slipper_right",
+      "visual": "slipper",
+      "spawn": {
+        "name": "pantufla derecha",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -120000
+            },
+            "max": {
+              "x": 50000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1250000,
+            "y": 1450000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -120000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantufla derecha",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 95000
+                },
+                "radius": 40000,
+                "label": "puntera"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "borde del talón"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -110000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_right",
+            "state": "placed",
+            "mount_part": "$body_foot_r",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "bed",
+      "object": "bed",
+      "visual": "bed",
+      "spawn": {
+        "name": "cama",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1000000,
+            "y": 1500000,
+            "z": 0
+          }
+        }
+      }
+    },
+    {
+      "ref": "shower_tray",
+      "object": "shower_tray",
+      "visual": "shower_tray",
+      "spawn": {
+        "name": "plato de ducha",
+        "location": {
+          "space": "$bathroom",
+          "pos": {
+            "x": 2000000,
+            "y": 1000000,
+            "z": 0
+          }
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_need",
+      "data": {
+        "entity": "$giantess",
+        "need": "energy",
+        "value": 150
+      }
+    },
+    {
+      "tick": 750,
+      "kind": "set_need",
+      "data": {
+        "entity": "$giantess",
+        "need": "hygiene",
+        "value": 100
+      }
+    }
+  ],
+  "expect": [
+    {
+      "no_event": "command_rejected"
+    },
+    {
+      "event": "action_done",
+      "match": {
+        "entity": "$giantess",
+        "what": "sleep"
+      }
+    },
+    {
+      "event": "garment_worn",
+      "match": {
+        "garment": "$slipper_left"
+      }
+    },
+    {
+      "event": "garment_worn",
+      "match": {
+        "garment": "$slipper_right"
+      }
+    },
+    {
+      "event": "garment_doffed",
+      "match": {
+        "garment": "$slipper_left",
+        "surface": "$bathroom"
+      }
+    },
+    {
+      "event": "action_done",
+      "match": {
+        "entity": "$giantess",
+        "what": "shower"
+      }
+    }
+  ]
+}

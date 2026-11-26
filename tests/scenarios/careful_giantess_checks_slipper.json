@@ -1,0 +1,560 @@
+{
+  "name": "careful_giantess_checks_slipper",
+  "seed": 204,
+  "ticks": 400,
+  "notes": "P2: con agent.care alto, la giantess nota al tiny en la pantufla, titubea y extiende el aviso para que escape sin morir.",
+  "entities": [
+    {
+      "ref": "house",
+      "spawn": {
+        "name": "house",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "ref": "bedroom",
+      "visual": "bedroom",
+      "spawn": {
+        "name": "dormitorio",
+        "space": {
+          "kind": "static",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 3000000,
+              "y": 3000000
+            }
+          }
+        },
+        "location": {
+          "space": "$house",
+          "pos": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 100000,
+            "version": 0,
+            "rows": [
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              "..............................",
+              ".............................."
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000
+          }
+        }
+      }
+    },
+    {
+      "ref": "giantess",
+      "visual": "giantess",
+      "spawn": {
+        "name": "Giantess",
+        "space": {
+          "kind": "body",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1000000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "mover": {
+            "speed": 1000000,
+            "scale": "giantess"
+          },
+          "agent": {
+            "scale": "giantess",
+            "distance_cost": 0.05,
+            "watch": 2500000,
+            "care": 1.0
+          },
+          "needs": [
+            {
+              "name": "energy",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hygiene",
+              "value": 900,
+              "decay": 0
+            },
+            {
+              "name": "hunger",
+              "value": 900,
+              "decay": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "body_foot_l",
+      "visual": "body_foot_l",
+      "spawn": {
+        "name": "pie izquierdo",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -150000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_foot_r",
+      "visual": "body_foot_r",
+      "spawn": {
+        "name": "pie derecho",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 100000,
+              "y": 240000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": 50000,
+            "y": -80000,
+            "z": 20000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              ".....",
+              "....."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "body_calf_l",
+      "visual": "body_calf_l",
+      "spawn": {
+        "name": "pantorrilla izquierda",
+        "space": {
+          "kind": "articulated",
+          "extent": {
+            "min": {
+              "x": 0,
+              "y": 0
+            },
+            "max": {
+              "x": 80000,
+              "y": 160000
+            }
+          }
+        },
+        "location": {
+          "space": "$giantess",
+          "pos": {
+            "x": -140000,
+            "y": -40000,
+            "z": 120000
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": 0,
+              "y": 0
+            },
+            "cell": 20000,
+            "version": 0,
+            "rows": [
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "....",
+              "...."
+            ]
+          }
+        }
+      }
+    },
+    {
+      "ref": "slipper_left",
+      "visual": "slipper",
+      "spawn": {
+        "name": "pantufla izquierda",
+        "space": {
+          "kind": "rigid",
+          "extent": {
+            "min": {
+              "x": -50000,
+              "y": -120000
+            },
+            "max": {
+              "x": 50000,
+              "y": 120000
+            }
+          }
+        },
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1150000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "nav_grid": {
+            "origin": {
+              "x": -50000,
+              "y": -120000
+            },
+            "cell": 10000,
+            "version": 0,
+            "rows": [
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              "..........",
+              ".........."
+            ]
+          },
+          "body_zone": {
+            "body": "$giantess",
+            "region": "pantufla izquierda",
+            "occluded": true,
+            "grips": [
+              {
+                "pos": {
+                  "x": 0,
+                  "y": 95000
+                },
+                "radius": 40000,
+                "label": "puntera"
+              },
+              {
+                "pos": {
+                  "x": 0,
+                  "y": -100000
+                },
+                "radius": 40000,
+                "label": "borde del talón"
+              }
+            ]
+          },
+          "contact_surface": {
+            "tolerance": 40000,
+            "scale": "tiny",
+            "stable_ticks": 2,
+            "require_still": true,
+            "body": "$giantess",
+            "access": [
+              {
+                "x": 0,
+                "y": -110000
+              },
+              {
+                "x": -40000,
+                "y": -40000
+              }
+            ],
+            "access_reach": 80000
+          },
+          "garment": {
+            "owner": "$giantess",
+            "slot": "slipper_left",
+            "state": "placed",
+            "mount_part": "$body_foot_l",
+            "worn_pos": {
+              "x": 50000,
+              "y": 120000,
+              "z": -10000
+            },
+            "inner_pressure": {
+              "zone": {
+                "min": {
+                  "x": -40000,
+                  "y": -80000
+                },
+                "max": {
+                  "x": 40000,
+                  "y": 70000
+                }
+              },
+              "force": 50,
+              "source": "garment"
+            },
+            "don_warn_ticks": 20
+          },
+          "landmark": {}
+        }
+      }
+    },
+    {
+      "ref": "bed",
+      "visual": "bed",
+      "spawn": {
+        "name": "cama",
+        "location": {
+          "space": "$bedroom",
+          "pos": {
+            "x": 1000000,
+            "y": 1500000,
+            "z": 0
+          }
+        },
+        "components": {
+          "offers": [
+            {
+              "action": "sleep",
+              "scale": "giantess",
+              "effects": [
+                {
+                  "need": "energy",
+                  "amount": 700
+                }
+              ],
+              "steps": [
+                {
+                  "do": "goto"
+                },
+                {
+                  "do": "use",
+                  "ticks": 15
+                },
+                {
+                  "do": "don",
+                  "slot": "slipper_left"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ref": "tiny1",
+      "visual": "tiny",
+      "spawn": {
+        "name": "Tiny 01",
+        "location": {
+          "space": "$slipper_left",
+          "pos": {
+            "x": 0,
+            "y": 20000,
+            "z": 0
+          }
+        },
+        "body": {
+          "radius": 2000,
+          "height": 8000,
+          "mass": 1
+        },
+        "components": {
+          "mover": {
+            "speed": 40000,
+            "scale": "tiny"
+          },
+          "agent": {
+            "scale": "tiny",
+            "reflex": 4
+          },
+          "needs": [
+            {
+              "name": "energy",
+              "value": 900,
+              "decay": 0
+            }
+          ],
+          "fragile": {}
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "tick": 0,
+      "kind": "set_need",
+      "data": {
+        "entity": "$giantess",
+        "need": "energy",
+        "value": 150
+      }
+    }
+  ],
+  "expect": [
+    {
+      "no_event": "command_rejected"
+    },
+    {
+      "event": "hesitated",
+      "match": {
+        "entity": "$giantess",
+        "surface": "$slipper_left",
+        "source": "garment"
+      }
+    },
+    {
+      "event": "garment_donning",
+      "match": {
+        "garment": "$slipper_left"
+      }
+    },
+    {
+      "event": "garment_worn",
+      "match": {
+        "garment": "$slipper_left"
+      }
+    },
+    {
+      "no_event": "crushed"
+    }
+  ]
+}
