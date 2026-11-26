@@ -5,6 +5,7 @@ y sus escenarios de cierre en tests/scenarios/ (docs/ideas.md).
     python tools/scenarios/vida.py
     python tools/scenarios/oficios.py
     python tools/scenarios/cuerpo.py
+    python tools/scenarios/actividades.py
     python tools/scenarios/prendas.py
     python tools/scenarios/quickwins.py
 
@@ -29,6 +30,7 @@ QW2_REFS = {
     'genkan_bag', 'genkan_bag_spot', 'genkan_bag_target',
     'genkan_bag_crumb_1', 'genkan_bag_crumb_2',
     'spot_bedroom_door', 'spot_hallway_bath',
+    'bath_mat', 'potted_plant', 'plant_pot_climb', 'spot_living_plant',
 }
 
 QW2_GARMENT_ENTITIES = {'$sock_left', '$sock_right', '$hair_tie'}
@@ -236,6 +238,23 @@ def with_quickwins(d):
             bz = e['spawn'].get('components', {}).get('body_zone')
             if bz is not None:
                 bz.pop('sensitivity', None)
+        # QW5: la arrocera en $counter provee visual y landmark; su oferta cook_rice vive en $counter para la giantess.
+        if ref == 'rice_cooker':
+            e['object'] = 'rice_cooker'
+            e['visual'] = 'rice_cooker'
+            e['spawn'].setdefault('components', {})['offers'] = []
+        elif ref == 'counter':
+            rc = json.load(open(os.path.join(ROOT, 'content', 'objects', 'rice_cooker.json'), encoding='utf-8'))
+            cook_offer = copy.deepcopy(rc['components']['offers'][0])
+            cook_offer['approach'] = {'x': 950000, 'y': 1150000}
+            for st in cook_offer.get('steps', []):
+                if isinstance(st.get('item'), str):
+                    item_obj = json.load(open(os.path.join(ROOT, 'content', 'objects', st['item'] + '.json'), encoding='utf-8'))
+                    item_obj.pop('visual', None)
+                    st['item'] = item_obj
+            offers = e['spawn'].setdefault('components', {}).setdefault('offers', [])
+            offers[:] = [o for o in offers if o.get('action') != 'cook_rice']
+            offers.append(cook_offer)
 
     d['entities'].extend([
         _sock_entity('sock_left', 'media izquierda', 'sock_left', '$body_foot_l', (1550000, 1750000, 0)),
@@ -382,6 +401,41 @@ def with_quickwins(d):
                 'components': {
                     'search_spot': {},
                     'landmark': {'range': 2500000},
+                },
+            },
+        },
+        {
+            'ref': 'bath_mat',
+            'visual': 'bath_mat',
+            'spawn': {
+                'name': 'alfombra del baño',
+                'location': {'space': '$bathroom', 'pos': {'x': 1550000, 'y': 550000, 'z': 0}},
+                'components': {},
+            },
+        },
+        {
+            'ref': 'potted_plant',
+            'object': 'potted_plant',
+            'visual': 'potted_plant',
+            'spawn': {
+                'name': 'maceta del living',
+                'space': {'kind': 'elevated', 'extent': _rect_centered(18, 18)},
+                'location': {'space': '$living', 'pos': {'x': 3850000, 'y': 2850000, 'z': 300000}},
+                'components': {
+                    'nav_grid': _grid(36, 36, cell_cm=1, origin=(-18, -18)),
+                },
+            },
+        },
+        _portal('plant_pot_climb', 'subida a la maceta del living',
+                '$living', (3550000, 2650000), '$potted_plant', (-140000, -140000), disabled=False, cost=30000),
+        {
+            'ref': 'spot_living_plant',
+            'spawn': {
+                'name': 'borde de la maceta del living',
+                'location': {'space': '$living', 'pos': {'x': 3550000, 'y': 2650000, 'z': 0}},
+                'components': {
+                    'search_spot': {},
+                    'landmark': {'range': 1800000},
                 },
             },
         },
@@ -831,6 +885,127 @@ def bond_evolves_from_share_and_near_miss(casa):
     return d
 
 
+def giantess_cooks_rice_and_colony_hauls(casa):
+    d = copy.deepcopy(casa)
+    d['name'] = 'giantess_cooks_rice_and_colony_hauls'
+    d['notes'] = 'QW5: la giantess usa la arrocera en la cocina y genera arroz multiporción (4); un tiny lo acarrea al nido.'
+    d['ticks'] = 3000
+    d.pop('atlas', None)
+    d.pop('random', None)
+
+    tinies = [e for e in d['entities'] if e['spawn'].get('components', {}).get('member')]
+    hauler = copy.deepcopy(tinies[0])
+    d['entities'] = [e for e in d['entities'] if not e['spawn'].get('components', {}).get('member')]
+
+    # Nido vacío para priorizar acarreo de comida.
+    nest = _entity(d, 'nest')
+    nest['spawn']['components']['portions'] = {'items': [{'resource': 'water', 'amount': 6}]}
+
+    hauler['ref'] = 'rice_hauler'
+    hauler['spawn']['name'] = 'Tiny 01'
+    hauler['spawn']['location'] = {'space': '$counter', 'pos': {'x': 450000, 'y': 1250000, 'z': 0}}
+    hauler['spawn']['components']['mover'] = {'speed': 80000, 'scale': 'tiny'}
+    hauler['spawn']['components']['agent'].update({
+        'work': 0.9,
+        'curiosity': 0,
+        'sight': 800000,
+        'reflex': 4,
+        'known': [
+            {'entity': '$nest', 'since': 0},
+            {'entity': '$leg1_bottom', 'since': 0},
+            {'entity': '$leg1_top', 'since': 0},
+            {'entity': '$door_bedroom', 'since': 0},
+            {'entity': '$door_kitchen', 'since': 0},
+            {'entity': '$duct_living', 'since': 0},
+            {'entity': '$duct_bedroom', 'since': 0},
+            {'entity': '$counter_cable_bottom', 'since': 0},
+            {'entity': '$counter_cable_top', 'since': 0},
+        ],
+    })
+    hauler['spawn']['components']['member'] = {'colony': '$nest', 'role': 'porter'}
+    hauler['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'thirst', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+    ]
+    d['entities'].append(hauler)
+
+    g = _entity(d, 'giantess')
+    g['spawn']['location'] = {'space': '$kitchen', 'pos': {'x': 1200000, 'y': 1100000, 'z': 0}}
+    g['spawn']['components'].pop('encounter', None)
+    # En este test aislado evitamos que desayuno/tv compitan con la arrocera.
+    for ref in ('fridge', 'tv', 'sofa'):
+        for e in d['entities']:
+            if e.get('ref') == ref:
+                e['spawn'].setdefault('components', {})['offers'] = []
+    g['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 550, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 650, 'decay': 0},
+        {'name': 'hygiene', 'value': 950, 'decay': 0},
+    ]
+    d['expect'] = COMMON + [
+        {'event': 'action_done', 'match': {'entity': '$giantess', 'action': 'use', 'what': 'cook_rice'}},
+        {'event': 'items_left', 'match': {'entity': '$giantess', 'motive': 'cook_rice'}},
+        {'event': 'stored', 'match': {'colony': '$nest', 'resource': 'food', 'portions': 4}},
+        {'no_event': 'crushed'},
+    ]
+    return d
+
+
+def giantess_waters_plant_and_tinies_drink(casa):
+    d = copy.deepcopy(casa)
+    d['name'] = 'giantess_waters_plant_and_tinies_drink'
+    d['notes'] = 'QW5: la giantess riega la maceta del living dejando agua con vencimiento; un tiny sediento sube y bebe.'
+    d['ticks'] = 800
+    d.pop('atlas', None)
+    d.pop('random', None)
+
+    tinies = [e for e in d['entities'] if e['spawn'].get('components', {}).get('member')]
+    drinker = copy.deepcopy(tinies[0])
+    d['entities'] = [e for e in d['entities'] if not e['spawn'].get('components', {}).get('member')]
+
+    nest = _entity(d, 'nest')
+    nest['spawn']['components']['portions'] = {'items': [{'resource': 'food', 'amount': 6}]}
+
+    drinker['ref'] = 'plant_drinker'
+    drinker['spawn']['name'] = 'Tiny 01'
+    drinker['spawn']['location'] = {'space': '$living', 'pos': {'x': 3550000, 'y': 2650000, 'z': 0}}
+    drinker['spawn']['components'].pop('member', None)
+    drinker['spawn']['components']['mover'] = {'speed': 60000, 'scale': 'tiny'}
+    drinker['spawn']['components']['agent'].update({'work': 0, 'curiosity': 0.6, 'sight': 180000, 'reflex': 4})
+    drinker['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'thirst', 'value': 120, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 950, 'decay': 0},
+    ]
+    d['entities'].append(drinker)
+
+    g = _entity(d, 'giantess')
+    g['spawn']['location'] = {'space': '$living', 'pos': {'x': 3100000, 'y': 2500000, 'z': 0}}
+    g['spawn']['components'].pop('encounter', None)
+    for ref in ('tv', 'sofa', 'fridge'):
+        for e in d['entities']:
+            if e.get('ref') == ref:
+                e['spawn'].setdefault('components', {})['offers'] = []
+    g['spawn']['components']['needs'] = [
+        {'name': 'hunger', 'value': 950, 'decay': 0},
+        {'name': 'energy', 'value': 950, 'decay': 0},
+        {'name': 'fun', 'value': 300, 'decay': 0},
+        {'name': 'hygiene', 'value': 950, 'decay': 0},
+    ]
+    d['expect'] = COMMON + [
+        {'event': 'action_done', 'match': {'entity': '$giantess', 'action': 'use', 'what': 'water_plant'}},
+        {'event': 'items_left', 'match': {'entity': '$giantess', 'motive': 'water_plant'}},
+        {'event': 'entity_reparented', 'match': {'entity': '$plant_drinker', 'to': '$potted_plant'}},
+        {'event': 'action_done', 'match': {'entity': '$plant_drinker', 'action': 'use', 'what': 'drink'}},
+        {'no_event': 'crushed'},
+    ]
+    return d
+
+
 def _write(path, d):
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(d, ensure_ascii=False, indent=2) + '\n')
@@ -850,6 +1025,8 @@ def main():
         tiny_tickles_giantess_neck,
         tinies_react_to_observe_by_trust,
         bond_evolves_from_share_and_near_miss,
+        giantess_cooks_rice_and_colony_hauls,
+        giantess_waters_plant_and_tinies_drink,
     ):
         d = fn(casa)
         _write(os.path.join(SCEN, d['name'] + '.json'), d)

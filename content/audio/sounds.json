@@ -399,6 +399,22 @@
       "cooldown_ms": 200
     },
     {
+      "id": "plant_rain",
+      "file": "plant_rain.wav",
+      "category": "efectos",
+      "ms": 500,
+      "voices": 2,
+      "cooldown_ms": 400
+    },
+    {
+      "id": "rice_steam",
+      "file": "rice_steam.wav",
+      "category": "efectos",
+      "ms": 450,
+      "voices": 1,
+      "cooldown_ms": 450
+    },
+    {
       "id": "shower_run",
       "file": "shower_run.wav",
       "category": "efectos",

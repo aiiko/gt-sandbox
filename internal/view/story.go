@@ -126,6 +126,10 @@ func storyText(k chronicler, event world.Event) string {
 			return "Quedan gotas de agua en la mesada."
 		case "shower":
 			return "Quedan gotas de agua y un charco junto a la ducha."
+		case "cook_rice":
+			return "Quedan granos de arroz y vapor condensado en la mesada."
+		case "water_plant":
+			return "Quedan gotas de riego y un charco sobre la maceta."
 		}
 	case encounter.Observed:
 		if ev.Seen == 1 {

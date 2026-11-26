@@ -41,6 +41,10 @@ var displayNames = map[string]string{
 	"body_rear":    "trasero",
 	"fiber":        "una fibra",
 	"trinket_coin": "una moneda",
+	"bath_mat":     "alfombra del baño",
+	"rice_cooker":  "arrocera",
+	"rice_grain":   "granos de arroz",
+	"potted_plant": "maceta del living",
 }
 
 // display devuelve el nombre de una entidad para la interfaz de partida.
@@ -139,6 +143,8 @@ var activities = map[string][2]string{
 	"use:wash_hands":   {"Se lava las manos", "lavarse las manos"},
 	"use:wash_dishes":  {"Lava los platos", "lavar los platos"},
 	"use:shower":       {"Se ducha", "ducharse"},
+	"use:cook_rice":    {"Cocina arroz", "cocinar arroz"},
+	"use:water_plant":  {"Riega la maceta", "regar la maceta"},
 	"use:nibble":       {"Mordisquea una migaja", "mordisquear una migaja"},
 	"use:shelter":      {"Descansa en la taza", "descansar en la taza"},
 	"use:sleep":        {"Duerme", "dormir"},

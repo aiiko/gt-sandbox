@@ -12,7 +12,7 @@ func TestDefaultAndMerge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Join(lib.Names(), ","); got != "bed,chair,crumb,cup,desk,fiber,fridge,napkin,nest,plate,puddle,refuge_site,shower_tray,sink,sofa,trinket_button,trinket_clip,trinket_coin,trinket_graphite,trinket_thread,tv,washbasin,water_drop" {
+	if got := strings.Join(lib.Names(), ","); got != "bed,chair,crumb,cup,desk,fiber,fridge,napkin,nest,plate,potted_plant,puddle,refuge_site,rice_cooker,rice_grain,shower_tray,sink,sofa,trinket_button,trinket_clip,trinket_coin,trinket_graphite,trinket_thread,tv,washbasin,water_drop" {
 		t.Fatalf("objetos: %s", got)
 	}
 	raw, err := lib.Spawn("crumb", json.RawMessage(`{"name":"c1","components":{"mover":{"speed":1}}}`))

@@ -2,6 +2,7 @@ package scenario_test
 
 import (
 	"bytes"
+	"maps"
 	"path/filepath"
 	"slices"
 	"testing"
@@ -52,7 +53,7 @@ func verifySnapshotContinuity(t *testing.T, scenFile string, saveTick, afterTick
 			specB.Commands = append(specB.Commands, c)
 		}
 	}
-	inB := &scenario.Instance{Spec: &specB, World: wB, Refs: inA.Refs}
+	inB := &scenario.Instance{Spec: &specB, World: wB, Refs: inA.Refs, Visuals: maps.Clone(inA.Visuals)}
 	pB, err := inB.Player()
 	if err != nil {
 		t.Fatal(err)
@@ -156,5 +157,20 @@ func TestQW4BondSnapshotAndTrustEvolution(t *testing.T) {
 	}
 	if b, ok := bonds.Get(in.Refs["floor_tiny"]); !ok || b.Trust >= 10 {
 		t.Fatalf("floor_tiny debía bajar su confianza tras near_miss (<10), tiene %+v (ok=%v)", b, ok)
+	}
+}
+
+func TestQW5MicroEventsSnapshot(t *testing.T) {
+	for _, tc := range []struct {
+		file       string
+		saveTick   int
+		afterTicks int
+	}{
+		{"giantess_cooks_rice_and_colony_hauls.json", 140, 400},
+		{"giantess_waters_plant_and_tinies_drink.json", 120, 400},
+	} {
+		t.Run(tc.file, func(t *testing.T) {
+			verifySnapshotContinuity(t, tc.file, tc.saveTick, tc.afterTicks)
+		})
 	}
 }

@@ -8,7 +8,7 @@
       "seed": 42,
       "tick": 30,
       "view": "macro",
-      "digest": "f82773eefa6a6856"
+      "digest": "94386937e5264d64"
     },
     {
       "name": "escritorio",
@@ -22,7 +22,7 @@
         200,
         -90
       ],
-      "digest": "2dce50bbf0711352"
+      "digest": "bd082de1f5ae43bc"
     },
     {
       "name": "mano-apoyada",
@@ -32,7 +32,7 @@
       "tick": 300,
       "view": "micro",
       "micro": "palma",
-      "digest": "abf57c36ec8226d1"
+      "digest": "4ee8e09801d68dda"
     },
     {
       "name": "viaje-macro",
@@ -41,7 +41,7 @@
       "seed": 42,
       "tick": 530,
       "view": "macro",
-      "digest": "1460a2c25451478d"
+      "digest": "85b0af3cc3c05338"
     },
     {
       "name": "viaje",
@@ -51,7 +51,7 @@
       "tick": 530,
       "view": "micro",
       "follow": "Tiny 01",
-      "digest": "6c2c5148ad2e91a5"
+      "digest": "bc738e379ebd5250"
     },
     {
       "name": "llegada-living",
@@ -61,7 +61,7 @@
       "tick": 600,
       "view": "micro",
       "micro": "mesa del living",
-      "digest": "5e13c82e98d83704"
+      "digest": "0395976d000d618a"
     },
     {
       "name": "caida",
@@ -71,7 +71,7 @@
       "tick": 17,
       "view": "micro",
       "follow": "Tiny 01",
-      "digest": "19bba9aa7f5ef3ea"
+      "digest": "b36e13552d792ab6"
     },
     {
       "name": "sombra-de-la-mano",
@@ -81,7 +81,7 @@
       "tick": 188,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "09da86806a575f6e"
+      "digest": "7b7803fba5570aed"
     },
     {
       "name": "aplastado",
@@ -91,7 +91,7 @@
       "tick": 200,
       "view": "micro",
       "follow": "Tiny 16",
-      "digest": "9a8a4906ae73d4d9"
+      "digest": "2b817ac20ab58b0a"
     },
     {
       "name": "pisada",
@@ -101,7 +101,7 @@
       "tick": 175,
       "view": "micro",
       "follow": "Tiny 21",
-      "digest": "d3cbf0e30e54956e"
+      "digest": "964ceb01278de923"
     },
     {
       "name": "pantufla-micro",
@@ -111,7 +111,7 @@
       "tick": 22,
       "view": "micro",
       "follow": "Tiny 01",
-      "digest": "ef497c8612010da3"
+      "digest": "ca442b95fc0ff02b"
     }
   ]
 }

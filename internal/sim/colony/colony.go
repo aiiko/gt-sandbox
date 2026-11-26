@@ -21,6 +21,8 @@ import (
 	"gtsandbox/internal/sim/comp"
 	"gtsandbox/internal/sim/ecs"
 	"gtsandbox/internal/sim/jobs"
+	"gtsandbox/internal/sim/nav"
+	"gtsandbox/internal/sim/space"
 	"gtsandbox/internal/sim/spatial"
 	"gtsandbox/internal/sim/world"
 )
@@ -229,7 +231,7 @@ func (share) Run(w *world.World) {
 				ai.Learn(w, a, e, n.Target)
 			}
 		})
-		if (ecs.Get[Food](r).Has(n.Target) || ecs.Get[Water](r).Has(n.Target)) && !atNest(w, m.Colony, n.Target) && !hauled(w, n.Target) {
+		if (ecs.Get[Food](r).Has(n.Target) || ecs.Get[Water](r).Has(n.Target)) && !atNest(w, m.Colony, n.Target) && !hauled(w, n.Target) && haulableAt(w, n.Target) {
 			nest, ok := comp.Of(r).Location.Get(m.Colony)
 			if !ok {
 				continue
@@ -282,6 +284,23 @@ func hauled(w *world.World, e ids.ID) bool {
 		found = found || j.Target == e && !w.ECS().Despawning(id)
 	})
 	return found
+}
+
+// haulableAt evita publicar acarreos hacia celdas bloqueadas o partes
+// articuladas del cuerpo donde los porteadores no pueden entrar ni salir.
+func haulableAt(w *world.World, target ids.ID) bool {
+	r := w.ECS()
+	l, ok := comp.Of(r).Location.Get(target)
+	if !ok || l.Space.IsNil() {
+		return false
+	}
+	if sp, ok := ecs.Get[space.Space](r).Get(l.Space); ok && sp.Kind == space.Articulated {
+		return false
+	}
+	if g := ecs.Get[nav.Grid](r).Ptr(l.Space); g != nil && !g.Walkable(l.Pos.XY()) {
+		return false
+	}
+	return true
 }
 
 // atNest: e está a menos de Radius del nido col.

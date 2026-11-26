@@ -196,11 +196,11 @@ func scoreJob(c *ai.Ctx, _ ids.ID, j jobs.Job, base float64) (float64, bool) {
 	if isWaterHaul && waterDef > 0 {
 		if loc, ok := comp.Of(r).Location.Get(j.Target); ok {
 			dist := ai.Distance(c, loc.Space, loc.Pos.XY())
-			bonus := 0.16 * waterDef
+			bonus := 0.24 * waterDef
 			if criticalWater {
-				bonus += 0.14
+				bonus += 0.16
 			}
-			waterBase := c.Agent.Work + 0.01*float64(j.Priority) + bonus - 0.015*dist
+			waterBase := c.Agent.Work + 0.01*float64(j.Priority) + bonus - 0.012*dist
 			if waterBase > base {
 				base = waterBase
 			}

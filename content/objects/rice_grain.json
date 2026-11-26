@@ -1,0 +1,14 @@
+{
+  "name": "rice_grain",
+  "visual": "rice_grain",
+  "body": {"radius": 1800, "height": 1200, "mass": 0},
+  "components": {
+    "portions": {"items": [{"resource": "food", "amount": 4}]},
+    "food": {},
+    "expires": {"ttl": 3600, "kind": "rice_grain"},
+    "offers": [
+      {"action": "nibble", "scale": "tiny", "effects": [{"need": "hunger", "amount": 200}],
+       "steps": [{"do": "goto"}, {"do": "use", "ticks": 60}, {"do": "consume"}]}
+    ]
+  }
+}

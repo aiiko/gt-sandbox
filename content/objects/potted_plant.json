@@ -1,0 +1,19 @@
+{
+  "name": "potted_plant",
+  "visual": "potted_plant",
+  "components": {
+    "landmark": {"range": 1800000},
+    "offers": [
+      {"action": "water_plant", "scale": "giantess",
+       "effects": [{"need": "fun", "amount": 280}],
+       "approach": {"x": -550000, "y": -200000},
+       "facing": 256,
+       "steps": [
+         {"do": "goto"},
+         {"do": "use", "ticks": 100},
+         {"do": "spawn", "item": "water_drop", "count": 2, "offset": {"x": 280000, "y": 0}, "spread": 40000},
+         {"do": "spawn", "item": "puddle", "count": 1, "offset": {"x": 280000, "y": 0}}
+       ]}
+    ]
+  }
+}

@@ -41,6 +41,23 @@ COIN = '#FFD25A'
 COIN_HI = '#FFF6C8'
 COIN_SH = '#C88D2A'
 
+MAT = hexc('#76C8B8')
+MAT_HI = hexc('#A9E5D8')
+MAT_SH = hexc('#4C998B')
+
+RICE = '#FFF7E8'
+RICE_HI = '#FFFFFF'
+RICE_SH = '#DCC9AE'
+
+POT = hexc('#C97B56')
+POT_HI = hexc('#E59E79')
+POT_SH = hexc('#945235')
+SOIL = hexc('#5C4338')
+SOIL_D = hexc('#443028')
+LEAF = hexc('#5FA86D')
+LEAF_HI = hexc('#8ED299')
+LEAF_D = hexc('#3F7A4D')
+
 
 def _save(im, rel):
     path = os.path.join(SRC, rel)
@@ -188,6 +205,112 @@ def _coin():
     h.save(os.path.join(SRC, 'trinket_coin/micro_held.png'))
 
 
+def _bath_mat():
+    # Macro (28x20, pivote [14, 10])
+    im = Image.new('RGBA', (28, 20), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([2, 3, 26, 18], radius=3, fill=(0x3F, 0x36, 0x5C, 65))
+    d.rounded_rectangle([2, 2, 25, 17], radius=3, fill=MAT, outline=INK_T)
+    d.rounded_rectangle([4, 4, 23, 15], radius=2, outline=SOCK)
+    d.line([(6, 6), (21, 6)], fill=MAT_HI)
+    d.line([(6, 13), (21, 13)], fill=MAT_SH)
+    _save(im, 'bath_mat/macro_idle.png')
+
+    # Micro (scale 4 -> 140x100, pivote [70, 50])
+    w, h = 140, 100
+    im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([8, 10, w - 6, h - 6], radius=14, fill=(0x3F, 0x36, 0x5C, 50))
+    d.rounded_rectangle([6, 6, w - 8, h - 8], radius=14, fill=MAT, outline=INK_T, width=3)
+    d.rounded_rectangle([14, 14, w - 16, h - 16], radius=10, fill=MAT_SH, outline=SOCK, width=3)
+    d.rounded_rectangle([20, 20, w - 22, h - 22], radius=8, fill=MAT)
+    for yy in range(28, h - 24, 12):
+        for xx in range(28, w - 24, 14):
+            d.ellipse([xx, yy, xx + 4, yy + 4], fill=MAT_HI)
+    _save(im, 'bath_mat/micro_idle.png')
+
+
+def _rice_cooker_use():
+    # Macro use (26x26, pivote [13, 20]): base igual a rice_cooker + vapor blanco encima
+    im = Image.new('RGBA', (26, 26), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([3, 18, 23, 25], fill=(0x3F, 0x36, 0x5C, 70))
+    d.rounded_rectangle([3, 5, 22, 23], radius=5, fill=SOCK, outline=INK_T)
+    d.ellipse([8, 8, 17, 16], fill=SOCK_SH, outline=(0xD6, 0xC4, 0xA9, 255))
+    d.rectangle([9, 17, 16, 20], fill=SOCK_STRIPE)
+    d.point((15, 18), fill=TIE)
+    # Nubes de vapor tibio saliendo de la válvula
+    d.ellipse([9, 2, 14, 7], fill=(255, 255, 255, 225), outline=INK_T)
+    d.ellipse([13, 0, 18, 5], fill=(255, 255, 255, 235), outline=INK_T)
+    d.ellipse([11, 5, 15, 9], fill=(255, 255, 255, 210))
+    _save(im, 'rice_cooker/macro_use.png')
+
+
+def _rice_grain():
+    # Macro (3x2, selected_only, pivote [1, 1])
+    m = Canvas(3, 2)
+    m.px(0, 0, RICE_HI)
+    m.px(1, 0, RICE)
+    m.px(2, 0, RICE_SH)
+    m.px(1, 1, INK)
+    m.save(os.path.join(SRC, 'rice_grain/macro_idle.png'))
+
+    # Micro (16x14, pivote [8, 11])
+    c = Canvas(16, 14)
+    c.ellipse(8, 11, 6, 2, hexc(INK, 55))
+    for gx, gy, col in ((5, 9, RICE_SH), (10, 9, RICE_SH), (7, 7, RICE), (9, 8, RICE), (6, 8, RICE_HI), (8, 6, RICE_HI)):
+        c.ellipse(gx, gy, 2, 1, INK)
+        c.hline(gx - 1, gx + 1, gy, col)
+    c.save(os.path.join(SRC, 'rice_grain/micro_idle.png'))
+
+    h = Canvas(14, 14)
+    h.ellipse(7, 8, 3, 2, INK)
+    h.ellipse(7, 8, 2, 1, RICE_HI)
+    h.px(6, 7, RICE)
+    h.save(os.path.join(SRC, 'rice_grain/micro_held.png'))
+
+
+def _potted_plant():
+    # Macro (46x54, pivote [23, 50])
+    im = Image.new('RGBA', (46, 54), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([7, 41, 39, 52], fill=(0x3F, 0x36, 0x5C, 80))
+    d.polygon([(12, 26), (34, 26), (30, 48), (16, 48)], fill=POT, outline=INK_T)
+    d.rounded_rectangle([10, 22, 36, 28], radius=3, fill=POT_HI, outline=INK_T)
+    d.ellipse([12, 22, 34, 27], fill=SOIL, outline=INK_T)
+    # Hojas alrededor dejando ver la maceta y la tierra
+    for box, col in (
+        ([3, 12, 20, 24], LEAF_D),
+        ([26, 12, 43, 24], LEAF_D),
+        ([8, 4, 24, 18], LEAF),
+        ([22, 4, 38, 18], LEAF),
+        ([15, 1, 31, 14], LEAF_HI),
+    ):
+        d.ellipse(box, fill=col, outline=INK_T)
+    _save(im, 'potted_plant/macro_idle.png')
+
+    # Micro (scale 4 -> 184x184, pivote [92, 92] -> 36x36 cm = 144x144 px + 20 px hojas)
+    w, h = 184, 184
+    im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([8, 10, w - 6, h - 6], fill=(0x3F, 0x36, 0x5C, 55))
+    d.ellipse([10, 10, w - 10, h - 10], fill=POT_SH, outline=INK_T, width=3)
+    d.ellipse([16, 16, w - 16, h - 16], fill=POT_HI, outline=INK_T, width=2)
+    d.ellipse([24, 24, w - 24, h - 24], fill=SOIL, outline=INK_T, width=3)
+    # Textura orgánica de tierra húmeda en el interior caminable
+    for xx, yy, r in ((54, 58, 8), (118, 62, 10), (76, 118, 9), (126, 112, 7), (92, 88, 12)):
+        d.ellipse([xx - r, yy - r // 2, xx + r, yy + r // 2], fill=SOIL_D)
+    # Hojas decorando el borde exterior sin tapar el suelo
+    for box, col in (
+        ([2, 64, 34, 116], LEAF),
+        ([w - 34, 64, w - 2, 116], LEAF),
+        ([64, 2, 116, 32], LEAF_HI),
+        ([64, h - 32, 116, h - 2], LEAF_D),
+    ):
+        d.ellipse(box, fill=col, outline=INK_T, width=3)
+    _save(im, 'potted_plant/micro_idle.png')
+
+
 def main(src):
     global SRC
     SRC = src
@@ -196,3 +319,7 @@ def main(src):
     _street_shoe()
     _genkan_bag()
     _coin()
+    _bath_mat()
+    _rice_cooker_use()
+    _rice_grain()
+    _potted_plant()

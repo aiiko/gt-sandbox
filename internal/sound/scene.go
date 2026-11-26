@@ -58,6 +58,8 @@ const (
 	GarmentRustle = "garment_rustle" // roce de tela al ponerse o sacarse el cárdigan
 	SockRustle    = "sock_rustle"    // roce suave de media o coletero
 	BodyTickle    = "body_tickle"    // risa o sobresalto breve al sentir cosquillas
+	RiceSteam     = "rice_steam"     // vapor de la arrocera mientras cocina
+	PlantRain     = "plant_rain"     // chorro suave al regar la maceta
 	Emote         = "emote_"         // + el símbolo (view.Emote*)
 )
 
@@ -74,7 +76,7 @@ const (
 // los que cuentan algo (la mano, las caídas, los descubrimientos).
 var minor = map[string]bool{
 	StepTatami: true, StepWood: true, StepTile: true, FootStepMicro: true, Bite: true,
-	FaucetRun: true, ShowerRun: true, WaterDrip: true,
+	FaucetRun: true, ShowerRun: true, WaterDrip: true, RiceSteam: true, PlantRain: true,
 	TinyStep + "1": true, TinyStep + "2": true, TinyStep + "3": true,
 	CrumbPop: true, CrumbTick: true,
 	Emote + view.EmoteExplore: true, Emote + view.EmoteSleep: true, Emote + view.EmoteNote: true,
@@ -369,7 +371,7 @@ func (c *collector) event(prev, cur *view.Frame, e any) {
 			}
 		}
 	case ai.ItemsLeft:
-		if (ev.Motive == "wash_hands" || ev.Motive == "wash_dishes" || ev.Motive == "shower") && len(ev.Items) > 0 {
+		if (ev.Motive == "wash_hands" || ev.Motive == "wash_dishes" || ev.Motive == "shower" || ev.Motive == "cook_rice" || ev.Motive == "water_plant") && len(ev.Items) > 0 {
 			if p, ok := pos(ev.Items[0], cur); ok {
 				c.add(WaterDrip, p, 0.8)
 			}
@@ -552,6 +554,12 @@ func (c *collector) state(prev, cur *view.Frame) {
 			}
 			if s.Activity == "use:shower" && (s.Step == "" || s.Step == "use") && crossed(prev.Tick, cur.Tick, showerTicks, 0) {
 				c.add(ShowerRun, s.Pose.Pos, 0.9)
+			}
+			if s.Activity == "use:cook_rice" && (s.Step == "" || s.Step == "use") && crossed(prev.Tick, cur.Tick, faucetTicks, 0) {
+				c.add(RiceSteam, s.Pose.Pos, 0.7)
+			}
+			if s.Activity == "use:water_plant" && (s.Step == "" || s.Step == "use") && crossed(prev.Tick, cur.Tick, faucetTicks, 0) {
+				c.add(PlantRain, s.Pose.Pos, 0.75)
 			}
 		}
 	}

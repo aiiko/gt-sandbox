@@ -2908,7 +2908,8 @@
       "macro": {
         "pivot": [13, 20],
         "clips": {
-          "idle": { "frame_ticks": 1, "frames": ["rice_cooker/macro_idle.png"] }
+          "idle": { "frame_ticks": 1, "frames": ["rice_cooker/macro_idle.png"] },
+          "use": { "frame_ticks": 1, "frames": ["rice_cooker/macro_use.png"] }
         }
       },
       "micro": {
@@ -3160,6 +3161,52 @@
         "clips": {
           "idle": { "frame_ticks": 1, "frames": ["trinket_coin/micro_idle.png"] },
           "held": { "frame_ticks": 1, "frames": ["trinket_coin/micro_held.png"] }
+        }
+      }
+    },
+    "bath_mat": {
+      "macro": {
+        "pivot": [14, 10],
+        "layer": "ground",
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["bath_mat/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [70, 50],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["bath_mat/micro_idle.png"] }
+        }
+      }
+    },
+    "rice_grain": {
+      "macro": {
+        "pivot": [1, 1],
+        "selected_only": true,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rice_grain/macro_idle.png"] }
+        }
+      },
+      "micro": {
+        "pivot": [8, 11],
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["rice_grain/micro_idle.png"] },
+          "held": { "frame_ticks": 1, "frames": ["rice_grain/micro_held.png"] }
+        }
+      }
+    },
+    "potted_plant": {
+      "macro": {
+        "hidden": true
+      },
+      "micro": {
+        "pivot": [92, 92],
+        "layer": "ground",
+        "scale": 4,
+        "clips": {
+          "idle": { "frame_ticks": 1, "frames": ["potted_plant/micro_idle.png"] }
         }
       }
     }

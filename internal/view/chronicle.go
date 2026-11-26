@@ -320,6 +320,8 @@ var routineText = map[string]struct {
 	"snack_living": {"Merienda", true},
 	"snack":        {"Merienda", true},
 	"relax":        {"Descansa en el sofá", false},
+	"cook_rice":    {"Cocina arroz", true},
+	"water_plant":  {"Riega la maceta", true},
 }
 
 func (c *Chronicle) startRoutine(k chronicler, t clock.Tick, ev ai.ActionStarted) {

@@ -732,6 +732,25 @@
       "layers": [
         {"wave": "sine", "f0": 440, "f1": 329.63, "dur": 0.12, "attack": 0.005, "decay": 0.045, "gain": 0.18}
       ]
+    },
+    "rice_steam": {
+      "category": "efectos",
+      "voices": 1,
+      "cooldown_ms": 450,
+      "layers": [
+        {"wave": "noise", "f0": 4800, "f1": 3200, "dur": 0.45, "attack": 0.06, "decay": 0.16, "gain": 0.20, "lp": 2400},
+        {"wave": "sine", "f0": 180, "f1": 160, "dur": 0.35, "attack": 0.04, "decay": 0.14, "gain": 0.10}
+      ]
+    },
+    "plant_rain": {
+      "category": "efectos",
+      "voices": 2,
+      "cooldown_ms": 400,
+      "layers": [
+        {"wave": "noise", "f0": 5400, "f1": 2800, "dur": 0.50, "attack": 0.04, "decay": 0.18, "gain": 0.22, "lp": 3200},
+        {"wave": "sine", "f0": 920, "f1": 1240, "dur": 0.05, "delay": 0.12, "attack": 0.002, "decay": 0.02, "gain": 0.10},
+        {"wave": "sine", "f0": 1080, "f1": 1460, "dur": 0.05, "delay": 0.28, "attack": 0.002, "decay": 0.02, "gain": 0.10}
+      ]
     }
   }
 }

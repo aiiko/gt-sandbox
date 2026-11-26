@@ -1,0 +1,22 @@
+{
+  "name": "rice_cooker",
+  "visual": "rice_cooker",
+  "components": {
+    "landmark": {},
+    "offers": [
+      {"action": "cook_rice", "scale": "giantess",
+       "effects": [
+         {"need": "hunger", "amount": 160},
+         {"need": "fun", "amount": 60}
+       ],
+       "approach": {"x": 650000, "y": 250000},
+       "facing": 2048,
+       "steps": [
+         {"do": "goto"},
+         {"do": "use", "ticks": 120},
+         {"do": "spawn", "item": "rice_grain", "count": 2, "offset": {"x": 200000, "y": 0}, "spread": 40000},
+         {"do": "spawn", "item": "water_drop", "count": 1, "offset": {"x": 160000, "y": -40000}}
+       ]}
+    ]
+  }
+}
